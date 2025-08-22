@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Aplicación web progresiva con funcionalidad offline">
+    <meta name="theme-color" content="#2563eb">
+    
+    <!-- PWA Metadatos -->
+    
+    <!-- Manifest e ícono -->
+    <link rel="manifest" href="pwa/manifest.json">
+    <link rel="icon" href="pwa/icons/icon-192x192.png">
+    
+    <!-- Estilos -->
+    <link rel="stylesheet" href="styles.css">
+    
+    <title>Mi PWA - Aplicación Progresiva</title>
+</head>
+<body>
+    <header>
+        <h1>Mi PWA</h1>
+        <p>Aplicación Web Progresiva</p>
+    </header>
+    
+    <main>
+        <section class="hero">
+            <h2>Bienvenido a nuestra PWA</h2>
+            <p>Esta aplicación funciona incluso sin conexión a internet</p>
+            <button id="installButton" class="install-btn" style="display: none;">
+                Instalar App
+            </button>
+        </section>
+        
+        <section class="features">
+            <h3>Características</h3>
+            <div class="feature-grid">
+                <div class="feature">
+                    <h4>Funciona Offline</h4>
+                    <p>Accede al contenido sin conexión</p>
+                </div>
+                <div class="feature">
+                    <h4>Instalable</h4>
+                    <p>Agrega la app a tu pantalla principal</p>
+                </div>
+                <div class="feature">
+                    <h4>Respuesta Rápida</h4>
+                    <p>Experiencia de usuario fluida</p>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <footer>
+        <p>&copy; 2024 Mi PWA. Desarrollado con tecnología PWA.</p>
+    </footer>
+    
+    <!-- Scripts -->
+    <script src="app.js"></script>
+</body>
+</html>
