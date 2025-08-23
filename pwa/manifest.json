@@ -1,6 +1,6 @@
 {
-  "name": "Mi PWA - Aplicación Web Progresiva",
-  "short_name": "Mi PWA",
+  "name": "FTI - Finanzas, Trading, Inversiones",
+  "short_name": "FTI",
   "description": "Una aplicación web progresiva que funciona offline y se puede instalar en tu dispositivo",
   "start_url": "/",
   "display": "standalone",
@@ -13,13 +13,13 @@
   "categories": ["productivity", "utilities"],
   "icons": [
     {
-      "src": "pwa/icons/icon-192x192.png",
+      "src": "pwa/logo-app.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "pwa/icons/icon-512x512.png",
+      "src": "pwa/logo-app.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"

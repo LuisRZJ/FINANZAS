@@ -9,8 +9,7 @@ const STATIC_ASSETS = [
   '/styles.css',
   '/app.js',
   '/pwa/manifest.json',
-  '/pwa/icons/icon-192x192.png',
-  '/pwa/icons/icon-512x512.png'
+  '/pwa/logo-app.png'
 ];
 
 // Rutas de API o contenido dinámico
@@ -58,52 +57,71 @@ self.addEventListener('activate', (event) => {
   return self.clients.claim();
 });
 
-// Estrategia de caché: Cache First para recursos estáticos
-const cacheFirst = async (request) => {
-  const cached = await caches.match(request);
-  if (cached) {
-    return cached;
-  }
-  
-  try {
-    const response = await fetch(request);
-    const cache = await caches.open(DYNAMIC_CACHE);
-    cache.put(request, response.clone());
-    return response;
-  } catch (error) {
-    console.error('[SW] Error en cacheFirst:', error);
-    // Retornar página offline personalizada si existe
-    if (request.destination === 'document') {
-      return new Response('Disponible offline', {status: 200, headers: {'Content-Type': 'text/html'}});
-    }
-  }
-};
-
-// Estrategia de caché: Network First para contenido dinámico
+// Estrategia de caché: Network First para todos los recursos
 const networkFirst = async (request) => {
   try {
     const response = await fetch(request);
-    const cache = await caches.open(DYNAMIC_CACHE);
-    cache.put(request, response.clone());
+    // Solo cachear respuestas válidas
+    if (response.status === 200) {
+      const cache = await caches.open(DYNAMIC_CACHE);
+      cache.put(request, response.clone());
+    }
     return response;
   } catch (error) {
-    console.error('[SW] Error en networkFirst:', error);
+    console.error('[SW] Sin conexión, usando caché:', error);
     const cached = await caches.match(request);
-    return cached || caches.match('/offline.html');
+    if (cached) {
+      return cached;
+    }
+    
+    // Retornar respuesta offline personalizada para documentos HTML
+    if (request.destination === 'document' || request.mode === 'navigate') {
+      return new Response(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>Sin conexión</title>
+          <style>
+            body { 
+              font-family: Arial, sans-serif; 
+              display: flex; 
+              align-items: center; 
+              justify-content: center; 
+              height: 100vh; 
+              margin: 0; 
+              background: #f5f5f5; 
+            }
+            .offline-container { 
+              text-align: center; 
+              padding: 40px; 
+              background: white; 
+              border-radius: 10px; 
+              box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+            }
+            .offline-icon { 
+              font-size: 48px; 
+              margin-bottom: 20px; 
+            }
+          </style>
+        </head>
+        <body>
+          <div class="offline-container">
+            <div class="offline-icon">📡</div>
+            <h1>Sin conexión a internet</h1>
+            <p>La aplicación intentará conectarse a la red primero.</p>
+            <p>Por favor, verifica tu conexión y vuelve a intentar.</p>
+          </div>
+        </body>
+        </html>
+      `, {
+        status: 200,
+        headers: { 'Content-Type': 'text/html' }
+      });
+    }
+    
+    return new Response('Sin conexión', { status: 503 });
   }
-};
-
-// Estrategia de caché: Stale While Revalidate
-const staleWhileRevalidate = async (request) => {
-  const cached = await caches.match(request);
-  
-  const fetchPromise = fetch(request).then((response) => {
-    const cache = caches.open(DYNAMIC_CACHE);
-    cache.then((c) => c.put(request, response.clone()));
-    return response;
-  }).catch(() => cached);
-  
-  return cached || fetchPromise;
 };
 
 // Manejo de eventos fetch
@@ -116,37 +134,8 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   
-  // Manejar diferentes tipos de recursos
-  if (url.origin === location.origin) {
-    // Recursos estáticos (CSS, JS, imágenes, etc.)
-    if (request.destination === 'style' || 
-        request.destination === 'script' || 
-        request.destination === 'image' ||
-        request.destination === 'font') {
-      event.respondWith(cacheFirst(request));
-    }
-    // HTML y otros documentos
-    else if (request.destination === 'document') {
-      event.respondWith(networkFirst(request));
-    }
-    // API y contenido dinámico
-    else if (url.pathname.startsWith('/api/')) {
-      event.respondWith(networkFirst(request));
-    }
-    // Cualquier otro recurso
-    else {
-      event.respondWith(staleWhileRevalidate(request));
-    }
-  }
-  
-  // Recursos externos (CDN, etc.)
-  else {
-    if (request.destination === 'image' || request.destination === 'font') {
-      event.respondWith(cacheFirst(request));
-    } else {
-      event.respondWith(staleWhileRevalidate(request));
-    }
-  }
+  // Aplicar estrategia Network First a TODOS los recursos
+  event.respondWith(networkFirst(request));
 });
 
 // Actualización automática del Service Worker

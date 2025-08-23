@@ -3,6 +3,14 @@ const isSupported = () => {
   return 'serviceWorker' in navigator && 'caches' in window;
 };
 
+
+// variables de versión de página
+const PAGE_VERSION = "Beta"
+const ACT_DATE = "23/08/25"
+
+console.log("Página versión: " + PAGE_VERSION + ", actualizada por ultima vez el: " + ACT_DATE)
+
+
 // Estado de la aplicación
 let deferredPrompt = null;
 let isOffline = false;
@@ -296,3 +304,4 @@ window.addEventListener('error', (event) => {
 window.addEventListener('unhandledrejection', (event) => {
   log(`Promesa rechazada: ${event.reason}`, 'error');
 });
+
