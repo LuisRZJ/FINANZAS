@@ -6,6 +6,14 @@
     <meta name="description" content="Aplicación web progresiva con funcionalidad offline">
     <meta name="theme-color" content="#2563eb">
     
+    <!-- Google Fonts - Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome para iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
     <!-- PWA Metadatos -->
     
     <!-- Manifest e ícono -->
@@ -15,47 +23,76 @@
     <!-- Estilos -->
     <link rel="stylesheet" href="styles.css">
     
-    <title>FTI - Finanzas</title>
+    <title>FTI - Finanzas, Trading e Inversiones</title>
 </head>
 <body>
     <header>
         <h1>FTI</h1>
-        <p>Finanzas</p>
+        <p>Finanzas, Trading e Inversiones</p>
     </header>
     
     <main>
+        <!--
         <section class="hero">
-            <h2>Bienvenido a nuestra PWA</h2>
-            <p>Esta aplicación funciona incluso sin conexión a internet</p>
-            <button id="installButton" class="install-btn" style="display: none;">
-                Instalar App
-            </button>
-        </section>
-        
-        <section class="features">
-            <h3>Características</h3>
-            <div class="feature-grid">
-                <div class="feature">
-                    <h4>Funciona Offline</h4>
-                    <p>Accede al contenido sin conexión</p>
+            <h2>Tu Plataforma Integral de Finanzas</h2>
+            <p>Gestiona tus finanzas, opera en trading y optimiza tus inversiones, incluso sin conexión a internet.</p>
+        </section> -->
+
+        <section class="modules">
+            <h3>Nuestros Módulos</h3>
+            <div class="module-grid">
+                <div class="module finance">
+                    <i class="fas fa-wallet icon"></i>
+                    <h4>Finanzas Personales</h4>
+                    <p>Controla tus ingresos y gastos.</p>
+                    <a href="modulo-finanzas/index.html" class="btn">Ir a Finanzas</a>
                 </div>
-                <div class="feature">
-                    <h4>Instalable</h4>
-                    <p>Agrega la app a tu pantalla principal</p>
+                <div class="module trading">
+                    <i class="fas fa-chart-line icon"></i>
+                    <h4>Trading</h4>
+                    <p>Opera en los mercados financieros.</p>
+                    <a href="modulo-trading/index.html" class="btn">Ir a Trading</a>
                 </div>
-                <div class="feature">
-                    <h4>Respuesta Rápida</h4>
-                    <p>Experiencia de usuario fluida</p>
+                <div class="module investment">
+                    <i class="fas fa-lightbulb icon"></i>
+                    <h4>Inversiones</h4>
+                    <p>Descubre oportunidades de inversión.</p>
+                    <a href="modulo-inversiones/index.html" class="btn">Ir a Inversiones</a>
+                </div>
+                <div class="module utilities">
+                    <i class="fas fa-tools icon"></i>
+                    <h4>Utilidades</h4>
+                    <p>Herramientas y recursos útiles.</p>
+                    <a href="utilidades.html" class="btn">Ir a Utilidades</a>
                 </div>
             </div>
+        </section>
+
+        <section class="install-app-section">
+            <button id="installButton" class="install-btn" style="display: none;">
+                Instalar Aplicación
+            </button>
         </section>
     </main>
     
     <footer>
-        <p>&copy; 2024 Mi PWA. Desarrollado con tecnología PWA.</p>
+        <p>Versión: <span id="appVersion"></span> | Última Actualización: <span id="appDate"></span></p>
     </footer>
     
     <!-- Scripts -->
     <script src="app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const appVersionElement = document.getElementById('appVersion');
+            const appDateElement = document.getElementById('appDate');
+
+            if (typeof PAGE_VERSION !== 'undefined') {
+                appVersionElement.textContent = PAGE_VERSION;
+            }
+            if (typeof ACT_DATE !== 'undefined') {
+                appDateElement.textContent = ACT_DATE;
+            }
+        });
+    </script>
 </body>
 </html>

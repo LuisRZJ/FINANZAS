@@ -1,17 +1,23 @@
 /* Variables CSS para fácil personalización */
 :root {
-  --primary-color: #2563eb;
-  --secondary-color: #1e40af;
-  --accent-color: #3b82f6;
-  --text-color: #1f2937;
-  --text-light: #6b7280;
-  --background: #ffffff;
-  --surface: #f8fafc;
-  --border: #e5e7eb;
-  --shadow: rgba(0, 0, 0, 0.1);
-  --shadow-lg: rgba(0, 0, 0, 0.25);
+  --primary-color: #4a90e2; /* Azul más vibrante */
+  --secondary-color: #357ABD; /* Azul oscuro para contraste */
+  --accent-color: #50E3C2; /* Verde menta para acentos */
+  --text-color: #333333; /* Gris oscuro para texto principal */
+  --text-light: #666666; /* Gris medio para texto secundario */
+  --background: #f0f2f5; /* Gris claro para el fondo general */
+  --surface: #ffffff; /* Blanco para las tarjetas y superficies */
+  --border: #e0e0e0; /* Gris claro para bordes */
+  --shadow: rgba(0, 0, 0, 0.08); /* Sombra más sutil */
+  --shadow-lg: rgba(0, 0, 0, 0.15); /* Sombra más pronunciada */
+
+  /* Colores personalizados para cada tarjeta */
+  --finance-color: #3498db; /* Azul para Finanzas */
+  --trading-color: #e74c3c; /* Rojo para Trading */
+  --investment-color: #2ecc71; /* Verde para Inversiones */
+  --utilities-color: #9b59b6; /* Púrpura para Utilidades */
   
-  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   --font-mono: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Consolas', monospace;
   
   --border-radius: 8px;
@@ -38,6 +44,9 @@ body {
   background-color: var(--background);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
 /* Contenedor principal */
@@ -71,136 +80,401 @@ header p {
 /* Main content */
 main {
   padding: 2rem 0;
-  min-height: calc(100vh - 200px);
+  flex-grow: 1;
+}
+
+/* Sections general style */
+section {
+    background-color: var(--background); /* Usar surface para las secciones */
+    padding: 3rem;
+    border-radius: var(--border-radius-lg);
+    box-shadow: 0 4px 15px var(--shadow);
+    margin-bottom: 2rem;
 }
 
 /* Hero section */
 .hero {
   text-align: center;
-  padding: 3rem 0;
-  max-width: 600px;
-  margin: 0 auto;
+  padding: 4rem 0;
+  background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+  color: white;
 }
 
 .hero h2 {
-  font-size: 2.25rem;
-  font-weight: 600;
+  font-size: 2.8rem;
+  font-weight: 700;
   margin-bottom: 1rem;
-  color: var(--text-color);
+  text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
 }
 
 .hero p {
-  font-size: 1.25rem;
-  color: var(--text-light);
-  margin-bottom: 2rem;
+  font-size: 1.3rem;
+  max-width: 800px;
+  margin: 0 auto;
+  opacity: 0.9;
 }
 
-/* Botones */
+/* Modules section */
+.modules h3 {
+    text-align: center;
+    font-size: 2rem;
+    font-weight: 600;
+    margin-bottom: 2rem;
+    color: var(--text-color);
+}
+
+.module-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+    margin-top: 20px;
+}
+
+.module {
+    background-color: var(--surface);
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    box-shadow: 0 2px 8px var(--shadow);
+    text-align: center;
+    transition: var(--transition);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.module:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 15px var(--shadow-lg);
+}
+
+.module h4 {
+    font-size: 1.6rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    color: black;
+}
+
+.module p {
+    font-size: 1em;
+    color: var(--text-light);
+    flex-grow: 1;
+    margin-bottom: 1.5rem;
+}
+
+.module .icon {
+    font-size: 3rem;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+/* Colores personalizados para cada tarjeta */
+.module.finance .btn {
+    background-color: var(--finance-color);
+    color: white;
+}
+
+.module.trading .btn {
+    background-color: var(--trading-color);
+    color: white;
+}
+
+.module.investment .btn {
+    background-color: var(--investment-color);
+    color: white;
+}
+
+.module.finance .icon {
+    color: var(--finance-color);
+}
+
+.module.trading .icon {
+    color: var(--trading-color);
+}
+
+.module.investment .icon {
+    color: var(--investment-color);
+}
+
+/* Estilos específicos para utilidades.html */
+.utilities-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: calc(100vh - 120px);
+}
+
+.utilities-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.utilities-header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
+}
+
+.utilities-header p {
+    font-size: 1.125rem;
+    color: var(--text-light);
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.utilities-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.utility-card {
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 2rem;
+    text-align: center;
+    box-shadow: 0 4px 6px var(--shadow);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.utility-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px var(--shadow-lg);
+}
+
+.utility-icon {
+    font-size: 3rem;
+    color: var(--utilities-color);
+    margin-bottom: 1rem;
+}
+
+.utility-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
+}
+
+.utility-description {
+    color: var(--text-light);
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+}
+
+.btn-utility {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.875rem 2rem;
+    background: var(--utilities-color);
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: var(--transition);
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    font-family: inherit;
+}
+
+.btn-utility:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(155, 89, 182, 0.3);
+}
+
+.btn-utility:active {
+    transform: translateY(0);
+}
+
+.btn-utility i {
+    margin-right: 0.5rem;
+}
+
+.back-button {
+    display: block;
+    margin: 2rem auto 0 auto;
+    padding: 0.75rem 1.5rem;
+    background-color: var(--primary-color);
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: var(--transition);
+    box-shadow: 0 2px 8px var(--shadow);
+    text-align: center;
+    width: fit-content;
+}
+
+.back-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.back-button i {
+    margin-right: 0.5rem;
+}
+
+@media (max-width: 768px) {
+    .utilities-container {
+        margin: 1rem auto;
+        padding: 0 0.5rem;
+    }
+    
+    .utilities-header h1 {
+        font-size: 2rem;
+    }
+    
+    .utilities-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .back-button {
+        margin: 2rem auto 2rem auto;
+        display: block;
+    }
+}
+
+.module.utilities .btn {
+    background-color: var(--utilities-color);
+    color: white;
+}
+
+.module.utilities .icon {
+    color: var(--utilities-color);
+}
+
+/* Buttons */
+.btn {
+    display: inline-block;
+    background-color: var(--primary-color);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--border-radius);
+    text-decoration: none;
+    font-weight: 600;
+    transition: var(--transition);
+    margin-top: 1rem;
+}
+
+.btn:hover {
+    background-color: var(--secondary-color);
+    transform: translateY(-1px);
+}
+
+.install-app-section {
+    text-align: center;
+    padding: 3rem;
+    background-color: var(--surface);
+    border-radius: var(--border-radius-lg);
+    display: none; /* Ocultar por defecto */
+}
+
 .install-btn {
   background: var(--accent-color);
   color: white;
   border: none;
-  padding: 0.875rem 2rem;
-  font-size: 1.125rem;
+  padding: 1rem 2.5rem;
+  font-size: 1.25rem;
   font-weight: 600;
   border-radius: var(--border-radius-lg);
   cursor: pointer;
   transition: var(--transition);
-  box-shadow: 0 2px 4px var(--shadow);
+  box-shadow: 0 4px 8px var(--shadow);
 }
 
 .install-btn:hover {
   background: var(--primary-color);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px var(--shadow-lg);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px var(--shadow-lg);
 }
 
 .install-btn:active {
   transform: translateY(0);
 }
 
-/* Features section */
-.features {
-  padding: 3rem 0;
-  background: var(--surface);
-  margin: 2rem 0;
-  border-radius: var(--border-radius-lg);
-}
 
-.features h3 {
-  text-align: center;
-  font-size: 2rem;
-  font-weight: 600;
-  margin-bottom: 2rem;
-  color: var(--text-color);
-}
 
-.feature-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 2rem;
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-.feature {
-  background: var(--background);
-  padding: 2rem;
-  border-radius: var(--border-radius-lg);
-  box-shadow: 0 2px 4px var(--shadow);
-  text-align: center;
-  transition: var(--transition);
-}
-
-.feature:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 16px var(--shadow);
-}
-
-.feature h4 {
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin-bottom: 0.75rem;
-  color: var(--primary-color);
-}
-
-.feature p {
-  color: var(--text-light);
-  line-height: 1.5;
-}
-
-/* Footer */
 footer {
-  background: var(--text-color);
-  color: white;
+  background-color: var(--surface); /* Fondo claro para el pie de página */
+  color: var(--text-light); /* Color de texto suave */
   text-align: center;
-  padding: 1.5rem 0;
+  padding: 1.5rem 1rem; /* Espaciado interno */
+  border-top: 1px solid var(--border); /* Borde superior sutil */
+  font-size: 0.9rem;
+  width: 100%; /* Ocupa todo el ancho disponible */
+  box-shadow: 0 -2px 8px var(--shadow); /* Sombra sutil hacia arriba */
   margin-top: auto;
 }
 
 footer p {
-  opacity: 0.8;
-  font-size: 0.875rem;
+  margin: 0;
+  line-height: 1.4;
+}
+
+footer span {
+  font-weight: 600;
+  color: var(--text-color); /* Resaltar la información importante */
 }
 
 /* Responsive design */
 @media (max-width: 768px) {
   html {
     font-size: 14px;
-  }
+
   
   header h1 {
     font-size: 2rem;
   }
   
   .hero h2 {
-    font-size: 1.875rem;
+    font-size: 2.2rem;
   }
   
-  .feature-grid {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
+  .hero p {
+    font-size: 1.1rem;
   }
+
+  .modules h3 {
+      font-size: 1.8rem;
+  }
+
+  .module-grid {
+      grid-template-columns: 1fr;
+  }
+
+  .install-btn {
+      font-size: 1.1rem;
+      padding: 0.8rem 2rem;
+  }
+
+  section {
+      padding: 2rem;
+  }
+
+  main {
+      padding: 1rem 0;
+  }
+
+  .hero {
+      padding: 3rem 0;
+  }
+
+  .btn {
+      padding: 0.6rem 1.2rem;
+      font-size: 0.9rem;
+  }
+
+  footer p {
+      font-size: 0.8rem;
+  }
+}
   
   .container {
     padding: 0 0.75rem;

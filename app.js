@@ -5,7 +5,7 @@ const isSupported = () => {
 
 
 // variables de versión de página
-const PAGE_VERSION = "Beta"
+const PAGE_VERSION = "1.0.0"
 const ACT_DATE = "23/08/25"
 
 console.log("Página versión: " + PAGE_VERSION + ", actualizada por ultima vez el: " + ACT_DATE)
@@ -17,6 +17,7 @@ let isOffline = false;
 
 // Elementos del DOM
 const installButton = document.getElementById('installButton');
+const installSection = document.querySelector('.install-app-section');
 
 // Función de utilidad para logs
 const log = (message, type = 'info') => {
@@ -114,8 +115,9 @@ const handleInstallPrompt = () => {
     log('Evento de instalación PWA detectado', 'info');
     
     // Mostrar botón de instalación
-    if (installButton) {
+    if (installButton && installSection) {
       installButton.style.display = 'block';
+      installSection.style.display = 'block'; // Mostrar la sección completa
     }
   });
   
@@ -140,6 +142,9 @@ const handleInstallPrompt = () => {
       
       deferredPrompt = null;
       installButton.style.display = 'none';
+      if (installSection) {
+        installSection.style.display = 'none'; // Ocultar la sección completa
+      }
     });
   }
   

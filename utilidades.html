@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Utilidades y herramientas para gestión financiera">
+    <meta name="theme-color" content="#2563eb">
+    <link rel="icon" href="pwa/logo-app.png">
+
+    
+    <!-- Google Fonts - Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome para iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- Estilos del proyecto -->
+    <link rel="stylesheet" href="styles.css">
+    
+    <title>Utilidades - FTI</title>
+    
+
+</head>
+<body>
+    <a href="index.html" class="back-button">
+        <i class="fas fa-arrow-left"></i>
+        Volver al inicio
+    </a>
+    
+    <div class="utilities-container">
+        <div class="utilities-header">
+            <h1>Utilidades</h1>
+            <p>Herramientas y recursos adicionales para potenciar tu gestión financiera</p>
+        </div>
+        <!--
+        <div class="utilities-grid">
+            <div class="utility-card">
+                <i class="fas fa-calculator utility-icon"></i>
+                <h3 class="utility-title">Calculadora de Intereses</h3>
+                <p class="utility-description">Calcula intereses simples y compuestos para tus inversiones y préstamos.</p>
+                <button class="btn-utility" onclick="window.location.href='#'">
+                    <i class="fas fa-play"></i>
+                    Usar Calculadora
+                </button>
+            </div>-->
+            <!--
+            <div class="utility-card">
+                <i class="fas fa-chart-pie utility-icon"></i>
+                <h3 class="utility-title">Analizador de Portafolio</h3>
+                <p class="utility-description">Analiza la diversificación y rendimiento de tu portafolio de inversiones.</p>
+                <button class="btn-utility" onclick="window.location.href='#'">
+                    <i class="fas fa-chart-bar"></i>
+                    Analizar Portafolio
+                </button>
+            </div>-->
+            
+            <div class="utility-card">
+                <i class="fas fa-exchange-alt utility-icon"></i>
+                <h3 class="utility-title">Convertidor de BTC</h3>
+                <p class="utility-description">Convierte MXN a BTC y viceversa con diferentes opciones de visualización.</p>
+                <button class="btn-utility" onclick="window.location.href='/conversor-btc.html'">
+                    <i class="fa-brands fa-bitcoin"></i>
+                    Convertir BTC
+                </button>
+            </div>
+            <!--
+            <div class="utility-card">
+                <i class="fas fa-bullseye utility-icon"></i>
+                <h3 class="utility-title">Calculadora de Metas</h3>
+                <p class="utility-description">Establece y calcula cuánto necesitas ahorrar para alcanzar tus metas financieras.</p>
+                <button class="btn-utility" onclick="window.location.href='#'">
+                    <i class="fas fa-target"></i>
+                    Calcular Meta
+                </button>
+            </div>-->
+        </div>
+    </div>
+    
+    <footer>
+        <p>Versión: <span id="appVersion"></span> | Última Actualización: <span id="appDate"></span></p>
+    </footer>
+    
+    <!-- Scripts -->
+    <script src="app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const appVersionElement = document.getElementById('appVersion');
+            const appDateElement = document.getElementById('appDate');
+
+            if (typeof PAGE_VERSION !== 'undefined') {
+                appVersionElement.textContent = PAGE_VERSION;
+            }
+            if (typeof ACT_DATE !== 'undefined') {
+                appDateElement.textContent = ACT_DATE;
+            }
+        });
+    </script>
+</body>
+</html>
