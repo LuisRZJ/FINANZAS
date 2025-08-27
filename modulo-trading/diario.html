@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <link rel="stylesheet" href="estilos.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backtesting - Diario</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="Logo_app_trading-removebg-preview.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="Logo_app_trading-removebg-preview.png">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Diario de Trading</h1>
+            <div id="datetime" class="datetime"></div>
+        </div>
+
+        <div class="navigation-buttons">
+            <button class="nav-btn" onclick="window.location.href='index.html'">Volver al Inicio</button>
+            <button class="nav-btn" onclick="window.location.href='tabla-trades.html'">Vista de tabla</button>
+        </div>
+
+        <div id="diaryContainer">
+            <!-- El contenido se cargará dinámicamente -->
+        </div>
+    </div>
+
+    <script src="javascript.js"></script>
+    <script>
+        // Función para obtener una cookie
+        function getCookie(name) {
+            const nameEQ = name + "=";
+            const ca = document.cookie.split(';');
+            for(let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+            }
+            return null;
+        }
+
+        // Cargar tema guardado
+        function loadTheme() {
+            const theme = getCookie('theme') || 'light';
+            document.body.className = theme;
+        }
+
+        // Actualizar fecha y hora
+        function updateDateTime() {
+            const now = new Date();
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            };
+            document.getElementById('datetime').textContent = now.toLocaleDateString('es-ES', options);
+        }
+
+        // Cargar tema y actualizar fecha/hora al iniciar
+        loadTheme();
+        setInterval(updateDateTime, 1000);
+        updateDateTime();
+    </script>
+</body>
+</html>

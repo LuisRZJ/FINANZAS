@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <link rel="stylesheet" href="estilos.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backtesting - Plan de Trading</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="Logo_app_trading-removebg-preview.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="Logo_app_trading-removebg-preview.png">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Plan de Trading</h1>
+            <div id="datetime" class="datetime"></div>
+        </div>
+
+        <div class="trading-plan-container">
+            <section class="plan-section">
+                <h2>Reglas de Trading</h2>
+                <div class="rule-item">
+                    <h3>Gestión de Riesgo</h3>
+                    <textarea id="risk-management" placeholder="Define tus reglas de gestión de riesgo..."></textarea>
+                </div>
+                <div class="rule-item">
+                    <h3>Estrategia de Entrada</h3>
+                    <textarea id="entry-strategy" placeholder="Describe tu estrategia de entrada..."></textarea>
+                </div>
+                <div class="rule-item">
+                    <h3>Estrategia de Salida</h3>
+                    <textarea id="exit-strategy" placeholder="Describe tu estrategia de salida..."></textarea>
+                </div>
+            </section>
+
+            <section class="plan-section">
+                <h2>Horarios de Trading</h2>
+                <div class="plan-card">
+                    <div class="schedule-options">
+                        <div class="schedule-option">
+                            <input type="radio" id="morning" name="schedule" value="morning">
+                            <label for="morning">Solo Mañanas (6:00 - 12:00)</label>
+                        </div>
+                        <div class="schedule-option">
+                            <input type="radio" id="afternoon" name="schedule" value="afternoon">
+                            <label for="afternoon">Solo Tardes (12:00 - 18:00)</label>
+                        </div>
+                        <div class="schedule-option">
+                            <input type="radio" id="night" name="schedule" value="night">
+                            <label for="night">Solo Noches (18:00 - 00:00)</label>
+                        </div>
+                        <div class="schedule-option">
+                            <input type="radio" id="full" name="schedule" value="full">
+                            <label for="full">24/7</label>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="plan-section">
+                <h2>Instrumentos de Trading</h2>
+                <div class="plan-card">
+                    <div class="instruments-list">
+                        <div class="instrument-item">
+                            <input type="checkbox" id="forex">
+                            <label for="forex">Forex</label>
+                        </div>
+                        <div class="instrument-item">
+                            <input type="checkbox" id="stocks">
+                            <label for="stocks">Acciones</label>
+                        </div>
+                        <div class="instrument-item">
+                            <input type="checkbox" id="crypto">
+                            <label for="crypto">Criptomonedas</label>
+                        </div>
+                        <div class="instrument-item">
+                            <input type="checkbox" id="futures">
+                            <label for="futures">Futuros</label>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="button-container">
+                <button class="save-button" onclick="saveTradingPlan()">Guardar Plan</button>
+                <a href="index.html" class="back-button">Volver al Inicio</a>
+            </div>
+
+            <div class="cookie-info">
+                <p id="cookie-expiry-info">No hay un plan de trading guardado.</p>
+                <p id="cookie-renewal-advice" class="hidden">Te recomendamos guardar el plan nuevamente para renovar el período de validez.</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="javascript.js"></script>
+    <script>
+
+        // Función para cargar el tema guardado
+        function loadTheme() {
+            const theme = getCookie('theme') || 'light';
+            document.body.className = theme;
+        }
+
+        // Función para actualizar fecha y hora
+        function updateDateTime() {
+            const now = new Date();
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            };
+            document.getElementById('datetime').textContent = now.toLocaleDateString('es-ES', options);
+        }
+        
+        setInterval(updateDateTime, 1000);
+        updateDateTime();
+
+        // Función para establecer una cookie
+        function setCookie(name, value, days) {
+            const date = new Date();
+            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+            const expires = "expires=" + date.toUTCString();
+            document.cookie = name + "=" + JSON.stringify(value) + ";" + expires + ";path=/";
+            // Guardar la fecha de expiración en una cookie separada
+            document.cookie = name + "_expiry=" + date.getTime() + ";" + expires + ";path=/";
+        }
+
+        // Función para obtener una cookie
+        function getCookie(name) {
+            const nameEQ = name + "=";
+            const ca = document.cookie.split(';');
+            for(let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+            }
+            return null;
+        }
+
+        // Función para obtener una cookie JSON
+        function getJsonCookie(name) {
+            const nameEQ = name + "=";
+            const ca = document.cookie.split(';');
+            for(let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) === 0) {
+                    try {
+                        return JSON.parse(c.substring(nameEQ.length, c.length));
+                    } catch (e) {
+                        return null;
+                    }
+                }
+            }
+            return null;
+        }
+
+        // Función para obtener la fecha de expiración de una cookie
+        function getCookieExpiry(cookieName) {
+            const expiryCookie = getJsonCookie(cookieName + "_expiry");
+            if (expiryCookie) {
+                return new Date(parseInt(expiryCookie));
+            }
+            return null;
+        }
+
+        // Función para formatear el tiempo restante
+        function formatTimeRemaining(expiryDate) {
+            const now = new Date();
+            const diff = expiryDate - now;
+            
+            if (diff <= 0) return "Expirado";
+            
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            
+            let timeStr = "";
+            if (days > 0) timeStr += `${days} día${days !== 1 ? 's' : ''} `;
+            if (hours > 0) timeStr += `${hours} hora${hours !== 1 ? 's' : ''} `;
+            if (minutes > 0) timeStr += `${minutes} minuto${minutes !== 1 ? 's' : ''}`;
+            
+            return timeStr.trim();
+        }
+
+        // Función para actualizar la información de la cookie
+        function updateCookieInfo() {
+            const plan = getJsonCookie('tradingPlan');
+            const expiryDate = getCookieExpiry('tradingPlan');
+            const infoElement = document.getElementById('cookie-expiry-info');
+            const adviceElement = document.getElementById('cookie-renewal-advice');
+            
+            if (!plan || !expiryDate) {
+                infoElement.textContent = "No hay un plan de trading guardado.";
+                adviceElement.classList.add('hidden');
+                return;
+            }
+
+            const timeRemaining = formatTimeRemaining(expiryDate);
+            const daysRemaining = Math.floor((expiryDate - new Date()) / (1000 * 60 * 60 * 24));
+            
+            infoElement.textContent = `Tu plan de trading expirará en: ${timeRemaining}`;
+            
+            // Mostrar recomendación si quedan menos de 30 días
+            if (daysRemaining <= 30) {
+                adviceElement.classList.remove('hidden');
+            } else {
+                adviceElement.classList.add('hidden');
+            }
+        }
+
+        // Actualizar la información cada minuto
+        setInterval(updateCookieInfo, 60000);
+        
+        // Actualizar la información al cargar la página
+        updateCookieInfo();
+
+        // Función para guardar el plan de trading
+        function saveTradingPlan() {
+            const plan = {
+                rules: {
+                    riskManagement: document.getElementById('risk-management').value,
+                    entryStrategy: document.getElementById('entry-strategy').value,
+                    exitStrategy: document.getElementById('exit-strategy').value
+                },
+                schedule: document.querySelector('input[name="schedule"]:checked')?.value || '',
+                instruments: {
+                    forex: document.getElementById('forex').checked,
+                    stocks: document.getElementById('stocks').checked,
+                    crypto: document.getElementById('crypto').checked,
+                    futures: document.getElementById('futures').checked
+                }
+            };
+
+            // Guardar en cookie con expiración de 1 año
+            setCookie('tradingPlan', plan, 365);
+            alert('Plan de trading guardado exitosamente');
+        }
+
+        // Función para cargar el plan de trading guardado
+        function loadTradingPlan() {
+            const plan = getJsonCookie('tradingPlan');
+            
+            if (plan) {
+                // Cargar reglas
+                document.getElementById('risk-management').value = plan.rules.riskManagement || '';
+                document.getElementById('entry-strategy').value = plan.rules.entryStrategy || '';
+                document.getElementById('exit-strategy').value = plan.rules.exitStrategy || '';
+
+                // Cargar horario
+                if (plan.schedule) {
+                    document.getElementById(plan.schedule).checked = true;
+                }
+
+                // Cargar instrumentos
+                document.getElementById('forex').checked = plan.instruments.forex || false;
+                document.getElementById('stocks').checked = plan.instruments.stocks || false;
+                document.getElementById('crypto').checked = plan.instruments.crypto || false;
+                document.getElementById('futures').checked = plan.instruments.futures || false;
+            }
+        }
+
+        // Cargar el tema y el plan al iniciar
+        loadTheme();
+        loadTradingPlan();
+    </script>
+</body>
+</html>

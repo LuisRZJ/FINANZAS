@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <link rel="stylesheet" href="estilos.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backtesting - Ajustes</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="Logo_app_trading-removebg-preview.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="Logo_app_trading-removebg-preview.png">
+    <style>
+        .username-setting {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .username-setting input {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            width: 200px;
+        }
+
+        .username-setting .nav-btn {
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .username-setting .nav-btn:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Ajustes</h1>
+            <div id="datetime" class="datetime"></div>
+        </div>
+
+        <div class="settings-container">
+            <div class="settings-section">
+                <h3>Tema de la Aplicación</h3>
+                <div class="theme-options">
+                    <label>
+                        <input type="radio" name="theme" value="light" id="theme-light">
+                        Tema Claro
+                    </label>
+                    <label>
+                        <input type="radio" name="theme" value="dark" id="theme-dark">
+                        Tema Oscuro
+                    </label>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h3>Meta</h3>
+                <div class="goal-setting">
+                    <div class="period-selector">
+                        <label>Período:</label>
+                        <select id="goal-period">
+                            <option value="daily">Diaria</option>
+                            <option value="weekly">Semanal</option>
+                            <option value="monthly">Mensual</option>
+                            <option value="yearly">Anual</option>
+                        </select>
+                    </div>
+                    <input type="number" id="monthly-goal" min="0" step="100" placeholder="Ingrese su meta">
+                    <button id="save-goal" class="nav-btn">Guardar Meta</button>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h3>Nombre de Usuario</h3>
+                <div class="username-setting">
+                    <input type="text" id="username" placeholder="Ingrese su nombre">
+                    <button id="save-username" class="nav-btn">Guardar Nombre</button>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h3>Capital Inicial del Broker</h3>
+                <div class="capital-setting">
+                    <input type="number" id="initial-capital" min="0" step="1000" placeholder="Ingrese su capital inicial">
+                    <button id="save-capital" class="nav-btn">Guardar Capital</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="navigation-buttons">
+            <button class="nav-btn" onclick="window.location.href='index.html'">Volver al Inicio</button>
+        </div>
+    </div>
+
+    <script src="javascript.js"></script>
+    <script>
+        // Actualizar fecha y hora
+        function updateDateTime() {
+            const now = new Date();
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            };
+            document.getElementById('datetime').textContent = now.toLocaleDateString('es-ES', options);
+        }
+        
+        setInterval(updateDateTime, 1000);
+        updateDateTime();
+
+        // Función para establecer una cookie
+        function setCookie(name, value, days) {
+            const date = new Date();
+            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+            const expires = "expires=" + date.toUTCString();
+            document.cookie = name + "=" + value + ";" + expires + ";path=/";
+        }
+
+        // Función para obtener una cookie
+        function getCookie(name) {
+            const nameEQ = name + "=";
+            const ca = document.cookie.split(';');
+            for(let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+            }
+            return null;
+        }
+
+        // Cargar configuración guardada
+        function loadSettings() {
+            const theme = getCookie('theme') || 'light';
+            document.getElementById(`theme-${theme}`).checked = true;
+            document.body.className = theme;
+
+            const monthlyGoal = getCookie('monthlyGoal') || '10000';
+            document.getElementById('monthly-goal').value = monthlyGoal;
+
+            const goalPeriod = getCookie('goalPeriod') || 'monthly';
+            document.getElementById('goal-period').value = goalPeriod;
+
+            // Cargar capital inicial
+            const initialCapital = localStorage.getItem('initialCapital') || '100000';
+            document.getElementById('initial-capital').value = initialCapital;
+
+            // Cargar nombre de usuario
+            const username = localStorage.getItem('username') || '';
+            document.getElementById('username').value = username;
+        }
+
+        // Guardar configuración
+        function saveSettings() {
+            const selectedTheme = document.querySelector('input[name="theme"]:checked').value;
+            setCookie('theme', selectedTheme, 365);
+            document.body.className = selectedTheme;
+
+            const monthlyGoal = document.getElementById('monthly-goal').value;
+            setCookie('monthlyGoal', monthlyGoal, 365);
+
+            const goalPeriod = document.getElementById('goal-period').value;
+            setCookie('goalPeriod', goalPeriod, 365);
+
+            alert('Configuración guardada exitosamente');
+        }
+
+        // Función para guardar el capital inicial
+        function saveInitialCapital() {
+            const initialCapital = document.getElementById('initial-capital').value;
+            if (initialCapital && initialCapital > 0) {
+                localStorage.setItem('initialCapital', initialCapital);
+                alert('Capital inicial guardado exitosamente');
+            } else {
+                alert('Por favor ingrese un valor válido para el capital inicial');
+            }
+        }
+
+        // Función para guardar el nombre de usuario
+        function saveUsername() {
+            const username = document.getElementById('username').value;
+            if (username && username.trim() !== '') {
+                localStorage.setItem('username', username);
+                alert('Nombre de usuario guardado exitosamente');
+            } else {
+                alert('Por favor ingrese un nombre de usuario válido');
+            }
+        }
+
+        // Event Listeners
+        document.querySelectorAll('input[name="theme"]').forEach(radio => {
+            radio.addEventListener('change', saveSettings);
+        });
+
+        document.getElementById('save-goal').addEventListener('click', saveSettings);
+        document.getElementById('save-capital').addEventListener('click', saveInitialCapital);
+        document.getElementById('save-username').addEventListener('click', saveUsername);
+
+        // Cargar configuración al iniciar
+        loadSettings();
+    </script>
+</body>
+</html>

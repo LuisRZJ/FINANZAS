@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planificador de Metas Financieras</title>
+    <meta name="theme-color" content="#2563eb">
+    <link rel="icon" href="../pwa/logo-app.png">
+
+    <!-- Estilos del proyecto -->
+    <link rel="stylesheet" href="/styles.css">
+
+    <!-- Fuente Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #3498db;
+            --secondary: #2ecc71;
+            --accent: #e74c3c;
+            --light: #f9f9f9;
+            --dark: #333;
+            --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Make page a column flex container so footer can stay at the bottom */
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            color: var(--dark);
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            /* allow the main container to grow so footer is pushed to the bottom */
+            flex: 1 0 auto;
+        }
+        
+        header {
+            /* Use grid to reserve a left column for the back button and center the title
+               without overlap. */
+            display: grid;
+            grid-template-columns: auto 1fr;
+            align-items: center;
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            position: relative;
+        }
+
+        /* Inner wrapper holds title and description and centers them in the second column */
+        .header-inner {
+            grid-column: 2 / 3;
+            text-align: center;
+        }
+        
+        h1 {
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+        
+        .description {
+            color: #666;
+            font-size: 1.1rem;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: var(--shadow);
+        }
+        .goal-subtitle {
+            margin-top: 10px;
+            color: var(--primary);
+            font-weight: 600;
+            font-size: 1.05rem;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #444;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        .results {
+            display: none;
+            background-color: #eaf7ff;
+            border-left: 4px solid var(--primary);
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 5px;
+        }
+        
+        .results h3 {
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+        
+        .result-item {
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .result-value {
+            font-weight: 600;
+            color: var(--secondary);
+        }
+        
+        footer {
+            text-align: center;
+            /* keep visual spacing but allow footer to stick to bottom */
+            margin-top: 40px;
+            color: #777;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+            box-sizing: border-box;
+            /* compensate body padding so footer can appear full-bleed */
+            width: calc(100% + 40px);
+            margin-left: -20px;
+            padding: 12px 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .results { font-size: 14px; }
+        }
+        /* Botón para volver a la página de utilidades */
+        .back-btn {
+            display: inline-block;
+            background-color: var(--primary);
+            color: #fff;
+            padding: 8px 14px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 700;
+            transition: background 0.2s ease, transform 0.08s ease;
+            z-index: 50;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+            grid-column: 1 / 2;
+            justify-self: start;
+        }
+        .back-btn:active { transform: translateY(1px); }
+        .back-btn:hover { background-color: #2b86c8; }
+
+        /* Ajuste para pantallas pequeñas: colocar el botón dentro del flujo encima del contenido
+           y evitar solapamientos. También reducimos el padding horizontal del header. */
+        @media (max-width: 600px) {
+            header { grid-template-columns: 1fr; padding: 18px 20px; }
+            .back-btn {
+                grid-column: auto;
+                justify-self: start;
+                margin-bottom: 12px;
+            }
+            .header-inner { grid-column: auto; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Planificador de Metas Financieras</h1>
+            <p class="description">Calcula cuánto tiempo te tomará alcanzar tus metas basado en tu ritmo de ahorro actual</p>
+            <!-- Botón estratégico para volver a Utilidades -->
+            <br><a class="back-btn" href="../utilidades.html" title="Volver a Utilidades">← Volver a Utilidades</a>
+        </header>
+        
+        <div class="card">
+            <h2>Registrar Nueva Meta</h2>
+            <form id="goal-form">
+                <div class="form-group">
+                    <label for="goal-name">Nombre de la meta</label>
+                    <input type="text" id="goal-name" placeholder="Ej. Viaje a Europa, Carro nuevo, etc." required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="goal-amount">Costo total ($)</label>
+                    <input type="number" id="goal-amount" min="1" placeholder="¿Cuánto cuesta?" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="saving-amount">Cantidad a ahorrar por periodo ($)</label>
+                    <input type="number" id="saving-amount" min="1" placeholder="¿Cuánto puedes ahorrar regularmente?" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="saving-frequency">Frecuencia de ahorro</label>
+                    <select id="saving-frequency" required>
+                        <option value="diario">Diario</option>
+                        <option value="semanal" selected>Semanal</option>
+                        <option value="quincenal">Quincenal</option>
+                        <option value="trimestral">Trimestral</option>
+                        <option value="semestral">Semestral</option>
+                        <option value="mensual">Mensual</option>
+                        <option value="anual">Anual</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="initial-saving">Ahorro inicial (opcional)</label>
+                    <input type="number" id="initial-saving" min="0" placeholder="¿Ya tienes algo ahorrado?">
+                </div>
+                
+                <button type="submit">Calcular Tiempo para la Meta</button>
+            </form>
+            
+            <div class="results" id="results">
+                <h3>Resultados de tu meta</h3>
+                <div id="error-message" style="display:none;color:var(--accent);margin-bottom:12px;font-weight:600;"></div>
+                <h4 id="name-subtitle" class="goal-subtitle" style="display:none;"></h4>
+                
+                <div class="result-item">
+                    <span>Tiempo estimado:</span>
+                    <span class="result-value" id="time-result"></span>
+                </div>
+                <div class="result-item">
+                    <span>Fecha estimada de logro:</span>
+                    <span class="result-value" id="date-result"></span>
+                </div>
+                <div class="result-item">
+                    <span>Total de periodos de ahorro:</span>
+                    <span class="result-value" id="periods-result"></span>
+                </div>
+                <div class="result-item">
+                    <span>Cantidad total a ahorrar:</span>
+                    <span class="result-value" id="total-saving"></span>
+                </div>
+            </div>
+        </div>
+        
+       
+    </div>
+
+    <footer>
+        <p>Versión: <span id="appVersion"></span> | Última Actualización: <span id="appDate"></span></p>
+    </footer>
+    
+    <!-- footer scripts -->
+    <script src="/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const appVersionElement = document.getElementById('appVersion');
+            const appDateElement = document.getElementById('appDate');
+            if (typeof PAGE_VERSION !== 'undefined') {
+                appVersionElement.textContent = PAGE_VERSION;
+            }
+            if (typeof ACT_DATE !== 'undefined') {
+                appDateElement.textContent = ACT_DATE;
+            }
+        });
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const goalForm = document.getElementById('goal-form');
+            const resultsDiv = document.getElementById('results');
+            const timeResult = document.getElementById('time-result');
+            const dateResult = document.getElementById('date-result');
+            const periodsResult = document.getElementById('periods-result');
+            const totalSaving = document.getElementById('total-saving');
+            const nameSubtitle = document.getElementById('name-subtitle');
+
+            goalForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                    const goalAmount = parseFloat(document.getElementById('goal-amount').value);
+                    const savingAmount = parseFloat(document.getElementById('saving-amount').value);
+                    const savingFrequency = document.getElementById('saving-frequency').value;
+                    const initialSaving = parseFloat(document.getElementById('initial-saving').value);
+                    const errorMessage = document.getElementById('error-message');
+                    const resultItems = resultsDiv.querySelectorAll('.result-item');
+
+                    // reset UI
+                    errorMessage.style.display = 'none';
+                    resultItems.forEach(it => it.style.display = 'flex');
+                    resultsDiv.style.display = 'none';
+                    nameSubtitle.style.display = 'none';
+
+                    // Normalize initialSaving (treat empty as 0)
+                    const initSave = Number.isFinite(initialSaving) ? initialSaving : 0;
+
+                // Validaciones
+                if (!Number.isFinite(goalAmount) || goalAmount <= 0) {
+                    errorMessage.textContent = 'Introduce un Costo total válido mayor que 0.';
+                    errorMessage.style.display = 'block';
+                    resultItems.forEach(it => it.style.display = 'none');
+                    resultsDiv.style.display = 'block';
+                    return;
+                }
+
+                if (!Number.isFinite(savingAmount) || savingAmount <= 0) {
+                    errorMessage.textContent = 'La cantidad de ahorro por periodo debe ser mayor a cero y válida.';
+                    errorMessage.style.display = 'block';
+                    resultItems.forEach(it => it.style.display = 'none');
+                    resultsDiv.style.display = 'block';
+                    return;
+                }
+
+                if (initSave < 0 || !Number.isFinite(initSave)) {
+                    errorMessage.textContent = 'Introduce un Ahorro inicial válido (0 o mayor).';
+                    errorMessage.style.display = 'block';
+                    resultItems.forEach(it => it.style.display = 'none');
+                    resultsDiv.style.display = 'block';
+                    return;
+                }
+
+                // Calcular tiempo necesario
+                const amountNeeded = goalAmount - initSave;
+                // Si ya se alcanzó la meta
+                if (amountNeeded <= 0) {
+                    const today = new Date();
+                    // Mostrar resultados indicando que la meta ya está alcanzada
+                    const goalNameValue = document.getElementById('goal-name').value.trim();
+                    if (goalNameValue) {
+                        nameSubtitle.textContent = goalNameValue;
+                        nameSubtitle.style.display = 'block';
+                    }
+                    timeResult.textContent = '¡Meta alcanzada!';
+                    dateResult.textContent = formatDate(today);
+                    periodsResult.textContent = 0;
+                    totalSaving.textContent = `$${goalAmount.toFixed(2)}`;
+                    resultsDiv.style.display = 'block';
+                    return;
+                }
+
+                const periodsNeeded = Math.ceil(amountNeeded / savingAmount);
+
+                // Calcular fecha estimada
+                const today = new Date();
+                let estimatedDate = new Date(today);
+
+                switch(savingFrequency) {
+                    case 'diario':
+                        estimatedDate.setDate(today.getDate() + periodsNeeded);
+                        break;
+                    case 'semanal':
+                        estimatedDate.setDate(today.getDate() + (periodsNeeded * 7));
+                        break;
+                    case 'quincenal':
+                        estimatedDate.setDate(today.getDate() + (periodsNeeded * 15));
+                        break;
+                    case 'trimestral':
+                        estimatedDate.setMonth(today.getMonth() + (periodsNeeded * 3));
+                        break;
+                    case 'semestral':
+                        estimatedDate.setMonth(today.getMonth() + (periodsNeeded * 6));
+                        break;
+                    case 'mensual':
+                        estimatedDate.setMonth(today.getMonth() + periodsNeeded);
+                        break;
+                    case 'anual':
+                        estimatedDate.setFullYear(today.getFullYear() + periodsNeeded);
+                        break;
+                }
+
+                // Formatear tiempo estimado
+                let timeText = '';
+                if (periodsNeeded < 1) {
+                    timeText = 'Menos de un periodo';
+                } else {
+                    timeText = `${periodsNeeded} ${getPeriodText(savingFrequency, periodsNeeded)}`;
+                }
+
+                // Mostrar resultados (sin opción de guardar)
+                timeResult.textContent = timeText;
+                // Mostrar el nombre como subtítulo en la tarjeta
+                const goalNameValue = document.getElementById('goal-name').value.trim();
+                if (goalNameValue) {
+                    nameSubtitle.textContent = goalNameValue;
+                    nameSubtitle.style.display = 'block';
+                } else {
+                    nameSubtitle.style.display = 'none';
+                }
+                dateResult.textContent = formatDate(estimatedDate);
+                periodsResult.textContent = periodsNeeded;
+                totalSaving.textContent = `$${goalAmount.toFixed(2)}`;
+
+                resultsDiv.style.display = 'block';
+            });
+
+            function getPeriodText(frequency, count) {
+                const texts = {
+                    'diario': count === 1 ? 'día' : 'días',
+                    'semanal': count === 1 ? 'semana' : 'semanas',
+                    'quincenal': count === 1 ? 'quincena' : 'quincenas',
+                    'trimestral': count === 1 ? 'trimestre' : 'trimestres',
+                    'semestral': count === 1 ? 'semestre' : 'semestres',
+                    'mensual': count === 1 ? 'mes' : 'meses',
+                    'anual': count === 1 ? 'año' : 'años'
+                };
+                return texts[frequency];
+            }
+
+            function formatDate(date) {
+                const options = { year: 'numeric', month: 'long', day: 'numeric' };
+                return date.toLocaleDateString('es-ES', options);
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <link rel="stylesheet" href="estilos.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Diferencia</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="Logo_app_trading-removebg-preview.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="Logo_app_trading-removebg-preview.png">
+    <style>
+        .resultado-positivo {
+            color: #2e7d32;
+            font-weight: bold;
+        }
+        .resultado-negativo {
+            color: #c62828;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Calculadora de Diferencia</h1>
+            <div id="datetime" class="datetime"></div>
+        </div>
+
+        <div class="form-group">
+            <label for="initialCapital">Cantidad A:</label>
+            <input type="number" id="initialCapital" step="0.01" required>
+        </div>
+
+        <div class="form-group">
+            <label for="finalCapital">Cantidad B:</label>
+            <input type="number" id="finalCapital" step="0.01" required>
+        </div>
+
+        <div class="form-group">
+            <button class="nav-btn" onclick="calculateDifference()">Calcular Diferencia</button>
+            <button class="nav-btn" onclick="window.location.href='estadisticas.html'">Volver a Estadísticas</button>
+        </div>
+
+        <div id="roiResult" class="card" style="display: none;">
+            <h3>Resultados</h3>
+            <div id="roiContent"></div>
+        </div>
+    </div>
+
+    <script src="javascript.js"></script>
+    <script>
+        // Función para obtener una cookie
+        function getCookie(name) {
+            const nameEQ = name + "=";
+            const ca = document.cookie.split(';');
+            for(let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+            }
+            return null;
+        }
+
+        // Cargar tema guardado
+        function loadTheme() {
+            const theme = getCookie('theme') || 'light';
+            document.body.className = theme;
+        }
+
+        // Actualizar fecha y hora
+        function updateDateTime() {
+            const now = new Date();
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            };
+            document.getElementById('datetime').textContent = now.toLocaleDateString('es-ES', options);
+        }
+
+        // Función para formatear números con separadores de miles
+        function formatearNumero(numero) {
+            return numero.toLocaleString('es-MX', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        // Función para calcular la diferencia
+        function calculateDifference() {
+            const cantidadA = parseFloat(document.getElementById('initialCapital').value);
+            const cantidadB = parseFloat(document.getElementById('finalCapital').value);
+            
+            if (isNaN(cantidadA) || isNaN(cantidadB)) {
+                alert('Por favor, ingresa valores numéricos válidos');
+                return;
+            }
+
+            const diferencia = cantidadB - cantidadA;
+            const porcentaje = (diferencia / cantidadA) * 100;
+
+            const claseEstilo = diferencia >= 0 ? 'resultado-positivo' : 'resultado-negativo';
+            const simbolo = diferencia >= 0 ? '+' : '';
+
+            const resultado = document.getElementById('roiContent');
+            resultado.innerHTML = `
+                <p>Diferencia absoluta: <span class="${claseEstilo}">${simbolo}${formatearNumero(diferencia)}</span></p>
+                <p>Diferencia porcentual: <span class="${claseEstilo}">${simbolo}${formatearNumero(porcentaje)}%</span></p>
+            `;
+
+            document.getElementById('roiResult').style.display = 'block';
+        }
+
+        // Cargar tema y actualizar fecha/hora al iniciar
+        loadTheme();
+        setInterval(updateDateTime, 1000);
+        updateDateTime();
+    </script>
+</body>
+</html>

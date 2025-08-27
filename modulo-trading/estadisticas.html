@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <link rel="stylesheet" href="estilos.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backtesting - Estadísticas</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="Logo_app_trading-removebg-preview.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="Logo_app_trading-removebg-preview.png">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Estadísticas</h1>
+            <div id="datetime" class="datetime"></div>
+        </div>
+
+        <div class="stats-sections">
+            <!-- Nueva Sección de Calificación de Rendimiento -->
+            <section class="stats-section rating-stats">
+                <h2>Calificación de Rendimiento</h2>
+                <div class="stat-content">
+                    <p id="performanceRatingSummary">Calculando rendimiento...</p>
+                    <!-- Barra de Progreso de Rendimiento -->
+                    <div class="performance-progress-bar-container">
+                        <div class="progress-bar-labels">
+                            <span>0%</span>
+                            <span>100%</span>
+                        </div>
+                        <div class="performance-progress-bar">
+                            <div id="performanceProgressBarFill" class="progress-bar-fill"></div>
+                            <div id="performanceProgressBarMarker" class="progress-bar-marker"></div>
+                        </div>
+                    </div>
+                    <h4>Criterios considerados:</h4>
+                    <!-- Contenedor para los criterios de calificación -->
+                    <div class="rating-criteria-grid">
+                        <div id="criterion-winrate" class="rating-criterion-item">
+                            <span class="criterion-label">Win Rate:</span>
+                            <span class="criterion-value">-</span>
+                            <span class="criterion-score"></span>
+                        </div>
+                        <div id="criterion-pnl" class="rating-criterion-item">
+                            <span class="criterion-label">PNL Final:</span>
+                            <span class="criterion-value">-</span>
+                            <span class="criterion-score"></span>
+                        </div>
+                        <div id="criterion-drawdown" class="rating-criterion-item">
+                            <span class="criterion-label">Drawdown Máximo:</span>
+                            <span class="criterion-value">-</span>
+                            <span class="criterion-score"></span>
+                        </div>
+                        <div id="criterion-ratio" class="rating-criterion-item">
+                            <span class="criterion-label">Ratio Beneficio/Riesgo:</span>
+                            <span class="criterion-value">-</span>
+                            <span class="criterion-score"></span>
+                        </div>
+                        <div id="criterion-avgpips" class="rating-criterion-item">
+                            <span class="criterion-label">Promedio Pips por Trade:</span>
+                            <span class="criterion-value">-</span>
+                            <span class="criterion-score"></span>
+                        </div>
+                        <!-- Nuevo Criterio: Promedio Ganancia (MXN) -->
+                        <div id="criterion-avgprofit" class="rating-criterion-item">
+                            <span class="criterion-label">Promedio Ganancia (MXN):</span>
+                            <span class="criterion-value">-</span>
+                            <span class="criterion-score"></span>
+                        </div>
+                    </div>
+                    <!-- Mensaje informativo de umbrales -->
+                    <div class="roi-calculation-hint">
+                        <button class="collapsible-header">Detalles de Criterios y Umbrales <span class="icon">▼</span></button>
+                        <div class="collapsible-content">
+                            <p>Umbral mínimo para sumar punto:</p>
+                            <ul>
+                                <li>Win Rate >= 60%</li>
+                                <li>PNL Final > 0</li>
+                                <li>Drawdown Máximo es 0 (si no hay pérdidas) O PNL Final > 0 y Drawdown Máximo (valor absoluto) &lt;= Pérdidas Totales (valor absoluto) (si hay pérdidas)</li>
+                                <li>Ratio Beneficio/Riesgo >= 150.00</li>
+                                <li>Promedio Pips por Trade > 5 pips</li>
+                                <li>Promedio Ganancia (MXN) > 10 MXN (solo si hay operaciones ganadoras).</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Sección de Estadísticas Generales -->
+            <section class="stats-section general-stats">
+                <h2>Estadísticas Generales</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">📊</div>
+                        <div class="stat-content">
+                            <h3>Total de Operaciones</h3>
+                            <div class="stat-value" id="totalTrades">-</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">✅</div>
+                        <div class="stat-content">
+                            <h3>Operaciones Ganadoras</h3>
+                            <div class="stat-value" id="winningTrades">-</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">❌</div>
+                        <div class="stat-content">
+                            <h3>Operaciones Perdedoras</h3>
+                            <div class="stat-value" id="losingTrades">-</div>
+                        </div>
+                    </div>
+                    <!-- Nueva tarjeta para Operaciones Break Even -->
+                    <div class="stat-card">
+                        <div class="stat-icon">🤝</div>
+                        <div class="stat-content">
+                            <h3>Operaciones Break Even</h3>
+                            <div class="stat-value" id="breakevenTrades">-</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📈</div>
+                        <div class="stat-content">
+                            <h3>Win Rate</h3>
+                            <div class="stat-value" id="winRate">-</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Sección de Estadísticas de Rendimiento -->
+            <section class="stats-section performance-stats">
+                <h2>Rendimiento</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">💰</div>
+                        <div class="stat-content">
+                            <h3>PNL Final</h3>
+                            <div class="stat-value" id="totalProfit">-</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📉</div>
+                        <div class="stat-content">
+                            <h3>Drawdown Máximo</h3>
+                            <div class="stat-value" id="maxDrawdown">-</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">💵</div>
+                        <div class="stat-content">
+                            <h3>Max. Ganancia (MXN)</h3>
+                            <div class="stat-value" id="maxProfit">-</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📏</div>
+                        <div class="stat-content">
+                            <h3>Promedio Ganancia (MXN)</h3>
+                            <div class="stat-value" id="avgProfit">-</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">⚖️</div>
+                        <div class="stat-content">
+                            <h3>Ratio Beneficio/Riesgo</h3>
+                            <div class="stat-value" id="profitRiskRatio">-</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📊</div>
+                        <div class="stat-content">
+                            <h3>PNL Pips</h3>
+                            <div class="stat-value" id="totalPips">-</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">➗</div>
+                        <div class="stat-content">
+                            <h3>Promedio Pips por Trade</h3>
+                            <div class="stat-value" id="avgPips">-</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Sección de Estrategias -->
+            <section class="stats-section strategies-stats">
+                <h2>Estrategias</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">💎</div>
+                        <div class="stat-content">
+                            <h3>Estrategia más Rentable</h3>
+                            <div class="stat-value" id="mostProfitableStrategy">-</div>
+                            <div class="stat-description">Estrategia que ha generado mayor beneficio neto</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📊</div>
+                        <div class="stat-content">
+                            <h3>Estrategia más Operada</h3>
+                            <div class="stat-value" id="mostUsedStrategy">-</div>
+                            <div class="stat-description">Estrategia con mayor número de operaciones</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🎯</div>
+                        <div class="stat-content">
+                            <h3>Estrategia más Fiable</h3>
+                            <div class="stat-value" id="mostReliableStrategy">-</div>
+                            <div class="stat-description">Estrategia con mayor porcentaje de aciertos</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Sección de Análisis de Tiempo y Horario -->
+            <section class="stats-section time-analysis-stats">
+                <h2>Análisis de Tiempo y Horario</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">⏳</div>
+                        <div class="stat-content">
+                            <h3>Holding Promedio</h3>
+                            <div class="stat-value" id="avgHolding">-</div>
+                            <div class="stat-description">Tiempo promedio que los trades permanecen abiertos</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🕒</div>
+                        <div class="stat-content">
+                            <h3>Horario Favorito</h3>
+                            <div class="stat-value" id="favoriteHour">-</div>
+                            <div class="stat-description">Franja horaria con mayor cantidad de operaciones abiertas</div>
+                        </div>
+                    </div>
+                    <div class="stat-card placeholder">
+                        <div class="stat-icon">🚧</div>
+                        <div class="stat-content">
+                            <h3>Métrica Adicional</h3>
+                            <div class="stat-value">Próximamente</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <button class="nav-btn btn-roi" onclick="window.location.href='calculadora-roi.html'">Calculadora de Diferencia</button>
+
+        <div class="navigation-buttons">
+            <button class="nav-btn" onclick="window.location.href='index.html'">Volver al Inicio</button>
+        </div>
+    </div>
+
+    <script src="javascript.js"></script>
+    <script>
+        // Función para obtener una cookie
+        function getCookie(name) {
+            const nameEQ = name + "=";
+            const ca = document.cookie.split(';');
+            for(let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+            }
+            return null;
+        }
+
+        // Cargar tema guardado
+        function loadTheme() {
+            const theme = getCookie('theme') || 'light';
+            document.body.className = theme;
+        }
+
+        // Actualizar fecha y hora
+        function updateDateTime() {
+            const now = new Date();
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            };
+            document.getElementById('datetime').textContent = now.toLocaleDateString('es-ES', options);
+        }
+
+        // Cargar tema y actualizar fecha/hora al iniciar
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTheme();
+            setInterval(updateDateTime, 1000);
+            updateDateTime();
+            renderStats(); // Asegurarnos de que las estadísticas se muestren al cargar la página
+        });
+    </script>
+</body>
+</html>

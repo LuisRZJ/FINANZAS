@@ -141,6 +141,7 @@ self.addEventListener('fetch', (event) => {
 // Actualización automática del Service Worker
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
-    self.skipWaiting();
+  console.log('[SW] Mensaje SKIP_WAITING recibido. Activando nuevo SW...');
+  self.skipWaiting();
   }
 });

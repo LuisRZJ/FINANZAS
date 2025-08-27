@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <link rel="stylesheet" href="estilos.css?v=2">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backtesting - Tabla de Trades</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="Logo_app_trading-removebg-preview.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="Logo_app_trading-removebg-preview.png">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Vista de Tabla de Trades</h1>
+            <div id="datetime" class="datetime"></div>
+        </div>
+        <div class="navigation-buttons">
+            <button class="nav-btn" onclick="window.location.href='diario.html'">Vista de tarjetas</button>
+            <button class="nav-btn" onclick="window.location.href='index.html'">Volver al Inicio</button>
+        </div>
+        <div id="tableContainer" style="margin-top: 36px; margin-bottom: 36px;">
+            <!-- La tabla se cargará dinámicamente -->
+        </div>
+    </div>
+    <script src="javascript.js"></script>
+    <script>
+        // Función para obtener una cookie
+        function getCookie(name) {
+            const nameEQ = name + "=";
+            const ca = document.cookie.split(';');
+            for(let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+            }
+            return null;
+        }
+
+        // Cargar tema guardado
+        function loadTheme() {
+            const theme = getCookie('theme') || 'light';
+            document.body.className = theme;
+        }
+
+        // Llama a loadTheme al cargar la página
+        loadTheme();
+
+        // Actualizar fecha y hora
+        function updateDateTime() {
+            const now = new Date();
+            const options = {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            };
+            document.getElementById('datetime').textContent = now.toLocaleDateString('es-ES', options);
+        }
+        setInterval(updateDateTime, 1000);
+        updateDateTime();
+
+        // Renderizar tabla de trades
+        function renderTradesTable() {
+            const trades = JSON.parse(localStorage.getItem('trades')) || [];
+            const tableContainer = document.getElementById('tableContainer');
+            if (trades.length === 0) {
+                tableContainer.innerHTML = '<p>No hay trades registrados aún.</p>';
+                return;
+            }
+            let html = '<div style="overflow-x:auto;">';
+            html += '<table class="trades-table">';
+            html += '<thead><tr>' +
+                '<th>Activo</th>' +
+                '<th>Dirección</th>' +
+                '<th>Lotes</th>' +
+                '<th>Resultado (MXN)</th>' +
+                '<th>Resultado (Pips)</th>' +
+                '<th>Fecha Apertura</th>' +
+                '<th>Fecha Cierre</th>' +
+                '<th>Precio Entrada</th>' +
+                '<th>Precio Salida</th>' +
+                '<th>Estrategia</th>' +
+                '<th>Notas</th>' +
+                '</tr></thead><tbody>';
+            trades.slice().reverse().forEach(trade => {
+                const formattedAsset = trade.asset.replace(/([A-Z]{3})([A-Z]{3})/, '$1/$2');
+                const isCompra = trade.direction === 'long';
+                const direction = isCompra ? 'COMPRA' : 'VENTA';
+                const directionClass = isCompra ? 'trade-direction-compra' : 'trade-direction-venta';
+                const openDate = new Date(trade.openTime);
+                const closeDate = new Date(trade.closeTime);
+                html += `<tr>` +
+                    `<td>${formattedAsset}</td>` +
+                    `<td class="${directionClass}">${direction}</td>` +
+                    `<td>${parseFloat(trade.lots).toFixed(3)}</td>` +
+                    `<td class="${parseFloat(trade.resultMxn) >= 0 ? 'positive' : 'negative'}">${parseFloat(trade.resultMxn).toFixed(2)}</td>` +
+                    `<td>${trade.pips ? parseFloat(trade.pips).toFixed(3) : '-'}</td>` +
+                    `<td>${openDate.toLocaleString('es-ES')}</td>` +
+                    `<td>${closeDate.toLocaleString('es-ES')}</td>` +
+                    `<td>${trade.openPrice}</td>` +
+                    `<td>${trade.closePrice}</td>` +
+                    `<td>${trade.strategy}</td>` +
+                    `<td>${trade.notes ? trade.notes : '-'}</td>` +
+                    `</tr>`;
+            });
+            html += '</tbody></table></div>';
+            tableContainer.innerHTML = html;
+        }
+        document.addEventListener('DOMContentLoaded', renderTradesTable);
+    </script>
+</body>
+</html>

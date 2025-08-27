@@ -5,8 +5,8 @@ const isSupported = () => {
 
 
 // variables de versión de página
-const PAGE_VERSION = "1.0.0"
-const ACT_DATE = "23/08/25"
+const PAGE_VERSION = "2.0.0"
+const ACT_DATE = "26/08/25"
 
 console.log("Página versión: " + PAGE_VERSION + ", actualizada por ultima vez el: " + ACT_DATE)
 
@@ -69,39 +69,85 @@ const registerServiceWorker = async () => {
   if (!isSupported()) {
     log('Service Worker no soportado en este navegador', 'warn');
     showNotification('Tu navegador no soporta todas las funciones PWA', 'warning');
-    return;
+    return null;
   }
-  
+
+  // Service Workers sólo funcionan en contextos seguros (https) o localhost.
+  // También evitamos intentar registrar cuando se abre el archivo vía file://
+  if (location.protocol === 'file:') {
+    log('Abierto vía file:// — no se registrará el Service Worker en este entorno', 'warn');
+    // No mostramos notificación para evitar mensajes de error molestos al usuario
+    return null;
+  }
+
+  if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+    log('Contexto inseguro — omitiendo registro del Service Worker', 'warn');
+    return null;
+  }
+
   try {
-    const registration = await navigator.serviceWorker.register('/pwa/service-worker.js');
+    // Resolver la URL del service worker respecto al origen para evitar problemas
+    // con rutas relativas en páginas anidadas.
+    let swUrl;
+    try {
+      swUrl = new URL('/pwa/service-worker.js', location.origin).href;
+    } catch (e) {
+      // Fallback razonable
+      swUrl = '/pwa/service-worker.js';
+    }
+
+    // Registrar el Service Worker y pedir que controle toda la raíz (o la que corresponda)
+    const registration = await navigator.serviceWorker.register(swUrl, { scope: '/' });
     log('Service Worker registrado exitosamente', 'info');
     
     // Escuchar actualizaciones
     registration.addEventListener('updatefound', () => {
       const newWorker = registration.installing;
+      if (!newWorker) return;
       newWorker.addEventListener('statechange', () => {
         if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
           log('Nueva versión disponible', 'info');
-          showNotification('Nueva versión disponible. Actualizar ahora?', 'info');
-          
-          // Opcional: auto-actualizar
-          setTimeout(() => {
-            newWorker.postMessage({ type: 'SKIP_WAITING' });
-            window.location.reload();
-          }, 5000);
+          showNotification('Nueva versión disponible. Actualizando...', 'info');
+
+          // Pedir al worker instalado que active inmediatamente y recargar
+          newWorker.postMessage({ type: 'SKIP_WAITING' });
         }
       });
     });
+
+    // Si ya hay un worker en estado 'waiting' (actualización pendiente), forzarlo
+    if (registration.waiting) {
+      log('Worker en estado waiting detectado; activando actualización', 'info');
+      registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+    }
     
     // Verificar estado del Service Worker
     if (registration.active) {
       log('Service Worker activo', 'info');
     }
+
+    // Escuchar mensaje desde el Service Worker para recargar cuando sea seguro
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      log('Controlador del Service Worker cambiado — recargando página', 'info');
+      window.location.reload();
+    });
     
+    // Forzar comprobación de nuevas versiones tras el registro (útil en desarrollo)
+    try {
+      registration.update();
+      log('Comprobando actualizaciones del Service Worker...', 'info');
+    } catch (e) {
+      log(`No se pudo forzar update del SW: ${e.message}`, 'warn');
+    }
+
     return registration;
   } catch (error) {
-    log(`Error al registrar Service Worker: ${error.message}`, 'error');
-    showNotification('Error al instalar funciones offline', 'error');
+  // Mostrar un mensaje menos alarmante: fallos aquí son comunes en entornos
+  // no seguros o cuando el archivo no existe. Logueamos el error para depuración
+  // pero evitamos asustar al usuario con un mensaje crítico.
+  log(`Error al registrar Service Worker: ${error.message}`, 'error');
+  showNotification('No fue posible activar las funciones offline en este entorno (no afecta al uso)', 'warning');
+  return null;
   }
 };
 
@@ -159,6 +205,7 @@ const handleInstallPrompt = () => {
 // Detectar estado de conexión
 const handleConnectionStatus = () => {
   const updateConnectionStatus = () => {
+    const wasOffline = isOffline;
     isOffline = !navigator.onLine;
     
     if (isOffline) {
@@ -167,7 +214,9 @@ const handleConnectionStatus = () => {
       document.body.classList.add('offline');
     } else {
       log('Conexión restaurada', 'info');
-      showNotification('Conexión a internet restaurada', 'success');
+      if (wasOffline) {
+        showNotification('Conexión a internet restaurada', 'success');
+      }
       document.body.classList.remove('offline');
     }
   };

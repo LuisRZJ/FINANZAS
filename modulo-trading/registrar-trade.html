@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <link rel="stylesheet" href="estilos.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backtesting - Registrar Trade</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="Logo_app_trading-removebg-preview.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="Logo_app_trading-removebg-preview.png">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Registrar Trade</h1>
+            <div id="datetime" class="datetime"></div>
+        </div>
+
+        <form id="tradeForm">
+            <div class="form-group">
+                <label for="asset">Símbolo:</label>
+                <select id="asset" required>
+                    <option value="EURUSD">EUR/USD</option>
+                    <option value="GBPUSD">GBP/USD</option>
+                    <option value="USDJPY">USD/JPY</option>
+                    <option value="AUDUSD">AUD/USD</option>
+                    <option value="USDCAD">USD/CAD</option>
+                    <option value="NZDUSD">NZD/USD</option>
+                    <option value="USDCHF">USD/CHF</option>
+                    <option value="EURGBP">EUR/GBP</option>
+                    <option value="EURJPY">EUR/JPY</option>
+                    <option value="GBPJPY">GBP/JPY</option>
+                    <option value="USDMXN">USD/MXN</option>
+                    <option value="EURMXN">EUR/MXN</option>
+                    <option value="EURCHF">EUR/CHF</option>
+                    <option value="AUDJPY">AUD/JPY</option>
+                    <option value="AUDNZD">AUD/NZD</option>
+                    <option value="AUDCAD">AUD/CAD</option>
+                    <option value="AUDCHF">AUD/CHF</option>
+                    <option value="CADCHF">CAD/CHF</option>
+                    <option value="CADJPY">CAD/JPY</option>
+                    <option value="CHFJPY">CHF/JPY</option>
+                    <option value="EURAUD">EUR/AUD</option>
+                    <option value="EURCAD">EUR/CAD</option>
+                    <option value="EURNZD">EUR/NZD</option>
+                    <option value="GBPAUD">GBP/AUD</option>
+                    <option value="GBPCAD">GBP/CAD</option>
+                    <option value="GBPNZD">GBP/NZD</option>
+                    <option value="NZDCAD">NZD/CAD</option>
+                    <option value="NZDCHF">NZD/CHF</option>
+                    <option value="NZDJPY">NZD/JPY</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="openTime">Fecha de Apertura:</label>
+                <input type="datetime-local" id="openTime" required>
+            </div>
+
+            <div class="form-group">
+                <label for="closeTime">Fecha de Cierre:</label>
+                <input type="datetime-local" id="closeTime" required>
+            </div>
+
+            <div class="form-group">
+                <label for="direction">Dirección:</label>
+                <select id="direction" required>
+                    <option value="long">Compra</option>
+                    <option value="short">Venta</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="openPrice">Precio de Entrada:</label>
+                <input type="number" id="openPrice" step="0.000001" required>
+            </div>
+
+            <div class="form-group">
+                <label for="closePrice">Precio de Salida:</label>
+                <input type="number" id="closePrice" step="0.000001" required>
+            </div>
+
+            <div class="form-group">
+                <label for="lots">Tamaño (Lotes):</label>
+                <input type="number" id="lots" step="0.001" min="0.001" required>
+            </div>
+
+            <div class="form-group">
+                <label for="resultMxn">Resultado (MXN):</label>
+                <input type="number" id="resultMxn" step="0.01" required>
+            </div>
+
+            <div class="form-group">
+                <label for="pips">Resultado (Pips):</label>
+                <input type="number" id="pips" name="pips" step="0.001" min="-999.999" max="999.999" pattern="^-?\d{1,3}(\.\d{1,3})?$" required placeholder="Ej: 25.500 o -12.345">
+            </div>
+
+            <div class="form-group">
+                <label for="strategy">Estrategia:</label>
+                <select id="strategy" required>
+                    <option value="Script CCI">Script CCI</option>
+                    <option value="Script RSI">Script RSI</option>
+                    <option value="Script MACD">Script MACD</option>
+                    <option value="Script AO">Script AO</option>
+                    <option value="Script TII">Script TII</option>
+                    <option value="Script DeMarker">Script DeMarker</option>
+                    <option value="Script Estocastico">Script Estocastico</option>
+                    <option value="Script Cruce de MMs">Script Cruce de MMs</option>
+                    <option value="Script SAR">Script SAR</option>
+                    <option value="Script BMSB">Script BMSB</option>
+                    <option value="Script CDM-RSI">Script CDM-RSI</option>
+                    <option value="Script EMA Grupos">Script EMA Grupos</option>
+                    <option value="Script FCT">Script FCT</option>
+                    <option value="Señales app">Señales app</option>
+                    <option value="Análisis técnico">Análisis técnico</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="notes">Notas:</label>
+                <textarea id="notes" rows="4" maxlength="234"></textarea>
+                <div id="notesCounter" style="text-align:right; font-size:0.9em; color:#666;">234 caracteres restantes</div>
+            </div>
+
+            <div class="navigation-buttons">
+                <button type="submit" class="nav-btn">Guardar Trade</button>
+                <button type="button" class="nav-btn" onclick="window.location.href='index.html'">Volver al Inicio</button>
+            </div>
+        </form>
+    </div>
+
+    <script src="javascript.js"></script>
+    <script>
+        // Función para obtener una cookie
+        function getCookie(name) {
+            const nameEQ = name + "=";
+            const ca = document.cookie.split(';');
+            for(let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+            }
+            return null;
+        }
+
+        // Cargar tema guardado
+        function loadTheme() {
+            const theme = getCookie('theme') || 'light';
+            document.body.className = theme;
+        }
+
+        // Actualizar fecha y hora
+        function updateDateTime() {
+            const now = new Date();
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            };
+            document.getElementById('datetime').textContent = now.toLocaleDateString('es-ES', options);
+        }
+
+        // Event listener para el formulario
+        document.getElementById('tradeForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            addTrade();
+            // Limpiar todos los campos, incluyendo pips
+            if (typeof clearForm === 'function') {
+                clearForm();
+            } else {
+                document.getElementById('pips').value = '';
+            }
+        });
+
+        // Cargar tema y actualizar fecha/hora al iniciar
+        loadTheme();
+        setInterval(updateDateTime, 1000);
+        updateDateTime();
+
+        // Contador de caracteres para notas
+        const notes = document.getElementById('notes');
+        const notesCounter = document.getElementById('notesCounter');
+        const maxNotesLength = 234;
+        notes.addEventListener('input', function() {
+            const remaining = maxNotesLength - notes.value.length;
+            notesCounter.textContent = `${remaining} caracteres restantes`;
+        });
+    </script>
+</body>
+</html>

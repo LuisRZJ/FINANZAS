@@ -23,72 +23,55 @@
     
 
 </head>
+
 <body>
-    <a href="index.html" class="back-button">
-        <i class="fas fa-arrow-left"></i>
-        Volver al inicio
-    </a>
-    
-    <div class="utilities-container">
-        <div class="utilities-header">
-            <h1>Utilidades</h1>
-            <p>Herramientas y recursos adicionales para potenciar tu gestión financiera</p>
-        </div>
-        <!--
-        <div class="utilities-grid">
-            <div class="utility-card">
-                <i class="fas fa-calculator utility-icon"></i>
-                <h3 class="utility-title">Calculadora de Intereses</h3>
-                <p class="utility-description">Calcula intereses simples y compuestos para tus inversiones y préstamos.</p>
-                <button class="btn-utility" onclick="window.location.href='#'">
-                    <i class="fas fa-play"></i>
-                    Usar Calculadora
-                </button>
-            </div>-->
-            <!--
-            <div class="utility-card">
-                <i class="fas fa-chart-pie utility-icon"></i>
-                <h3 class="utility-title">Analizador de Portafolio</h3>
-                <p class="utility-description">Analiza la diversificación y rendimiento de tu portafolio de inversiones.</p>
-                <button class="btn-utility" onclick="window.location.href='#'">
-                    <i class="fas fa-chart-bar"></i>
-                    Analizar Portafolio
-                </button>
-            </div>-->
-            
-            <div class="utility-card">
-                <i class="fas fa-exchange-alt utility-icon"></i>
-                <h3 class="utility-title">Convertidor de BTC</h3>
-                <p class="utility-description">Convierte MXN a BTC y viceversa con diferentes opciones de visualización.</p>
-                <button class="btn-utility" onclick="window.location.href='/conversor-btc.html'">
-                    <i class="fa-brands fa-bitcoin"></i>
-                    Convertir BTC
-                </button>
+    <header>
+        <h1>FTI</h1>
+        <p>Finanzas, Trading e Inversiones</p>
+    </header>
+
+    <main>
+        <section class="modules">
+            <h3>Utilidades y Herramientas</h3>
+            <div class="module-grid">
+                <div class="module utility">
+                    <i class="fas fa-exchange-alt icon"></i>
+                    <h4>Convertidor de BTC</h4>
+                    <p>Convierte MXN a BTC y viceversa con diferentes opciones de visualización.</p>
+                    <a href="/modulo-utilidades/conversor-btc.html" class="btn">Convertir BTC</a>
+                </div>
+                <!-- Ejemplo de utilidades futuras -->
+                <div class="module utility">
+                    <i class="fas fa-money-bill-wave icon"></i>
+                    <h4>Calculadora de Intereses</h4>
+                    <p>Calcula intereses simples y compuestos para tus inversiones y préstamos.</p>
+                    <a href="modulo-utilidades/intereses.html" class="btn" style="margin-top: 0.5rem;">Calculadora de Intereses</a>
+                </div>
+                <div class="module utility">
+                    <i class="fas fa-bullseye icon"></i>
+                    <h4>Calculadora de Metas</h4>
+                    <p>Establece y calcula cuánto necesitas ahorrar para alcanzar tus metas financieras.</p>
+                    <a href="modulo-utilidades/metas.html" class="btn">Planificador de Metas</a>
+                </div>
             </div>
-            <!--
-            <div class="utility-card">
-                <i class="fas fa-bullseye utility-icon"></i>
-                <h3 class="utility-title">Calculadora de Metas</h3>
-                <p class="utility-description">Establece y calcula cuánto necesitas ahorrar para alcanzar tus metas financieras.</p>
-                <button class="btn-utility" onclick="window.location.href='#'">
-                    <i class="fas fa-target"></i>
-                    Calcular Meta
-                </button>
-            </div>-->
-        </div>
-    </div>
-    
+            <div style="margin-top:2rem;">
+                <a href="index.html" class="btn back-btn">
+                    <i class="fas fa-arrow-left"></i> Volver al inicio
+                </a>
+            </div>
+        </section>
+    </main>
+
     <footer>
         <p>Versión: <span id="appVersion"></span> | Última Actualización: <span id="appDate"></span></p>
     </footer>
-    
+
     <!-- Scripts -->
     <script src="app.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const appVersionElement = document.getElementById('appVersion');
             const appDateElement = document.getElementById('appDate');
-
             if (typeof PAGE_VERSION !== 'undefined') {
                 appVersionElement.textContent = PAGE_VERSION;
             }

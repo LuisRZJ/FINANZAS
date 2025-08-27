@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backtesting - Depósito/Retiro</title>
+    <link rel="stylesheet" href="estilos.css">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="Logo_app_trading-removebg-preview.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="Logo_app_trading-removebg-preview.png">
+</head>
+<body class="deposito-retiro-page">
+    <!-- El botón del menú de navegación se ocultará a través de CSS en esta página -->
+    <!-- <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+    <div class="menu-overlay"></div>
+    <nav class="nav-menu">
+        <div class="menu-items">
+            <a href="index.html">Inicio</a>
+            <a href="registrar-trade.html">Registrar Trade</a>
+            <a href="diario.html">Diario</a>
+            <a href="estadisticas.html">Estadísticas</a>
+            <a href="plan-trading.html">Plan de Trading</a>
+            <a href="almacenamiento.html">Almacenamiento</a>
+            <a href="ajustes.html">Ajustes</a>
+            <a href="deposito-retiro.html" class="active">Deposito/Retiro</a>
+        </div>
+    </nav> -->
+
+    <div class="container">
+        <h1>Registro de Depósito/Retiro</h1>
+        <button class="back-to-home" onclick="window.location.href='index.html'">Volver al Inicio</button>
+
+        <div class="form-container modern-card">
+            <h2>Nuevo Movimiento</h2>
+            <label for="movement-type">Tipo de Movimiento:</label>
+            <select id="movement-type">
+                <option value="deposito">Depósito</option>
+                <option value="retiro">Retiro</option>
+            </select>
+
+            <label for="movement-amount">Monto:</label>
+            <input type="number" id="movement-amount" step="0.01" value="0.00">
+
+            <button onclick="addMovement()">Registrar Movimiento</button>
+        </div>
+
+        <div class="movements-history modern-card">
+            <h2>Historial de Movimientos</h2>
+            <ul id="movements-list"></ul>
+        </div>
+    </div>
+
+    <script src="javascript.js"></script>
+    <script>
+        renderMovementsHistory(); // Cargar historial al cargar la página
+
+        // Función para obtener una cookie
+        function getCookie(name) {
+            const nameEQ = name + "=";
+            const ca = document.cookie.split(';');
+            for(let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+            }
+            return null;
+        }
+
+        // Cargar tema guardado
+        function loadTheme() {
+            const theme = getCookie('theme') || 'light';
+            document.body.className = theme;
+        }
+
+        // Cargar tema al iniciar
+        loadTheme();
+    </script>
+</body>
+</html> 

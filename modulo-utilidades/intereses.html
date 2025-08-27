@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Intereses</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="../pwa/logo-app.png">
+    <style>
+        .interest-container {
+            max-width: 500px;
+            margin: 2rem auto;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 16px rgba(37,99,235,0.08);
+            padding: 2rem;
+        }
+        .interest-container h2 {
+            color: #2563eb;
+            margin-bottom: 1rem;
+        }
+        .interest-container label {
+            font-weight: 500;
+            margin-top: 1rem;
+        }
+        .interest-container input, .interest-container select {
+            width: 100%;
+            padding: 0.5rem;
+            margin-top: 0.5rem;
+            margin-bottom: 1rem;
+            border-radius: 6px;
+            border: 1px solid #d1d5db;
+            font-size: 1rem;
+        }
+        .interest-container button {
+            background: #2563eb;
+            color: #fff;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 1rem;
+            box-shadow: 0 1px 4px rgba(37,99,235,0.07);
+            transition: background 0.18s, box-shadow 0.18s, transform 0.18s;
+        }
+        .interest-container button:hover {
+            background: #3b82f6;
+            box-shadow: 0 2px 8px rgba(59,130,246,0.13);
+            transform: translateY(-1px) scale(1.025);
+        }
+        .interest-container .result {
+            margin-top: 1.5rem;
+            background: #f3f4f6;
+            padding: 1rem;
+            border-radius: 8px;
+            color: #2563eb;
+            font-weight: 500;
+        }
+        .back-btn {
+            display: inline-block;
+            margin-top: 2rem;
+            background: #3b82f6;
+            color: #fff;
+            padding: 0.5rem 1.2rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            box-shadow: 0 2px 8px rgba(59,130,246,0.08);
+            transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+        }
+        .back-btn:hover {
+            background: #2563eb;
+            box-shadow: 0 4px 16px rgba(37,99,235,0.15);
+            transform: translateY(-2px) scale(1.04);
+        }
+
+        /* Añadido: separación visual más evidente entre las dos secciones */
+        .interest-container {
+            /* Mantener max-width y centrado pero usar grid para separar columnas */
+            max-width: 900px;
+            margin: 2rem auto;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 16px rgba(37,99,235,0.08);
+            padding: 1.5rem;
+
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 3.5rem; /* aumentado: espacio vertical notable entre secciones en móvil */
+        }
+
+        /* Añadir padding interno a cada sección para mayor separación interna */
+        .interest-section,
+        .compare-section {
+            padding: 0.75rem 0.5rem;
+            background: transparent; /* conservar apariencia, solo separar */
+            border-radius: 8px;
+        }
+
+        /* Asegurar separación extra entre el panel de resultados y la siguiente sección cuando esté apilada */
+        .interest-section .result {
+            margin-bottom: 1.75rem; /* espacio adicional que hace la separación claramente notable */
+        }
+
+        /* En pantallas más anchas colocamos las secciones lado a lado y añadimos un separador */
+        @media (min-width: 720px) {
+            .interest-container {
+                grid-template-columns: 1fr 1fr; /* dos columnas */
+                gap: 3.5rem; /* aumentado: espacio entre columnas */
+                padding: 2rem;
+            }
+
+            /* separador visual entre columnas */
+            .compare-section {
+                border-left: 1px solid #e5e7eb;
+                padding-left: 1.5rem; /* compensar el borde para separación del contenido */
+                margin-top: 0; /* asegurar alineación en escritorio */
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Calculadora de Intereses</h1>
+        <p>Calcula diferentes tipos de intereses y compara cantidades</p>
+    </header>
+    <main>
+        <div class="interest-container">
+            <div class="interest-section">
+                <h2>Calcula tu interés</h2>
+                <label for="tipoInteres">Tipo de interés:</label>
+                <select id="tipoInteres">
+                    <option value="simple">Interés Simple</option>
+                    <option value="compuesto">Interés Compuesto</option>
+                    <option value="efectivo">Interés Efectivo</option>
+                    <option value="nominal">Interés Nominal</option>
+                </select>
+                <label for="capital">Capital inicial:</label>
+                <input type="number" id="capital" min="0" step="any" placeholder="Ej: 1000">
+                <label for="tasa">Tasa de interés (% anual):</label>
+                <input type="number" id="tasa" min="0" step="any" placeholder="Ej: 5">
+                <label for="periodos">Número de períodos (años):</label>
+                <input type="number" id="periodos" min="1" step="1" placeholder="Ej: 3">
+                <button onclick="calcularInteres()">Calcular Interés</button>
+                <div class="result" id="resultadoInteres"></div>
+            </div>
+            
+            <div class="compare-section">
+                <h2>Comparar cantidades</h2>
+                <label for="cantidad1">Cantidad 1:</label>
+                <input type="number" id="cantidad1" min="0" step="any" placeholder="Ej: 1200">
+                <label for="cantidad2">Cantidad 2:</label>
+                <input type="number" id="cantidad2" min="0" step="any" placeholder="Ej: 1000">
+                <button onclick="calcularDiferencia()">Calcular Diferencia</button>
+                <div class="result" id="resultadoDiferencia"></div>
+                <a href="../utilidades.html" class="back-btn">← Volver a Utilidades</a>
+            </div>
+        </div>
+    </main>
+    <footer>
+        <p>Versión: <span id="appVersion"></span> | Última Actualización: <span id="appDate"></span></p>
+    </footer>
+    <script src="../app.js"></script>
+    <script>
+        // Mostrar versión y fecha en el pie de página
+        document.addEventListener('DOMContentLoaded', () => {
+            const appVersionElement = document.getElementById('appVersion');
+            const appDateElement = document.getElementById('appDate');
+            if (typeof PAGE_VERSION !== 'undefined') {
+                appVersionElement.textContent = PAGE_VERSION;
+            }
+            if (typeof ACT_DATE !== 'undefined') {
+                appDateElement.textContent = ACT_DATE;
+            }
+        });
+
+        function calcularInteres() {
+            const tipo = document.getElementById('tipoInteres').value;
+            const capital = parseFloat(document.getElementById('capital').value);
+            const tasa = parseFloat(document.getElementById('tasa').value) / 100;
+            const periodos = parseInt(document.getElementById('periodos').value);
+            let resultado = '';
+            if (isNaN(capital) || isNaN(tasa) || isNaN(periodos) || capital <= 0 || tasa < 0 || periodos <= 0) {
+                resultado = 'Por favor, ingresa valores válidos.';
+            } else {
+                let interes = 0, montoFinal = 0;
+                switch(tipo) {
+                    case 'simple':
+                        interes = capital * tasa * periodos;
+                        montoFinal = capital + interes;
+                        resultado = `Interés Simple: $${interes.toFixed(2)}<br>Monto final: $${montoFinal.toFixed(2)}`;
+                        break;
+                    case 'compuesto':
+                        montoFinal = capital * Math.pow(1 + tasa, periodos);
+                        interes = montoFinal - capital;
+                        resultado = `Interés Compuesto: $${interes.toFixed(2)}<br>Monto final: $${montoFinal.toFixed(2)}`;
+                        break;
+                    case 'efectivo':
+                        montoFinal = capital * Math.pow(1 + tasa, periodos);
+                        interes = montoFinal - capital;
+                        resultado = `Interivo Efectivo: $${interes.toFixed(2)}<br>Monto final: $${montoFinal.toFixed(2)}`;
+                        break;
+                    case 'nominal':
+                        // Nominal: tasa nominal anual, sin capitalización
+                        interes = capital * tasa * periodos;
+                        montoFinal = capital + interes;
+                        resultado = `Interés Nominal: $${interes.toFixed(2)}<br>Monto final: $${montoFinal.toFixed(2)}`;
+                        break;
+                    default:
+                        resultado = 'Tipo de interés no soportado.';
+                }
+            }
+            document.getElementById('resultadoInteres').innerHTML = resultado;
+        }
+        function calcularDiferencia() {
+            const cantidadInicial = parseFloat(document.getElementById('cantidad1').value);
+            const cantidadFinal = parseFloat(document.getElementById('cantidad2').value);
+            let resultado = '';
+            if (isNaN(cantidadInicial) || isNaN(cantidadFinal)) {
+                resultado = 'Por favor, ingresa ambas cantidades.';
+            } else {
+                const diferencia = cantidadFinal - cantidadInicial;
+                const porcentaje = cantidadInicial !== 0 ? (diferencia / cantidadInicial) * 100 : 0;
+                resultado = `Diferencia: $${diferencia.toFixed(2)}<br>Porcentaje: ${porcentaje.toFixed(2)}%`;
+            }
+            document.getElementById('resultadoDiferencia').innerHTML = resultado;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <link rel="stylesheet" href="estilos.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backtesting - Almacenamiento</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="Logo_app_trading-removebg-preview.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="Logo_app_trading-removebg-preview.png">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Almacenamiento</h1>
+            <div id="datetime" class="datetime"></div>
+        </div>
+
+        <div id="storageContainer" class="stats">
+            <!-- El contenido se cargará dinámicamente -->
+        </div>
+
+        <div class="form-group">
+            <button class="nav-btn" onclick="saveData()">Guardar Datos en Almacenamiento Local</button>
+        </div>
+
+        <div class="form-group">
+            <button class="nav-btn clear" onclick="clearData()">Eliminar Datos del Almacenamiento Local</button>
+        </div>
+
+        <div class="form-group">
+            <button class="nav-btn export" onclick="exportTrades()">Exportar Trades</button>
+        </div>
+
+        <div class="form-group">
+            <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importTrades(event)">
+            <button class="nav-btn import" onclick="document.getElementById('importFile').click()">Importar Trades</button>
+        </div>
+
+        <div class="navigation-buttons">
+            <button class="nav-btn" onclick="window.location.href='index.html'">Volver al Inicio</button>
+        </div>
+    </div>
+
+    <script src="javascript.js"></script>
+    <script>
+        // Función para obtener una cookie (restaurada)
+        function getCookie(name) {
+            const nameEQ = name + "=";
+            const ca = document.cookie.split(';');
+            for(let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+            }
+            return null;
+        }
+
+        // Cargar tema guardado (restaurada)
+        function loadTheme() {
+            const theme = getCookie('theme') || 'light';
+            document.body.className = theme;
+        }
+
+        // Actualizar fecha y hora (restaurada)
+        function updateDateTime() {
+            const now = new Date();
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            };
+            document.getElementById('datetime').textContent = now.toLocaleDateString('es-ES', options);
+        }
+
+        // Funciones de Importar y Exportar Trades (restauradas)
+        function importTrades(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const maxSize = 4.5 * 1024 * 1024; // 4.5MB para dejar margen
+            if (file.size > maxSize) {
+                alert('El archivo es demasiado grande. El tamaño máximo permitido es 4.5MB para asegurar compatibilidad con LocalStorage.');
+                event.target.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    // Validar y cargar trades
+                    if (data.hasOwnProperty('trades') && Array.isArray(data.trades)) {
+                        const jsonString = JSON.stringify(data.trades);
+                        const storageSize = jsonString.length * 2;
+                        const storageSizeMB = storageSize / (1024 * 1024);
+
+                        if (storageSizeMB > 4.5) {
+                             // Advertencia pero permitir importación parcial si los trades son el problema
+                            alert(`Advertencia: El archivo contiene demasiados trades (${data.trades.length}). El tamaño estimado de los trades (${storageSizeMB.toFixed(2)}MB) excede el límite seguro de LocalStorage (4.5MB). Se intentará importar el resto de los datos.`);
+                        } else {
+                             // Si los trades caben, intentar cargarlos
+                            localStorage.setItem('trades', jsonString);
+                        }
+                    } else {
+                        alert('El archivo no contiene un formato válido de trades o están ausentes.');
+                    }
+
+                    // Cargar capital inicial si existe
+                    if (data.hasOwnProperty('initialCapital') && data.initialCapital !== undefined) {
+                         localStorage.setItem('initialCapital', data.initialCapital);
+                    }
+
+                    // Cargar nombre de usuario si existe
+                    if (data.hasOwnProperty('username') && data.username !== undefined) {
+                         localStorage.setItem('username', data.username);
+                    }
+
+                    // Cargar movimientos de capital si existen
+                    if (data.hasOwnProperty('capitalMovements') && Array.isArray(data.capitalMovements)) {
+                         const movementsJsonString = JSON.stringify(data.capitalMovements);
+                         const movementsStorageSize = movementsJsonString.length * 2;
+                         const movementsStorageSizeMB = movementsStorageSize / (1024 * 1024);
+                         // No comprobamos límite aquí ya que la comprobación total se hace antes con file.size
+                         localStorage.setItem('capitalMovements', movementsJsonString);
+                    } else {
+                         // Si no hay movimientos en el archivo, asegurarse de que tampoco estén en LocalStorage
+                         localStorage.removeItem('capitalMovements');
+                    }
+                    
+                    // Confirmar importación general y actualizar vista
+                    if (confirm('¿Estás seguro de que deseas importar estos datos? Esto reemplazará los datos existentes (trades, capital inicial, usuario, movimientos).')) {
+                         // Los localStorage.setItem ya se hicieron condicionalmente arriba.
+                         alert('Datos importados exitosamente');
+                         renderStorageInfo(); // Actualizar información de almacenamiento mostrada
+                         // Opcional: Recargar la página para asegurar que todos los datos se muestren correctamente en todas partes
+                         // location.reload();
+                    } else {
+                         // Si el usuario cancela después de las comprobaciones, no hacer nada más.
+                         alert('Importación cancelada.');
+                    }
+
+
+                } catch (error) {
+                    if (error instanceof SyntaxError) {
+                        alert('Error: El archivo no es un JSON válido. Por favor, asegúrate de que el archivo fue exportado correctamente desde esta aplicación.');
+                    } else {
+                        alert('Error al importar los datos: ' + error.message);
+                    }
+                     // Limpiar el input de archivo en caso de error
+                    event.target.value = '';
+                }
+            };
+
+            reader.onerror = function() {
+                alert('Error al leer el archivo. Por favor, intenta nuevamente.');
+                event.target.value = '';
+            };
+
+            reader.readAsText(file);
+        }
+
+        function exportTrades() {
+            const trades = JSON.parse(localStorage.getItem('trades')) || [];
+            const initialCapital = localStorage.getItem('initialCapital');
+            const username = localStorage.getItem('username');
+            const capitalMovements = JSON.parse(localStorage.getItem('capitalMovements')) || []; // Obtener movimientos de capital
+            
+            // Incluir movimientos de capital en los datos a exportar
+            const exportData = {
+                trades: trades,
+                initialCapital: initialCapital,
+                username: username,
+                capitalMovements: capitalMovements // Añadir movimientos de capital aquí
+            };
+
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+
+            const exportFileDefaultName = `backtest_data_${new Date().toISOString().split('T')[0]}.json`;
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+        }
+
+        // Función para eliminar todos los datos (restaurada)
+        function clearData() {
+            if (confirm('¿Estás seguro de que deseas eliminar todos los datos? Esta acción no se puede deshacer.')) {
+                localStorage.clear();
+                alert('Todos los datos han sido eliminados');
+                renderStorageInfo(); 
+            }
+        }
+
+        // Función para renderizar la información de almacenamiento (restaurada y modificada)
+        function renderStorageInfo() {
+            const storageContainer = document.getElementById('storageContainer');
+            if (!storageContainer) return;
+
+            const trades = JSON.parse(localStorage.getItem('trades')) || [];
+            const total = trades.length;
+
+            // Calcular el uso de almacenamiento de trades
+            const jsonString = JSON.stringify(trades);
+            const storageUsed = jsonString.length * 2;
+            const storageUsedKB = (storageUsed / 1024).toFixed(2);
+            const storageUsedMB = (storageUsed / (1024 * 1024)).toFixed(4);
+
+            // Calcular el uso de almacenamiento del capital inicial
+            const initialCapital = localStorage.getItem('initialCapital');
+            const capitalStorageUsed = initialCapital ? initialCapital.length * 2 : 0;
+            const capitalStorageUsedKB = (capitalStorageUsed / 1024).toFixed(2);
+
+            // Calcular el uso de almacenamiento del nombre de usuario
+            const username = localStorage.getItem('username');
+            const usernameStorageUsed = username ? username.length * 2 : 0;
+            const usernameStorageUsedKB = (usernameStorageUsed / 1024).toFixed(2);
+
+            // Calcular el uso de almacenamiento de movimientos de capital
+            const movements = JSON.parse(localStorage.getItem('capitalMovements')) || [];
+            const movementsJsonString = JSON.stringify(movements);
+            const movementsStorageUsed = movementsJsonString.length * 2;
+            const movementsStorageUsedKB = (movementsStorageUsed / 1024).toFixed(2);
+
+            // Calcular el uso total de almacenamiento
+            const totalStorageUsedBytes = storageUsed + capitalStorageUsed + usernameStorageUsed + movementsStorageUsed;
+            const totalStorageUsedKB = (totalStorageUsedBytes / 1024).toFixed(2);
+            const totalStorageUsedMB = (totalStorageUsedBytes / (1024 * 1024)).toFixed(4);
+
+            // Calcular tamaño promedio por trade y estimación de trades restantes
+            const remainingSpace5MB = 5 * 1024 * 1024 - totalStorageUsedBytes;
+            const remainingSpace10MB = 10 * 1024 * 1024 - totalStorageUsedBytes;
+
+            const avgSizePerTrade = total > 0 ? storageUsed / total : 0;
+            const remainingTrades5MB = avgSizePerTrade > 0 ? Math.floor(remainingSpace5MB / avgSizePerTrade) : 0;
+            const remainingTrades10MB = avgSizePerTrade > 0 ? Math.floor(remainingSpace10MB / avgSizePerTrade) : 0;
+
+            // Calcular estimaciones basadas en uso real
+            const tradesPerYear = 600;
+            const yearsEstimate5MB = remainingTrades5MB > 0 ? Math.floor(remainingTrades5MB / tradesPerYear) : 0;
+            const yearsEstimate10MB = remainingTrades10MB > 0 ? Math.floor(remainingTrades10MB / tradesPerYear) : 0;
+
+            storageContainer.innerHTML = `
+                <div class="storage-info">
+                    <h3>Uso de Almacenamiento</h3>
+                    <div class="storage-details">
+                        <p>Has registrado un total de ${total} trades, lo que supone un uso de memoria de ${storageUsedKB} KB</p>
+                        ${initialCapital ? `<p>El capital inicial ocupa ${capitalStorageUsedKB} KB de almacenamiento</p>` : ''}
+                        ${username ? `<p>El nombre de usuario ocupa ${usernameStorageUsedKB} KB de almacenamiento</p>` : ''}
+                        <p>Tu historial de movimientos ocupa ${movementsStorageUsedKB} KB de almacenamiento</p>
+                        <p class="storage-limit-info">Uso total estimado: ${totalStorageUsedKB} KB (${totalStorageUsedMB} MB)</p>
+                        <p class="storage-limit-info">El límite de LocalStorage es aproximadamente 5-10 MB</p>
+                    </div>
+                    ${total > 0 && avgSizePerTrade > 0 ? `
+                        <div class="storage-limit-info">
+                            En base a un límite de 5MB y el tamaño promedio del registro (${(avgSizePerTrade / 1024).toFixed(2)} KB por trade), 
+                            se estima que esa capacidad te permita registrar un restante de ${remainingTrades5MB.toLocaleString()} trades.
+                        </div>
+                        <div class="storage-limit-info">
+                            Si el límite fuera de 10MB, podrías registrar aproximadamente ${remainingTrades10MB.toLocaleString()} trades adicionales.
+                        </div>
+                        <div class="storage-capacity-info">
+                            <strong>Capacidad a largo plazo:</strong>
+                            <ul>
+                                <li>Con el límite de 5MB: Podrías registrar aproximadamente ${yearsEstimate5MB} años más de operaciones (asumiendo 600 trades por año)</li>
+                                <li>Con el límite de 10MB: Podrías registrar aproximadamente ${yearsEstimate10MB} años más de operaciones</li>
+                            </ul>
+                        </div>
+                    ` : `<div class="storage-capacity-info"><strong>No hay suficientes datos de trades para estimar la capacidad futura.</strong></div>`}
+                </div>
+            `;
+        }
+
+        // Cargar tema y actualizar fecha/hora al iniciar
+        loadTheme();
+        setInterval(updateDateTime, 1000);
+        updateDateTime();
+
+        // Renderizar la información al cargar la página
+        renderStorageInfo();
+
+    </script>
+</body>
+</html>
