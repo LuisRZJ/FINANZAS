@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Inversiones</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Estilo para la barra de desplazamiento */
+        ::-webkit-scrollbar {
+            height: 8px;
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: #94a3b8;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f9fafb; /* bg-gray-50 */
+            color: #374151; /* text-gray-700 */
+        }
+        .card {
+            background-color: #ffffff; /* bg-white */
+            border-radius: 0.75rem; /* rounded-xl */
+            padding: 1.5rem; /* p-6 */
+            border: 1px solid #e5e7eb; /* border-gray-200 */
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        .form-input {
+            width: 100%;
+            background-color: #ffffff; /* bg-white */
+            border: 1px solid #d1d5db; /* border-gray-300 */
+            color: #374151; /* text-gray-700 */
+            border-radius: 0.5rem; /* rounded-lg */
+            padding: 0.75rem 1rem; /* px-4 py-3 */
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #3b82f6; /* focus:border-blue-500 */
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+        .btn {
+            background-color: #3b82f6; /* bg-blue-600 */
+            color: white;
+            font-weight: 600;
+            padding: 0.75rem 1.5rem; /* py-3 px-6 */
+            border-radius: 0.5rem; /* rounded-lg */
+            transition: background-color 0.2s;
+            width: 100%;
+        }
+        .btn:hover {
+            background-color: #2563eb; /* hover:bg-blue-700 */
+        }
+        .progress-bar-bg {
+            background-color: #e5e7eb; /* bg-gray-200 */
+        }
+        .progress-bar-fg {
+            background-color: #10b981; /* bg-green-500 */
+        }
+        .tag {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .tag-recovering {
+            background-color: #f59e0b; /* bg-amber-500 */
+            color: #78350f;
+        }
+        .tag-recovered {
+            background-color: #10b981; /* bg-green-500 */
+            color: #064e3b;
+        }
+        /* Estilos para las pestañas */
+        .tab-btn {
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            padding: 0.75rem 0.25rem;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #6b7280; /* text-gray-500 */
+            transition: color 0.2s, border-color 0.2s;
+        }
+        .tab-btn:hover {
+            color: #374151; /* text-gray-700 */
+        }
+        .tab-btn.active {
+            color: #3b82f6; /* text-blue-500 */
+            border-color: #3b82f6; /* border-blue-500 */
+        }
+        /* Estilos para el modal de confirmación */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 50;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 0.75rem;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .modal-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        .modal-btn {
+            flex: 1;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .modal-btn-cancel {
+            background-color: #e5e7eb;
+            color: #374151;
+        }
+        .modal-btn-cancel:hover {
+            background-color: #d1d5db;
+        }
+        .modal-btn-confirm {
+            background-color: #ef4444;
+            color: white;
+        }
+        .modal-btn-confirm:hover {
+            background-color: #dc2626;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container mx-auto p-4 md:p-8">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-800">Panel de Control de Inversiones</h1>
+            <p class="text-gray-600 mt-2">Registra y monitorea el rendimiento de tus activos.</p>
+        </header>
+
+        <!-- Navegación de Pestañas -->
+        <div class="mb-8 border-b border-gray-200 overflow-hidden">
+            <div class="overflow-x-auto" style="scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent;">
+                <nav class="-mb-px flex space-x-6 min-w-max px-1 pb-2" aria-label="Tabs">
+                    <a href="../index.html" class="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-gray-600 hover:bg-blue-500 hover:text-white transition-colors" title="Volver a Inversiones">
+                        <i class="fas fa-arrow-left text-lg"></i>
+                    </a>
+                    <button id="tab-btn-register" class="tab-btn active whitespace-nowrap">Registrar</button>
+                    <button id="tab-btn-history" class="tab-btn whitespace-nowrap">Historial</button>
+                    <button id="tab-btn-summary" class="tab-btn whitespace-nowrap">Resumen</button>
+                    <button id="tab-btn-storage" class="tab-btn whitespace-nowrap">Almacenamiento</button>
+                </nav>
+            </div>
+        </div>
+
+        <main id="tab-content-wrapper">
+            <!-- Pestaña de Registro -->
+            <div id="tab-content-register" class="tab-content-item">
+                <div class="card max-w-lg mx-auto">
+                    <h2 class="text-2xl font-semibold mb-4 text-gray-800">Registrar Nueva Inversión</h2>
+                    <form id="investment-form" class="space-y-4">
+                        <div>
+                            <label for="investment-name" class="block text-sm font-medium text-gray-600 mb-1">Nombre Inversión</label>
+                            <input type="text" id="investment-name" class="form-input" placeholder="Ej: Minero ASIC S19" required>
+                        </div>
+                        <div>
+                            <label for="registration-date" class="block text-sm font-medium text-gray-600 mb-1">Fecha de Registro</label>
+                            <input type="date" id="registration-date" class="form-input" required>
+                        </div>
+                        <div>
+                            <label for="cost" class="block text-sm font-medium text-gray-600 mb-1">Costo (MXN)</label>
+                            <input type="number" id="cost" class="form-input" placeholder="Ej: 5000.00" required step="0.01">
+                        </div>
+                        <div>
+                            <label for="daily-income" class="block text-sm font-medium text-gray-600 mb-1">Ingreso Diario (MXN)</label>
+                            <input type="number" id="daily-income" class="form-input" placeholder="Ej: 50.00" required step="0.01">
+                        </div>
+                        <div>
+                            <label for="note" class="block text-sm font-medium text-gray-600 mb-1">Nota (Opcional)</label>
+                            <textarea id="note" class="form-input" placeholder="Anotaciones sobre esta inversión..." rows="3"></textarea>
+                        </div>
+                        <button type="submit" class="btn">Agregar Inversión</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Pestaña de Historial -->
+            <div id="tab-content-history" class="tab-content-item hidden">
+                 <div class="card h-full">
+                    <h2 class="text-2xl font-semibold mb-4 text-gray-800">Historial de Inversiones</h2>
+                    <div id="investment-history" class="space-y-6">
+                        <!-- Las inversiones se insertarán aquí dinámicamente -->
+                        <p class="text-gray-500 text-center py-8">No hay inversiones registradas aún.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pestaña de Resumen -->
+            <div id="tab-content-summary" class="tab-content-item hidden">
+                <div class="card max-w-lg mx-auto">
+                    <h2 class="text-2xl font-semibold mb-4 text-gray-800">Resumen General</h2>
+                    <div id="summary-details" class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Costo Total Invertido:</span>
+                            <span id="total-cost" class="text-xl font-bold text-gray-800"></span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Ingresos Diarios Totales:</span>
+                            <span id="total-daily-income" class="text-xl font-bold text-green-600"></span>
+                        </div>
+                        <hr class="border-gray-200">
+                        <div class="bg-gray-50 p-4 rounded-lg space-y-3">
+                            <h3 class="text-lg font-semibold text-gray-700 mb-2">Análisis de Ingresos</h3>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-600">Últimos 7 días:</span>
+                                <span id="last-7-days-income" class="text-lg font-semibold text-green-600"></span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-600">Últimas 2 semanas:</span>
+                                <span id="last-2-weeks-income" class="text-lg font-semibold text-green-600"></span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-600">Último mes:</span>
+                                <span id="last-month-income" class="text-lg font-semibold text-green-600"></span>
+                            </div>
+                        </div>
+                        <hr class="border-gray-200">
+                        <div class="text-center">
+                            <span class="text-gray-600 text-sm">Como referencia, si quisieras recuperar el costo total de todas tus inversiones, en base al ingreso diario, tardarías aproximadamente:</span>
+                            <p id="total-roi" class="text-2xl font-bold text-blue-600"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pestaña de Almacenamiento -->
+            <div id="tab-content-storage" class="tab-content-item hidden">
+                <div class="card max-w-lg mx-auto">
+                    <h2 class="text-2xl font-semibold mb-4 text-gray-800">Uso de Almacenamiento</h2>
+                    <div id="storage-details" class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Espacio Total Usado:</span>
+                            <span id="total-storage" class="text-xl font-bold text-blue-600"></span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Número de Registros:</span>
+                            <span id="total-records" class="text-xl font-bold text-gray-800"></span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Última Actualización:</span>
+                            <span id="last-update" class="text-xl font-bold text-gray-800"></span>
+                        </div>
+                        <hr class="border-gray-200">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                            <button id="download-data" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                </svg>
+                                Descargar Datos
+                            </button>
+                            <div class="relative">
+                                <input type="file" id="import-data" accept=".json" class="hidden">
+                                <button id="import-data-btn" class="w-full bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors flex items-center justify-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" transform="rotate(180 10 10)" />
+                                    </svg>
+                                    Importar Datos
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <button id="backup-to-discord" class="w-full bg-indigo-500 text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition-colors flex items-center justify-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M20.317 4.492c-1.53-.69-3.17-1.2-4.885-1.49a.075.075 0 0 0-.079.036c-.21.369-.444.85-.608 1.23a18.566 18.566 0 0 0-5.487 0 12.36 12.36 0 0 0-.617-1.23A.077.077 0 0 0 8.562 3c-1.714.29-3.354.8-4.885 1.491a.07.07 0 0 0-.032.027C.533 9.093-.32 13.555.099 17.961a.08.08 0 0 0 .031.055 20.03 20.03 0 0 0 5.993 2.98.078.078 0 0 0 .084-.026 13.83 13.83 0 0 0 1.226-1.963.074.074 0 0 0-.041-.104 13.175 13.175 0 0 1-1.872-.878.075.075 0 0 1-.008-.125c.126-.093.252-.19.372-.287a.075.075 0 0 1 .078-.01c3.927 1.764 8.18 1.764 12.061 0a.075.075 0 0 1 .079.009c.12.098.245.195.372.288a.075.075 0 0 1-.006.125c-.598.344-1.22.635-1.873.877a.075.075 0 0 0-.041.105c.36.687.772 1.341 1.225 1.962a.077.077 0 0 0 .084.028 19.963 19.963 0 0 0 6.002-2.981.076.076 0 0 0 .032-.054c.5-5.094-.838-9.52-3.549-13.442a.06.06 0 0 0-.031-.028zM8.02 15.278c-1.182 0-2.157-1.069-2.157-2.38 0-1.312.956-2.38 2.157-2.38 1.21 0 2.176 1.077 2.157 2.38 0 1.312-.956 2.38-2.157 2.38zm7.975 0c-1.183 0-2.157-1.069-2.157-2.38 0-1.312.955-2.38 2.157-2.38 1.21 0 2.176 1.077 2.157 2.38 0 1.312-.946 2.38-2.157 2.38z"></path>
+                                </svg>
+                                Respaldar en Discord
+                            </button>
+                            <div id="webhook-config" class="mt-4 hidden">
+                                <input type="text" id="discord-webhook" placeholder="URL del Webhook de Discord" class="form-input mb-2">
+                                <div class="flex justify-end">
+                                    <button id="save-webhook" class="bg-indigo-500 text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition-colors text-sm">
+                                        Guardar URL
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-center mt-4">
+                            <button id="clear-storage" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors">
+                                Limpiar Almacenamiento
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const investmentForm = document.getElementById('investment-form');
+            const investmentHistory = document.getElementById('investment-history');
+            
+            const totalCostEl = document.getElementById('total-cost');
+            const totalDailyIncomeEl = document.getElementById('total-daily-income');
+            const totalRoiEl = document.getElementById('total-roi');
+
+            let investments = JSON.parse(localStorage.getItem('investments')) || [];
+
+            // Lógica para Pestañas
+            const tabs = [
+                { btn: document.getElementById('tab-btn-register'), content: document.getElementById('tab-content-register') },
+                { btn: document.getElementById('tab-btn-history'), content: document.getElementById('tab-content-history') },
+                { btn: document.getElementById('tab-btn-summary'), content: document.getElementById('tab-content-summary') },
+                { btn: document.getElementById('tab-btn-storage'), content: document.getElementById('tab-content-storage') }
+            ];
+
+            const switchTab = (activeBtn) => {
+                tabs.forEach(tab => {
+                    const isTabActive = tab.btn === activeBtn;
+                    tab.btn.classList.toggle('active', isTabActive);
+                    tab.content.classList.toggle('hidden', !isTabActive);
+                });
+            };
+
+            tabs.forEach(tab => {
+                tab.btn.addEventListener('click', () => switchTab(tab.btn));
+            });
+            // Fin Lógica para Pestañas
+
+            // Formateador de moneda para MXN
+            const currencyFormatter = new Intl.NumberFormat('es-MX', {
+                style: 'currency',
+                currency: 'MXN'
+            });
+
+            // Función principal para renderizar todo
+            const renderApp = () => {
+                renderHistory();
+                renderSummary();
+            };
+
+            // Renderizar el historial de inversiones
+            const renderHistory = () => {
+                investmentHistory.innerHTML = '';
+                if (investments.length === 0) {
+                    investmentHistory.innerHTML = '<p class="text-gray-500 text-center py-8">No hay inversiones registradas aún.</p>';
+                    return;
+                }
+                const sortedInvestments = [...investments].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+                sortedInvestments.forEach(inv => {
+                    const now = new Date();
+                    now.setUTCHours(0, 0, 0, 0);
+                    
+                    // Ordenar el historial de ingresos por fecha
+                    const incomeHistory = inv.incomeHistory ? 
+                        [...inv.incomeHistory].sort((a, b) => new Date(a.date) - new Date(b.date)) :
+                        [{ date: inv.date, dailyIncome: inv.dailyIncome }];
+                    
+                    // Calcular ganancias totales considerando los cambios de tasa
+                    let totalEarned = 0;
+                    let currentDate = new Date(inv.date);
+                    currentDate.setUTCHours(0, 0, 0, 0);
+                    
+                    for (let i = 0; i < incomeHistory.length; i++) {
+                        const currentRate = incomeHistory[i];
+                        const nextRate = incomeHistory[i + 1];
+                        const endDate = nextRate ? new Date(nextRate.date) : now;
+                        endDate.setUTCHours(0, 0, 0, 0);
+                        
+                        const periodDays = Math.max(0, Math.floor((endDate - currentDate) / (1000 * 60 * 60 * 24)));
+                        totalEarned += periodDays * currentRate.dailyIncome;
+                        
+                        currentDate = new Date(endDate);
+                    }
+                    
+                    const daysPassed = Math.max(0, Math.floor((now - new Date(inv.date)) / (1000 * 60 * 60 * 24)));
+                    const recoveryPercentage = Math.min((totalEarned / inv.cost) * 100, 100);
+                    const isRecovered = totalEarned >= inv.cost;
+                    const timeToRecover = Math.ceil(inv.cost / inv.dailyIncome);
+                    const statusTag = isRecovered
+                        ? `<span class="tag tag-recovered">Recuperado</span>`
+                        : `<span class="tag tag-recovering">En recuperación</span>`;
+
+                    const investmentEl = document.createElement('div');
+                    investmentEl.className = 'p-5 rounded-lg border border-gray-200 bg-gray-50 space-y-3';
+                    
+                    investmentEl.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <div class="flex items-center gap-3">
+                                    <h3 class="text-xl font-semibold text-gray-800">${inv.name}</h3>
+                                    ${statusTag}
+                                </div>
+                                <p class="text-sm text-gray-600">Registrado: ${new Date(inv.date).toLocaleDateString('es-MX', { timeZone: 'UTC' })}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-lg font-bold text-blue-600">${currencyFormatter.format(inv.cost)}</p>
+                                <p class="text-sm text-green-600">+${currencyFormatter.format(inv.dailyIncome)} / día</p>
+                                <div class="flex justify-end gap-2 mt-2">
+                                    <button class="edit-investment text-blue-600 hover:text-blue-800 p-1.5 rounded-lg border border-blue-200 hover:bg-blue-50 transition-colors" data-id="${inv.id}">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                                        </svg>
+                                    </button>
+                                    <button class="delete-investment text-red-600 hover:text-red-800 p-1.5 rounded-lg border border-red-200 hover:bg-red-50 transition-colors" data-id="${inv.id}">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        ${inv.note ? `<p class="text-gray-700 pt-2 border-t border-gray-200"><em>Nota: ${inv.note}</em></p>` : ''}
+                        <div class="space-y-2 pt-2">
+                             <div class="w-full progress-bar-bg rounded-full h-2.5">
+                                <div class="progress-bar-fg h-2.5 rounded-full" style="width: ${recoveryPercentage}%"></div>
+                            </div>
+                            <div class="flex justify-between text-sm text-gray-600">
+                                <span>Progreso de recuperación</span>
+                                <span>${recoveryPercentage.toFixed(2)}%</span>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-center pt-2 text-sm">
+                            <div>
+                                <p class="font-semibold text-gray-800">${daysPassed} días</p>
+                                <p class="text-gray-600">Tiempo transcurrido</p>
+                            </div>
+                             <div>
+                                <p class="font-semibold text-gray-800">${currencyFormatter.format(totalEarned)}</p>
+                                <p class="text-gray-600">Monto recuperado</p>
+                            </div>
+                             <div>
+                                <p class="font-semibold text-gray-800">${timeToRecover} días</p>
+                                <p class="text-gray-600">ROI esperado</p>
+                            </div>
+                        </div>
+                    `;
+                    investmentHistory.appendChild(investmentEl);
+                });
+            };
+
+            // Función para calcular ingresos en un período específico
+            const calculatePeriodIncome = (days) => {
+                const now = new Date();
+                now.setUTCHours(0, 0, 0, 0);
+                const startDate = new Date(now);
+                startDate.setDate(startDate.getDate() - days);
+
+                return investments.reduce((total, inv) => {
+                    const investmentStartDate = new Date(inv.date);
+                    investmentStartDate.setUTCHours(0, 0, 0, 0);
+                    
+                    // Si la inversión es más reciente que el inicio del período
+                    if (investmentStartDate > startDate) {
+                        const daysActive = Math.floor((now - investmentStartDate) / (1000 * 60 * 60 * 24));
+                        return total + (daysActive * inv.dailyIncome);
+                    }
+                    
+                    // Si la inversión es más antigua que el inicio del período
+                    return total + (days * inv.dailyIncome);
+                }, 0);
+            };
+
+            // Renderizar el resumen general
+            const renderSummary = () => {
+                const totalCost = investments.reduce((sum, inv) => sum + inv.cost, 0);
+                const totalDaily = investments.reduce((sum, inv) => sum + inv.dailyIncome, 0);
+                
+                // Calcular ingresos para diferentes períodos
+                const last7DaysIncome = calculatePeriodIncome(7);
+                const last2WeeksIncome = calculatePeriodIncome(14);
+                const lastMonthIncome = calculatePeriodIncome(30);
+
+                // Actualizar elementos en la UI
+                totalCostEl.textContent = currencyFormatter.format(totalCost);
+                totalDailyIncomeEl.textContent = `${currencyFormatter.format(totalDaily)} / día`;
+                document.getElementById('last-7-days-income').textContent = currencyFormatter.format(last7DaysIncome);
+                document.getElementById('last-2-weeks-income').textContent = currencyFormatter.format(last2WeeksIncome);
+                document.getElementById('last-month-income').textContent = currencyFormatter.format(lastMonthIncome);
+
+                if (totalDaily > 0) {
+                    const totalRoiDays = Math.ceil(totalCost / totalDaily);
+                    totalRoiEl.textContent = `${totalRoiDays} días`;
+                } else {
+                    totalRoiEl.textContent = 'N/A';
+                }
+            };
+            
+            // Manejar el envío del formulario
+            investmentForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const name = document.getElementById('investment-name').value.trim();
+                const registrationDate = document.getElementById('registration-date').value;
+                const cost = parseFloat(document.getElementById('cost').value);
+                const dailyIncome = parseFloat(document.getElementById('daily-income').value);
+                const note = document.getElementById('note').value;
+
+                if (!name || !registrationDate) {
+                    alert('El nombre y la fecha de registro son obligatorios.');
+                    return;
+                }
+
+                if (isNaN(cost) || isNaN(dailyIncome) || cost <= 0 || dailyIncome <= 0) {
+                    alert('Por favor, ingresa valores válidos para costo e ingreso diario.');
+                    return;
+                }
+                const newInvestment = {
+                    id: Date.now(),
+                    name: name,
+                    cost: cost,
+                    dailyIncome: dailyIncome,
+                    note: note,
+                    date: registrationDate, // Guardar como 'YYYY-MM-DD'
+                    incomeHistory: [{
+                        date: registrationDate,
+                        dailyIncome: dailyIncome
+                    }]
+                };
+                investments.push(newInvestment);
+                localStorage.setItem('investments', JSON.stringify(investments));
+                investmentForm.reset();
+                renderApp();
+                // Opcional: cambiar a la pestaña de historial después de registrar
+                switchTab(document.getElementById('tab-btn-history'));
+            });
+
+            // Funcionalidad de editar y eliminar inversión
+            investmentHistory.addEventListener('click', async (e) => {
+                const deleteBtn = e.target.closest('.delete-investment');
+                const editBtn = e.target.closest('.edit-investment');
+                
+                if (deleteBtn) {
+                    const investmentId = parseInt(deleteBtn.dataset.id);
+                    const confirmed = await showDeleteConfirmationModal(investmentId);
+                    
+                    if (confirmed) {
+                        investments = investments.filter(inv => inv.id !== investmentId);
+                        localStorage.setItem('investments', JSON.stringify(investments));
+                        renderApp();
+                    }
+                } else if (editBtn) {
+                    const investmentId = parseInt(editBtn.dataset.id);
+                    const investment = investments.find(inv => inv.id === investmentId);
+                    if (investment) {
+                        const updatedInvestment = await showEditInvestmentModal(investment);
+                        if (updatedInvestment) {
+                            const index = investments.findIndex(inv => inv.id === investmentId);
+                            investments[index] = { ...investment, ...updatedInvestment };
+                            localStorage.setItem('investments', JSON.stringify(investments));
+                            renderApp();
+                        }
+                    }
+                }
+            });
+
+            // Función para mostrar el modal de edición
+            function showEditInvestmentModal(investment) {
+                const modal = document.createElement('div');
+                modal.className = 'modal-overlay active';
+                modal.innerHTML = `
+                    <div class="modal-content">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">Editar Inversión</h3>
+                        <form id="edit-investment-form" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-600">Nombre Inversión</label>
+                                <input type="text" name="name" class="form-input" value="${investment.name}" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-600">Fecha de Registro</label>
+                                <input type="date" name="date" class="form-input" value="${investment.date}" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-600">Costo (MXN)</label>
+                                <input type="number" name="cost" class="form-input" value="${investment.cost}" required step="0.01">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-600">Ingreso Diario (MXN)</label>
+                                <input type="number" name="dailyIncome" class="form-input" value="${investment.dailyIncome}" required step="0.01">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-600">Nota (Opcional)</label>
+                                <textarea name="note" class="form-input" rows="3">${investment.note || ''}</textarea>
+                            </div>
+                            <div class="modal-buttons">
+                                <button type="button" class="modal-btn modal-btn-cancel">Cancelar</button>
+                                <button type="submit" class="modal-btn modal-btn-save">Guardar Cambios</button>
+                            </div>
+                        </form>
+                    </div>
+                `;
+                
+                document.body.appendChild(modal);
+
+                return new Promise((resolve) => {
+                    const form = modal.querySelector('#edit-investment-form');
+                    const cancelBtn = modal.querySelector('.modal-btn-cancel');
+
+                    form.addEventListener('submit', (e) => {
+                        e.preventDefault();
+                        const formData = new FormData(form);
+                        const newDailyIncome = parseFloat(formData.get('dailyIncome'));
+                        const currentDate = new Date().toISOString().split('T')[0];
+                        
+                        // Solo agregamos al historial si la tasa ha cambiado
+                        const updatedInvestment = {
+                            name: formData.get('name'),
+                            date: formData.get('date'),
+                            cost: parseFloat(formData.get('cost')),
+                            dailyIncome: newDailyIncome,
+                            note: formData.get('note')
+                        };
+                        
+                        // Si la tasa diaria ha cambiado, agregamos una nueva entrada al historial
+                        if (newDailyIncome !== investment.dailyIncome) {
+                            const incomeHistory = investment.incomeHistory || 
+                                [{ date: investment.date, dailyIncome: investment.dailyIncome }];
+                            
+                            updatedInvestment.incomeHistory = [
+                                ...incomeHistory,
+                                { date: currentDate, dailyIncome: newDailyIncome }
+                            ];
+                        } else {
+                            updatedInvestment.incomeHistory = investment.incomeHistory;
+                        }
+
+                        if (isNaN(updatedInvestment.cost) || isNaN(updatedInvestment.dailyIncome) || 
+                            updatedInvestment.cost <= 0 || updatedInvestment.dailyIncome <= 0) {
+                            alert('Por favor, ingresa valores válidos para costo e ingreso diario.');
+                            return;
+                        }
+
+                        document.body.removeChild(modal);
+                        resolve(updatedInvestment);
+                    });
+
+                    cancelBtn.addEventListener('click', () => {
+                        document.body.removeChild(modal);
+                        resolve(null);
+                    });
+
+                    // Cerrar modal al hacer clic fuera
+                    modal.addEventListener('click', (e) => {
+                        if (e.target === modal) {
+                            document.body.removeChild(modal);
+                            resolve(null);
+                        }
+                    });
+                });
+            }
+
+            // Función para actualizar la información de almacenamiento
+            const updateStorageInfo = () => {
+                const totalStorage = document.getElementById('total-storage');
+                const totalRecords = document.getElementById('total-records');
+                const lastUpdate = document.getElementById('last-update');
+                
+                // Calcular el tamaño total usado
+                const storageSize = new Blob([localStorage.getItem('investments') || '']).size;
+                totalStorage.textContent = `${(storageSize / 1024).toFixed(2)} KB`;
+                
+                // Contar registros
+                totalRecords.textContent = investments.length;
+                
+                // Mostrar última actualización
+                const now = new Date();
+                lastUpdate.textContent = now.toLocaleString('es-MX', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false
+                });
+            };
+
+            // Función para descargar datos
+            const downloadData = () => {
+                const data = {
+                    type: 'btc-mining-investments',
+                    version: '1.0',
+                    data: investments,
+                    exportDate: new Date().toISOString()
+                };
+                
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `inversiones-mineria-${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+            };
+
+            // Función para importar datos
+            const importData = async (file) => {
+                try {
+                    const text = await file.text();
+                    const importedData = JSON.parse(text);
+                    
+                    // Verificar que el archivo sea del tipo correcto
+                    if (importedData.type !== 'btc-mining-investments') {
+                        throw new Error('El archivo no es compatible con esta aplicación');
+                    }
+
+                    // Confirmar la importación
+                    const confirmed = await showConfirmationModal(
+                        'Confirmar importación',
+                        `¿Estás seguro de que deseas importar ${importedData.data.length} inversiones? Los datos actuales serán reemplazados.`
+                    );
+
+                    if (confirmed) {
+                        investments = importedData.data;
+                        localStorage.setItem('investments', JSON.stringify(investments));
+                        renderApp();
+                        updateStorageInfo();
+                        alert('Datos importados correctamente');
+                    }
+                } catch (error) {
+                    alert('Error al importar el archivo: ' + error.message);
+                }
+            };
+
+            // Función genérica para mostrar modal de confirmación
+            const showConfirmationModal = (title, message) => {
+                const modal = document.createElement('div');
+                modal.className = 'modal-overlay active';
+                modal.innerHTML = `
+                    <div class="modal-content">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-2">${title}</h3>
+                        <p class="text-gray-600">${message}</p>
+                        <div class="modal-buttons">
+                            <button class="modal-btn modal-btn-cancel">Cancelar</button>
+                            <button class="modal-btn modal-btn-confirm">Confirmar</button>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(modal);
+
+                return new Promise((resolve) => {
+                    const cancelBtn = modal.querySelector('.modal-btn-cancel');
+                    const confirmBtn = modal.querySelector('.modal-btn-confirm');
+
+                    cancelBtn.addEventListener('click', () => {
+                        document.body.removeChild(modal);
+                        resolve(false);
+                    });
+
+                    confirmBtn.addEventListener('click', () => {
+                        document.body.removeChild(modal);
+                        resolve(true);
+                    });
+
+                    modal.addEventListener('click', (e) => {
+                        if (e.target === modal) {
+                            document.body.removeChild(modal);
+                            resolve(false);
+                        }
+                    });
+                });
+            };
+
+            // Función para respaldar en Discord
+            const backupToDiscord = async () => {
+                const webhookUrl = 'https://discord.com/api/webhooks/1411805272233476258/HmfwqvLEKY6PEsbMTQqKwCqyZgcT3bHxO2WWLgb5y0pGHiVS0OBRHwwu6_dApTxNfHLv';
+
+                try {
+                    // Crear el archivo JSON
+                    const fileData = JSON.stringify({
+                        type: 'btc-mining-investments',
+                        version: '1.0',
+                        data: investments,
+                        exportDate: new Date().toISOString()
+                    }, null, 2);
+
+                    // Crear el FormData para enviar el archivo
+                    const formData = new FormData();
+                    
+                    // Agregar el JSON del mensaje embed
+                    const messageData = {
+                        content: '**Respaldo de Inversiones**',
+                        embeds: [{
+                            title: 'Respaldo de Datos de Minería BTC',
+                            color: 3447003,
+                            fields: [
+                                {
+                                    name: '📊 Resumen',
+                                    value: `Total de inversiones: ${investments.length}\nÚltima actualización: ${new Date().toLocaleString('es-MX')}`
+                                }
+                            ],
+                            footer: {
+                                text: 'Respaldo automático de inversiones'
+                            },
+                            timestamp: new Date()
+                        }]
+                    };
+                    
+                    // Agregar el mensaje como parte del FormData
+                    formData.append('payload_json', JSON.stringify(messageData));
+                    
+                    // Crear el Blob y agregar el archivo
+                    const blob = new Blob([fileData], { type: 'application/json' });
+                    formData.append('file', blob, `inversiones-mineria-${new Date().toISOString().split('T')[0]}.json`);
+
+                    // Enviar la solicitud
+                    const response = await fetch(webhookUrl, {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Error al enviar datos a Discord');
+                    }
+
+                    alert('Respaldo enviado correctamente a Discord');
+                } catch (error) {
+                    alert('Error al respaldar datos: ' + error.message);
+                    console.error('Error:', error);
+                }
+            };
+
+            // Event listeners para los botones de la pestaña de almacenamiento
+            document.getElementById('download-data').addEventListener('click', downloadData);
+            
+            document.getElementById('import-data-btn').addEventListener('click', () => {
+                document.getElementById('import-data').click();
+            });
+
+            document.getElementById('backup-to-discord').addEventListener('click', backupToDiscord);
+            
+            document.getElementById('import-data').addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    importData(e.target.files[0]);
+                }
+            });
+
+            // Manejar la limpieza del almacenamiento
+            document.getElementById('clear-storage').addEventListener('click', async () => {
+                const confirmed = await showConfirmationModal(
+                    'Confirmar limpieza',
+                    '¿Estás seguro de que deseas eliminar todos los datos de inversiones? Esta acción no se puede deshacer.'
+                );
+                
+                if (confirmed) {
+                    localStorage.removeItem('investments');
+                    investments = [];
+                    renderApp();
+                    updateStorageInfo();
+                }
+            });
+
+            // Actualizar la información de almacenamiento cuando se cambie a esa pestaña
+            document.getElementById('tab-btn-storage').addEventListener('click', updateStorageInfo);
+
+            // Renderizar la app al cargar y establecer un intervalo para actualizar el estado en tiempo real
+            renderApp();
+            setInterval(renderHistory, 60000); // Actualiza el historial cada minuto
+
+            // Funciones para el modal de confirmación
+            function showDeleteConfirmationModal(investmentId) {
+                const modal = document.createElement('div');
+                modal.className = 'modal-overlay active';
+                modal.innerHTML = `
+                    <div class="modal-content">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-2">Confirmar eliminación</h3>
+                        <p class="text-gray-600">¿Estás seguro de que deseas eliminar esta inversión? Esta acción no se puede deshacer.</p>
+                        <div class="modal-buttons">
+                            <button class="modal-btn modal-btn-cancel">Cancelar</button>
+                            <button class="modal-btn modal-btn-confirm">Eliminar</button>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(modal);
+
+                return new Promise((resolve) => {
+                    const cancelBtn = modal.querySelector('.modal-btn-cancel');
+                    const confirmBtn = modal.querySelector('.modal-btn-confirm');
+
+                    cancelBtn.addEventListener('click', () => {
+                        document.body.removeChild(modal);
+                        resolve(false);
+                    });
+
+                    confirmBtn.addEventListener('click', () => {
+                        document.body.removeChild(modal);
+                        resolve(true);
+                    });
+
+                    // Cerrar modal al hacer clic fuera
+                    modal.addEventListener('click', (e) => {
+                        if (e.target === modal) {
+                            document.body.removeChild(modal);
+                            resolve(false);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

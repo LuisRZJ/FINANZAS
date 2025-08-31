@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Inversiones</title>
+    <meta name="theme-color" content="#2563eb">
+    <link rel="icon" href="/pwa/logo-app.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --investment-blue: #1a4f7a;
+            --investment-dark: #0d2d4d;
+            --investment-accent: #2e8b57;
+            --investment-light: #5da271;
+            --investment-gold: #d4af37;
+            --investment-silver: #c0c0c0;
+            
+            --text-color: #2c3e50;
+            --text-light: #7f8c8d;
+            --background: #f9f9f9;
+            --card-bg: #ffffff;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--investment-blue), var(--investment-dark));
+            color: white;
+            padding: 2.5rem 0;
+            text-align: center;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        header p {
+            font-size: 1.2rem;
+            max-width: 800px;
+            margin: 0 auto;
+            font-weight: 300;
+            opacity: 0.9;
+        }
+
+        .intro {
+            text-align: center;
+            margin-bottom: 3.5rem;
+            padding: 0 1rem;
+        }
+
+        .intro h2 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+            color: var(--investment-blue);
+        }
+
+        .intro p {
+            max-width: 800px;
+            margin: 0 auto;
+            color: var(--text-light);
+            font-size: 1.1rem;
+        }
+
+        .cards-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 2.2rem;
+            margin-bottom: 3rem;
+            padding: 0 1rem;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: var(--transition);
+            box-shadow: var(--shadow);
+        }
+
+        .card:hover {
+            transform: translateY(-7px);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-icon {
+            font-size: 2.8rem;
+            padding: 1.8rem;
+            text-align: center;
+            color: white;
+        }
+
+        .card-content {
+            padding: 1.8rem;
+        }
+
+        .card h3 {
+            margin-bottom: 0.8rem;
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+
+        .card p {
+            color: var(--text-light);
+            margin-bottom: 1.8rem;
+            font-size: 1rem;
+            line-height: 1.7;
+        }
+
+        .card-link {
+            display: inline-block;
+            color: white;
+            padding: 0.8rem 1.6rem;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+            font-size: 0.95rem;
+        }
+
+        .card-link:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+
+        /* Colores específicos para cada tarjeta */
+        .card:nth-child(1) .card-icon {
+            background: linear-gradient(135deg, var(--investment-blue), var(--investment-dark));
+        }
+        .card:nth-child(1) h3 {
+            color: var(--investment-blue);
+        }
+        .card:nth-child(1) .card-link {
+            background-color: var(--investment-blue);
+        }
+
+        .card:nth-child(2) .card-icon {
+            background: linear-gradient(135deg, var(--investment-accent), var(--investment-light));
+        }
+        .card:nth-child(2) h3 {
+            color: var(--investment-accent);
+        }
+        .card:nth-child(2) .card-link {
+            background-color: var(--investment-accent);
+        }
+
+        .card:nth-child(3) .card-icon {
+            background: linear-gradient(135deg, var(--investment-gold), #b8941f);
+        }
+        .card:nth-child(3) h3 {
+            color: var(--investment-gold);
+        }
+        .card:nth-child(3) .card-link {
+            background-color: var(--investment-gold);
+        }
+
+        .card:nth-child(4) .card-icon {
+            background: linear-gradient(135deg, var(--investment-silver), #a0a0a0);
+        }
+        .card:nth-child(4) h3 {
+            color: var(--investment-silver);
+        }
+        .card:nth-child(4) .card-link {
+            background-color: var(--investment-silver);
+        }
+
+        .card:nth-child(5) .card-icon {
+            background: linear-gradient(135deg, #4682B4, #2a4e6c);
+        }
+        .card:nth-child(5) h3 {
+            color: #4682B4;
+        }
+        .card:nth-child(5) .card-link {
+            background-color: #4682B4;
+        }
+
+        .card:nth-child(6) .card-icon {
+            background: linear-gradient(135deg, #32CD32, #228B22);
+        }
+        .card:nth-child(6) h3 {
+            color: #32CD32;
+        }
+        .card:nth-child(6) .card-link {
+            background-color: #32CD32;
+        }
+
+        footer {
+            background: linear-gradient(135deg, var(--investment-blue), var(--investment-dark));
+            height: 20px;
+            margin-top: 4rem;
+        }
+
+        @media (max-width: 768px) {
+            .cards-container {
+                grid-template-columns: 1fr;
+                gap: 1.8rem;
+            }
+            
+            header h1 {
+                font-size: 2.2rem;
+            }
+            
+            header p {
+                font-size: 1rem;
+                padding: 0 1rem;
+            }
+
+            .intro h2 {
+                font-size: 1.8rem;
+            }
+            
+            .card {
+                max-width: 400px;
+                margin: 0 auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Panel de Inversiones</h1>
+            <p>Acceder a todas las herramientas y recursos para gestionar las inversiones</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <!--<section class="intro">
+            <h2>Maximiza tu potencial de inversión</h2>
+            <p>Nuestro portal te ofrece todas las herramientas necesarias para tomar decisiones informadas y hacer crecer tu cartera de inversiones de manera inteligente.</p>
+        </section>-->
+
+         <section class="container" style="text-align: center; margin-top: 4rem; margin-bottom: 4rem;">
+            <a href="../index.html" class="card-link" style="background-color: var(--investment-blue); padding: 1rem 2rem; font-size: 1.1rem;">Volver a la Página Principal</a>
+        </section>
+
+
+        <section class="cards-container">
+            <div class="card">
+                <div class="card-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="card-content">
+                    <h3>Bitcoin Mining</h3>
+                    <p>Acceder a información detallada sobre las inversiones en BTC Mining.</p>
+                    <a href="/modulo-inversiones/btc-mining/btc-mining.html" class="card-link">Ver BTC Mining</a>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">
+                    <i class="fas fa-coins"></i>
+                </div>
+                <div class="card-content">
+                    <h3>Tap Mining</h3>
+                    <p>Acceder a información detallada sobre las inversiones en Tap Mining.</p>
+                    <a href="#" class="card-link">Ver Tap Mining</a>
+                </div>
+            </div>
+
+            <!--<div class="card">
+                <div class="card-icon">
+                    <i class="fas fa-newspaper"></i>
+                </div>
+                <div class="card-content">
+                    <h3>Noticias Financieras</h3>
+                    <p>Mantente informado con las últimas noticias del mundo financiero y su impacto en los mercados.</p>
+                    <a href="#" class="card-link">Leer Noticias</a>
+                </div>
+            </div>-->
+
+            <div class="card">
+                <div class="card-icon">
+                    <i class="fas fa-chart-pie"></i>
+                </div>
+                <div class="card-content">
+                    <h3>CryptoTab</h3>
+                    <p>Acceder a información detallada sobre las inversiones en CryptoTab.</p>
+                    <a href="#" class="card-link">Ver CryptoTab</a>
+                </div>
+         </div>
+
+            <div class="card">
+                <div class="card-icon">
+                    <i class="fas fa-calculator"></i>
+                </div>
+                <div class="card-content">
+                    <h3>Go Mining</h3>
+                    <p>Acceder a información detallada sobre las inversiones en Go Mining.</p>
+                    <a href="#" class="card-link">Ver Go Mining</a>
+                </div>
+            </div>
+
+            <!--<div class="card">
+                <div class="card-icon">
+                    <i class="fas fa-graduation-cap"></i>
+                </div>
+                <div class="card-content">
+                    <h3>Educación Financiera</h3>
+                    <p>Aprende sobre concepts financieros, estrategias de inversión y cómo tomar decisiones informadas.</p>
+                    <a href="#" class="card-link">Comenzar a Aprender</a>
+                </div>
+            </div>-->
+        </section>
+
+        <hr style="border: none; height: 1px; background: linear-gradient(90deg, transparent, var(--investment-blue), transparent); margin: 4rem 0;">
+
+        <section class="container" style="text-align: center; margin-bottom: 4rem;">
+            <h2 style="color: var(--investment-blue); margin-bottom: 2rem; font-size: 2.2rem;">Avanzado</h2>
+            <div style="display: flex; justify-content: center;">
+                <div class="card" style="max-width: 400px; margin: 0 auto;">
+                    <div class="card-icon" style="background: linear-gradient(135deg, #FF4D4D, #FF7043);">
+                        <i class="fa-solid fa-chart-column"></i>
+                    </div>
+                    <div class="card-content">
+                        <h3 style="color: #FF4D4D;">Estadística</h3>
+                        <p>Herramientas avanzadas de estadística para analizar datos financieros y tomar decisiones informadas.</p>
+                        <a href="estadisticas.html" class="card-link" style="background-color: #FF4D4D;"><i class="fa-solid fa-arrow-right-to-bracket"></i>ㅤEntrar</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+    </footer>
+
+</body>
+</html>
