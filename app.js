@@ -5,7 +5,7 @@ const isSupported = () => {
 
 
 // variables de versión de página
-const PAGE_VERSION = "2.1.0"
+const PAGE_VERSION = "2.2.0"
 const ACT_DATE = "31/08/25"
 
 console.log("Página versión: " + PAGE_VERSION + ", actualizada por ultima vez el: " + ACT_DATE)
@@ -146,7 +146,7 @@ const registerServiceWorker = async () => {
   // no seguros o cuando el archivo no existe. Logueamos el error para depuración
   // pero evitamos asustar al usuario con un mensaje crítico.
   log(`Error al registrar Service Worker: ${error.message}`, 'error');
-  showNotification('No fue posible activar las funciones offline en este entorno (no afecta al uso)', 'warning');
+  log('No fue posible activar las funciones offline en este entorno (no afecta al uso)', 'warning');
   return null;
   }
 };
