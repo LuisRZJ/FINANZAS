@@ -207,6 +207,23 @@ section {
     color: white;
 }
 
+.module.settings .icon {
+    color: #000000;
+}
+
+.module.settings h4 {
+    color: #000000;
+}
+
+.module.settings .btn {
+    background-color: #000000;
+    color: white;
+}
+
+.module.settings .btn:hover {
+    background-color: #333333;
+}
+
 .module.finance .icon {
     color: var(--finance-color);
 }
