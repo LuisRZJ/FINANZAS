@@ -230,6 +230,55 @@
       .calculator-modal{max-width:94vw}
     }
 
+    /* Estilos para notas expandibles */
+    .notes-cell {
+      max-width: 300px;
+      position: relative;
+    }
+    
+    .notes-content {
+      max-height: 60px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      line-height: 1.4;
+      transition: max-height 0.3s ease;
+    }
+    
+    .notes-content.expanded {
+      max-height: none;
+      -webkit-line-clamp: unset;
+    }
+    
+    .notes-toggle {
+      background: none;
+      border: none;
+      color: var(--primary);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 0;
+      text-decoration: underline;
+      transition: color 0.2s ease;
+    }
+    
+    .notes-toggle:hover {
+      color: var(--primary-2);
+    }
+    
+    /* Ocultar botón cuando no hay truncamiento */
+    .notes-toggle.hidden {
+      display: none;
+    }
+    
+    @media (max-width: 700px) {
+      .notes-cell {
+        max-width: 200px;
+      }
+    }
+
     .kbd{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; background:#0a0f1d; border:1px solid var(--border); padding:2px 6px; border-radius:6px}
 
     .hidden{display:none}
@@ -777,14 +826,51 @@
     tabs.forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
     document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
-  const target = byId(btn.dataset.tab);
-  target.classList.add('active');
-  // If opening almacenamiento tab, refresh storage stats
-  if (btn.dataset.tab === 'tab-almacenamiento') refreshStorageStats();
+    const target = byId(btn.dataset.tab);
+    target.classList.add('active');
+    
+    // If opening historial tab, check for note truncation after rendering
+    if (btn.dataset.tab === 'tab-historial') {
+      setTimeout(() => verificarTruncamientoNotas(), 200);
+    }
+    // If opening almacenamiento tab, refresh storage stats
+    if (btn.dataset.tab === 'tab-almacenamiento') refreshStorageStats();
   }));
 
   // Add handling for the new storage tab activation when present
   // (If a tab with data-tab="tab-almacenamiento" exists it will work with above listener)
+
+  function verificarTruncamientoNotas() {
+    const tbody = document.querySelector('#tablaHistorial tbody');
+    if (!tbody) return;
+    
+    // Esperar a que el DOM esté completamente renderizado
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        const notesContents = tbody.querySelectorAll('.notes-content');
+        notesContents.forEach(content => {
+          const toggleBtn = content.nextElementSibling;
+          if (!toggleBtn) return;
+          
+          // Forzar recálculo de layout
+          content.style.display = 'none';
+          content.offsetHeight;
+          content.style.display = '';
+          
+          // Verificar truncamiento con precisión
+          const maxHeight = 60;
+          const isTruncated = content.scrollHeight > maxHeight + 1 || 
+                             content.scrollWidth > content.clientWidth + 1;
+          
+          if (isTruncated && content.textContent.trim()) {
+            toggleBtn.classList.remove('hidden');
+          } else {
+            toggleBtn.classList.add('hidden');
+          }
+        });
+      }, 50);
+    });
+  }
 
   let currentBtcPriceMXN = 0;
   async function fetchBtcPrice() {
@@ -946,19 +1032,35 @@
     for (const r of list){
       const rowText = `${r.id} ${r.sats} ${r.mxn_static} ${r.dateISO} ${r.notes||''}`.toLowerCase(); if (ft && !rowText.includes(ft)) continue;
       const tr = document.createElement('tr');
+      
+      // Procesar notas - siempre incluir botón para detección visual
+      const notesText = r.notes ? r.notes.replace(/</g,'&lt;') : '';
+      
+      let notesCellContent = '';
+      if (notesText) {
+        notesCellContent = `
+          <div class="notes-cell">
+            <div class="notes-content" data-full-text="${notesText}">${notesText}</div>
+            <button class="notes-toggle hidden" onclick="toggleNotesExpansion(this)">Ver más</button>
+          </div>`;
+      }
+      
       tr.innerHTML = `
         <td class="nowrap">${r.id}</td>
         <td>${fmtNumber(r.sats)}</td>
         <td>${fmtMoney(r.mxn_static)}</td>
         <td class="nowrap">${r.dateISO}</td>
-        <td>${r.notes ? r.notes.replace(/</g,'&lt;') : ''}</td>
+        <td>${notesCellContent}</td>
         <td class="nowrap">
           <button class="btn ghost" data-action="edit" data-id="${r.id}">✏️ Editar</button>
           <button class="btn danger" data-action="del" data-id="${r.id}">🗑 Eliminar</button>
         </td>`;
       tbody.appendChild(tr);
     }
-
+    
+    // Verificar truncamiento después de renderizar
+    verificarTruncamientoNotas();
+    
     tbody.onclick = async (e)=>{
       const btn = e.target.closest('button'); if (!btn) return; const id = btn.getAttribute('data-id');
       if (btn.getAttribute('data-action')==='del'){
@@ -1035,6 +1137,22 @@
   }
 
   window.closeModal = function(element) { element.closest('.modal-overlay').remove(); };
+
+  // Función para expandir/contraer notas en la tabla de historial
+  window.toggleNotesExpansion = function(button) {
+    const notesContent = button.previousElementSibling;
+    const isExpanded = notesContent.classList.contains('expanded');
+    
+    if (isExpanded) {
+      // Contraer
+      notesContent.classList.remove('expanded');
+      button.textContent = 'Ver más';
+    } else {
+      // Expandir
+      notesContent.classList.add('expanded');
+      button.textContent = 'Ver menos';
+    }
+  };
 
   // Export / Import
   byId('btnExportar').onclick = async ()=>{
