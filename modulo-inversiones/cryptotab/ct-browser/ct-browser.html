@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <title>Registro diario | CT Browser</title>
+  <style>
+    :root{
+      --bg:#f7fafc;         /* slate-900 */
+      --panel:#ffffff;      /* gray-900 */
+      --panel-2:#f1f5f9;    /* custom */
+      --text:#0f172a;       /* gray-200 */
+      --muted:#64748b;      /* slate-400 */
+      --primary:#16a34a;    /* green-500 */
+      --primary-2:#15803d;  /* green-600 */
+      --danger:#ef4444;     /* red-500 */
+      --warning:#f59e0b;    /* amber-500 */
+      --card:#ffffff;
+      --border:#d1d5db;     /* gray-800 */
+      --accent:#60a5fa;     /* blue-400 */
+    }
+    *{box-sizing:border-box}
+    html{min-height:100%; height:auto;}
+    body{min-height:100%;}
+    body{
+      margin:0; font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, Cantarell, "Noto Sans", Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      background: radial-gradient(1200px 600px at 70% -10%, rgba(96,165,250,.12), transparent),
+                  radial-gradient(1000px 600px at -20% 40%, rgba(34,197,94,.10), transparent),
+                  var(--bg);
+      color:var(--text);
+    }
+    .container{max-width:1100px; margin:0 auto; padding:20px}
+    header{display:flex; flex-wrap:wrap; align-items:center; gap:16px; justify-content:space-between; margin-bottom:16px}
+    .brand{display:flex; align-items:center; gap:12px}
+  .brand-link{display:flex; align-items:center; gap:12px; color:inherit; text-decoration:none}
+  .brand-link:hover{opacity:0.95}
+    .logo{width:36px; height:36px; display:grid; place-items:center; border-radius:10px; background:linear-gradient(135deg, var(--accent), var(--primary)); box-shadow:0 8px 24px rgba(34,197,94,.25)}
+    .logo svg{filter:drop-shadow(0 2px 8px rgba(0,0,0,.35))}
+    h1{font-size:18px; margin:0; letter-spacing:.3px}
+
+    /* Tabs */
+    .tabs{display:flex; gap:8px; background:rgba(255,255,255,.03); padding:6px; border-radius:12px; border:1px solid var(--border); font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, Cantarell, "Noto Sans", Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";}
+    .tab-btn{appearance:none; border:1px solid transparent; background:transparent; color:var(--muted); padding:10px 14px; border-radius:10px; cursor:pointer; transition:.2s; font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, Cantarell, "Noto Sans", Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";}
+    .tab-btn.active{background:var(--panel); color:var(--text); border-color:var(--border); box-shadow: inset 0 0 0 1px rgba(255,255,255,.03)}
+
+    /* Panels */
+    .panel{display:none}
+    .panel.active{display:block}
+
+    .card{background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.00)); border:1px solid var(--border); border-radius:14px; padding:16px}
+
+    /* Estilos para el selector de fechas personalizado */
+    /* Estilos para el selector de fechas personalizado */
+    .custom-date-picker-popup {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+      padding: 15px;
+      width: 300px;
+      position: absolute;
+      z-index: 1000;
+      box-sizing: border-box;
+      backdrop-filter: blur(10px);
+      background-color: rgba(255, 255, 255, 0.95);
+    }
+
+    /* Tema oscuro */
+    @media (prefers-color-scheme: dark) {
+      .custom-date-picker-popup {
+        background-color: rgba(30, 30, 30, 0.95);
+      }
+    }
+
+    .custom-date-picker-header-popup {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .custom-date-picker-header-popup h3 {
+      margin: 0;
+      font-size: 1.1em;
+      color: var(--text-color);
+    }
+
+    .custom-date-picker-navigation {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .custom-date-picker-navigation button,
+    .custom-date-picker-header-popup button {
+      background: none;
+      border: none;
+      font-size: 1.2em;
+      cursor: pointer;
+      color: var(--text-color);
+      padding: 5px;
+      border-radius: 4px;
+      transition: background-color 0.2s ease;
+    }
+
+    .custom-date-picker-navigation button:hover,
+    .custom-date-picker-header-popup button:hover {
+      background-color: var(--hover-bg);
+    }
+
+    .custom-date-picker-weekdays-popup {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      text-align: center;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: var(--primary-color);
+    }
+
+    .custom-date-picker-days-popup {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 5px;
+      text-align: center;
+    }
+
+    .custom-date-picker-day {
+      padding: 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.2s ease, color 0.2s ease;
+      color: var(--text-color);
+      font-weight: 500;
+    }
+
+    .custom-date-picker-day:hover {
+      background-color: var(--hover-bg);
+      color: var(--primary-color);
+    }
+
+    .custom-date-picker-day.selected {
+      background-color: var(--primary-color);
+      color: black; /* Cambiado a negro */
+      font-weight: bold;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .custom-date-picker-day.today {
+      color: var(--primary-color);
+      font-weight: bold;
+      border: 1px solid var(--primary-color);
+    }
+
+    .custom-date-picker-day.selected.today {
+      color: black;
+      border: 1px solid transparent;
+    }
+
+    .custom-date-picker-day.disabled {
+      color: var(--text-color-light);
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    .custom-date-picker-header-popup h3 {
+      margin: 0;
+      font-size: 1.2em;
+      color: var(--text-color);
+      font-weight: 600;
+    }
+
+    .custom-date-picker-day.today {
+      border: 1px solid var(--primary-color);
+    }
+    .grid{display:grid; gap:16px}
+    @media (min-width: 900px){
+      .grid.cols-2{grid-template-columns: 1.2fr .8fr}
+    }
+
+    label{display:block; font-size:12px; color:var(--muted); margin-bottom:6px}
+    input[type="text"], input[type="number"], textarea{
+      width:100%; background:var(--panel); color:var(--text); border:1px solid var(--border); border-radius:10px; padding:10px 12px; outline:none;
+    }
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button{ -webkit-appearance: none; margin: 0; }
+
+    .row{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+    .btn{appearance:none; border:none; cursor:pointer; padding:10px 14px; border-radius:10px; font-weight:600; font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, Cantarell, "Noto Sans", Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";}
+    .btn.primary{background:var(--primary); color:#041308; font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, Cantarell, "Noto Sans", Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";}
+    .btn.primary:hover{background:var(--primary-2)}
+    .btn.ghost{background:transparent; color:var(--text); border:1px solid var(--border)}
+    .btn.warn{background:var(--warning); color:#1a1202}
+    .btn.danger{background:var(--danger); color:#130404}
+
+    .help{font-size:12px; color:var(--muted)}
+    .pill{font-size:12px; color:#041308; background:var(--primary); padding:2px 8px; border-radius:999px; font-weight:700}
+
+    table{width:100%; border-collapse: collapse; overflow:hidden; border-radius:12px; border:1px solid var(--border)}
+    thead{background:rgba(255,255,255,.04)}
+    th, td{padding:10px 12px; text-align:left; border-bottom:1px solid var(--border)}
+    tbody tr:hover{background:rgba(255,255,255,.03)}
+
+    .footer{margin-top:20px; font-size:12px; color:var(--muted)}
+    .stat{background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:14px}
+    .stat h3{margin:0 0 8px 0; font-size:14px; color:#bfe6c9}
+    .stat .value{font-size:20px; font-weight:800}
+
+    /* Responsive tweaks for small screens, especially the almacenamiento tab */
+    @media (max-width: 700px) {
+      .container{padding:12px}
+      .tabs{overflow-x:auto; -webkit-overflow-scrolling: touch;}
+      .tabs .tab-btn{flex:0 0 auto}
+      /* Make the almacenamiento grid stack vertically */
+      #tab-almacenamiento .grid{grid-template-columns: 1fr !important;}
+      #tab-almacenamiento .stat{padding:10px}
+      #tab-almacenamiento .stat h3{font-size:13px}
+      #tab-almacenamiento .stat .value{font-size:18px; word-break:break-word; overflow-wrap:anywhere}
+      /* Ensure the card fits the viewport */
+      #tab-almacenamiento .card{padding:12px}
+      /* Buttons should wrap and not overflow */
+      .row.right{flex-wrap:wrap}
+      .row.right .btn{margin-top:8px}
+      /* Date picker and modals scale better */
+      .custom-date-picker-popup{width:90vw; max-width:340px}
+      .calculator-modal{max-width:94vw}
+    }
+
+    .kbd{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; background:#0a0f1d; border:1px solid var(--border); padding:2px 6px; border-radius:6px}
+
+    .hidden{display:none}
+    .right{justify-content:flex-end}
+    .nowrap{white-space:nowrap}
+
+    /* Modal Calculadora */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      animation: fadeIn 0.2s ease-out;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .calculator-modal {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+      width: 100%;
+      max-width: 320px;
+      animation: slideUp 0.3s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideUp {
+      from { 
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+      }
+      to { 
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .calculator-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .calculator-title {
+      font-weight: 700;
+      color: var(--text);
+      font-size: 18px;
+    }
+
+    .close-calculator {
+      background: transparent;
+      border: 0;
+      font-size: 18px;
+      cursor: pointer;
+      color: var(--muted);
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .close-calculator:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .calculator-display-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .calculator-display-row .calculator-display {
+      flex-grow: 1;
+      margin-bottom: 0; /* Eliminar el margen inferior existente */
+    }
+
+    .calculator-display-row .calc-btn.clear {
+      width: 60px; /* Ajustar el ancho del botón C */
+      height: 60px; /* Ajustar la altura del botón C */
+      font-size: 1.5em;
+      margin-bottom: 0;
+    }
+
+    .calculator-display {
+      width: 100%;
+      height: 60px;
+      border-radius: 10px;
+      background: var(--panel-2);
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 16px;
+      border: 1px solid var(--border);
+    }
+
+    .calculator-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .calc-btn {
+      height: 60px;
+      border-radius: 10px;
+      border: 0;
+      font-size: 18px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.1s ease;
+      font-family: inherit;
+    }
+
+    .calc-btn:active {
+      transform: translateY(1px);
+    }
+
+    .calc-btn.number {
+      background: var(--panel-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .calc-btn.number:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .calc-btn.operator {
+      background: #fff7ed;
+      color: #ea580c;
+      border: 1px solid #fed7aa;
+    }
+
+    .calc-btn.operator:hover {
+      background: #ffedd5;
+    }
+
+    .calc-btn.equals {
+      background: var(--primary);
+      color: white;
+      border: 1px solid var(--primary);
+    }
+
+    .calc-btn.equals:hover {
+      background: var(--primary-2);
+    }
+
+    .calc-btn.clear {
+      background: #fee2e2;
+      color: #dc2626;
+      border: 1px solid #fca5a5;
+    }
+
+    .calc-btn.clear:hover {
+      background: #fecaca;
+    }
+
+    .calc-btn.copy {
+      background: #dbeafe;
+      color: #1e40af;
+      grid-column: span 2;
+      border: 1px solid #bfdbfe;
+    }
+
+    .calc-btn.copy:hover:not(:disabled) {
+      background: #bfdbfe;
+    }
+
+    .calc-btn.copy:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  
+/* Light theme overrides: ajusta elementos que dependían de fondo oscuro */
+.logo svg path { stroke: var(--text) !important; }
+.kbd{ background: #f1f5f9 !important; color: var(--text) !important; border:1px solid var(--border) !important; }
+.btn.primary{ color: #ffffff !important; }
+.stat h3{ color: var(--primary) !important; }
+.tabs{ background: rgba(2,6,23,0.02) !important; }
+</style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <a href="../../index.html" class="brand-link" aria-label="Volver al panel de inversiones">
+          <div class="logo" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2L4 6v12l8 4 8-4V6l-8-4Z" stroke="white" stroke-opacity=".85" stroke-width="1.2"/>
+              <path d="M8 9h8M8 12h8M8 15h6" stroke="white" stroke-opacity=".85" stroke-width="1.2"/>
+            </svg>
+          </div>
+          <h1>Registro diario | CT Browser</h1>
+        </a>
+      </div>
+      <div class="row right">
+      </div>
+    </header>
+
+    <!-- Tabs -->
+    <nav class="tabs" role="tablist" aria-label="Navegación de pestañas">
+      <button class="tab-btn active" data-tab="tab-registro" role="tab" aria-selected="true">1) Registro del día</button>
+      <button class="tab-btn" data-tab="tab-historial" role="tab" aria-selected="false">2) Historial</button>
+      <button class="tab-btn" data-tab="tab-estadisticas" role="tab" aria-selected="false">3) Estadísticas</button>
+      <button class="tab-btn" data-tab="tab-almacenamiento" role="tab" aria-selected="false">4) Almacenamiento</button>
+    </nav>
+
+    <!-- Panels -->
+    <section id="tab-registro" class="panel active" aria-labelledby="Registro del día" style="margin-top:14px;">
+      <div class="grid cols-2">
+        <div class="card">
+          <h2 style="margin-top:0;">Nuevo registro</h2>
+          <div class="help">ID autogenerado en secuencia (formato <span class="kbd">D#</span>). Se permite <b>un registro por día</b>.</div>
+          <div style="height:10px"></div>
+          <form id="formRegistro" autocomplete="off">
+            <div class="row" style="gap:16px">
+              <div style="flex:1; min-width:200px">
+                <label for="fechaRegistro">Fecha de registro</label>
+                <input id="fechaRegistro" type="date" required style="display: none;"/>
+                <button type="button" id="openDatePickerBtn" class="btn ghost">
+  <i class="fas fa-calendar-alt"></i>
+  <span>Seleccionar Fecha</span>
+  <span id="selectedDateDisplay" style="margin-left: 10px; font-weight: bold;"></span>
+</button>
+                <div id="customDatePicker" class="custom-date-picker-popup" style="display: none;">
+                  <div class="custom-date-picker-header-popup">
+                    <h3 id="currentMonthYear"></h3>
+                    <button id="closeDatePickerBtn" class="btn ghost">✖</button>
+                  </div>
+                  <div class="custom-date-picker-navigation">
+                    <button id="prevMonthPopup">&lt;</button>
+                    <button id="nextMonthPopup">&gt;</button>
+                  </div>
+                  <div class="custom-date-picker-weekdays-popup">
+                    <span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span><span>Dom</span>
+                  </div>
+                  <div class="custom-date-picker-days-popup"></div>
+                </div>
+              </div>
+              <div style="flex:1; min-width:200px">
+                <label for="sats">SATs <span class="help">(entero o decimal)</span></label>
+                <input id="sats" type="number" inputmode="decimal" step="1" min="0" placeholder="Ej. 25000" required />
+              </div>
+            </div>
+            <div style="margin-top:12px">
+              <label for="notas">Notas (opcional)</label>
+              <textarea id="notas" rows="3" placeholder="Detalles adicionales (opcional)"></textarea>
+            </div>
+            <div class="row right" style="margin-top:14px">
+              <button type="button" class="btn ghost" id="btnFechaActual">Usar fecha actual: <span id="fechaActualLabel"></span></button>
+              <button type="button" class="btn" style="background-color: #FFA500; color: #000;"><i class="fas fa-calculator"></i> Abrir calculadora</button>
+              <button type="submit" class="btn primary">Guardar registro</button>
+            </div>
+            <div class="help" style="margin-top:10px">La conversión <b>SATs→MXN</b> se calculará y <b>guardará como valor estático</b> del día con el precio de BTC indicado.
+            </div>
+          </form>
+        </div>
+        <aside class="card">
+          <h3 style="margin-top:0">Resumen rápido</h3>
+          <div class="grid" style="grid-template-columns: repeat(2,1fr); gap:12px">
+            <div class="stat"><h3>Precio BTC (MXN)</h3><div class="value" id="statPrecio">—</div><div class="help">Fuente: Red</div></div>
+            <div class="stat"><h3>Registro de hoy</h3><div class="value" id="statEstadoHoy">—</div><div class="help">Un registro por día</div></div>
+            <div class="stat"><h3>Próximo ID</h3><div class="value" id="statNextId">D1</div><div class="help">Secuencia</div></div>
+            <div class="stat"><h3>Total días</h3><div class="value" id="statDias">0</div><div class="help">Con registro</div></div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section id="tab-historial" class="panel" aria-labelledby="Historial" style="margin-top:14px;">
+      <div class="card">
+        <div class="row" style="justify-content:space-between; align-items:end; gap:12px">
+          <div>
+            <h2 style="margin:0 0 6px 0">Historial</h2>
+            <div class="help">Edita SATs/Notas. MXN siempre refleja la tasa estática del día registrado.</div>
+          </div>
+          <div class="row">
+            <button class="btn ghost" id="btnExportar">⤴️ Exportar JSON</button>
+            <label class="btn ghost" for="fileImport">⤵️ Importar JSON</label>
+            <input id="fileImport" type="file" accept="application/json" class="hidden" />
+          </div>
+        </div>
+        <div style="margin:12px 0" class="row">
+          <input type="text" id="buscador" placeholder="Buscar por ID, notas o fecha (AAAA-MM-DD)" style="flex:1"/>
+          <button class="btn ghost" id="btnLimpiarBusqueda">✖ Limpiar</button>
+        </div>
+        <div style="overflow:auto">
+          <table id="tablaHistorial">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>SATs</th>
+                <th>MXN (estático)</th>
+                <th>Día</th>
+                <th>Notas</th>
+                <th class="nowrap">Acciones</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-estadisticas" class="panel" aria-labelledby="Estadísticas" style="margin-top:14px;">
+      <div class="grid cols-2">
+        <div class="card">
+          <h2 style="margin-top:0">Métricas en MXN</h2>
+          <div class="grid" style="grid-template-columns: repeat(2,1fr); gap:12px">
+            <div class="stat"><h3>Promedio MXN (global)</h3><div class="value" id="avgMxn">—</div></div>
+            <div class="stat"><h3>Promedio 7 días</h3><div class="value" id="avgMxn7">—</div></div>
+            <div class="stat"><h3>Promedio 30 días</h3><div class="value" id="avgMxn30">—</div></div>
+            <div class="stat"><h3>Total MXN</h3><div class="value" id="sumMxn">—</div></div>
+          </div>
+        </div>
+        <div class="card">
+          <h2 style="margin-top:0">Métricas en SATs</h2>
+          <div class="grid" style="grid-template-columns: repeat(2,1fr); gap:12px">
+            <div class="stat"><h3>Promedio SATs (global)</h3><div class="value" id="avgSats">—</div></div>
+            <div class="stat"><h3>Promedio 7 días</h3><div class="value" id="avgSats7">—</div></div>
+            <div class="stat"><h3>Promedio 30 días</h3><div class="value" id="avgSats30">—</div></div>
+            <div class="stat"><h3>Total SATs</h3><div class="value" id="sumSats">—</div></div>
+          </div>
+        </div>
+        <div class="card">
+          <h2 style="margin-top:0">Métricas adicionales</h2>
+          <div class="grid" style="grid-template-columns: repeat(2,1fr); gap:12px">
+            <div class="stat"><h3>Días con registro</h3><div class="value" id="diasConRegistro">0</div></div>
+            <div class="stat"><h3>Racha actual</h3><div class="value" id="rachaActual">0</div></div>
+            <div class="stat"><h3>Primera fecha</h3><div class="value" id="primeraFecha">—</div></div>
+            <div class="stat"><h3>Última fecha</h3><div class="value" id="ultimaFecha">—</div></div>
+          </div>
+          <div class="help" style="margin-top:8px">Todas las métricas usan los valores <b>estáticos</b> de MXN guardados en cada registro.</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-almacenamiento" class="panel" aria-labelledby="Almacenamiento" style="margin-top:14px;">
+      <div class="card">
+        <h2 style="margin-top:0">Almacenamiento (IndexedDB)</h2>
+        <div class="help">Información sobre el almacenamiento usado por esta base de datos específica.</div>
+        <div style="height:12px"></div>
+        <div class="grid" style="grid-template-columns: repeat(2,1fr); gap:12px">
+          <div class="stat"><h3>Nombre DB</h3><div class="value" id="statDbName">—</div></div>
+          <div class="stat"><h3>Registros</h3><div class="value" id="statRecordsCount">—</div></div>
+          <div class="stat"><h3>Tamaño estimado (DB)</h3><div class="value" id="statDbSize">—</div></div>
+          <div class="stat"><h3>Uso origen</h3><div class="value" id="statOriginUsage">—</div></div>
+          <div class="stat"><h3>Cuota origen</h3><div class="value" id="statOriginQuota">—</div></div>
+          <div class="stat"><h3>Uso %</h3><div class="value" id="statOriginPercent">—</div></div>
+        </div>
+        <div style="height:12px"></div>
+        <div class="row right">
+          <button id="btnClearDb" class="btn danger">🗑 Eliminar todos los datos</button>
+          <button id="btnSendDiscord" class="btn primary" style="margin-left:8px">📤 Enviar respaldo a Discord</button>
+        </div>
+        <div class="help" style="margin-top:10px">Eliminar los datos borrará totalmente la base de datos <b>ctBrowser_registroDiario_db_v1</b>. Asegúrate de exportar si necesitas respaldo.</div>
+      </div>
+    </section>
+
+    <div class="footer">Hecho con ❤️
+    </div>
+  </div>
+
+  <!-- Modal Calculadora -->
+  <div class="modal-overlay" id="calculatorModal">
+    <div class="calculator-modal">
+      <div class="calculator-header">
+        <div class="calculator-title">Calculadora</div>
+        <button class="close-calculator" id="closeCalculatorBtn">✕</button>
+      </div>
+      
+      <div class="calculator-display-row">
+        <div class="calculator-display" id="calculatorDisplay">0</div>
+        <button class="calc-btn clear" onclick="calcClear()">C</button>
+      </div>
+      
+      <div class="calculator-grid">
+        <button class="calc-btn number" onclick="calcAppend('1')">1</button>
+        <button class="calc-btn number" onclick="calcAppend('2')">2</button>
+        <button class="calc-btn number" onclick="calcAppend('3')">3</button>
+        <button class="calc-btn operator" onclick="calcAppend('+')">+</button>
+        
+        <button class="calc-btn number" onclick="calcAppend('4')">4</button>
+        <button class="calc-btn number" onclick="calcAppend('5')">5</button>
+        <button class="calc-btn number" onclick="calcAppend('6')">6</button>
+        <button class="calc-btn operator" onclick="calcAppend('-')">-</button>
+        
+        <button class="calc-btn number" onclick="calcAppend('7')">7</button>
+        <button class="calc-btn number" onclick="calcAppend('8')">8</button>
+        <button class="calc-btn number" onclick="calcAppend('9')">9</button>
+        <button class="calc-btn equals" onclick="calcCalculate()">=</button>
+        
+        <button class="calc-btn number" onclick="calcAppend('0')">0</button>
+        <button class="calc-btn number" onclick="calcAppend('.')">.</button>
+        <button class="calc-btn copy" id="calcCopyBtn" onclick="calcCopy()" disabled>
+          <i class="far fa-copy"></i> Copiar
+        </button>
+      </div>
+    </div>
+  </div>
+
+<script>
+// ...existing code...
+(async function(){
+  // IndexedDB wrapper for records
+  const DB_NAME = 'ctBrowser_registroDiario_db_v1';
+  const DB_VERSION = 1;
+  const STORE_RECORDS = 'records';
+  const SATS_PER_BTC = 100_000_000;
+
+  // Date helpers
+  function todayYMD(){
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth()+1).padStart(2,'0');
+    const d = String(now.getDate()).padStart(2,'0');
+    return `${y}-${m}-${d}`;
+  }
+  function parseYMD(ymdString) {
+    const [year, month, day] = ymdString.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  }
+  function toYMD(date){
+    const y = date.getFullYear();
+    const m = String(date.getMonth()+1).padStart(2,'0');
+    const d = String(date.getDate()).padStart(2,'0');
+    return `${y}-${m}-${d}`;
+  }
+  function fmtMoney(n){
+    if (n === undefined || n === null || Number.isNaN(n)) return '—';
+    return new Intl.NumberFormat('es-MX',{style:'currency', currency:'MXN', maximumFractionDigits:2}).format(n);
+  }
+  function fmtNumber(n){
+    if (n === undefined || n === null || Number.isNaN(n)) return '—';
+    return new Intl.NumberFormat('es-MX',{maximumFractionDigits:2}).format(n);
+  }
+
+  // Simple promisified IndexedDB open
+  function openDB(){
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(DB_NAME, DB_VERSION);
+      req.onupgradeneeded = (ev) => {
+        const db = ev.target.result;
+        if (!db.objectStoreNames.contains(STORE_RECORDS)){
+          const store = db.createObjectStore(STORE_RECORDS, { keyPath: 'id' });
+          store.createIndex('dateISO', 'dateISO', { unique: false });
+        }
+      };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  async function getAllRecordsFromDB(){
+    const db = await openDB();
+    return new Promise((resolve, reject)=>{
+      const tx = db.transaction(STORE_RECORDS, 'readonly');
+      const store = tx.objectStore(STORE_RECORDS);
+      const req = store.getAll();
+      req.onsuccess = ()=> resolve(req.result || []);
+      req.onerror = ()=> reject(req.error);
+    });
+  }
+
+  async function clearAndSaveRecords(list){
+    const db = await openDB();
+    return new Promise((resolve, reject)=>{
+      const tx = db.transaction(STORE_RECORDS, 'readwrite');
+      const store = tx.objectStore(STORE_RECORDS);
+      const clearReq = store.clear();
+      clearReq.onsuccess = ()=>{
+        let i = 0;
+        if (!list.length) { tx.oncomplete = ()=> resolve(); return; }
+        for (const item of list){
+          const putReq = store.put(item);
+          putReq.onerror = ()=> console.error('Error guardando registro', putReq.error);
+          putReq.onsuccess = ()=>{
+            i++; if (i===list.length) tx.oncomplete = ()=> resolve();
+          };
+        }
+      };
+      clearReq.onerror = ()=> reject(clearReq.error);
+    });
+  }
+
+  async function saveRecords(list){
+    // Save list as-is into IndexedDB. We assume caller prepared IDs.
+    await clearAndSaveRecords(list);
+  }
+
+  async function loadRecords(){
+    // Read all, reassign sequential IDs based on date asc, then return desc
+    const arr = await getAllRecordsFromDB();
+    // Ensure we have array
+    const copy = Array.isArray(arr) ? arr.slice() : [];
+    // Sort by date asc
+    copy.sort((a,b)=> a.dateISO.localeCompare(b.dateISO));
+    // Reassign IDs sequentially to maintain D# sequence
+    const reassigned = copy.map((record, index) => ({
+      ...record,
+      id: `D${index + 1}`
+    }));
+    // Persist reassigned IDs back
+    // Save in background but await to keep consistency
+    const final = reassigned.slice().sort((a,b)=> b.dateISO.localeCompare(a.dateISO));
+    await saveRecords(reassigned);
+    return final;
+  }
+
+  function nextId(list){ return `D${list.length + 1}`; }
+  function hasRecordFor(dateISO, list){ return list.some(r=> r.dateISO === dateISO); }
+  function calcMXNFromSats(sats, btcPriceMXN){ return (Number(sats) / SATS_PER_BTC) * Number(btcPriceMXN); }
+
+  function byId(id){return document.getElementById(id)}
+
+  // UI state and listeners (unchanged behavior)
+  const tabs = document.querySelectorAll('.tab-btn');
+  tabs.forEach(btn=>btn.addEventListener('click', ()=>{
+    tabs.forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  const target = byId(btn.dataset.tab);
+  target.classList.add('active');
+  // If opening almacenamiento tab, refresh storage stats
+  if (btn.dataset.tab === 'tab-almacenamiento') refreshStorageStats();
+  }));
+
+  // Add handling for the new storage tab activation when present
+  // (If a tab with data-tab="tab-almacenamiento" exists it will work with above listener)
+
+  let currentBtcPriceMXN = 0;
+  async function fetchBtcPrice() {
+    try {
+      const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=mxn');
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+      if (data.bitcoin && data.bitcoin.mxn){
+        currentBtcPriceMXN = data.bitcoin.mxn;
+        byId('statPrecio').textContent = fmtMoney(currentBtcPriceMXN);
+      } else {
+        console.error('Sin precio en respuesta');
+      }
+    } catch (err){ console.error('fetchBtcPrice', err); }
+  }
+
+  // Cache for historical prices to avoid repeated network calls
+  const historicPriceCache = new Map(); // key: dateISO -> price
+
+  async function fetchBtcPriceAtDate(dateISO){
+    // If date is today, return current price
+    if (dateISO === todayYMD()){
+      if (!currentBtcPriceMXN) await fetchBtcPrice();
+      return currentBtcPriceMXN;
+    }
+    if (historicPriceCache.has(dateISO)) return historicPriceCache.get(dateISO);
+    try {
+      // Use CryptoCompare histoday endpoint to get daily close price
+      // Convert dateISO to UTC midnight timestamp (seconds)
+      const ts = Math.floor(new Date(dateISO + 'T00:00:00Z').getTime() / 1000);
+      const url = `https://min-api.cryptocompare.com/data/v2/histoday?fsym=BTC&tsym=MXN&limit=1&toTs=${ts}`;
+      const resp = await fetch(url);
+      if (!resp.ok) throw new Error('Fallo en la API histórica: ' + resp.status);
+      const data = await resp.json();
+      if (!data.Data || !data.Data.Data || data.Data.Data.length === 0) throw new Error('No hay datos históricos para ' + dateISO);
+      const entry = data.Data.Data[0];
+      const price = entry.close;
+      if (!price || Number.isNaN(price)) throw new Error('Precio inválido en respuesta histórica');
+      historicPriceCache.set(dateISO, price);
+      return price;
+    } catch (err){
+      console.error('fetchBtcPriceAtDate', err);
+      return null;
+    }
+  }
+
+  // Refresh resumen async
+  async function refreshResumen(){
+    const list = await loadRecords();
+    byId('statPrecio').textContent = currentBtcPriceMXN ? fmtMoney(currentBtcPriceMXN) : '—';
+    byId('statEstadoHoy').textContent = hasRecordFor(todayYMD(), list) ? '✅ ya registrado' : 'Pendiente';
+    byId('statNextId').textContent = nextId(list);
+    byId('statDias').textContent = list.length;
+
+    const now = new Date();
+    const pretty = new Intl.DateTimeFormat('es-MX',{dateStyle:'full'}).format(now);
+    byId('fechaActualLabel').textContent = pretty;
+
+    byId('fechaRegistro').value = todayYMD();
+    const initialDate = new Date();
+    renderDatePickerPopup(initialDate);
+    updateSelectedDateDisplay(initialDate);
+  }
+
+  // Date picker elements
+  const openDatePickerBtn = byId('openDatePickerBtn');
+  const closeDatePickerBtn = byId('closeDatePickerBtn');
+  const customDatePickerPopup = byId('customDatePicker');
+
+  openDatePickerBtn.addEventListener('click', () => {
+    customDatePickerPopup.style.display = 'block';
+    const initialDateForDisplay = parseYMD(byId('fechaRegistro').value || todayYMD());
+    renderDatePickerPopup(initialDateForDisplay);
+    updateSelectedDateDisplay(initialDateForDisplay);
+  });
+  closeDatePickerBtn.addEventListener('click', () => { customDatePickerPopup.style.display = 'none'; });
+
+  // Submit registro
+  async function handleSubmitRegistro(ev){
+    ev.preventDefault();
+    const sats = Number(byId('sats').value);
+    const notes = byId('notas').value.trim();
+    const dateISO = byId('fechaRegistro').value;
+
+    if (!sats || sats<=0){ alert('Ingresa una cantidad de SATs válida.'); return; }
+
+    const selectedDate = parseYMD(dateISO);
+    const today = parseYMD(todayYMD());
+    if (selectedDate > today) { alert('No se pueden registrar ganancias en días futuros.'); return; }
+
+    const list = await loadRecords();
+    if (hasRecordFor(dateISO, list)){ alert('Ya existe un registro para ese día. Edita el existente en la pestaña Historial.'); return; }
+
+    // Determine which BTC price to use: historical for past dates, current for today
+    let precioAPI = null;
+    if (dateISO === todayYMD()){
+      // ensure we have a current price
+      if (!currentBtcPriceMXN) await fetchBtcPrice();
+      precioAPI = currentBtcPriceMXN;
+    } else {
+      // fetch historical price for the selected past date
+      precioAPI = await fetchBtcPriceAtDate(dateISO);
+    }
+
+    if (!precioAPI || precioAPI <= 0){ alert('No se pudo obtener el precio de BTC para la fecha seleccionada. Intenta nuevamente o elige otra fecha.'); return; }
+
+    const id = nextId(list);
+    const mxn = calcMXNFromSats(sats, precioAPI);
+    const record = { id, sats: Number(sats), mxn_static: Number(mxn), dateISO, notes, rate_mxn_btc_at_entry: Number(precioAPI) };
+    list.push(record);
+    await saveRecords(list);
+
+    byId('sats').value=''; byId('notas').value='';
+    await refreshAll();
+    alert(`Registro ${id} guardado para ${dateISO}.`);
+  }
+  byId('formRegistro').addEventListener('submit', handleSubmitRegistro);
+  byId('btnFechaActual').onclick = ()=> {
+    byId('fechaRegistro').value = todayYMD();
+    const newDate = new Date(); renderDatePickerPopup(newDate); updateSelectedDateDisplay(newDate);
+  };
+
+  // Date picker rendering (unchanged logic)
+  let currentMonthPopup = new Date();
+  function renderDatePickerPopup(date) {
+    currentMonthPopup = new Date(date.getFullYear(), date.getMonth(), 1);
+    const monthName = currentMonthPopup.toLocaleString('es-MX', { month: 'long', year: 'numeric' });
+    byId('currentMonthYear').textContent = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+
+    const daysContainer = customDatePickerPopup.querySelector('.custom-date-picker-days-popup');
+    daysContainer.innerHTML = '';
+    const today = new Date();
+    const selectedDate = byId('fechaRegistro').value ? parseYMD(byId('fechaRegistro').value) : null;
+    const firstDayOfMonth = currentMonthPopup.getDay();
+    const daysInPrevMonth = new Date(date.getFullYear(), date.getMonth(), 0).getDate();
+    const startDay = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1;
+    for (let i = startDay; i > 0; i--) {
+      const day = document.createElement('span'); day.classList.add('custom-date-picker-day', 'disabled'); day.textContent = daysInPrevMonth - i + 1; daysContainer.appendChild(day);
+    }
+    const daysInMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+    for (let i = 1; i <= daysInMonth; i++){
+      const day = document.createElement('span'); day.classList.add('custom-date-picker-day'); day.textContent = i;
+      const currentDayDate = new Date(date.getFullYear(), date.getMonth(), i);
+      const currentDayYMD = toYMD(currentDayDate);
+      if (currentDayYMD === toYMD(today)) day.classList.add('today');
+      if (selectedDate && currentDayYMD === toYMD(selectedDate)) day.classList.add('selected');
+      if (currentDayDate > today) { day.classList.add('disabled'); } else { day.addEventListener('click', ()=>{ byId('fechaRegistro').value = currentDayYMD; updateSelectedDateDisplay(currentDayDate); renderDatePickerPopup(currentDayDate); }); }
+      daysContainer.appendChild(day);
+    }
+    byId('prevMonthPopup').onclick = () => { currentMonthPopup.setMonth(currentMonthPopup.getMonth() - 1); renderDatePickerPopup(currentMonthPopup); };
+    byId('nextMonthPopup').onclick = () => { currentMonthPopup.setMonth(currentMonthPopup.getMonth() + 1); renderDatePickerPopup(currentMonthPopup); };
+  }
+
+  // Historial rendering and delegation
+  async function renderHistorial(filterText=''){
+    const tbody = byId('tablaHistorial').querySelector('tbody'); tbody.innerHTML = '';
+    const list = await loadRecords();
+    const ft = filterText.trim().toLowerCase();
+    for (const r of list){
+      const rowText = `${r.id} ${r.sats} ${r.mxn_static} ${r.dateISO} ${r.notes||''}`.toLowerCase(); if (ft && !rowText.includes(ft)) continue;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="nowrap">${r.id}</td>
+        <td>${fmtNumber(r.sats)}</td>
+        <td>${fmtMoney(r.mxn_static)}</td>
+        <td class="nowrap">${r.dateISO}</td>
+        <td>${r.notes ? r.notes.replace(/</g,'&lt;') : ''}</td>
+        <td class="nowrap">
+          <button class="btn ghost" data-action="edit" data-id="${r.id}">✏️ Editar</button>
+          <button class="btn danger" data-action="del" data-id="${r.id}">🗑 Eliminar</button>
+        </td>`;
+      tbody.appendChild(tr);
+    }
+
+    tbody.onclick = async (e)=>{
+      const btn = e.target.closest('button'); if (!btn) return; const id = btn.getAttribute('data-id');
+      if (btn.getAttribute('data-action')==='del'){
+        if (confirm(`¿Eliminar registro ${id}?`)){
+          let list = await loadRecords(); list = list.filter(x=> x.id !== id); await saveRecords(list); await refreshAll();
+        }
+      } else if (btn.getAttribute('data-action')==='edit'){
+        await editarRegistro(id);
+      }
+    };
+  }
+
+  async function editarRegistro(id){
+    const list = await loadRecords();
+    const r = list.find(x => x.id === id);
+    if (!r) { alert('Registro no encontrado'); return; }
+    const modal = document.createElement('div'); modal.className = 'modal-overlay active';
+    modal.innerHTML = `...`;
+    // Build full edit modal (keep style & inputs as before) - to avoid duplicating many lines we recreate fully here
+    modal.innerHTML = `
+      <div class="calculator-modal" style="max-width: 400px; width: 90%;">
+        <div class="calculator-header">
+          <div class="calculator-title">Editar Registro ${r.id}</div>
+          <button class="close-calculator" onclick="this.closest('.modal-overlay').remove()">×</button>
+        </div>
+        <form id="editForm" style="display: flex; flex-direction: column; gap: 16px;">
+          <div>
+            <label style="font-size: 12px; color: var(--muted); margin-bottom: 6px; display: block;">Fecha</label>
+            <input type="date" id="editFecha" value="${r.dateISO}" required style="width: 100%; background: var(--panel); color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px;">
+          </div>
+          <div>
+            <label style="font-size: 12px; color: var(--muted); margin-bottom: 6px; display: block;">SATs</label>
+            <input type="number" id="editSats" value="${r.sats}" inputmode="decimal" step="1" min="0" required style="width: 100%; background: var(--panel); color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px;">
+          </div>
+          <div>
+            <label style="font-size: 12px; color: var(--muted); margin-bottom: 6px; display: block;">Notas</label>
+            <textarea id="editNotas" rows="3" style="width: 100%; background: var(--panel); color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; resize: vertical;">${r.notes || ''}</textarea>
+          </div>
+          <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px;">
+            <button type="button" class="btn ghost" onclick="this.closest('.modal-overlay').remove()">Cancelar</button>
+            <button type="submit" class="btn primary">Guardar cambios</button>
+          </div>
+        </form>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    modal.querySelector('#editForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const nuevaFecha = modal.querySelector('#editFecha').value;
+      const nuevosSats = Number(modal.querySelector('#editSats').value);
+      const nuevasNotas = modal.querySelector('#editNotas').value.trim();
+      if (!nuevosSats || nuevosSats <= 0) { alert('Ingresa una cantidad de SATs válida.'); return; }
+      const selectedDate = parseYMD(nuevaFecha); const today = parseYMD(todayYMD()); if (selectedDate > today) { alert('No se pueden registrar ganancias en días futuros.'); return; }
+      if (nuevaFecha !== r.dateISO){
+        const existeRegistro = (await loadRecords()).some(record => record.dateISO === nuevaFecha && record.id !== r.id);
+        if (existeRegistro) { alert('Ya existe un registro para esta fecha.'); return; }
+        // If date changed, update the stored BTC rate according to the new date
+        let nuevaRate = null;
+        if (nuevaFecha === todayYMD()){
+          if (!currentBtcPriceMXN) await fetchBtcPrice();
+          nuevaRate = currentBtcPriceMXN;
+        } else {
+          nuevaRate = await fetchBtcPriceAtDate(nuevaFecha);
+        }
+        if (!nuevaRate || nuevaRate <= 0){ alert('No se pudo obtener el precio histórico para la nueva fecha.'); return; }
+        r.rate_mxn_btc_at_entry = Number(nuevaRate);
+      }
+      // Update sats, mxn_static and notes using the (possibly updated) rate
+      r.dateISO = nuevaFecha; r.sats = nuevosSats; r.mxn_static = calcMXNFromSats(nuevosSats, r.rate_mxn_btc_at_entry); r.notes = nuevasNotas;
+      await saveRecords(list);
+      await refreshAll(); modal.remove(); alert(`Registro ${r.id} actualizado exitosamente.`);
+    });
+  }
+
+  window.closeModal = function(element) { element.closest('.modal-overlay').remove(); };
+
+  // Export / Import
+  byId('btnExportar').onclick = async ()=>{
+    const data = { records: await loadRecords() };
+    const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `btc_registros_${todayYMD()}.json`; a.click(); URL.revokeObjectURL(a.href);
+  };
+
+  byId('fileImport').addEventListener('change', async (ev)=>{
+    const file = ev.target.files?.[0]; if (!file) return; const text = await file.text();
+    try{
+      const data = JSON.parse(text);
+      if (!data || !Array.isArray(data.records)) throw new Error('Estructura inválida');
+      const current = await loadRecords();
+      const existingDates = new Set(current.map(r=> r.dateISO));
+      const merged = [...current];
+      for (const r of data.records){ if (!existingDates.has(r.dateISO)) merged.push(r); }
+      await saveRecords(merged);
+      await refreshAll(); alert('Importación completada.');
+    }catch(err){ alert('Error al importar: '+ err.message); }finally{ ev.target.value=''; }
+  });
+
+  // Buscador
+  byId('buscador').addEventListener('input', (e)=> renderHistorial(e.target.value));
+  byId('btnLimpiarBusqueda').onclick = ()=>{ byId('buscador').value=''; renderHistorial(''); };
+
+  // Estadísticas
+  async function computeStats(){
+    const list = await loadRecords();
+    if (!list.length){
+      const ids = ['avgMxn','avgMxn7','avgMxn30','sumMxn','avgSats','avgSats7','avgSats30','sumSats','diasConRegistro','rachaActual','primeraFecha','ultimaFecha'];
+      ids.forEach(id=> byId(id).textContent = id.includes('sum')||id.includes('avg') ? '—' : '0');
+      return;
+    }
+    const byDate = list.slice().sort((a,b)=> a.dateISO.localeCompare(b.dateISO));
+    const mxnAll = byDate.map(r=> r.mxn_static); const satsAll = byDate.map(r=> r.sats);
+    const today = new Date(todayYMD()); const msDay = 86400000; const d7 = new Date(today.getTime() - 6*msDay); const d30 = new Date(today.getTime() - 29*msDay);
+    const last7 = byDate.filter(r=> new Date(r.dateISO) >= d7); const last30 = byDate.filter(r=> new Date(r.dateISO) >= d30);
+    const avg = arr => arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : 0; const sum = arr => arr.reduce((a,b)=>a+b,0);
+    byId('avgMxn').textContent = fmtMoney(avg(mxnAll)); byId('avgMxn7').textContent = fmtMoney(avg(last7.map(r=> r.mxn_static))); byId('avgMxn30').textContent = fmtMoney(avg(last30.map(r=> r.mxn_static))); byId('sumMxn').textContent = fmtMoney(sum(mxnAll));
+    byId('avgSats').textContent = fmtNumber(avg(satsAll)); byId('avgSats7').textContent = fmtNumber(avg(last7.map(r=> r.sats))); byId('avgSats30').textContent = fmtNumber(avg(last30.map(r=> r.sats))); byId('sumSats').textContent = fmtNumber(sum(satsAll));
+    byId('diasConRegistro').textContent = byDate.length; byId('primeraFecha').textContent = byDate[0]?.dateISO || '—'; byId('ultimaFecha').textContent = byDate[byDate.length-1]?.dateISO || '—';
+    let streak = 0; let cursor = new Date(today); const dates = new Set(byDate.map(r=> r.dateISO)); while (dates.has(toYMD(cursor))){ streak++; cursor = new Date(cursor.getTime() - msDay); }
+    byId('rachaActual').textContent = streak;
+  }
+
+  async function refreshAll(){ await refreshResumen(); await renderHistorial(byId('buscador').value||''); await computeStats(); }
+
+  // --- Storage info functions ---
+  async function estimateOriginUsage(){
+    if (navigator.storage && navigator.storage.estimate){
+      try{
+        const estimate = await navigator.storage.estimate();
+        return estimate; // {usage, quota}
+      }catch(e){ console.warn('estimate failed', e); }
+    }
+    return null;
+  }
+
+  function bytesToHuman(bytes){
+    if (bytes === undefined || bytes === null) return '—';
+    const thresh = 1024;
+    if (Math.abs(bytes) < thresh) return bytes + ' B';
+    const units = ['KB','MB','GB','TB'];
+    let u = -1; do { bytes /= thresh; ++u; } while(Math.abs(bytes) >= thresh && u < units.length-1);
+    return bytes.toFixed(2) + ' ' + units[u];
+  }
+
+  async function computeDbJsonSize(){
+    const records = await getAllRecordsFromDB();
+    const json = JSON.stringify(records || []);
+    // approximate bytes length using Blob
+    const blob = new Blob([json]);
+    return blob.size; // bytes
+  }
+
+  async function refreshStorageStats(){
+    byId('statDbName').textContent = DB_NAME;
+    const records = await getAllRecordsFromDB();
+    byId('statRecordsCount').textContent = (records||[]).length;
+    const jsonBytes = await computeDbJsonSize();
+    byId('statDbSize').textContent = bytesToHuman(jsonBytes) + ` (${jsonBytes} B)`;
+    const est = await estimateOriginUsage();
+    if (est){
+      byId('statOriginUsage').textContent = bytesToHuman(est.usage);
+      byId('statOriginQuota').textContent = bytesToHuman(est.quota);
+      byId('statOriginPercent').textContent = est.quota ? ((est.usage/est.quota)*100).toFixed(2)+'%' : '—';
+    } else {
+      byId('statOriginUsage').textContent = 'No disponible';
+      byId('statOriginQuota').textContent = 'No disponible';
+      byId('statOriginPercent').textContent = '—';
+    }
+  }
+
+  // Delete DB button
+  const btnClearDb = document.getElementById('btnClearDb');
+  if (btnClearDb){
+    btnClearDb.addEventListener('click', async ()=>{
+      if (!confirm('¿Eliminar TODOS los datos de la base ctBrowser_registroDiario_db_v1? Esta acción es irreversible.')) return;
+      // close open DB connections then delete
+      try{
+        const db = await openDB();
+        db.close();
+      }catch(e){}
+      const delReq = indexedDB.deleteDatabase(DB_NAME);
+      delReq.onsuccess = async ()=>{ await refreshAll(); await refreshStorageStats(); alert('Base de datos eliminada.'); };
+      delReq.onerror = ()=>{ alert('Error al eliminar la base de datos.'); };
+      delReq.onblocked = ()=>{ alert('Eliminación bloqueada: cierra otras pestañas que usen la app.'); };
+    });
+  }
+
+  // Send to Discord webhook button
+  const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1415551944851980338/wD2IgMyi0FlGtYM-oxAp7plzLqQsjJDi5OaE37Djd7fztAEcmzrCkE5rvTvGV633_gkf';
+  const btnSendDiscord = document.getElementById('btnSendDiscord');
+  if (btnSendDiscord){
+    btnSendDiscord.addEventListener('click', async ()=>{
+      if (!confirm('Enviar respaldo JSON con todos los registros al canal de Discord mediante webhook?')) return;
+      try{
+        btnSendDiscord.disabled = true; btnSendDiscord.textContent = '⌛ Enviando...';
+        const records = await getAllRecordsFromDB();
+        const payload = { exported_at: new Date().toISOString(), records };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const form = new FormData();
+        form.append('file', blob, `ctbrowser_backup_${todayYMD()}.json`);
+        // optional: add content message
+        form.append('payload_json', JSON.stringify({ content: `Respaldo de registros - ${todayYMD()}` }));
+
+        const resp = await fetch(DISCORD_WEBHOOK_URL, { method: 'POST', body: form });
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        alert('Respaldo enviado a Discord correctamente.');
+      }catch(err){
+        console.error('Enviar a Discord:', err);
+        alert('Error al enviar a Discord: ' + (err.message || err));
+      }finally{
+        btnSendDiscord.disabled = false; btnSendDiscord.textContent = '📤 Enviar respaldo a Discord';
+      }
+    });
+  }
+
+
+  function updateSelectedDateDisplay(date) {
+    const today = new Date(); const displaySpan = byId('selectedDateDisplay'); const buttonTextSpan = byId('openDatePickerBtn').querySelector('span');
+    if (displaySpan && buttonTextSpan) { displaySpan.textContent = date.toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' }); buttonTextSpan.style.display = 'none'; }
+  }
+
+  // Inicio: obtener precio, luego inicializar UI leyendo IndexedDB
+  await fetchBtcPrice();
+  await refreshAll();
+  // Refresh storage stats initially
+  await refreshStorageStats();
+
+  // --- Calculadora (sin cambios funcionales) ---
+  let calcDisplay = document.getElementById('calculatorDisplay');
+  let calcCopyBtn = document.getElementById('calcCopyBtn');
+  let calcModal = document.getElementById('calculatorModal');
+  let calcOpenBtn = document.querySelector('button[style*="background-color: #FFA500"]');
+  let calcCloseBtn = document.getElementById('closeCalculatorBtn');
+  let calcHasResult = false; let calcExpression = '';
+  function openCalculatorModal(){ calcModal.classList.add('active'); document.body.style.overflow = 'hidden'; }
+  function closeCalculatorModal(){ calcModal.classList.remove('active'); document.body.style.overflow = ''; calcClear(); }
+  function calcAppend(value){
+    if (calcDisplay.textContent === '0' && value !== '.' && value !== '+' && value !== '-') { calcDisplay.textContent = value; }
+    else if (calcHasResult && !isCalcOperator(value)) { calcDisplay.textContent = value; calcHasResult = false; calcCopyBtn.disabled = true; }
+    else { if (value === '.' && calcDisplay.textContent.includes('.') && !calcDisplay.textContent.includes('+') && !calcDisplay.textContent.includes('-')) return; if (isCalcOperator(value) && (calcDisplay.textContent.slice(-1) === '+' || calcDisplay.textContent.slice(-1) === '-')) return; calcDisplay.textContent += value; }
+    if (calcHasResult) { calcHasResult = false; calcCopyBtn.disabled = true; }
+  }
+  function isCalcOperator(value){ return value === '+' || value === '-'; }
+  function calcClear(){ calcDisplay.textContent = '0'; calcHasResult = false; calcCopyBtn.disabled = true; }
+  function calcCalculate(){ try{ calcExpression = calcDisplay.textContent; if (!/^[\d+\-.\s]+$/.test(calcExpression)) throw new Error('Expresión inválida'); let result = eval(calcExpression); calcDisplay.textContent = result; calcHasResult = true; calcCopyBtn.disabled = false; }catch(e){ calcDisplay.textContent = 'Error'; calcHasResult = false; calcCopyBtn.disabled = true; setTimeout(calcClear,1500);} }
+  function calcCopy(){ if (!calcHasResult) return; const tempTextArea = document.createElement('textarea'); tempTextArea.value = calcDisplay.textContent; document.body.appendChild(tempTextArea); tempTextArea.select(); try{ document.execCommand('copy'); const notification = document.createElement('div'); notification.style.cssText = 'position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--primary); color: white; padding: 10px 20px; border-radius: 6px; font-size: 14px; z-index: 1001; animation: fadeIn 0.3s ease;'; notification.textContent = '¡Copiado al portapapeles!'; document.body.appendChild(notification); setTimeout(()=>notification.remove(),2000);}catch(err){console.error('Error al copiar:',err);} document.body.removeChild(tempTextArea); }
+  if (calcOpenBtn) calcOpenBtn.addEventListener('click', openCalculatorModal);
+  if (calcCloseBtn) calcCloseBtn.addEventListener('click', closeCalculatorModal);
+  document.querySelectorAll('.calc-btn').forEach(button => { if (button.id === 'closeCalculatorBtn' || button.id === 'calcCopyBtn') return; button.addEventListener('click', () => { const value = button.textContent.trim(); if (button.classList.contains('number') || button.classList.contains('operator')) calcAppend(value); else if (button.classList.contains('equals')) calcCalculate(); else if (button.classList.contains('clear')) calcClear(); }); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && calcModal.classList.contains('active')) closeCalculatorModal(); });
+  calcModal.addEventListener('click', (e)=>{ if (e.target === calcModal) closeCalculatorModal(); });
+  calcCopyBtn.addEventListener('click', calcCopy);
+  calcCopyBtn.disabled = true;
+  document.addEventListener('keydown', (e)=>{ if (!calcModal.classList.contains('active')) return; const key = e.key; if (key >= '0' && key <= '9') calcAppend(key); else if (key === '+' || key === '-') calcAppend(key); else if (key === '.') calcAppend(key); else if (key === 'Enter'){ e.preventDefault(); calcCalculate(); } else if (key === 'Backspace'){ e.preventDefault(); if (calcDisplay.textContent.length > 1) calcDisplay.textContent = calcDisplay.textContent.slice(0, -1); else calcDisplay.textContent = '0'; } else if (key === 'c' || key === 'C') calcClear(); });
+
+})();
+</script>
+</body>
+</html>

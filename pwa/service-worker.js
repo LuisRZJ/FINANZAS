@@ -1,16 +1,18 @@
 // Configuración del Service Worker
-const CACHE_NAME = 'mi-pwa-v1.0.0';
-const STATIC_CACHE = 'pwa-static-v1';
+// Version bump: actualice estos valores cuando necesite invalidar caches en despliegues
+const CACHE_NAME = 'mi-pwa-v1.0.1';
+const STATIC_CACHE = 'pwa-static-v2';
 const DYNAMIC_CACHE = 'pwa-dynamic-v1';
 
 // Archivos estáticos a cachear
+// Archivos estáticos a cachear (intencionalmente sin '/index.html')
 const STATIC_ASSETS = [
-  '/index.html',
   '/styles.css',
   '/app.js',
   '/pwa/manifest.json',
   '/pwa/logo-app.png'
 ];
+// Nota: evitamos cachear la raíz '/index.html' para que las rutas de páginas internas no queden forzadas
 
 // Rutas de API o contenido dinámico
 const DYNAMIC_URLS = [
