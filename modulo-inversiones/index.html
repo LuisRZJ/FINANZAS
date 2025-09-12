@@ -226,6 +226,12 @@
 
     /* allow the specific card to show overflow (so the dropdown isn't clipped) */
     .card.overflow-visible { overflow: visible; }
+    /* When overflow is visible we still want the visual rounded corners on the top of the card.
+       Apply matching top border-radius to the header area so it doesn't appear squared. */
+    .card.overflow-visible .card-icon {
+        border-top-left-radius: 12px;
+        border-top-right-radius: 12px;
+    }
 
         footer {
             background: linear-gradient(135deg, var(--investment-blue), var(--investment-dark));
@@ -323,8 +329,8 @@
                         <button type="button" class="card-link dropdown-button" id="ctDropdownBtn" aria-haspopup="true" aria-expanded="false">Seleccionar acción ▾</button>
                         <ul class="dropdown-menu" role="menu" aria-labelledby="ctDropdownBtn">
                             <li><a href="cryptotab/ct-browser/ct-browser.html" role="menuitem">Ver CT Browser</a></li>
-                            <li><button type="button" class="disabled" disabled>Ver CT Pool</button></li>
-                            <li><button type="button" class="disabled" disabled>Ver CT Farm</button></li>
+                            <li><a href="cryptotab/ct-pool/ct-pool.html" role="menuitem">Ver CT Pool</a></li>
+                            <li><a href="cryptotab/ct-farm/ct-farm.html" role="menuitem">Ver CT Farm</a></li>
                         </ul>
                     </div>
                 </div>

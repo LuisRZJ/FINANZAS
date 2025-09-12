@@ -5,7 +5,7 @@ const isSupported = () => {
 
 
 // variables de versión de página
-const PAGE_VERSION = "2.6.1"
+const PAGE_VERSION = "2.7.0"
 const ACT_DATE = "11/09/25"
 
 console.log("Página versión: " + PAGE_VERSION + ", actualizada por ultima vez el: " + ACT_DATE)

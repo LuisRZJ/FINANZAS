@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <title>Registro diario | CT Browser</title>
+  <title>Registro diario | CT Farm</title>
   <meta name="theme-color" content="#2563eb">
   <link rel="icon" href="/pwa/logo-app.png">
   <style>
@@ -30,8 +30,8 @@
     body{min-height:100%;}
     body{
       margin:0; font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, Cantarell, "Noto Sans", Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
-      background: radial-gradient(1200px 600px at 70% -10%, rgba(96, 165, 250, 0.212), transparent),
-                  radial-gradient(1000px 600px at -20% 40%, rgba(34, 197, 94, 0.247), transparent),
+      background: radial-gradient(1200px 600px at 70% -10%, rgba(250, 196, 96, 0.438), transparent),
+                  radial-gradient(1000px 600px at -20% 40%, rgba(221, 218, 46, 0.521), transparent),
                   var(--bg);
       color:var(--text);
     }
@@ -499,7 +499,7 @@
               <path d="M8 9h8M8 12h8M8 15h6" stroke="white" stroke-opacity=".85" stroke-width="1.2"/>
             </svg>
           </div>
-          <h1>Registro diario | CT Browser</h1>
+          <h1>Registro diario | CT Farm</h1>
         </a>
       </div>
       <div class="row right">
@@ -662,7 +662,7 @@
           <button id="btnClearDb" class="btn danger">🗑 Eliminar todos los datos</button>
           <button id="btnSendDiscord" class="btn primary" style="margin-left:8px">📤 Enviar respaldo a Discord</button>
         </div>
-        <div class="help" style="margin-top:10px">Eliminar los datos borrará totalmente la base de datos <b>ctBrowser_registroDiario_db_v1</b>. Asegúrate de exportar si necesitas respaldo.</div>
+  <div class="help" style="margin-top:10px">Eliminar los datos borrará totalmente la base de datos <b id="dbNameInline">—</b>. Asegúrate de exportar si necesitas respaldo.</div>
       </div>
     </section>
 
@@ -712,7 +712,7 @@
 // ...existing code...
 (async function(){
   // IndexedDB wrapper for records
-  const DB_NAME = 'ctBrowser_registroDiario_db_v1';
+  const DB_NAME = 'ctFarm_registroDiario_db_v1';
   const DB_VERSION = 1;
   const STORE_RECORDS = 'records';
   const SATS_PER_BTC = 100_000_000;
@@ -1252,22 +1252,25 @@
   // Delete DB button
   const btnClearDb = document.getElementById('btnClearDb');
   if (btnClearDb){
+    // show correct DB name in the UI help area
+    try{ if (byId('dbNameInline')) byId('dbNameInline').textContent = DB_NAME; }catch(e){}
+
     btnClearDb.addEventListener('click', async ()=>{
-      if (!confirm('¿Eliminar TODOS los datos de la base ctBrowser_registroDiario_db_v1? Esta acción es irreversible.')) return;
+      if (!confirm(`¿Eliminar TODOS los datos de la base ${DB_NAME}? Esta acción es irreversible.`)) return;
       // close open DB connections then delete
       try{
         const db = await openDB();
         db.close();
       }catch(e){}
       const delReq = indexedDB.deleteDatabase(DB_NAME);
-      delReq.onsuccess = async ()=>{ await refreshAll(); await refreshStorageStats(); alert('Base de datos eliminada.'); };
-      delReq.onerror = ()=>{ alert('Error al eliminar la base de datos.'); };
-      delReq.onblocked = ()=>{ alert('Eliminación bloqueada: cierra otras pestañas que usen la app.'); };
+      delReq.onsuccess = async ()=>{ await refreshAll(); await refreshStorageStats(); alert(`Base de datos ${DB_NAME} eliminada.`); };
+      delReq.onerror = ()=>{ alert(`Error al eliminar la base de datos ${DB_NAME}.`); };
+      delReq.onblocked = ()=>{ alert(`Eliminación bloqueada para ${DB_NAME}: cierra otras pestañas que usen la app.`); };
     });
   }
 
   // Send to Discord webhook button
-  const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1415551944851980338/wD2IgMyi0FlGtYM-oxAp7plzLqQsjJDi5OaE37Djd7fztAEcmzrCkE5rvTvGV633_gkf';
+  const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1415552311983607838/di66Yo9BMBDo_un4Q-pbKLz06tCb8NnZkmk4pdm9cO9xAexXVsCZyTAGKfTBaQ1sopmF';
   const btnSendDiscord = document.getElementById('btnSendDiscord');
   if (btnSendDiscord){
     btnSendDiscord.addEventListener('click', async ()=>{
@@ -1275,12 +1278,12 @@
       try{
         btnSendDiscord.disabled = true; btnSendDiscord.textContent = '⌛ Enviando...';
 
-        // Gather data for embed
+        // Gather data for a richer payload
         const records = await getAllRecordsFromDB();
         const dbJsonSize = await computeDbJsonSize();
         const est = await estimateOriginUsage();
         const summary = {
-          page_title: document.title || 'ct-browser',
+          page_title: document.title || 'ct-farm',
           db_name: DB_NAME,
           records_count: Array.isArray(records) ? records.length : 0,
           db_bytes: dbJsonSize,
@@ -1289,11 +1292,11 @@
           exported_at: new Date().toISOString()
         };
 
-        // File payload
+        // Build file payload
         const payloadFile = { summary, records };
         const blob = new Blob([JSON.stringify(payloadFile, null, 2)], { type: 'application/json' });
 
-        // Build embed-like object for Discord
+        // Build a human-readable message with embed-like fields
         const embed = {
           title: `Respaldo - ${summary.page_title}`,
           description: `Backup automático de la página: **${summary.page_title}**`,
@@ -1307,7 +1310,7 @@
         };
 
         const form = new FormData();
-        form.append('file', blob, `ctbrowser_backup_${todayYMD()}.json`);
+  form.append('file', blob, `ctfarm_backup_${todayYMD()}.json`);
         form.append('payload_json', JSON.stringify({ content: `Respaldo de registros - ${todayYMD()}`, embeds: [embed] }));
 
         const resp = await fetch(DISCORD_WEBHOOK_URL, { method: 'POST', body: form });
