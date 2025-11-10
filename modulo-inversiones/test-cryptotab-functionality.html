@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba de Funcionalidad Cryptotab</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .success { background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .error { background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .info { background-color: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Prueba de Funcionalidad Cryptotab</h1>
+    
+    <div class="section">
+        <h2>Datos de Prueba</h2>
+        <button onclick="createTestData()">Crear Datos de Prueba</button>
+        <button onclick="clearAllData()">Limpiar Todos los Datos</button>
+        <div id="test-data-results"></div>
+    </div>
+    
+    <div class="section">
+        <h2>Prueba de Funcionalidad</h2>
+        <button onclick="testCryptotabFunctionality()">Ejecutar Prueba</button>
+        <div id="test-results"></div>
+    </div>
+    
+    <div class="section">
+        <h2>Resultados del Cálculo</h2>
+        <div id="calculation-results"></div>
+    </div>
+
+    <script>
+        // Currency formatter
+        const currencyFormatter = new Intl.NumberFormat('es-MX', {
+            style: 'currency',
+            currency: 'MXN',
+            minimumFractionDigits: 2
+        });
+
+        // Function to get the most recent daily income from Cryptotab IndexedDB
+        function getCryptotabDailyIncome(dbName) {
+            return new Promise((resolve) => {
+                try {
+                    const request = indexedDB.open(dbName);
+                    
+                    request.onsuccess = function(event) {
+                        const db = event.target.result;
+                        
+                        // Check if the object store exists
+                        if (!db.objectStoreNames.contains('records')) {
+                            console.log(`Object store 'records' not found in ${dbName}`);
+                            resolve(0);
+                            return;
+                        }
+                        
+                        try {
+                            const transaction = db.transaction(['records'], 'readonly');
+                            const store = transaction.objectStore('records');
+                            
+                            // Get all records and find the most recent one
+                            const getAllRequest = store.getAll();
+                            
+                            getAllRequest.onsuccess = function(event) {
+                                const records = event.target.result;
+                                if (!records || records.length === 0) {
+                                    resolve(0);
+                                    return;
+                                }
+                                
+                                // Sort by dateISO in descending order to get the most recent
+                                records.sort((a, b) => new Date(b.dateISO) - new Date(a.dateISO));
+                                const mostRecentRecord = records[0];
+                                
+                                // Return the mxn_static value (daily income in MXN)
+                                resolve(mostRecentRecord.mxn_static || 0);
+                            };
+                            
+                            getAllRequest.onerror = function() {
+                                console.error(`Error getting records from ${dbName}`);
+                                resolve(0);
+                            };
+                        } catch (transactionError) {
+                            console.error(`Transaction error in ${dbName}:`, transactionError);
+                            resolve(0);
+                        }
+                    };
+                    
+                    request.onerror = function() {
+                        console.error(`Error opening database ${dbName}`);
+                        resolve(0);
+                    };
+                } catch (error) {
+                    console.error(`Error accessing IndexedDB ${dbName}:`, error);
+                    resolve(0);
+                }
+            });
+        }
+
+        // Create test data for Cryptotab databases
+        function createTestData() {
+            const resultsDiv = document.getElementById('test-data-results');
+            resultsDiv.innerHTML = '';
+            
+            const dbNames = [
+                'ctFarm_registroDiario_db_v1',
+                'ctPool_registroDiario_db_v1', 
+                'ctBrowser_registroDiario_db_v1'
+            ];
+            
+            dbNames.forEach(dbName => {
+                try {
+                    const request = indexedDB.open(dbName, 1);
+                    
+                    request.onupgradeneeded = function(event) {
+                        const db = event.target.result;
+                        if (!db.objectStoreNames.contains('records')) {
+                            const store = db.createObjectStore('records', { keyPath: 'id' });
+                            store.createIndex('dateISO', 'dateISO', { unique: false });
+                        }
+                    };
+                    
+                    request.onsuccess = function(event) {
+                        const db = event.target.result;
+                        const transaction = db.transaction(['records'], 'readwrite');
+                        const store = transaction.objectStore('records');
+                        
+                        // Create test record
+                        const testRecord = {
+                            id: Date.now().toString(),
+                            sats: 50000,
+                            mxn_static: 850.50,
+                            dateISO: new Date().toISOString().split('T')[0],
+                            notes: 'Registro de prueba',
+                            rate_mxn_btc_at_entry: 1701000
+                        };
+                        
+                        const addRequest = store.add(testRecord);
+                        
+                        addRequest.onsuccess = function() {
+                            resultsDiv.innerHTML += `<div class="test-result success">✓ Datos de prueba creados en ${dbName}</div>`;
+                        };
+                        
+                        addRequest.onerror = function() {
+                            resultsDiv.innerHTML += `<div class="test-result error">✗ Error al crear datos en ${dbName}</div>`;
+                        };
+                    };
+                    
+                    request.onerror = function() {
+                        resultsDiv.innerHTML += `<div class="test-result error">✗ Error al abrir ${dbName}</div>`;
+                    };
+                } catch (error) {
+                    resultsDiv.innerHTML += `<div class="test-result error">✗ Error: ${error.message}</div>`;
+                }
+            });
+        }
+
+        // Clear all test data
+        function clearAllData() {
+            const resultsDiv = document.getElementById('test-data-results');
+            
+            const dbNames = [
+                'ctFarm_registroDiario_db_v1',
+                'ctPool_registroDiario_db_v1', 
+                'ctBrowser_registroDiario_db_v1'
+            ];
+            
+            dbNames.forEach(dbName => {
+                try {
+                    const deleteRequest = indexedDB.deleteDatabase(dbName);
+                    
+                    deleteRequest.onsuccess = function() {
+                        resultsDiv.innerHTML += `<div class="test-result info">✓ Base de datos ${dbName} eliminada</div>`;
+                    };
+                    
+                    deleteRequest.onerror = function() {
+                        resultsDiv.innerHTML += `<div class="test-result error">✗ Error al eliminar ${dbName}</div>`;
+                    };
+                } catch (error) {
+                    resultsDiv.innerHTML += `<div class="test-result error">✗ Error: ${error.message}</div>`;
+                }
+            });
+        }
+
+        // Test the Cryptotab functionality
+        async function testCryptotabFunctionality() {
+            const resultsDiv = document.getElementById('test-results');
+            resultsDiv.innerHTML = '<div class="test-result info">Ejecutando pruebas...</div>';
+            
+            const dbNames = [
+                'ctFarm_registroDiario_db_v1',
+                'ctPool_registroDiario_db_v1', 
+                'ctBrowser_registroDiario_db_v1'
+            ];
+            
+            let results = [];
+            
+            for (const dbName of dbNames) {
+                try {
+                    const income = await getCryptotabDailyIncome(dbName);
+                    results.push({ dbName, income, success: true });
+                } catch (error) {
+                    results.push({ dbName, income: 0, success: false, error: error.message });
+                }
+            }
+            
+            resultsDiv.innerHTML = '';
+            results.forEach(result => {
+                if (result.success) {
+                    resultsDiv.innerHTML += `<div class="test-result success">✓ ${result.dbName}: ${currencyFormatter.format(result.income)}</div>`;
+                } else {
+                    resultsDiv.innerHTML += `<div class="test-result error">✗ ${result.dbName}: ${result.error}</div>`;
+                }
+            });
+            
+            // Calculate total
+            const total = results.reduce((sum, result) => sum + result.income, 0);
+            document.getElementById('calculation-results').innerHTML = `
+                <h3>Total de Ganancias Diarias:</h3>
+                <div class="test-result success">
+                    <strong>Total: ${currencyFormatter.format(total)}</strong>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

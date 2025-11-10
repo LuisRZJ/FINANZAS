@@ -8,11 +8,18 @@
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/png" sizes="192x192" href="Logo_app_trading-removebg-preview.png">
     <link rel="icon" type="image/png" sizes="512x512" href="Logo_app_trading-removebg-preview.png">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <h1>Estadísticas</h1>
+            <div class="account-switcher">
+                <label for="account-select">Cuenta:</label>
+                <select id="account-select"></select>
+                <button type="button" id="add-account-btn" class="nav-btn">Nueva cuenta</button>
+                <span id="active-account-name" class="account-name"></span>
+            </div>
             <div id="datetime" class="datetime"></div>
         </div>
 
@@ -181,6 +188,25 @@
                             <h3>Promedio Pips por Trade</h3>
                             <div class="stat-value" id="avgPips">-</div>
                         </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Sección de Evolución del Capital -->
+            <section class="stats-section capital-evolution">
+                <h2>Evolución del Capital</h2>
+                <div class="capital-chart-wrapper" style="position: relative; min-height: 280px;">
+                    <canvas id="capitalEvolutionChart"></canvas>
+                    <p id="capitalEvolutionEmptyState" style="display: none; text-align: center; margin-top: 24px;">Registra trades o movimientos para visualizar la evolución del capital.</p>
+                </div>
+                <div class="capital-metrics" style="display: flex; gap: 24px; flex-wrap: wrap; margin-top: 16px;">
+                    <div class="capital-metric-card" style="flex: 1 1 220px; background: rgba(255, 255, 255, 0.04); border-radius: 12px; padding: 16px;">
+                        <h3 style="margin-bottom: 8px; font-size: 1em;">PNL acumulado del período</h3>
+                        <div id="capitalEvolutionPnl" style="font-size: 1.6em; font-weight: bold;">-</div>
+                    </div>
+                    <div class="capital-metric-card" style="flex: 1 1 220px; background: rgba(255, 255, 255, 0.04); border-radius: 12px; padding: 16px;">
+                        <h3 style="margin-bottom: 8px; font-size: 1em;">ROI del período</h3>
+                        <div id="capitalEvolutionRoi" style="font-size: 1.6em; font-weight: bold;">-</div>
                     </div>
                 </div>
             </section>

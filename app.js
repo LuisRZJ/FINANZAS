@@ -5,18 +5,15 @@ const isSupported = () => {
 
 
 // variables de versión de página
-const PAGE_VERSION = "2.7.0"
-const ACT_DATE = "11/09/25"
+window.PAGE_VERSION = "4.0.0";
+window.ACT_DATE = "09/11/25";
 
-console.log("Página versión: " + PAGE_VERSION + ", actualizada por ultima vez el: " + ACT_DATE)
-
+console.log("Página versión: " + window.PAGE_VERSION + ", actualizada por ultima vez el: " + window.ACT_DATE);
 
 // Estado de la aplicación
-let deferredPrompt = null;
-let isOffline = false;
-
-// Elementos del DOM
-const installButton = document.getElementById('installButton');
+var deferredPrompt = null;
+var isOffline = false;
+var installButton = document.getElementById('installButton');
 const installSection = document.querySelector('.install-app-section');
 
 // Función de utilidad para logs

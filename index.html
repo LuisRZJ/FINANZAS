@@ -3,85 +3,141 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Aplicación web progresiva con funcionalidad offline">
+    <meta name="description" content="Aplicación web progresiva con funcionalidad offline para finanzas, trading e inversiones.">
     <meta name="theme-color" content="#2563eb">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Estilos personalizados -->
+    <link rel="stylesheet" href="estilos.css">
     
     <!-- Google Fonts - Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <!-- Font Awesome para iconos -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- PWA Metadatos -->
-    
-    <!-- Manifest e ícono -->
+    <!-- PWA Manifest e ícono -->
     <link rel="manifest" href="pwa/manifest.json">
     <link rel="icon" href="pwa/logo-app.png">
     
-    <!-- Estilos -->
-    <link rel="stylesheet" href="styles.css">
-    
     <title>FTI - Finanzas, Trading e Inversiones</title>
+    <script>
+      // Configuración de Tailwind para usar la fuente Inter
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+            },
+          }
+        }
+      }
+    </script>
 </head>
-<body>
-    <header>
-        <h1>FTI</h1>
-        <p>Finanzas, Trading e Inversiones</p>
+<body class="bg-gray-100 text-slate-800 font-sans antialiased flex flex-col min-h-screen">
+    
+    <!-- Encabezado -->
+    <header class="bg-white shadow-sm w-full">
+        <div class="container mx-auto px-6 py-8 text-center">
+            <h1 class="text-4xl md:text-5xl font-bold text-blue-600">FTI</h1>
+            <p class="text-lg text-slate-500 mt-2">Tu Centro de Finanzas, Trading e Inversiones</p>
+        </div>
     </header>
     
-    <main>
-        <!--
-        <section class="hero">
-            <h2>Tu Plataforma Integral de Finanzas</h2>
-            <p>Gestiona tus finanzas, opera en trading y optimiza tus inversiones, incluso sin conexión a internet.</p>
-        </section> -->
-
+    <!-- Contenido Principal -->
+    <main class="flex-grow container mx-auto px-6 py-12">
+        
+        <!-- Sección de Módulos -->
         <section class="modules">
-            <h3>Nuestros Módulos</h3>
-            <div class="module-grid">
-                <div class="module finance">
-                    <i class="fas fa-wallet icon"></i>
-                    <h4>Finanzas Personales</h4>
-                    <p>Controla tus ingresos y gastos.</p>
-                    <a href="modulo-finanzas/index.html" class="btn">Ir a Finanzas</a>
+            <h3 class="text-3xl font-bold text-center mb-12 text-slate-900">Nuestros Módulos</h3>
+            
+            <!-- Grid de Módulos -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                
+                <!-- Módulo: Finanzas Personales -->
+                <div class="bg-white rounded-xl shadow-lg p-8 flex flex-col items-center text-center transition-all duration-300 hover:scale-105 hover:shadow-2xl">
+                    <div class="bg-blue-100 text-blue-600 rounded-full p-5 mb-6">
+                        <i class="fas fa-wallet text-4xl"></i>
+                    </div>
+                    <h4 class="text-2xl font-semibold mb-2 text-slate-900">Finanzas Personales</h4>
+                    <p class="text-slate-500 mb-6 flex-grow">Controla tus ingresos, gastos y presupuestos de forma sencilla.</p>
+                    <a href="modulo-finanzas/operaciones.html" class="mt-auto bg-blue-600 text-white font-semibold py-3 px-8 rounded-lg hover:bg-blue-700 transition-colors duration-300 w-full">Acceder</a>
                 </div>
-                <div class="module trading">
-                    <i class="fas fa-chart-line icon"></i>
-                    <h4>Trading</h4>
-                    <p>Opera en los mercados financieros.</p>
-                    <a href="modulo-trading/index.html" class="btn">Ir a Trading</a>
+                
+                <!-- Módulo: Trading -->
+                <div class="bg-white rounded-xl shadow-lg p-8 flex flex-col items-center text-center transition-all duration-300 hover:scale-105 hover:shadow-2xl">
+                    <div class="bg-green-100 text-green-600 rounded-full p-5 mb-6">
+                        <i class="fas fa-chart-line text-4xl"></i>
+                    </div>
+                    <h4 class="text-2xl font-semibold mb-2 text-slate-900">Trading</h4>
+                    <p class="text-slate-500 mb-6 flex-grow">Opera en los mercados financieros con herramientas profesionales.</p>
+                    <a href="modulo-trading/index.html" class="bg-blue-600 text-white font-semibold py-3 px-8 rounded-lg hover:bg-blue-700 transition-colors duración-300 w-full mt-auto mb-2">Acceder</a>
+                    <button id="backtesting-button" class="bg-gray-200 text-slate-700 font-semibold py-2 px-6 rounded-lg hover:bg-gray-300 transition-colors duration-300 w-full text-sm">Otros...</button>
                 </div>
-                <div class="module investment">
-                    <i class="fas fa-lightbulb icon"></i>
-                    <h4>Inversiones</h4>
-                    <p>Descubre oportunidades de inversión.</p>
-                    <a href="modulo-inversiones/index.html" class="btn">Ir a Inversiones</a>
+                
+                <!-- Módulo: Inversiones -->
+                <div class="bg-white rounded-xl shadow-lg p-8 flex flex-col items-center text-center transition-all duration-300 hover:scale-105 hover:shadow-2xl">
+                     <div class="bg-purple-100 text-purple-600 rounded-full p-5 mb-6">
+                        <i class="fas fa-lightbulb text-4xl"></i>
+                    </div>
+                    <h4 class="text-2xl font-semibold mb-2 text-slate-900">Inversiones</h4>
+                    <p class="text-slate-500 mb-6 flex-grow">Descubre y gestiona nuevas oportunidades de inversión.</p>
+                    <a href="modulo-inversiones/index.html" class="mt-auto bg-blue-600 text-white font-semibold py-3 px-8 rounded-lg hover:bg-blue-700 transition-colors duration-300 w-full">Acceder</a>
                 </div>
-                <div class="module utilities">
-                    <i class="fas fa-tools icon"></i>
-                    <h4>Utilidades</h4>
-                    <p>Herramientas y recursos útiles.</p>
-                    <a href="utilidades.html" class="btn">Ir a Utilidades</a>
+                
+                <!-- Módulo: Utilidades -->
+                <div class="bg-white rounded-xl shadow-lg p-8 flex flex-col items-center text-center transition-all duration-300 hover:scale-105 hover:shadow-2xl">
+                    <div class="bg-yellow-100 text-yellow-600 rounded-full p-5 mb-6">
+                        <i class="fas fa-tools text-4xl"></i>
+                    </div>
+                    <h4 class="text-2xl font-semibold mb-2 text-slate-900">Utilidades</h4>
+                    <p class="text-slate-500 mb-6 flex-grow">Calculadoras, conversores y recursos para tus finanzas.</p>
+                    <a href="utilidades.html" class="mt-auto bg-blue-600 text-white font-semibold py-3 px-8 rounded-lg hover:bg-blue-700 transition-colors duration-300 w-full">Acceder</a>
                 </div>
-                <div class="module settings">
-                    <i class="fas fa-cog icon"></i>
-                    <h4>Ajustes</h4>
-                    <p>Configura la aplicación.</p>
-                    <a href="ajustes.html" class="btn">Ir a Ajustes</a>
+                
+                <!-- Módulo: Ajustes -->
+                <div class="bg-white rounded-xl shadow-lg p-8 flex flex-col items-center text-center transition-all duration-300 hover:scale-105 hover:shadow-2xl">
+                    <div class="bg-slate-100 text-slate-600 rounded-full p-5 mb-6">
+                        <i class="fas fa-cog text-4xl"></i>
+                    </div>
+                    <h4 class="text-2xl font-semibold mb-2 text-slate-900">Ajustes</h4>
+                    <p class="text-slate-500 mb-6 flex-grow">Configura tus preferencias y personaliza la aplicación.</p>
+                    <a href="ajustes.html" class="mt-auto bg-blue-600 text-white font-semibold py-3 px-8 rounded-lg hover:bg-blue-700 transition-colors duration-300 w-full">Acceder</a>
+                </div>
+
             </div>
         </section>
 
-        <section class="install-app-section">
-            <button id="installButton" class="install-btn" style="display: none;">
-                Instalar Aplicación
+        <!-- Sección de Instalación PWA -->
+        <section class="text-center mt-16">
+            <button id="installButton" class="bg-green-500 text-white font-bold py-3 px-8 rounded-full hover:bg-green-600 transition-colors duration-300 shadow-lg" style="display: none;">
+                <i class="fas fa-download mr-2"></i> Instalar Aplicación
             </button>
         </section>
     </main>
     
-    <footer>
-        <p>Versión: <span id="appVersion"></span> | Última Actualización: <span id="appDate"></span></p>
+    <!-- Modal para Backtesting -->
+    <div id="backtestingModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden flex justify-center items-center">
+        <div class="relative p-8 bg-white w-96 mx-auto rounded-lg shadow-xl">
+            <h3 class="text-xl font-bold mb-4 text-slate-900">Selecciona una Opción</h3>
+            <p class="text-slate-700 mb-6">¿Qué deseas realizar?</p>
+            <div class="flex flex-col space-y-4">
+                <a href="modulo-trading/backtesting/inicio.html" class="bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-700 text-center transition-colors duration-300">Backtesting Forex</a>
+                <a href="modulo-trading/registros-ftt.html" class="bg-green-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-green-700 text-center transition-colors duration-300">Diario FTT</a>
+                <button id="closeModalButton" class="bg-gray-300 text-slate-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-400 transition-colors duration-300">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pie de Página -->
+    <footer class="bg-white mt-auto w-full border-t border-slate-200">
+        <div class="container mx-auto px-6 py-4 text-center text-slate-400 text-sm">
+            <p>Versión: <span id="appVersion">1.0.0</span> | Última Actualización: <span id="appDate">N/A</span></p>
+        </div>
     </footer>
     
     <!-- Scripts -->
@@ -91,12 +147,32 @@
             const appVersionElement = document.getElementById('appVersion');
             const appDateElement = document.getElementById('appDate');
 
-            if (typeof PAGE_VERSION !== 'undefined') {
-                appVersionElement.textContent = PAGE_VERSION;
+            // Estas variables deberían ser definidas en tu proceso de build o en app.js
+            if (typeof window.PAGE_VERSION !== 'undefined') {
+                appVersionElement.textContent = window.PAGE_VERSION;
             }
-            if (typeof ACT_DATE !== 'undefined') {
-                appDateElement.textContent = ACT_DATE;
+            if (typeof window.ACT_DATE !== 'undefined') {
+                appDateElement.textContent = window.ACT_DATE;
             }
+
+            const backtestingButton = document.getElementById('backtesting-button');
+            const backtestingModal = document.getElementById('backtestingModal');
+            const closeModalButton = document.getElementById('closeModalButton');
+
+            backtestingButton.addEventListener('click', () => {
+                backtestingModal.classList.remove('hidden');
+            });
+
+            closeModalButton.addEventListener('click', () => {
+                backtestingModal.classList.add('hidden');
+            });
+
+            // Cerrar modal al hacer clic fuera de él
+            window.addEventListener('click', (event) => {
+                if (event.target === backtestingModal) {
+                    backtestingModal.classList.add('hidden');
+                }
+            });
         });
     </script>
 </body>

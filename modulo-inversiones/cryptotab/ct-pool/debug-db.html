@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug ct-pool DB</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .log { background: #f5f5f5; padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .error { background: #ffe6e6; color: #d00; }
+        .success { background: #e6ffe6; color: #080; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Debug ct-pool Database</h1>
+    <div>
+        <button onclick="checkDB()">Verificar Base de Datos</button>
+        <button onclick="deleteDB()">Eliminar Base de Datos</button>
+        <button onclick="createTestRecord()">Crear Registro de Prueba</button>
+        <button onclick="listAllRecords()">Listar Todos los Registros</button>
+    </div>
+    <div id="log"></div>
+
+    <script>
+        const DB_NAME = 'ctPool_registroDiario_db_v1';
+        const DB_VERSION = 1;
+        const STORE_RECORDS = 'records';
+
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const entry = document.createElement('div');
+            entry.className = `log ${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logDiv.appendChild(entry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function openDB() {
+            return new Promise((resolve, reject) => {
+                log(`Abriendo base de datos: ${DB_NAME} v${DB_VERSION}`);
+                const req = indexedDB.open(DB_NAME, DB_VERSION);
+                
+                req.onupgradeneeded = (ev) => {
+                    log('Evento onupgradeneeded disparado', 'success');
+                    const db = ev.target.result;
+                    log(`Object stores existentes: ${Array.from(db.objectStoreNames)}`);
+                    
+                    if (!db.objectStoreNames.contains(STORE_RECORDS)){
+                        log(`Creando object store: ${STORE_RECORDS}`, 'success');
+                        const store = db.createObjectStore(STORE_RECORDS, { keyPath: 'id' });
+                        store.createIndex('dateISO', 'dateISO', { unique: false });
+                        log('Object store creado exitosamente', 'success');
+                    } else {
+                        log(`Object store ${STORE_RECORDS} ya existe`, 'info');
+                    }
+                };
+                
+                req.onsuccess = () => {
+                    log('Base de datos abierta exitosamente', 'success');
+                    resolve(req.result);
+                };
+                
+                req.onerror = () => {
+                    log(`Error abriendo base de datos: ${req.error}`, 'error');
+                    reject(req.error);
+                };
+            });
+        }
+
+        async function checkDB() {
+            try {
+                log('=== VERIFICANDO BASE DE DATOS ===');
+                const db = await openDB();
+                log(`Object stores: ${Array.from(db.objectStoreNames)}`);
+                
+                if (db.objectStoreNames.contains(STORE_RECORDS)) {
+                    log(`✓ Object store ${STORE_RECORDS} existe`);
+                    
+                    // Intentar leer registros
+                    const tx = db.transaction(STORE_RECORDS, 'readonly');
+                    const store = tx.objectStore(STORE_RECORDS);
+                    const req = store.count();
+                    
+                    req.onsuccess = () => {
+                        log(`✓ Número de registros: ${req.result}`);
+                    };
+                    
+                    req.onerror = () => {
+                        log(`✗ Error contando registros: ${req.error}`, 'error');
+                    };
+                } else {
+                    log(`✗ Object store ${STORE_RECORDS} NO existe`, 'error');
+                }
+                
+                db.close();
+            } catch (error) {
+                log(`✗ Error verificando base de datos: ${error}`, 'error');
+            }
+        }
+
+        async function deleteDB() {
+            try {
+                log('=== ELIMINANDO BASE DE DATOS ===');
+                const deleteReq = indexedDB.deleteDatabase(DB_NAME);
+                
+                deleteReq.onsuccess = () => {
+                    log('✓ Base de datos eliminada exitosamente', 'success');
+                };
+                
+                deleteReq.onerror = () => {
+                    log(`✗ Error eliminando base de datos: ${deleteReq.error}`, 'error');
+                };
+                
+                deleteReq.onblocked = () => {
+                    log('✗ Eliminación bloqueada: cierra otras pestañas que usen la app', 'error');
+                };
+            } catch (error) {
+                log(`✗ Error: ${error}`, 'error');
+            }
+        }
+
+        async function createTestRecord() {
+            try {
+                log('=== CREANDO REGISTRO DE PRUEBA ===');
+                const db = await openDB();
+                
+                if (!db.objectStoreNames.contains(STORE_RECORDS)) {
+                    log('✗ No se puede crear registro: object store no existe', 'error');
+                    return;
+                }
+
+                const testRecord = {
+                    id: 'D1',
+                    sats: 1000,
+                    mxn_static: 500,
+                    dateISO: new Date().toISOString().split('T')[0],
+                    notes: 'Registro de prueba',
+                    rate_mxn_btc_at_entry: 500000
+                };
+
+                const tx = db.transaction(STORE_RECORDS, 'readwrite');
+                const store = tx.objectStore(STORE_RECORDS);
+                const req = store.put(testRecord);
+                
+                req.onsuccess = () => {
+                    log('✓ Registro de prueba creado exitosamente', 'success');
+                };
+                
+                req.onerror = () => {
+                    log(`✗ Error creando registro: ${req.error}`, 'error');
+                };
+                
+                tx.oncomplete = () => {
+                    log('✓ Transacción completada', 'success');
+                };
+                
+                tx.onerror = () => {
+                    log(`✗ Error en transacción: ${tx.error}`, 'error');
+                };
+                
+                db.close();
+            } catch (error) {
+                log(`✗ Error: ${error}`, 'error');
+            }
+        }
+
+        async function listAllRecords() {
+            try {
+                log('=== LISTANDO REGISTROS ===');
+                const db = await openDB();
+                
+                if (!db.objectStoreNames.contains(STORE_RECORDS)) {
+                    log('✗ No se pueden listar registros: object store no existe', 'error');
+                    return;
+                }
+
+                const tx = db.transaction(STORE_RECORDS, 'readonly');
+                const store = tx.objectStore(STORE_RECORDS);
+                const req = store.getAll();
+                
+                req.onsuccess = () => {
+                    const records = req.result || [];
+                    log(`✓ Se encontraron ${records.length} registros`);
+                    records.forEach(record => {
+                        log(`  - ID: ${record.id}, Fecha: ${record.dateISO}, Sats: ${record.sats}`);
+                    });
+                };
+                
+                req.onerror = () => {
+                    log(`✗ Error listando registros: ${req.error}`, 'error');
+                };
+                
+                db.close();
+            } catch (error) {
+                log(`✗ Error: ${error}`, 'error');
+            }
+        }
+
+        // Verificar al cargar la página
+        window.addEventListener('load', () => {
+            log('Página de debug cargada');
+            checkDB();
+        });
+    </script>
+</body>
+</html>

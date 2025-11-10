@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <link rel="stylesheet" href="estilos.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor de Cuentas</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="Logo_app_trading-removebg-preview.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="Logo_app_trading-removebg-preview.png">
+</head>
+<body>
+    <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+    <div class="menu-overlay"></div>
+    <nav class="nav-menu">
+        <div class="menu-items">
+            <a href="index.html">Inicio</a>
+            <a href="/index.html">Volver al panel de control</a>
+            <a href="registrar-trade.html">Registrar Trade</a>
+            <a href="diario.html">Diario</a>
+            <a href="estadisticas.html">Estadísticas</a>
+            <a href="plan-trading.html">Plan de Trading</a>
+            <a href="almacenamiento.html">Almacenamiento</a>
+            <a href="ajustes.html">Ajustes</a>
+            <a href="deposito-retiro.html">Deposito/Retiro</a>
+            <a href="gestor-cuentas.html" class="active">Gestor de Cuentas</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="header">
+            <h1>Gestor de Cuentas</h1>
+            <div class="account-switcher">
+                <label for="account-select">Cuenta:</label>
+                <select id="account-select"></select>
+                <button type="button" id="add-account-btn" class="nav-btn">Nueva cuenta</button>
+                <span id="active-account-name" class="account-name"></span>
+            </div>
+            <div id="datetime" class="datetime"></div>
+        </div>
+
+        <section class="account-manager">
+            <div class="account-manager-header">
+                <h2>Administrar cuentas</h2>
+                <button type="button" class="nav-btn" id="manager-create-account">Crear nueva cuenta</button>
+            </div>
+            <p class="account-manager-hint">Gestiona tus cuentas de trading. La cuenta principal no se puede eliminar, pero puedes renombrarla.</p>
+            <div id="accounts-manager-list" class="account-manager-list"></div>
+        </section>
+
+        <div class="navigation-buttons">
+            <button class="nav-btn" onclick="window.location.href='index.html'">Volver al Inicio</button>
+        </div>
+    </div>
+
+    <script src="javascript.js"></script>
+    <script>
+        function renderAccountsManager() {
+            const container = document.getElementById('accounts-manager-list');
+            if (!container) return;
+            const accounts = readAccountsMeta();
+            const activeId = getActiveAccountId();
+            container.innerHTML = '';
+
+            if (!accounts.length) {
+                container.innerHTML = '<p>No hay cuentas disponibles.</p>';
+                return;
+            }
+
+            accounts.forEach(account => {
+                const card = document.createElement('div');
+                card.className = 'account-manager-card';
+                if (account.id === activeId) card.classList.add('active');
+
+                const header = document.createElement('div');
+                header.className = 'account-manager-card-header';
+
+                const title = document.createElement('h3');
+                title.textContent = account.nombre;
+                header.appendChild(title);
+
+                if (account.esPrincipal) {
+                    const badge = document.createElement('span');
+                    badge.className = 'account-badge';
+                    badge.textContent = 'Cuenta principal';
+                    header.appendChild(badge);
+                }
+
+                card.appendChild(header);
+
+                const meta = document.createElement('p');
+                const createdDate = new Date(account.creadoEn);
+                meta.className = 'account-manager-meta';
+                meta.textContent = `Creada el ${createdDate.toLocaleDateString('es-ES')} ${account.id === activeId ? '• Cuenta activa' : ''}`;
+                card.appendChild(meta);
+
+                const actions = document.createElement('div');
+                actions.className = 'account-manager-actions';
+
+                const renameBtn = document.createElement('button');
+                renameBtn.type = 'button';
+                renameBtn.className = 'nav-btn secondary';
+                renameBtn.textContent = 'Renombrar';
+                renameBtn.addEventListener('click', () => {
+                    const newName = prompt('Ingresa el nuevo nombre de la cuenta', account.nombre);
+                    if (!newName) return;
+                    if (renameTradingAccount(account.id, newName)) {
+                        renderAccountsManager();
+                    }
+                });
+                actions.appendChild(renameBtn);
+
+                if (!account.esPrincipal) {
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.type = 'button';
+                    deleteBtn.className = 'nav-btn danger';
+                    deleteBtn.textContent = 'Eliminar';
+                    deleteBtn.addEventListener('click', () => {
+                        if (confirm(`¿Eliminar la cuenta "${account.nombre}"? Se perderán sus datos definitivamente.`)) {
+                            if (deleteTradingAccount(account.id)) {
+                                renderAccountsManager();
+                            }
+                        }
+                    });
+                    actions.appendChild(deleteBtn);
+                }
+
+                if (account.id !== activeId) {
+                    const activateBtn = document.createElement('button');
+                    activateBtn.type = 'button';
+                    activateBtn.className = 'nav-btn';
+                    activateBtn.textContent = 'Seleccionar';
+                    activateBtn.addEventListener('click', () => {
+                        if (setActiveAccountId(account.id)) {
+                            populateAccountSelectElement();
+                            updateActiveAccountNameDisplay();
+                            renderAccountsManager();
+                        }
+                    });
+                    actions.appendChild(activateBtn);
+                }
+
+                card.appendChild(actions);
+                container.appendChild(card);
+            });
+        }
+
+        function setupAccountManagerPage() {
+            const createBtn = document.getElementById('manager-create-account');
+            if (createBtn) {
+                createBtn.addEventListener('click', () => {
+                    const name = prompt('Nombre para la nueva cuenta');
+                    if (!name) return;
+                    const newId = createTradingAccount(name);
+                    if (newId) {
+                        setActiveAccountId(newId);
+                        populateAccountSelectElement();
+                        updateActiveAccountNameDisplay();
+                        renderAccountsManager();
+                    }
+                });
+            }
+            renderAccountsManager();
+        }
+
+        document.addEventListener('DOMContentLoaded', setupAccountManagerPage);
+    </script>
+</body>
+</html>

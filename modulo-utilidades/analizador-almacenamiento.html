@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Analizador de Almacenamiento y Memoria - FTI</title>
+    <meta name="theme-color" content="#2563eb">
+    <link rel="icon" href="/pwa/logo-app.png">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Font Awesome para iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+</head>
+<body class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 text-gray-800">
+    <div class="container mx-auto px-4 py-8 max-w-5xl">
+        <!-- Header -->
+        <header class="text-center mb-10">
+            <h1 class="text-4xl md:text-5xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-800 mb-3">
+                Analizador de Almacenamiento y Memoria
+            </h1>
+            <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+                Consulta la cuota total, uso actual y espacio restante estimado. Incluye memoria de la página cuando el navegador lo soporta.
+            </p>
+        </header>
+
+        <!-- Acciones -->
+        <div class="flex flex-wrap items-center justify-center gap-3 mb-8">
+            <a href="../ajustes.html" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors duration-300 flex items-center">
+                <i class="fas fa-arrow-left mr-2"></i> Volver a Ajustes
+            </a>
+            <button id="refreshBtn" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors duration-300 flex items-center">
+                <i class="fas fa-rotate-right mr-2"></i> Actualizar datos
+            </button>
+        </div>
+
+        <!-- Grid principal -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Tarjeta Almacenamiento -->
+            <section class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center mb-4">
+                    <div class="bg-indigo-100 p-3 rounded-xl mr-4">
+                        <i class="fas fa-hard-drive text-indigo-600 text-xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-semibold text-gray-900">Almacenamiento (Storage API)</h2>
+                        <p class="text-sm text-gray-600">Estimación provista por <code class="font-mono">navigator.storage.estimate()</code></p>
+                    </div>
+                </div>
+
+                <div class="space-y-2 text-sm">
+                    <p class="text-gray-700">Cuota Total: <span id="quotaText" class="font-semibold text-gray-900">—</span></p>
+                    <p class="text-gray-700">Uso Actual: <span id="usageText" class="font-semibold text-gray-900">—</span></p>
+                    <p class="text-gray-700">Espacio Restante: <span id="remainingText" class="font-semibold text-gray-900">—</span></p>
+                    <p class="text-gray-700">Porcentaje de Uso: <span id="usagePctText" class="font-semibold text-gray-900">—</span></p>
+                </div>
+
+                <!-- Barra de progreso -->
+                <div class="mt-4">
+                    <div class="flex justify-between items-center mb-2 text-xs text-gray-600">
+                        <span>0%</span>
+                        <span id="usagePctBarLabel">—</span>
+                        <span>100%</span>
+                    </div>
+                    <div class="w-full bg-gray-100 rounded-lg h-3">
+                        <div id="usageBar" class="bg-indigo-600 h-3 rounded-lg" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <p id="storageNote" class="mt-4 text-xs text-gray-500">
+                    Nota: Las cuotas y estimaciones pueden variar según el navegador, el dispositivo y las políticas de almacenamiento del sistema.
+                </p>
+            </section>
+
+            <!-- Tarjeta Memoria JS -->
+            <section class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center mb-4">
+                    <div class="bg-blue-100 p-3 rounded-xl mr-4">
+                        <i class="fas fa-microchip text-blue-600 text-xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-semibold text-gray-900">Memoria de la Página (JS)</h2>
+                        <p class="text-sm text-gray-600">Datos de <code class="font-mono">performance.memory</code> (principalmente Chrome)</p>
+                    </div>
+                </div>
+
+                <div id="memorySupported" class="space-y-2 text-sm">
+                    <p class="text-gray-700">Límite Heap: <span id="heapLimitText" class="font-semibold text-gray-900">—</span></p>
+                    <p class="text-gray-700">Tamaño Total Heap: <span id="totalHeapText" class="font-semibold text-gray-900">—</span></p>
+                    <p class="text-gray-700">Uso Heap Actual: <span id="usedHeapText" class="font-semibold text-gray-900">—</span></p>
+                    <p class="text-gray-700">Porcentaje de Uso: <span id="heapPctText" class="font-semibold text-gray-900">—</span></p>
+                </div>
+
+                <!-- Barra de progreso memoria -->
+                <div class="mt-4">
+                    <div class="flex justify-between items-center mb-2 text-xs text-gray-600">
+                        <span>0%</span>
+                        <span id="heapPctBarLabel">—</span>
+                        <span>100%</span>
+                    </div>
+                    <div class="w-full bg-gray-100 rounded-lg h-3">
+                        <div id="heapBar" class="bg-blue-600 h-3 rounded-lg" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <p id="memoryNote" class="mt-4 text-xs text-gray-500">
+                    Nota: La API de memoria no es estándar y no está disponible en todos los navegadores. Si no aparece información, tu navegador podría no soportarla.
+                </p>
+            </section>
+        </div>
+
+        <!-- Actualización -->
+        <div class="mt-8 text-center text-sm text-gray-600">
+            <p>Última actualización: <span id="lastUpdate">—</span></p>
+        </div>
+    </div>
+
+    <!-- Scripts página -->
+    <script>
+        const formatBytes = (bytes) => {
+            if (!Number.isFinite(bytes) || bytes < 0) return '—';
+            const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+            let i = 0;
+            let val = bytes;
+            while (val >= 1024 && i < units.length - 1) {
+                val /= 1024;
+                i++;
+            }
+            const decimals = val < 10 ? 2 : 0;
+            return `${val.toFixed(decimals)} ${units[i]}`;
+        };
+
+        const setBarWidth = (el, pct) => {
+            const safePct = Math.max(0, Math.min(100, pct || 0));
+            el.style.width = `${safePct}%`;
+        };
+
+        async function updateStorage() {
+            const quotaText = document.getElementById('quotaText');
+            const usageText = document.getElementById('usageText');
+            const remainingText = document.getElementById('remainingText');
+            const usagePctText = document.getElementById('usagePctText');
+            const usageBar = document.getElementById('usageBar');
+            const usagePctBarLabel = document.getElementById('usagePctBarLabel');
+
+            try {
+                if (!('storage' in navigator) || !navigator.storage?.estimate) {
+                    quotaText.textContent = 'No soportado';
+                    usageText.textContent = 'No soportado';
+                    remainingText.textContent = 'No soportado';
+                    usagePctText.textContent = '—';
+                    usagePctBarLabel.textContent = '—';
+                    setBarWidth(usageBar, 0);
+                    return;
+                }
+
+                const { quota = 0, usage = 0 } = await navigator.storage.estimate();
+                const remaining = Math.max((quota || 0) - (usage || 0), 0);
+                const pct = quota ? (usage / quota) * 100 : 0;
+
+                quotaText.textContent = formatBytes(quota);
+                usageText.textContent = formatBytes(usage);
+                remainingText.textContent = formatBytes(remaining);
+                usagePctText.textContent = `${pct.toFixed(2)}%`;
+                usagePctBarLabel.textContent = `${pct.toFixed(2)}%`;
+                setBarWidth(usageBar, pct);
+            } catch (err) {
+                quotaText.textContent = 'Error al estimar';
+                usageText.textContent = 'Error al estimar';
+                remainingText.textContent = '—';
+                usagePctText.textContent = '—';
+                usagePctBarLabel.textContent = '—';
+                setBarWidth(usageBar, 0);
+                console.error('Error en updateStorage:', err);
+            }
+        }
+
+        function updateMemory() {
+            const heapLimitText = document.getElementById('heapLimitText');
+            const totalHeapText = document.getElementById('totalHeapText');
+            const usedHeapText = document.getElementById('usedHeapText');
+            const heapPctText = document.getElementById('heapPctText');
+            const heapBar = document.getElementById('heapBar');
+            const heapPctBarLabel = document.getElementById('heapPctBarLabel');
+            const memoryNote = document.getElementById('memoryNote');
+
+            try {
+                const mem = performance && performance.memory ? performance.memory : null;
+                if (!mem) {
+                    heapLimitText.textContent = 'No soportado';
+                    totalHeapText.textContent = 'No soportado';
+                    usedHeapText.textContent = 'No soportado';
+                    heapPctText.textContent = '—';
+                    heapPctBarLabel.textContent = '—';
+                    setBarWidth(heapBar, 0);
+                    memoryNote.classList.remove('text-gray-500');
+                    memoryNote.classList.add('text-amber-600');
+                    memoryNote.textContent = 'Tu navegador no expone métricas de memoria JavaScript; esta sección puede aparecer vacía.';
+                    return;
+                }
+
+                const { jsHeapSizeLimit = 0, totalJSHeapSize = 0, usedJSHeapSize = 0 } = mem;
+                const pct = jsHeapSizeLimit ? (usedJSHeapSize / jsHeapSizeLimit) * 100 : 0;
+
+                heapLimitText.textContent = formatBytes(jsHeapSizeLimit);
+                totalHeapText.textContent = formatBytes(totalJSHeapSize);
+                usedHeapText.textContent = formatBytes(usedJSHeapSize);
+                heapPctText.textContent = `${pct.toFixed(2)}%`;
+                heapPctBarLabel.textContent = `${pct.toFixed(2)}%`;
+                setBarWidth(heapBar, pct);
+            } catch (err) {
+                heapLimitText.textContent = 'Error';
+                totalHeapText.textContent = '—';
+                usedHeapText.textContent = '—';
+                heapPctText.textContent = '—';
+                heapPctBarLabel.textContent = '—';
+                setBarWidth(heapBar, 0);
+                console.error('Error en updateMemory:', err);
+            }
+        }
+
+        function setLastUpdate() {
+            const el = document.getElementById('lastUpdate');
+            const now = new Date();
+            const pad = (n) => String(n).padStart(2, '0');
+            const ts = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+            el.textContent = ts;
+        }
+
+        document.getElementById('refreshBtn').addEventListener('click', async () => {
+            await updateStorage();
+            updateMemory();
+            setLastUpdate();
+        });
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await updateStorage();
+            updateMemory();
+            setLastUpdate();
+        });
+    </script>
+</body>
+</html>

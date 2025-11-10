@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ROI Anual - CryptoCompare</title>
+  <meta name="theme-color" content="#2563eb">
+    <link rel="icon" href="/pwa/logo-app.png">
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg: #f5f7fa;
+      --surface: #ffffff;
+      --muted: #7a7d81;
+      --text: #2c2e30;
+      --accent: #4a4d50;
+      --row-a: #f0f2f5;
+      --row-b: #e6e8eb;
+      --positive: #2e7d32;
+      --negative: #c62828;
+      --radius: 12px;
+      --card-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      --transition: all 0.3s ease;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: var(--bg);
+      color: var(--text);
+      transition: var(--transition);
+    }
+
+
+
+    .container {
+      width: min(1200px, 96%);
+      margin: 40px auto;
+      padding: 20px;
+    }
+
+    .header-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .app-title {
+      font-size: 2rem;
+      font-weight: 700;
+      background: #6a93ff;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: inline-block;
+    }
+
+    .controls {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+    }
+
+    .time-selector {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .time-selector label {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .time-selector select {
+      padding: 8px 12px;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--text);
+      font-size: 0.9rem;
+      font-family: 'Inter', system-ui, sans-serif;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .time-selector select:hover {
+      border-color: #6a93ff;
+    }
+
+    .time-selector select:focus {
+      outline: none;
+      border-color: #6a93ff;
+      box-shadow: 0 0 0 2px rgba(106, 147, 255, 0.2);
+    }
+
+
+
+
+
+    .main-content {
+      display: grid;
+      grid-template-columns: 350px 1fr;
+      gap: 25px;
+    }
+
+    @media (max-width: 900px) {
+      .main-content {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--card-shadow);
+      padding: 25px;
+      border: 1px solid rgba(255,255,255,0.03);
+      transition: var(--transition);
+    }
+
+
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .meta {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .asset-list {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      max-height: 600px;
+      overflow-y: auto;
+      padding-right: 5px;
+    }
+
+    .asset-list::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .asset-list::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .asset-list::-webkit-scrollbar-thumb {
+      background: var(--muted);
+      border-radius: 3px;
+    }
+
+    .asset-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      cursor: pointer;
+      transition: var(--transition);
+      border: 1px solid rgba(255,255,255,0.03);
+    }
+
+
+
+    .asset-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    }
+
+    .asset-card.selected {
+      border-color: #6a93ff;
+      box-shadow: 0 0 0 2px rgba(106, 147, 255, 0.3);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 20px;
+      border-radius: var(--radius);
+      font-size: 1rem;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      transition: var(--transition);
+      background-color: #6a93ff;
+      color: #ffffff;
+      border: none;
+    }
+
+    .btn:hover {
+      background-color: #5a82e0;
+      transform: translateY(-2px);
+    }
+
+    .back-btn i {
+      margin-right: 8px;
+    }
+
+    .asset-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .asset-name {
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+
+    .asset-roi {
+      font-weight: 700;
+      font-size: 1rem;
+    }
+
+    .positive {
+      color: var(--positive);
+    }
+
+    .negative {
+      color: var(--negative);
+    }
+
+    .asset-prices {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+
+    .price-box {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .price-label {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .price-value {
+      font-weight: 600;
+      font-size: 1rem;
+    }
+
+    .asset-details {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-top: 5px;
+    }
+
+    .detail-item {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .detail-label {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .detail-value {
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .chart-container {
+      height: 300px;
+      margin-top: 20px;
+      position: relative;
+    }
+
+    .table-container {
+      margin-top: 25px;
+      overflow: hidden;
+      border-radius: 8px;
+    }
+
+    .table-responsive {
+      position: relative;
+      width: 100%;
+    }
+
+    .table-scroll-container {
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+      scrollbar-color: var(--accent) rgba(255,255,255,0.1);
+    }
+
+    .table-scroll-container::-webkit-scrollbar {
+      height: 8px;
+    }
+
+    .table-scroll-container::-webkit-scrollbar-track {
+      background: rgba(255,255,255,0.05);
+      border-radius: 4px;
+    }
+
+    .table-scroll-container::-webkit-scrollbar-thumb {
+      background: var(--accent);
+      border-radius: 4px;
+    }
+
+    table {
+      width: 100%;
+      min-width: 600px;
+      border-collapse: collapse;
+      overflow: hidden;
+      border-radius: 8px;
+    }
+
+    thead th {
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.9rem;
+      padding: 16px;
+      color: var(--muted);
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border-bottom: 1px solid rgba(255,255,255,0.02);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    tbody td {
+      padding: 16px;
+      font-size: 0.95rem;
+      color: var(--text);
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+
+    tbody tr {
+      transition: background 0.18s;
+      background: var(--row-a);
+    }
+
+    tbody tr:nth-child(even) {
+      background: var(--row-b);
+    }
+
+    tbody tr:hover {
+      background: rgba(255,255,255,0.03);
+    }
+
+    .crypto-table th.col-asset {
+      min-width: 120px;
+    }
+
+    .crypto-table th.col-price {
+      min-width: 150px;
+    }
+
+    .crypto-table th.col-roi {
+      min-width: 120px;
+    }
+
+    .scroll-indicator {
+      display: none;
+      position: absolute;
+      top: 50%;
+      right: 10px;
+      transform: translateY(-50%);
+      background: var(--accent);
+      color: white;
+      padding: 0.5rem;
+      border-radius: 50%;
+      font-size: 1.2rem;
+      opacity: 0.7;
+      z-index: 5;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.7; }
+      50% { opacity: 1; }
+    }
+
+
+
+    .muted {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .center {
+      text-align: center;
+    }
+
+    .right {
+      text-align: right;
+    }
+
+    .loader {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.06);
+      border-top-color: var(--accent);
+      animation: spin 1s linear infinite;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .note {
+      margin-top: 20px;
+      color: var(--muted);
+      font-size: 0.85rem;
+      line-height: 1.5;
+    }
+
+    
+
+    .footer {
+      text-align: center;
+      margin-top: 40px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 640px) {
+      .header-container {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      
+      .controls {
+        width: 100%;
+        justify-content: space-between;
+      }
+      
+      td, th {
+        padding: 12px 10px;
+      }
+      
+      .asset-prices, .asset-details {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .favorite {
+      color: #ffc107;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .favorite:hover {
+      transform: scale(1.2);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header-container">
+      <div>
+        <h1 class="app-title">ROI — Criptomonedas</h1>
+        <div class="meta">Comparación: precio actual vs período seleccionado (CryptoCompare)</div>
+      </div>
+      <div class="controls">
+        <div class="time-selector">
+          <label for="timeframe">Período:</label>
+          <select id="timeframe" name="timeframe">
+            <option value="7">Semanal</option>
+            <option value="30">Mensual</option>
+            <option value="90">Trimestral</option>
+            <option value="180">Semestral</option>
+            <option value="365" selected>Anual</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+
+
+    <div class="main-content">
+      <div class="panel">
+        <div class="panel-header">
+          <h1>Lista de Criptomonedas</h1>
+          <div class="meta" id="updatedAt">Cargando datos...</div>
+        </div>
+        <div class="asset-list" id="asset-list">
+          <!-- Las tarjetas de activos se generarán dinámicamente -->
+          <div class="asset-card">
+            <div class="muted">Cargando precios… <span class="loader" aria-hidden="true"></span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <h1 id="detail-title">Detalles de Criptomoneda</h1>
+          <div class="favorite" id="favorite-btn">
+            <i class="far fa-star"></i>
+          </div>
+        </div>
+        <div id="detail-content">
+          <div class="muted center">Selecciona una criptomoneda para ver los detalles</div>
+        </div>
+        <div class="chart-container">
+          <canvas id="price-chart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel table-container">
+      <div class="table-responsive">
+        <div class="table-scroll-container" id="tableScrollContainer">
+          <table aria-live="polite" class="crypto-table">
+            <thead>
+              <tr>
+                <th class="col-asset">Activo</th>
+                <th class="col-price center">Precio Actual (USD)</th>
+                <th class="col-price center">Precio hace 1 año (USD)</th>
+                <th class="col-roi right">ROI Anual</th>
+              </tr>
+            </thead>
+            <tbody id="data-body">
+              <tr>
+                <td colspan="4" class="muted">Cargando precios… <span class="loader" aria-hidden="true"></span></td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="scroll-indicator" id="scrollIndicator" title="Desliza para ver más">
+            <i>→</i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:2rem;">
+      <a href="/utilidades.html" class="btn back-btn">
+        <i class="fas fa-arrow-left"></i> Volver a Utilidades
+      </a>
+    </div>
+
+    <div class="note">
+      Los precios se obtienen desde la API pública de CryptoCompare. Si algún activo no tiene histórico disponible, se mostrará como "N/D". 
+      El ROI se calcula como ((Precio Actual - Precio hace 1 año) / Precio hace 1 año) * 100.
+    </div>
+
+    <div class="footer">
+      <p>Datos proporcionados por CryptoCompare • Actualizado: <span id="update-time"></span></p>
+    </div>
+  </div>
+
+  <script>
+    // Lista ampliada de activos con nombres completos
+    const CRYPTO_ASSETS = [
+      { symbol: "BTC", name: "Bitcoin" },
+      { symbol: "ETH", name: "Ethereum" },
+      { symbol: "ADA", name: "Cardano" },
+      { symbol: "BNB", name: "Binance Coin" },
+      { symbol: "XRP", name: "Ripple" },
+      { symbol: "SOL", name: "Solana" },
+      { symbol: "DOT", name: "Polkadot" },
+      { symbol: "DOGE", name: "Dogecoin" },
+      { symbol: "AVAX", name: "Avalanche" },
+      { symbol: "MATIC", name: "Polygon" }
+    ];
+
+
+    let currentChart = null;
+
+    // Calcula timestamp preciso según el período seleccionado (UTC)
+    function timestampDesdePerdiodoUTC(dias) {
+      const now = new Date();
+      const past = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - dias, now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds()));
+      return Math.floor(past.getTime() / 1000);
+    }
+
+    // Obtener precio actual
+    async function obtenerPrecioActual(symbol) {
+      const url = `https://min-api.cryptocompare.com/data/price?fsym=${symbol}&tsyms=USD`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const j = await res.json();
+      return typeof j.USD === 'number' ? j.USD : null;
+    }
+
+    // Obtener precio histórico
+    async function obtenerPrecioHistorico(symbol, ts) {
+      // pricehistorical devuelve { BTC: { USD: value } }
+      const url = `https://min-api.cryptocompare.com/data/pricehistorical?fsym=${symbol}&tsyms=USD&ts=${ts}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const j = await res.json();
+      // Protección si la estructura no es la esperada
+      if (j && j[symbol] && typeof j[symbol].USD === 'number') return j[symbol].USD;
+
+      // Fallback: intentar histoday si pricehistorical no entregó
+      try {
+        const url2 = `https://min-api.cryptocompare.com/data/v2/histoday?fsym=${symbol}&tsym=USD&limit=1&toTs=${ts}`;
+        const res2 = await fetch(url2);
+        const j2 = await res2.json();
+        if (j2 && j2.Data && j2.Data.Data && j2.Data.Data.length > 0) return j2.Data.Data[0].close;
+      } catch (e) { /* ignore fallback error */ }
+
+      return null;
+    }
+
+    // Obtener datos adicionales
+    async function obtenerDatosAdicionales(symbol) {
+      try {
+        const url = `https://min-api.cryptocompare.com/data/pricemultifull?fsyms=${symbol}&tsyms=USD`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const j = await res.json();
+        
+        if (j && j.RAW && j.RAW[symbol] && j.RAW[symbol].USD) {
+          const data = j.RAW[symbol].USD;
+          return {
+            marketCap: data.MKTCAP,
+            volume24h: data.VOLUME24HOUR,
+            change24h: data.CHANGEPCT24HOUR,
+            high24h: data.HIGH24HOUR,
+            low24h: data.LOW24HOUR
+          };
+        }
+      } catch (e) {
+        console.error("Error obteniendo datos adicionales:", e);
+      }
+      return null;
+    }
+
+    // Obtener histórico para gráfico según temporalidad
+    async function obtenerHistoricoGrafico(symbol, dias) {
+      try {
+        const now = Math.floor(Date.now() / 1000);
+        const limit = Math.min(dias, 2000); // Limitar a 2000 días máximo
+        
+        const url = `https://min-api.cryptocompare.com/data/v2/histoday?fsym=${symbol}&tsym=USD&limit=${limit}&toTs=${now}`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const j = await res.json();
+        
+        if (j && j.Data && j.Data.Data) {
+          // Filtrar solo los últimos X días
+          const cutoffTime = now - (dias * 24 * 60 * 60);
+          return j.Data.Data
+            .filter(entry => entry.time >= cutoffTime)
+            .map(entry => ({
+              time: entry.time * 1000,
+              price: entry.close
+            }));
+        }
+      } catch (e) {
+        console.error("Error obteniendo histórico:", e);
+      }
+      return null;
+    }
+
+    // Formatear números
+    function formatNumber(v, decimals = 2) {
+      if (v === null || v === undefined) return 'N/D';
+      // Formatear números grandes en formato abreviado
+      if (v > 1e9) {
+        return `$${(v / 1e9).toFixed(decimals)}B`;
+      } else if (v > 1e6) {
+        return `$${(v / 1e6).toFixed(decimals)}M`;
+      } else if (v > 1e3) {
+        return `$${(v / 1e3).toFixed(decimals)}K`;
+      }
+      return `$${Number(v).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 8 })}`;
+    }
+
+    // Formatear porcentajes
+    function formatPercent(v) {
+      if (v === null || v === undefined) return 'N/D';
+      return `${v >= 0 ? '+' : ''}${Number(v).toFixed(2)}%`;
+    }
+
+    // Cargar tabla de datos
+    async function cargarTabla() {
+      const tbody = document.getElementById('data-body');
+      tbody.innerHTML = '';
+      
+      const timeframeSelect = document.getElementById('timeframe');
+      const selectedDays = parseInt(timeframeSelect.value);
+      const ts = timestampDesdePerdiodoUTC(selectedDays);
+      
+      const updatedEl = document.getElementById('updatedAt');
+      updatedEl.textContent = 'Actualizando...';
+
+      // Actualizar títulos de las columnas según el período
+      const periodLabels = {
+        7: 'semana',
+        30: 'mes',
+        90: 'trimestre',
+        180: 'semestre',
+        365: 'año'
+      };
+      
+      const periodLabel = periodLabels[selectedDays] || 'período';
+      document.querySelector('thead tr th:nth-child(3)').textContent = `Precio hace ${selectedDays} días (USD)`;
+
+      for (const asset of CRYPTO_ASSETS) {
+        const symbol = asset.symbol;
+        // Insertar fila provisional
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${symbol}</td>
+          <td class="center">Cargando… <span class="loader" aria-hidden="true"></span></td>
+          <td class="center muted">—</td>
+          <td class="right muted">—</td>
+        `;
+        tbody.appendChild(row);
+
+        try {
+          const [current, past] = await Promise.all([
+            obtenerPrecioActual(symbol),
+            obtenerPrecioHistorico(symbol, ts)
+          ]);
+
+          const roi = (past && past > 0) ? ((current - past) / past) * 100 : null;
+
+          row.innerHTML = `
+            <td>${symbol}</td>
+            <td class="center">${current !== null ? formatNumber(current) : 'Error'}</td>
+            <td class="center">${past !== null ? formatNumber(past) : 'N/D'}</td>
+            <td class="right ${roi !== null ? (roi >= 0 ? 'positive' : 'negative') : 'muted'}">
+              ${roi !== null ? formatPercent(roi) : 'N/D'}
+            </td>
+          `;
+
+        } catch (err) {
+          row.innerHTML = `<td>${symbol}</td><td colspan="3" class="muted">Error al obtener datos: ${err.message}</td>`;
+        }
+      }
+
+      const now = new Date();
+      updatedEl.textContent = `Última actualización: ${now.toLocaleTimeString()}`;
+      document.getElementById('update-time').textContent = now.toLocaleString();
+    }
+
+
+
+    // Cargar detalles del activo
+    async function cargarDetallesActivo(symbol, name, currentPrice, pastPrice, roi, additionalData) {
+      const detailContent = document.getElementById('detail-content');
+      const detailTitle = document.getElementById('detail-title');
+      const favoriteBtn = document.getElementById('favorite-btn');
+      
+      detailTitle.textContent = name;
+      
+      favoriteBtn.style.display = 'none'; // Ocultar el botón de favoritos si ya no se usa.
+      
+      const timeframeSelect = document.getElementById('timeframe');
+      const selectedDays = parseInt(timeframeSelect.value);
+      
+      const periodLabels = {
+        7: 'semana',
+        30: 'mes',
+        90: 'trimestre',
+        180: 'semestre',
+        365: 'año'
+      };
+      
+      const periodLabel = periodLabels[selectedDays] || 'período';
+      
+      // Mostrar información básica
+      detailContent.innerHTML = `
+        <div class="asset-header">
+          <div class="asset-name">${symbol} - ${name}</div>
+          <div class="asset-roi ${roi !== null ? (roi >= 0 ? 'positive' : 'negative') : 'muted'}">
+            ${roi !== null ? formatPercent(roi) : 'N/D'}
+          </div>
+        </div>
+        <div class="asset-prices">
+          <div class="price-box">
+            <div class="price-label">Precio Actual</div>
+            <div class="price-value">${currentPrice !== null ? formatNumber(currentPrice) : 'Error'}</div>
+          </div>
+          <div class="price-box">
+            <div class="price-label">Precio hace ${selectedDays} días</div>
+            <div class="price-value">${pastPrice !== null ? formatNumber(pastPrice) : 'N/D'}</div>
+          </div>
+        </div>
+        ${additionalData ? `
+        <div class="asset-details">
+          <div class="detail-item">
+            <div class="detail-label">Cap. de Mercado</div>
+            <div class="detail-value">${formatNumber(additionalData.marketCap)}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Volumen (24h)</div>
+            <div class="detail-value">${formatNumber(additionalData.volume24h)}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Cambio (24h)</div>
+            <div class="detail-value ${additionalData.change24h >= 0 ? 'positive' : 'negative'}">${formatPercent(additionalData.change24h)}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Máximo (24h)</div>
+            <div class="detail-value">${formatNumber(additionalData.high24h)}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Mínimo (24h)</div>
+            <div class="detail-value">${formatNumber(additionalData.low24h)}</div>
+          </div>
+        </div>
+        ` : ''}
+      `;
+      
+      // Cargar gráfico con la temporalidad seleccionada
+      const historicalData = await obtenerHistoricoGrafico(symbol, selectedDays);
+      if (historicalData) {
+        renderChart(historicalData, symbol, selectedDays);
+      } else {
+        document.getElementById('price-chart').innerHTML = '<div class="muted center">No hay datos históricos disponibles</div>';
+      }
+    }
+
+    // Renderizar gráfico
+    function renderChart(data, symbol, dias) {
+      const ctx = document.getElementById('price-chart').getContext('2d');
+      
+      // Destruir gráfico anterior si existe
+      if (currentChart) {
+        currentChart.destroy();
+      }
+      
+      // Preparar datos para el gráfico
+      const labels = data.map(entry => new Date(entry.time).toLocaleDateString());
+      const values = data.map(entry => entry.price);
+      
+      // Determinar color según tendencia
+      const firstPrice = values[0];
+      const lastPrice = values[values.length - 1];
+      const chartColor = lastPrice >= firstPrice ? 'rgba(129, 199, 132, 0.3)' : 'rgba(229, 115, 115, 0.3)';
+      const borderColor = lastPrice >= firstPrice ? 'rgb(129, 199, 132)' : 'rgb(229, 115, 115)';
+      
+      // Determinar etiqueta del período
+      const periodLabels = {
+        7: '7 días',
+        30: '30 días',
+        90: '90 días',
+        180: '180 días',
+        365: '1 año'
+      };
+      const periodLabel = periodLabels[dias] || `${dias} días`;
+      
+      currentChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: `Precio de ${symbol} (${periodLabel})`,
+            data: values,
+            backgroundColor: chartColor,
+            borderColor: borderColor,
+            borderWidth: 2,
+            pointRadius: 0,
+            pointHoverRadius: 5,
+            fill: true,
+            tension: 0.1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top',
+              labels: {
+                color: 'var(--muted)',
+                font: {
+                  size: 12
+                }
+              }
+            },
+            tooltip: {
+              mode: 'index',
+              intersect: false,
+              callbacks: {
+                label: function(context) {
+                  return `Precio: $${context.raw.toFixed(2)}`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: {
+                display: false,
+                color: 'rgba(255, 255, 255, 0.05)'
+              },
+              ticks: {
+                maxTicksLimit: 6,
+                color: 'var(--muted)'
+              }
+            },
+            y: {
+              grid: {
+                color: 'rgba(255, 255, 255, 0.05)'
+              },
+              ticks: {
+                color: 'var(--muted)',
+                callback: function(value) {
+                  return '$' + value.toFixed(2);
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+
+
+
+
+
+
+
+    // Cargar tarjetas de activos
+    async function cargarTarjetasActivos() {
+      const assetList = document.getElementById('asset-list');
+      assetList.innerHTML = '';
+      
+      const timeframeSelect = document.getElementById('timeframe');
+      const selectedDays = parseInt(timeframeSelect.value);
+      const ts = timestampDesdePerdiodoUTC(selectedDays);
+
+      for (const asset of CRYPTO_ASSETS) {
+        const card = document.createElement('div');
+        card.className = 'asset-card';
+        card.innerHTML = `
+          <div class="muted">Cargando ${asset.symbol}… <span class="loader" aria-hidden="true"></span></div>
+        `;
+        assetList.appendChild(card);
+
+        try {
+          const [current, past] = await Promise.all([
+            obtenerPrecioActual(asset.symbol),
+            obtenerPrecioHistorico(asset.symbol, ts)
+          ]);
+
+          const roi = (past && past > 0) ? ((current - past) / past) * 100 : null;
+
+          card.innerHTML = `
+            <div class="asset-header">
+              <div class="asset-name">${asset.symbol}</div>
+              <div class="asset-roi ${roi !== null ? (roi >= 0 ? 'positive' : 'negative') : 'muted'}">
+                ${roi !== null ? formatPercent(roi) : 'N/D'}
+              </div>
+            </div>
+            <div class="asset-prices">
+              <div class="price-box">
+                <div class="price-label">Precio Actual</div>
+                <div class="price-value">${current !== null ? formatNumber(current) : 'Error'}</div>
+              </div>
+            </div>
+          `;
+
+          // Agregar evento click para cargar detalles
+          card.addEventListener('click', async () => {
+            const additionalData = await obtenerDatosAdicionales(asset.symbol);
+            await cargarDetallesActivo(asset.symbol, asset.name, current, past, roi, additionalData);
+          });
+
+        } catch (err) {
+          card.innerHTML = `
+            <div class="asset-header">
+              <div class="asset-name">${asset.symbol}</div>
+            </div>
+            <div class="muted">Error al cargar</div>
+          `;
+        }
+      }
+    }
+
+    // Función para actualizar todos los datos cuando cambia el período
+    function actualizarPerido() {
+      cargarTabla();
+      cargarTarjetasActivos();
+      
+      // Limpiar detalles si están mostrados
+      const detailContent = document.getElementById('detail-content');
+      const detailTitle = document.getElementById('detail-title');
+      detailTitle.textContent = 'Detalles de Criptomoneda';
+      detailContent.innerHTML = '<div class="muted center">Selecciona una criptomoneda para ver los detalles</div>';
+      
+      // Limpiar gráfico
+      if (currentChart) {
+        currentChart.destroy();
+        currentChart = null;
+      }
+      document.getElementById('price-chart').innerHTML = '';
+    }
+
+    // Funciones para mejorar la experiencia móvil con la tabla
+    function initResponsiveTable() {
+      const tableContainer = document.getElementById('tableScrollContainer');
+      const scrollIndicator = document.getElementById('scrollIndicator');
+      
+      if (!tableContainer || !scrollIndicator) return;
+
+      function checkScrollability() {
+        const isScrollable = tableContainer.scrollWidth > tableContainer.clientWidth;
+        scrollIndicator.style.display = isScrollable ? 'block' : 'none';
+      }
+
+      function handleScroll() {
+        const maxScroll = tableContainer.scrollWidth - tableContainer.clientWidth;
+        const currentScroll = tableContainer.scrollLeft;
+        
+        // Ocultar indicador cuando se llega al final
+        if (currentScroll >= maxScroll - 5) {
+          scrollIndicator.style.display = 'none';
+        } else {
+          scrollIndicator.style.display = 'block';
+        }
+      }
+
+      // Verificar scrollabilidad en carga y redimensionamiento
+      checkScrollability();
+      window.addEventListener('resize', checkScrollability);
+      
+      // Manejar desplazamiento
+      tableContainer.addEventListener('scroll', handleScroll);
+      
+      // Ocultar indicador al hacer clic
+      scrollIndicator.addEventListener('click', () => {
+        scrollIndicator.style.display = 'none';
+      });
+
+      // Soporte táctil mejorado
+      let touchStartX = 0;
+      let touchStartY = 0;
+
+      tableContainer.addEventListener('touchstart', (e) => {
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+      }, { passive: true });
+
+      tableContainer.addEventListener('touchmove', (e) => {
+        if (!touchStartX || !touchStartY) return;
+        
+        const touchEndX = e.touches[0].clientX;
+        const touchEndY = e.touches[0].clientY;
+        
+        const diffX = Math.abs(touchEndX - touchStartX);
+        const diffY = Math.abs(touchEndY - touchStartY);
+        
+        // Si el movimiento es mayor horizontalmente, prevenir scroll vertical
+        if (diffX > diffY) {
+          e.preventDefault();
+        }
+      }, { passive: false });
+    }
+
+    // Auto-carga al abrir la página
+    document.addEventListener('DOMContentLoaded', () => {
+      // Asegurar que el sitio siempre esté en modo claro al cargar
+      document.body.classList.remove('light-mode');
+      localStorage.removeItem('theme'); // Eliminar cualquier preferencia de tema guardada
+
+      cargarTabla();
+      cargarTarjetasActivos();
+      initResponsiveTable();
+      
+      // Agregar event listener al selector de temporalidad
+      document.getElementById('timeframe').addEventListener('change', actualizarPerido);
+
+    });
+  </script>
+</body>
+</html>

@@ -37,12 +37,75 @@
         .username-setting .nav-btn:hover {
             background-color: #45a049;
         }
+
+        #strategy-management {
+            margin-top: 20px;
+        }
+
+        .strategy-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .strategy-form input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .strategies-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+        }
+
+        .strategy-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .strategy-list li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 10px;
+            background-color: rgba(0, 0, 0, 0.03);
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+
+        .strategy-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .strategy-actions .nav-btn.secondary {
+            background-color: #3498db;
+        }
+
+        .strategy-actions .nav-btn.secondary:hover {
+            background-color: #2980b9;
+        }
+
+        .strategy-empty {
+            margin: 0 0 10px 0;
+            color: #666;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <h1>Ajustes</h1>
+            <div class="account-switcher">
+                <label for="account-select">Cuenta:</label>
+                <select id="account-select"></select>
+                <button type="button" id="add-account-btn" class="nav-btn">Nueva cuenta</button>
+                <span id="active-account-name" class="account-name"></span>
+            </div>
             <div id="datetime" class="datetime"></div>
         </div>
 
@@ -91,6 +154,25 @@
                 <div class="capital-setting">
                     <input type="number" id="initial-capital" min="0" step="1000" placeholder="Ingrese su capital inicial">
                     <button id="save-capital" class="nav-btn">Guardar Capital</button>
+                </div>
+            </div>
+
+            <div class="settings-section" id="strategy-management">
+                <h3>Mis Estrategias Personalizadas</h3>
+                <form id="strategy-add-form" class="strategy-form">
+                    <input type="text" id="new-strategy-name" maxlength="80" placeholder="Nombre de la estrategia">
+                    <button type="submit" class="nav-btn">Agregar Estrategia</button>
+                </form>
+                <div class="strategies-container">
+                    <div class="strategies-column">
+                        <h4>Predefinidas</h4>
+                        <ul id="built-in-strategy-list" class="strategy-list"></ul>
+                    </div>
+                    <div class="strategies-column">
+                        <h4>Creadas por mí</h4>
+                        <p id="custom-strategy-empty" class="strategy-empty">Aún no has agregado estrategias.</p>
+                        <ul id="custom-strategy-list" class="strategy-list"></ul>
+                    </div>
                 </div>
             </div>
         </div>
@@ -181,6 +263,8 @@
             const initialCapital = document.getElementById('initial-capital').value;
             if (initialCapital && initialCapital > 0) {
                 localStorage.setItem('initialCapital', initialCapital);
+                const timestamp = new Date().toISOString();
+                localStorage.setItem('capitalStartDate', timestamp);
                 alert('Capital inicial guardado exitosamente');
             } else {
                 alert('Por favor ingrese un valor válido para el capital inicial');

@@ -13,6 +13,12 @@
     <div class="container">
         <div class="header">
             <h1>Vista de Tabla de Trades</h1>
+            <div class="account-switcher">
+                <label for="account-select">Cuenta:</label>
+                <select id="account-select"></select>
+                <button type="button" id="add-account-btn" class="nav-btn">Nueva cuenta</button>
+                <span id="active-account-name" class="account-name"></span>
+            </div>
             <div id="datetime" class="datetime"></div>
         </div>
         <div class="navigation-buttons">
@@ -78,7 +84,7 @@
                 '<th>Dirección</th>' +
                 '<th>Lotes</th>' +
                 '<th>Resultado (MXN)</th>' +
-                '<th>Resultado (Pips)</th>' +
+                '<th>Resultado (Pips/% )</th>' +
                 '<th>Fecha Apertura</th>' +
                 '<th>Fecha Cierre</th>' +
                 '<th>Precio Entrada</th>' +
@@ -87,18 +93,30 @@
                 '<th>Notas</th>' +
                 '</tr></thead><tbody>';
             trades.slice().reverse().forEach(trade => {
-                const formattedAsset = trade.asset.replace(/([A-Z]{3})([A-Z]{3})/, '$1/$2');
+                const formattedAsset = typeof formatAssetSymbol === 'function'
+                    ? formatAssetSymbol(trade.asset)
+                    : trade.asset.replace(/([A-Z]{3})([A-Z]{3})/, '$1/$2');
                 const isCompra = trade.direction === 'long';
                 const direction = isCompra ? 'COMPRA' : 'VENTA';
                 const directionClass = isCompra ? 'trade-direction-compra' : 'trade-direction-venta';
                 const openDate = new Date(trade.openTime);
                 const closeDate = new Date(trade.closeTime);
+                const metricType = trade.resultMetricType === 'percent' ? 'percent' : 'pips';
+                let metricDisplay = '-';
+                if (trade.pips !== undefined && trade.pips !== null && trade.pips !== '') {
+                    const numericMetric = parseFloat(trade.pips);
+                    if (!Number.isNaN(numericMetric)) {
+                        metricDisplay = metricType === 'percent'
+                            ? `${numericMetric.toFixed(2)} %`
+                            : `${numericMetric.toFixed(3)} pips`;
+                    }
+                }
                 html += `<tr>` +
                     `<td>${formattedAsset}</td>` +
                     `<td class="${directionClass}">${direction}</td>` +
                     `<td>${parseFloat(trade.lots).toFixed(3)}</td>` +
                     `<td class="${parseFloat(trade.resultMxn) >= 0 ? 'positive' : 'negative'}">${parseFloat(trade.resultMxn).toFixed(2)}</td>` +
-                    `<td>${trade.pips ? parseFloat(trade.pips).toFixed(3) : '-'}</td>` +
+                    `<td>${metricDisplay}</td>` +
                     `<td>${openDate.toLocaleString('es-ES')}</td>` +
                     `<td>${closeDate.toLocaleString('es-ES')}</td>` +
                     `<td>${trade.openPrice}</td>` +

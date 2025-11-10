@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FTI - Gestor de Finanzas | Operaciones</title>
+    <meta name="theme-color" content="#2563eb">
+    <link rel="icon" href="/pwa/logo-app.png">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="estilos.css">
+    <script defer src="javascript.js"></script>
+    <style>
+        /* Usando la fuente Inter como predeterminada */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 flex justify-center">
+
+    <!-- Contenedor principal de la app -->
+    <div class="w-full max-w-2xl bg-white shadow-lg relative min-h-screen">
+        <!-- Contenido de la página con padding inferior para la barra de navegación -->
+        <div class="p-4 sm:p-6 pb-24">
+
+            <!-- Encabezado y Saludo -->
+            <header class="mb-4 flex justify-between items-start">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">Operaciones</h1>
+                    <p class="text-gray-500">Revisa tus transacciones recientes.</p>
+                </div>
+
+                <!-- Menú de 3 puntos -->
+                <div class="relative group">
+                    <button class="p-2 rounded-full hover:bg-gray-200 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-600"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+                    </button>
+                    
+                    <!-- Dropdown Menu -->
+                    <!-- El padding-top (pt-2) crea el puente invisible para el cursor -->
+                    <div class="absolute right-0 w-48 pt-2 z-20 hidden group-hover:block">
+                        <div class="bg-white rounded-md shadow-xl py-1">
+                            <a href="/index.html" class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-500"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                                Volver a inicio
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Navegación por Mes y Selector de Periodo -->
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center gap-2">
+                    <button class="p-2 rounded-full hover:bg-gray-100">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-600"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                    </button>
+                    <span class="font-semibold text-lg text-gray-800">Septiembre 2025</span>
+                     <button class="p-2 rounded-full hover:bg-gray-100">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-600"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </button>
+                </div>
+                <button class="flex items-center gap-1 text-sm font-medium bg-gray-100 px-3 py-2 rounded-lg hover:bg-gray-200">
+                    Mensual
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-500"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </button>
+            </div>
+            
+            <!-- Filtros: Todos, Ingresos, Gastos -->
+            <div class="mb-6">
+                <div class="bg-gray-100 p-1 rounded-lg flex items-center justify-between text-sm font-medium">
+                    <button class="w-full bg-white text-indigo-600 py-2 rounded-md shadow-sm transition">Todos</button>
+                    <button class="w-full text-gray-500 py-2 rounded-md hover:bg-gray-200 transition">Ingresos</button>
+                    <button class="w-full text-gray-500 py-2 rounded-md hover:bg-gray-200 transition">Gastos</button>
+                </div>
+            </div>
+
+
+            <!-- Sección de Balance General (contextual a la vista) -->
+            <section class="mb-8">
+                 <div class="bg-gray-100 rounded-xl p-6">
+                    <div class="flex justify-between items-center mb-4">
+                         <span class="text-sm font-medium text-gray-500">Balance del Mes</span>
+                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                    </div>
+
+                    <!-- Contenedor para Balance y Gráfico -->
+                    <div class="flex items-center justify-between gap-4 mb-6">
+                        <p class="text-4xl sm:text-5xl font-bold text-gray-900">$1,764.50</p>
+                        
+                        <!-- Gráfico Circular SVG -->
+                        <div class="relative w-24 h-24 flex-shrink-0">
+                           <svg class="w-full h-full" viewBox="0 0 100 100">
+                               <!-- Círculo de fondo (Ingresos totales) -->
+                               <circle class="text-green-200" stroke-width="12" stroke="currentColor" fill="transparent" r="42" cx="50" cy="50" />
+                               <!-- Círculo de progreso (Gastos) -->
+                               <!-- Circunferencia = 2 * pi * 42 = 264. 26% gastado. offset = 264 * (1 - 0.26) = 195 -->
+                               <circle class="text-amber-500" stroke-width="12" stroke-linecap="round" stroke="currentColor" fill="transparent" r="42" cx="50" cy="50" style="stroke-dasharray: 264; stroke-dashoffset: 195; transform: rotate(-90deg); transform-origin: 50% 50%;" />
+                           </svg>
+                           <!-- Texto de porcentaje en el centro -->
+                           <div class="absolute inset-0 flex items-center justify-center">
+                                <span class="text-xl font-bold text-amber-500" title="26% gastado">26%</span>
+                           </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="p-2 bg-green-100 rounded-full">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-green-600"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Ingresos</p>
+                                <p class="text-lg font-semibold text-green-600">$2,375.00</p>
+                            </div>
+                        </div>
+                         <div class="flex items-center space-x-3">
+                            <div class="p-2 bg-red-100 rounded-full">
+                               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-red-600"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Gastos</p>
+                                <p class="text-lg font-semibold text-red-600">$610.50</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Lista de Transacciones Recientes -->
+            <section>
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold text-gray-900">Operaciones del Mes</h2>
+                    <div class="flex items-center gap-2">
+                         <!-- Botón Gasto -->
+                        <button title="Añadir Gasto" class="p-2.5 bg-red-100 rounded-full hover:bg-red-200 transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-red-600"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        </button>
+                        <!-- Botón Ingreso -->
+                        <button title="Añadir Ingreso" class="p-2.5 bg-green-100 rounded-full hover:bg-green-200 transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-green-600"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        </button>
+                        <!-- Botón Transferencia -->
+                        <button title="Añadir Transferencia" class="p-2.5 bg-indigo-100 rounded-full hover:bg-indigo-200 transition">
+                           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-indigo-600"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Historial Agrupado por Día -->
+                <div>
+                    <!-- Grupo de Día: 12 de Septiembre -->
+                    <div class="mt-4">
+                        <div class="flex justify-between items-center mb-3">
+                            <div class="flex items-center flex-grow">
+                                <div class="flex items-baseline gap-3">
+                                    <span class="text-3xl font-bold text-gray-800">12</span>
+                                    <div>
+                                        <p class="font-semibold text-gray-600">Viernes</p>
+                                        <p class="text-sm text-gray-400">Septiembre 2025</p>
+                                    </div>
+                                </div>
+                                <div class="flex-grow h-px ml-4 bg-gray-200"></div>
+                            </div>
+                            <!-- Balance del día -->
+                            <div class="text-right ml-4 flex-shrink-0">
+                                <p class="font-semibold text-base text-red-600">-$500.00</p>
+                            </div>
+                        </div>
+                        <div class="space-y-3">
+                             <!-- Item Transferencia -->
+                            <div class="flex items-center p-4 bg-white rounded-xl shadow-md">
+                                <div class="p-3 bg-indigo-100 rounded-full mr-4">
+                                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-indigo-600"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
+                                </div>
+                                <div class="flex-grow">
+                                    <p class="font-semibold text-gray-800">Transferencia a Ahorros</p>
+                                    <p class="text-sm text-gray-600">Meta para viaje</p>
+                                    <p class="text-xs text-gray-500 mt-1">De: C. Principal → A: Ahorros • 21:00</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="font-bold text-gray-700 text-lg">-$500.00</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Grupo de Día: 13 de Septiembre -->
+                    <div class="mt-6">
+                        <div class="flex justify-between items-center mb-3">
+                            <div class="flex items-center flex-grow">
+                                 <div class="flex items-baseline gap-3">
+                                    <span class="text-3xl font-bold text-gray-800">13</span>
+                                    <div>
+                                        <p class="font-semibold text-gray-600">Sábado</p>
+                                        <p class="text-sm text-gray-400">Septiembre 2025</p>
+                                    </div>
+                                </div>
+                                <div class="flex-grow h-px ml-4 bg-gray-200"></div>
+                            </div>
+                            <!-- Balance del día -->
+                            <div class="text-right ml-4 flex-shrink-0">
+                                <p class="font-semibold text-base text-green-600">+$14.50</p>
+                            </div>
+                        </div>
+                        <div class="space-y-3">
+                            <!-- Item Ingreso -->
+                            <div class="flex items-center p-4 bg-white rounded-xl shadow-md">
+                                <div class="p-3 bg-yellow-100 rounded-full mr-4">
+                                    <!-- Usando un icono de 'etiqueta' para ventas -->
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-yellow-600"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+                                </div>
+                                <div class="flex-grow">
+                                    <p class="font-semibold text-gray-800">Venta de garage</p>
+                                    <p class="text-sm text-gray-600">Venta de artículos varios</p>
+                                    <p class="text-xs text-gray-500 mt-1">Efectivo • 11:45</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="font-bold text-green-600 text-lg">+$100.00</p>
+                                </div>
+                            </div>
+                            <!-- Item Gasto -->
+                            <div class="flex items-center p-4 bg-white rounded-xl shadow-md">
+                                <div class="p-3 bg-blue-100 rounded-full mr-4">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-600"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+                                </div>
+                                <div class="flex-grow">
+                                    <p class="font-semibold text-gray-800">Supermercado</p>
+                                    <p class="text-sm text-gray-600">Compra de la semana</p>
+                                    <p class="text-xs text-gray-500 mt-1">Tarjeta de Débito • 18:15</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="font-bold text-red-600 text-lg">-$85.50</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Grupo de Día: 14 de Septiembre (Balance Cero) -->
+                    <div class="mt-6">
+                        <div class="flex justify-between items-center mb-3">
+                            <div class="flex items-center flex-grow">
+                                 <div class="flex items-baseline gap-3">
+                                    <span class="text-3xl font-bold text-gray-800">14</span>
+                                    <div>
+                                        <p class="font-semibold text-gray-600">Domingo</p>
+                                        <p class="text-sm text-gray-400">Septiembre 2025</p>
+                                    </div>
+                                </div>
+                                <div class="flex-grow h-px ml-4 bg-gray-200"></div>
+                            </div>
+                            <!-- Balance del día -->
+                            <div class="text-right ml-4 flex-shrink-0">
+                                <p class="font-semibold text-base text-orange-500">$0.00</p>
+                            </div>
+                        </div>
+                        <div class="space-y-3">
+                            <!-- Item Ingreso -->
+                            <div class="flex items-center p-4 bg-white rounded-xl shadow-md">
+                                <div class="p-3 bg-cyan-100 rounded-full mr-4">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-cyan-600"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                                </div>
+                                <div class="flex-grow">
+                                    <p class="font-semibold text-gray-800">Reembolso de amigo</p>
+                                    <p class="text-sm text-gray-600">Pago de cena</p>
+                                    <p class="text-xs text-gray-500 mt-1">Cuenta Principal • 15:20</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="font-bold text-green-600 text-lg">+$25.00</p>
+                                </div>
+                            </div>
+                            <!-- Item Gasto -->
+                            <div class="flex items-center p-4 bg-white rounded-xl shadow-md">
+                                <div class="p-3 bg-purple-100 rounded-full mr-4">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-purple-600"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                                </div>
+                                <div class="flex-grow">
+                                    <p class="font-semibold text-gray-800">Almuerzo</p>
+                                    <p class="text-sm text-gray-600">Comida con amigos</p>
+                                    <p class="text-xs text-gray-500 mt-1">Tarjeta de Débito • 14:00</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="font-bold text-red-600 text-lg">-$25.00</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Grupo de Día: 15 de Septiembre -->
+                    <div class="mt-6">
+                        <div class="flex justify-between items-center mb-3">
+                            <div class="flex items-center flex-grow">
+                                <div class="flex items-baseline gap-3">
+                                    <span class="text-3xl font-bold text-gray-800">15</span>
+                                    <div>
+                                        <p class="font-semibold text-gray-600">Lunes</p>
+                                        <p class="text-sm text-gray-400">Septiembre 2025</p>
+                                    </div>
+                                </div>
+                                <div class="flex-grow h-px ml-4 bg-gray-200"></div>
+                            </div>
+                             <!-- Balance del día -->
+                            <div class="text-right ml-4 flex-shrink-0">
+                                <p class="font-semibold text-base text-green-600">+$2,250.00</p>
+                            </div>
+                        </div>
+                        <div class="space-y-3">
+                            <!-- Item Ingreso -->
+                            <div class="flex items-center p-4 bg-white rounded-xl shadow-md">
+                                <div class="p-3 bg-green-100 rounded-full mr-4">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-green-600"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+                                </div>
+                                <div class="flex-grow">
+                                    <p class="font-semibold text-gray-800">Salario</p>
+                                    <p class="text-sm text-gray-600">Nómina quincenal</p>
+                                    <p class="text-xs text-gray-500 mt-1">Cuenta Principal • 09:30</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="font-bold text-green-600 text-lg">+$2,250.00</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Barra de Navegación Inferior -->
+        <footer class="fixed bottom-0 left-0 right-0 max-w-2xl mx-auto bg-white border-t border-gray-200">
+            <div class="grid grid-cols-5 items-center justify-items-center h-16">
+                <!-- Resumen -->
+                <a href="resumen.html" class="flex flex-col items-center justify-center text-gray-500 hover:text-indigo-600 w-full h-full transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 mb-1"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                    <span class="text-xs font-medium">Resumen</span>
+                </a>
+                <!-- Operaciones (Activo) -->
+                <a href="#" class="flex flex-col items-center justify-center text-indigo-600 w-full h-full transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 mb-1"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                    <span class="text-xs font-medium">Operaciones</span>
+                </a>
+                <!-- Estadísticas -->
+                <a href="estadisticas.html" class="flex flex-col items-center justify-center text-gray-500 hover:text-indigo-600 w-full h-full transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 mb-1"><line x1="12" y1="20" x2="12" y2="10"></line><line x1="18" y1="20" x2="18" y2="4"></line><line x1="6" y1="20" x2="6" y2="16"></line></svg>
+                    <span class="text-xs font-medium">Estadísticas</span>
+                </a>
+                <!-- Cuentas -->
+                <a href="cuentas.html" class="flex flex-col items-center justify-center text-gray-500 hover:text-indigo-600 w-full h-full transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 mb-1"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"></path></svg>
+                    <span class="text-xs font-medium">Cuentas</span>
+                </a>
+                <!-- Ajustes -->
+                 <a href="ajustes.html" class="flex flex-col items-center justify-center text-gray-500 hover:text-indigo-600 w-full h-full transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 mb-1"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                    <span class="text-xs font-medium">Ajustes</span>
+                </a>
+            </div>
+        </footer>
+
+    </div>
+
+</body>
+</html>
+
+
+

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Página Destino</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #a777e3, #6e8efb);
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+        
+        body.fade-in {
+            opacity: 1;
+        }
+        
+        body.fade-out {
+            opacity: 0;
+        }
+        
+        .container {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        h1 {
+            margin-bottom: 20px;
+            color: #a777e3;
+            font-size: 2.5rem;
+        }
+        
+        p {
+            margin-bottom: 25px;
+            line-height: 1.6;
+            font-size: 1.1rem;
+        }
+        
+        .btn {
+            display: inline-block;
+            background: linear-gradient(to right, #a777e3, #6e8efb);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            margin: 10px;
+            box-shadow: 0 4px 15px rgba(167, 119, 227, 0.4);
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(167, 119, 227, 0.6);
+        }
+        
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .content-card {
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .content-card h3 {
+            color: #a777e3;
+            margin-bottom: 10px;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 25px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Página Destino</h1>
+        <p>¡Has llegado a la página destino! Esta página se cargó con un efecto de aparición gradual. Ahora puedes regresar a la página de inicio con el mismo efecto de transición.</p>
+        
+        <a href="1.html" class="btn transition-link">Volver a Página de Inicio</a>
+        
+        <div class="content-grid">
+            <div class="content-card">
+                <h3>Característica 1</h3>
+                <p>Transición suave entre páginas con efecto de desvanecimiento.</p>
+            </div>
+            <div class="content-card">
+                <h3>Característica 2</h3>
+                <p>Diseño responsive que se adapta a todos los dispositivos.</p>
+            </div>
+            <div class="content-card">
+                <h3>Característica 3</h3>
+                <p>Fácil de implementar en cualquier proyecto web.</p>
+            </div>
+            <div class="content-card">
+                <h3>Característica 4</h3>
+                <p>Efecto visual profesional que mejora la experiencia de usuario.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Aplicar efecto de aparición al cargar
+            setTimeout(() => {
+                document.body.classList.add('fade-in');
+            }, 10);
+            
+            const links = document.querySelectorAll('.transition-link');
+            
+            links.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Indicar que estamos en transición
+                    sessionStorage.setItem('transitioning', 'true');
+                    
+                    // Aplicar efecto de desvanecimiento
+                    document.body.classList.remove('fade-in');
+                    document.body.classList.add('fade-out');
+                    
+                    // Redirigir después de la transición
+                    setTimeout(() => {
+                        window.location.href = this.href;
+                    }, 500);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

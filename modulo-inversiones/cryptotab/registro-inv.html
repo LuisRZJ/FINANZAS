@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Inversiones | CT</title>
+    <meta name="theme-color" content="#2563eb">
+    <link rel="icon" href="/pwa/logo-app.png">      
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <!-- Inter font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        /* Apply Inter as the primary font across the page and force override Tailwind utilities */
+        html, body, .app-inter {
+            font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial !important;
+        }
+        /* Helper: add .app-inter to the root to ensure highest specificity if needed */
+        :root { --app-font: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans app-inter">
+
+    <div class="container mx-auto p-4">
+
+        <!-- Simple header for the page -->
+        <header class="mb-6 bg-white rounded-lg shadow-sm p-4 flex items-start justify-between">
+            <div>
+                <h1 class="text-2xl font-semibold text-gray-800">Registro de Inversiones — CryptoTab</h1>
+                <p class="text-sm text-gray-600 mt-1">Aquí puedes añadir y gestionar tus registros de inversión en CryptoTab. Usa los filtros para encontrar registros rápidamente.</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <a href="../index.html" class="inline-flex items-center bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium py-2 px-3 rounded shadow">
+                    <i class="fas fa-arrow-left mr-2"></i>Volver al Panel
+                </a>
+            </div>
+        </header>
+
+        <!-- Pestañas de Navegación -->
+        <div class="mb-4 border-b border-gray-200">
+            <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="myTab" role="tablist">
+                <li class="mr-2" role="presentation">
+                    <button class="inline-block p-4 border-b-2 rounded-t-lg" id="dashboard-tab" type="button" role="tab" aria-controls="dashboard" aria-selected="true"><i class="fas fa-tachometer-alt mr-2"></i>Dashboard</button>
+                </li>
+                <li class="mr-2" role="presentation">
+                    <button class="inline-block p-4 border-b-2 rounded-t-lg hover:text-gray-600 hover:border-gray-300" id="settings-tab" type="button" role="tab" aria-controls="settings" aria-selected="false"><i class="fas fa-cog mr-2"></i>Ajustes</button>
+                </li>
+                <li class="mr-2" role="presentation">
+                    <button class="inline-block p-4 border-b-2 rounded-t-lg hover:text-gray-600 hover:border-gray-300" id="storage-tab" type="button" role="tab" aria-controls="storage" aria-selected="false"><i class="fas fa-database mr-2"></i>Almacenamiento</button>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Contenido de las Pestañas -->
+        <div id="tabContent">
+
+            <!-- Pestaña Principal: Dashboard -->
+            <div id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
+                <div class="flex justify-between items-center mb-4">
+                    <h1 class="text-2xl font-bold text-gray-800">Registros</h1>
+                    <button id="addRecordBtn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                        <i class="fas fa-plus mr-2"></i>Añadir Registro
+                    </button>
+                </div>
+
+                <!-- Filtros -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 p-4 bg-white rounded-lg shadow">
+                    <div>
+                        <label for="filterApp" class="block text-sm font-medium text-gray-700">Filtrar por APP</label>
+                        <select id="filterApp" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"></select>
+                    </div>
+                    <div>
+                        <label for="filterPlazo" class="block text-sm font-medium text-gray-700">Filtrar por Plazo</label>
+                        <select id="filterPlazo" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"></select>
+                    </div>
+                    <div>
+                        <label for="filterMetodoPago" class="block text-sm font-medium text-gray-700">Filtrar por Método de Pago</label>
+                        <select id="filterMetodoPago" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"></select>
+                    </div>
+                </div>
+
+                <!-- Tabla Principal -->
+                <div class="bg-white shadow-md rounded-lg overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">APP</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hash Rate</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Plazo Inversión</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Método Pago</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Costo</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Próx. Renovación</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notas</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dataTableBody" class="bg-white divide-y divide-gray-200">
+                            <!-- Filas de datos se insertarán aquí -->
+                        </tbody>
+                        <tfoot class="bg-gray-50 font-bold">
+                            <tr id="tableTotals">
+                                <td class="px-6 py-4">Total</td>
+                                <td id="totalHashRate" class="px-6 py-4"></td>
+                                <td class="px-6 py-4"></td>
+                                <td class="px-6 py-4"></td>
+                                <td id="totalCosto" class="px-6 py-4"></td>
+                                <td class="px-6 py-4"></td>
+                                <td id="totalRegistros" class="px-6 py-4 text-center" colspan="2"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Pestaña de Ajustes -->
+            <div id="settings" class="hidden" role="tabpanel" aria-labelledby="settings-tab">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">Gestionar Opciones</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <!-- Gestión de APPs -->
+                    <div>
+                        <h3 class="font-semibold mb-2">APPs</h3>
+                        <div id="appsOptions" class="space-y-2"></div>
+                        <div class="mt-2">
+                            <input type="text" id="newAppName" placeholder="Nombre de la APP" class="w-full border p-2 rounded">
+                            <input type="color" id="newAppColor" class="w-full h-8 p-1 border rounded mt-1">
+                            <button onclick="addOption('apps')" class="mt-2 bg-blue-500 text-white w-full py-2 rounded">Añadir APP</button>
+                        </div>
+                    </div>
+                    <!-- Gestión de Plazos de Inversión -->
+                    <div>
+                        <h3 class="font-semibold mb-2">Plazos de Inversión</h3>
+                        <div id="plazosOptions" class="space-y-2"></div>
+                        <div class="mt-2">
+                            <input type="text" id="newPlazoName" placeholder="Ej: 30 días / 3 meses" class="w-full border p-2 rounded">
+                            <div class="mt-1 flex gap-2">
+                                <input type="number" id="newPlazoLength" placeholder="Número" class="w-1/2 border p-2 rounded">
+                                <select id="newPlazoUnit" class="w-1/2 border p-2 rounded">
+                                    <option value="days">Días</option>
+                                    <option value="months">Meses</option>
+                                </select>
+                            </div>
+                            <input type="color" id="newPlazoColor" class="w-full h-8 p-1 border rounded mt-1">
+                            <button onclick="addOption('plazos')" class="mt-2 bg-blue-500 text-white w-full py-2 rounded">Añadir Plazo</button>
+                        </div>
+                    </div>
+                    <!-- Gestión de Métodos de Pago -->
+                    <div>
+                        <h3 class="font-semibold mb-2">Métodos de Pago</h3>
+                        <div id="metodosPagoOptions" class="space-y-2"></div>
+                        <div class="mt-2">
+                            <input type="text" id="newMetodoPagoName" placeholder="Nombre del método" class="w-full border p-2 rounded">
+                            <input type="color" id="newMetodoPagoColor" class="w-full h-8 p-1 border rounded mt-1">
+                            <button onclick="addOption('metodosPago')" class="mt-2 bg-blue-500 text-white w-full py-2 rounded">Añadir Método</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Pestaña de Almacenamiento -->
+            <div id="storage" class="hidden p-4 bg-white rounded-lg shadow" role="tabpanel" aria-labelledby="storage-tab">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">Almacenamiento</h2>
+                <p class="text-sm text-gray-600 mb-4">Resumen del almacenamiento usado por esta página (localStorage relacionado) y herramientas de respaldo/restauración.</p>
+
+                <div id="storageSummary" class="mb-4 space-y-2">
+                    <div>Total registros: <span id="storageTotalRecords">0</span></div>
+                    <div>Tamaño registros: <span id="storageSizeRecords">0</span> bytes</div>
+                    <div>Total opciones: <span id="storageTotalOptions">0</span></div>
+                    <div>Tamaño opciones: <span id="storageSizeOptions">0</span> bytes</div>
+                    <div>Tamaño total (estimado): <span id="storageSizeTotal">0</span> bytes</div>
+                </div>
+
+                <div class="flex gap-2">
+                    <button id="exportBtn" class="inline-flex items-center bg-green-500 hover:bg-green-600 text-white py-2 px-3 rounded"><i class="fas fa-file-export mr-2"></i>Exportar datos</button>
+                    <button id="sendDiscordBtn" class="inline-flex items-center bg-indigo-500 hover:bg-indigo-600 text-white py-2 px-3 rounded"><i class="fab fa-discord mr-2"></i>Enviar a Discord</button>
+                    <label for="importFile" class="inline-flex items-center bg-blue-500 hover:bg-blue-600 text-white py-2 px-3 rounded cursor-pointer"><i class="fas fa-file-import mr-2"></i>Importar/Restaurar</label>
+                    <input id="importFile" type="file" accept="application/json" class="hidden">
+                    <button id="clearBtn" class="inline-flex items-center bg-red-500 hover:bg-red-600 text-white py-2 px-3 rounded"><i class="fas fa-trash-alt mr-2"></i>Borrar datos</button>
+                </div>
+                <p id="storageMessage" class="text-sm text-gray-600 mt-3"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Añadir/Editar Registro -->
+    <div id="recordModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="mt-3 text-center">
+                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modalTitle">Añadir Nuevo Registro</h3>
+                <form id="recordForm" class="mt-2 space-y-4">
+                    <input type="hidden" id="recordId">
+                    <div>
+                        <label for="app" class="block text-sm font-medium text-gray-700 text-left">APP</label>
+                        <select id="app" name="app" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required></select>
+                    </div>
+                    <div>
+                        <label for="hashRate" class="block text-sm font-medium text-gray-700 text-left">Hash Rate</label>
+                        <input type="number" name="hashRate" id="hashRate" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" required>
+                    </div>
+                    <div>
+                        <label for="plazo" class="block text-sm font-medium text-gray-700 text-left">Plazo Inversión</label>
+                        <select id="plazo" name="plazo" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required></select>
+                    </div>
+                    <div>
+                        <label for="metodoPago" class="block text-sm font-medium text-gray-700 text-left">Método de Pago</label>
+                        <select id="metodoPago" name="metodoPago" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required></select>
+                    </div>
+                    <div>
+                        <label for="costo" class="block text-sm font-medium text-gray-700 text-left">Costo</label>
+                        <input type="number" step="0.01" name="costo" id="costo" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" required>
+                    </div>
+                    <div>
+                        <label for="fechaCompra" class="block text-sm font-medium text-gray-700 text-left">Fecha de Compra Inicial</label>
+                        <input type="date" name="fechaCompra" id="fechaCompra" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" required>
+                    </div>
+                    <div>
+                        <label for="notas" class="block text-sm font-medium text-gray-700 text-left">Notas</label>
+                        <textarea id="notas" name="notas" rows="3" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 mt-1 block w-full sm:text-sm border border-gray-300 rounded-md"></textarea>
+                    </div>
+                    <div class="items-center px-4 py-3">
+                        <button id="saveRecordBtn" class="px-4 py-2 bg-green-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-300">Guardar</button>
+                        <button id="cancelBtn" type="button" class="mt-2 px-4 py-2 bg-gray-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-300">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+        document.addEventListener('DOMContentLoaded', () => {
+    // Estado de la aplicación
+    let state = {
+        records: JSON.parse(localStorage.getItem('records')) || [],
+        options: JSON.parse(localStorage.getItem('options')) || {
+            apps: [{ id: 1, name: 'App Ejemplo', color: '#4299e1' }],
+            // plazos supports length + unit (unit = 'days' or 'months')
+            plazos: [{ id: 1, name: '30 días', length: 30, unit: 'days', color: '#68d391' }],
+            metodosPago: [{ id: 1, name: 'Tarjeta', color: '#f6ad55' }]
+        },
+        filters: {
+            app: 'all',
+            plazo: 'all',
+            metodoPago: 'all'
+        }
+    };
+
+    // Normalize old plazos format (days) to new format (length + unit)
+    if (Array.isArray(state.options.plazos)) {
+        state.options.plazos = state.options.plazos.map(o => {
+            if (o && o.days && !o.length) {
+                o.length = o.days;
+                o.unit = 'days';
+                delete o.days;
+            }
+            return o;
+        });
+    }
+
+    // --- Selectores del DOM ---
+    const dashboardTab = document.getElementById('dashboard-tab');
+    const settingsTab = document.getElementById('settings-tab');
+    const storageTabBtn = document.getElementById('storage-tab');
+    const dashboardContent = document.getElementById('dashboard');
+    const settingsContent = document.getElementById('settings');
+    const storageContent = document.getElementById('storage');
+    const addRecordBtn = document.getElementById('addRecordBtn');
+    const modal = document.getElementById('recordModal');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const recordForm = document.getElementById('recordForm');
+    const dataTableBody = document.getElementById('dataTableBody');
+
+    // --- Pestañas ---
+    dashboardTab.addEventListener('click', () => switchTab('dashboard'));
+    settingsTab.addEventListener('click', () => switchTab('settings'));
+    if (storageTabBtn) storageTabBtn.addEventListener('click', () => switchTab('storage'));
+
+    function switchTab(tab) {
+        // hide all first
+        dashboardContent.classList.add('hidden');
+        settingsContent.classList.add('hidden');
+        if (storageContent) storageContent.classList.add('hidden');
+
+        // deactivate all tab buttons
+        dashboardTab.classList.remove('border-blue-500', 'text-blue-600');
+        settingsTab.classList.remove('border-blue-500', 'text-blue-600');
+        if (storageTabBtn) storageTabBtn.classList.remove('border-blue-500', 'text-blue-600');
+
+        // activate the requested tab
+        if (tab === 'dashboard') {
+            dashboardContent.classList.remove('hidden');
+            dashboardTab.classList.add('border-blue-500', 'text-blue-600');
+        } else if (tab === 'settings') {
+            settingsContent.classList.remove('hidden');
+            settingsTab.classList.add('border-blue-500', 'text-blue-600');
+        } else if (tab === 'storage') {
+            if (storageContent) storageContent.classList.remove('hidden');
+            if (storageTabBtn) storageTabBtn.classList.add('border-blue-500', 'text-blue-600');
+            updateStorageSummary();
+        }
+    }
+
+    // --- Modal ---
+    addRecordBtn.addEventListener('click', () => openModal());
+    cancelBtn.addEventListener('click', () => closeModal());
+
+    function openModal(recordId = null) {
+        recordForm.reset();
+        document.getElementById('recordId').value = '';
+        const modalTitle = document.getElementById('modalTitle');
+        populateSelects();
+
+        if (recordId !== null) {
+            modalTitle.textContent = 'Editar Registro';
+            const record = state.records.find(r => r.id === recordId);
+            if (record) {
+                document.getElementById('recordId').value = record.id;
+                document.getElementById('app').value = record.app;
+                document.getElementById('hashRate').value = record.hashRate;
+                document.getElementById('plazo').value = record.plazo;
+                document.getElementById('metodoPago').value = record.metodoPago;
+                document.getElementById('costo').value = record.costo;
+                document.getElementById('fechaCompra').value = record.fechaCompra;
+                document.getElementById('notas').value = record.notas;
+            }
+        } else {
+            modalTitle.textContent = 'Añadir Nuevo Registro';
+        }
+        modal.classList.remove('hidden');
+    }
+
+    function closeModal() {
+        modal.classList.add('hidden');
+    }
+
+    // --- Lógica CRUD y de estado ---
+    function saveState() {
+        localStorage.setItem('records', JSON.stringify(state.records));
+        localStorage.setItem('options', JSON.stringify(state.options));
+        // update storage summary when state changes
+        updateStorageSummary();
+    }
+
+    recordForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const recordId = document.getElementById('recordId').value;
+        const formData = new FormData(recordForm);
+        const recordData = Object.fromEntries(formData.entries());
+
+        if (recordId) {
+            // Editar
+            const index = state.records.findIndex(r => r.id == recordId);
+            state.records[index] = { ...state.records[index], ...recordData };
+        } else {
+            // Crear
+            recordData.id = Date.now();
+            state.records.push(recordData);
+        }
+        saveState();
+        renderTable();
+        closeModal();
+    });
+
+    window.editRecord = function(id) {
+        openModal(id);
+    }
+
+    window.deleteRecord = function(id) {
+        if (confirm('¿Estás seguro de que quieres eliminar este registro?')) {
+            state.records = state.records.filter(r => r.id !== id);
+            saveState();
+            renderTable();
+        }
+    }
+
+    // --- Renderizado y Lógica de la Interfaz ---
+    function renderTable() {
+        dataTableBody.innerHTML = '';
+        const filteredRecords = state.records.filter(record => {
+            return (state.filters.app === 'all' || record.app === state.filters.app) &&
+                   (state.filters.plazo === 'all' || record.plazo === state.filters.plazo) &&
+                   (state.filters.metodoPago === 'all' || record.metodoPago === state.filters.metodoPago);
+        });
+
+        if (filteredRecords.length === 0) {
+            dataTableBody.innerHTML = `<tr><td colspan="8" class="text-center p-4">No hay registros que mostrar.</td></tr>`;
+        } else {
+            filteredRecords.forEach(record => {
+                const tr = document.createElement('tr');
+                const plazoOption = state.options.plazos.find(p => p.name === record.plazo);
+                let fechaRenovacion = 'N/A';
+                if (plazoOption && record.fechaCompra) {
+                    const base = parseDateFromInput(record.fechaCompra);
+                    if (plazoOption.unit === 'months') {
+                        // add months (approximate with setMonth to handle month length)
+                        const d = new Date(base);
+                        d.setMonth(d.getMonth() + (plazoOption.length || 0));
+                        fechaRenovacion = d.toLocaleDateString();
+                    } else {
+                        // default to days
+                        const d = new Date(base);
+                        d.setDate(d.getDate() + (plazoOption.length || 0));
+                        fechaRenovacion = d.toLocaleDateString();
+                    }
+                }
+                
+                const appOption = state.options.apps.find(a => a.name === record.app);
+                const plazoOpt = state.options.plazos.find(p => p.name === record.plazo);
+                const metodoOpt = state.options.metodosPago.find(m => m.name === record.metodoPago);
+
+                tr.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" style="background-color:${appOption?.color || '#ffffff'}; color: ${getContrastYIQ(appOption?.color)}">${record.app}</span></td>
+                    <td class="px-6 py-4 whitespace-nowrap">${record.hashRate}</td>
+                    <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" style="background-color:${plazoOpt?.color || '#ffffff'}; color: ${getContrastYIQ(plazoOpt?.color)}">${record.plazo}</span></td>
+                    <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" style="background-color:${metodoOpt?.color || '#ffffff'}; color: ${getContrastYIQ(metodoOpt?.color)}">${record.metodoPago}</span></td>
+                    <td class="px-6 py-4 whitespace-nowrap">${formatCurrency(parseFloat(record.costo) || 0)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${fechaRenovacion}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${record.notas}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button onclick="editRecord(${record.id})" class="text-indigo-600 hover:text-indigo-900"><i class="fas fa-edit"></i></button>
+                        <button onclick="deleteRecord(${record.id})" class="text-red-600 hover:text-red-900 ml-4"><i class="fas fa-trash"></i></button>
+                    </td>
+                `;
+                dataTableBody.appendChild(tr);
+            });
+        }
+        updateTotals(filteredRecords);
+    }
+    
+    function getContrastYIQ(hexcolor){
+        if(!hexcolor) return 'black';
+        hexcolor = hexcolor.replace("#", "");
+        var r = parseInt(hexcolor.substr(0,2),16);
+        var g = parseInt(hexcolor.substr(2,2),16);
+        var b = parseInt(hexcolor.substr(4,2),16);
+        var yiq = ((r*299)+(g*587)+(b*114))/1000;
+        return (yiq >= 128) ? 'black' : 'white';
+    }
+
+    // Parse a date string from <input type="date"> (YYYY-MM-DD) into a local Date
+    function parseDateFromInput(dateStr) {
+        if (!dateStr) return null;
+        // dateStr expected in format YYYY-MM-DD
+        const parts = dateStr.split('-');
+        if (parts.length !== 3) return new Date(dateStr);
+        const year = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10) - 1; // zero-based
+        const day = parseInt(parts[2], 10);
+        return new Date(year, month, day);
+    }
+
+    // Format number as currency with thousands separators, e.g. $1,234.56
+    function formatCurrency(value) {
+        const num = Number(value);
+        const valid = isFinite(num) ? num : 0;
+        return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(valid);
+    }
+
+
+    function updateTotals(records) {
+        const totalHashRate = records.reduce((sum, record) => sum + parseFloat(record.hashRate || 0), 0);
+        const totalCosto = records.reduce((sum, record) => sum + parseFloat(record.costo || 0), 0);
+        document.getElementById('totalHashRate').textContent = totalHashRate.toFixed(2);
+    document.getElementById('totalCosto').textContent = formatCurrency(totalCosto || 0);
+        document.getElementById('totalRegistros').textContent = `Total Registros: ${records.length}`;
+    }
+
+    // --- Storage utilities ---
+    function sizeOfString(str) {
+        // rough byte size
+        return new Blob([str]).size;
+    }
+
+    function updateStorageSummary() {
+        const recStr = JSON.stringify(state.records || []);
+        const optStr = JSON.stringify(state.options || {});
+        const recSize = sizeOfString(recStr);
+        const optSize = sizeOfString(optStr);
+        document.getElementById('storageTotalRecords').textContent = (state.records || []).length;
+        document.getElementById('storageSizeRecords').textContent = recSize;
+        document.getElementById('storageTotalOptions').textContent = (function(){
+            let count = 0;
+            for (const k in state.options) if (Array.isArray(state.options[k])) count += state.options[k].length;
+            return count;
+        })();
+        document.getElementById('storageSizeOptions').textContent = optSize;
+        document.getElementById('storageSizeTotal').textContent = (recSize + optSize);
+    }
+
+    // Export data for this page (records + options)
+    function exportData() {
+        const payload = { __page: 'registro-inv', exportedAt: new Date().toISOString(), records: state.records, options: state.options };
+        const dataStr = JSON.stringify(payload, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'registro-inv-backup-' + (new Date()).toISOString().slice(0,19).replace(/[:T]/g,'-') + '.json';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        document.getElementById('storageMessage').textContent = 'Exportación completada.';
+    }
+
+    // Import data (file input change handler)
+    function handleImportFile(file) {
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const parsed = JSON.parse(e.target.result);
+                // simple validation
+                if (!parsed || parsed.__page !== 'registro-inv' || !Array.isArray(parsed.records) || !parsed.options) {
+                    document.getElementById('storageMessage').textContent = 'Archivo no válido o no corresponde a esta página.';
+                    return;
+                }
+                if (!confirm('Restaurar los datos desde el archivo sobrescribirá los datos actuales. ¿Continuar?')) return;
+                state.records = parsed.records;
+                state.options = parsed.options;
+                saveState();
+                renderTable();
+                renderOptions();
+                document.getElementById('storageMessage').textContent = 'Importación y restauración completadas.';
+            } catch (err) {
+                document.getElementById('storageMessage').textContent = 'Error leyendo el archivo: ' + err.message;
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    function clearData() {
+        if (!confirm('Borrar todos los datos de esta página eliminará registros y opciones. ¿Estás seguro?')) return;
+        state.records = [];
+        state.options = { apps: [], plazos: [], metodosPago: [] };
+        saveState();
+        renderTable();
+        renderOptions();
+        document.getElementById('storageMessage').textContent = 'Datos borrados.';
+    }
+
+    // wire export/import/clear buttons
+    const exportBtn = document.getElementById('exportBtn');
+    const importFile = document.getElementById('importFile');
+    const clearBtn = document.getElementById('clearBtn');
+    if (exportBtn) exportBtn.addEventListener('click', exportData);
+    if (importFile) importFile.addEventListener('change', (e)=> handleImportFile(e.target.files[0]));
+    if (clearBtn) clearBtn.addEventListener('click', clearData);
+    const sendDiscordBtn = document.getElementById('sendDiscordBtn');
+    if (sendDiscordBtn) sendDiscordBtn.addEventListener('click', sendToDiscord);
+
+    // Send exported JSON file to Discord webhook as multipart/form-data
+    async function sendToDiscord() {
+        const webhookUrl = 'https://discord.com/api/webhooks/1429231500120948808/MbKuhnAL60vgoalLazjThfJEM5AMMKJyNz_aYQy3jaWHlJW0ZxlgYTYrOevu9Uzeppu6';
+        const payload = { __page: 'registro-inv', exportedAt: new Date().toISOString(), records: state.records, options: state.options };
+        const dataStr = JSON.stringify(payload, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const form = new FormData();
+        form.append('file', blob, 'registro-inv-backup.json');
+        // optional embed message
+        const embed = { embeds: [{ title: 'Backup Registro-Inv', description: 'Backup exportado desde la aplicación', timestamp: new Date().toISOString() }] };
+        form.append('payload_json', JSON.stringify(embed));
+        document.getElementById('storageMessage').textContent = 'Enviando a Discord...';
+        try {
+            const res = await fetch(webhookUrl, { method: 'POST', body: form });
+            if (!res.ok) throw new Error('HTTP ' + res.status + ' ' + res.statusText);
+            document.getElementById('storageMessage').textContent = 'Enviado a Discord correctamente.';
+        } catch (err) {
+            // CORS or network error - show helpful fallback
+            document.getElementById('storageMessage').textContent = 'No se pudo enviar a Discord desde el navegador (posible CORS). Puedes descargar el archivo y enviarlo manualmente. Error: ' + err.message;
+            // provide curl fallback
+            const curlCmd = `curl -H "Content-Type: multipart/form-data" -F "file=@registro-inv-backup.json" -F 'payload_json=${JSON.stringify(embed).replace(/"/g, '\\"')}' ${webhookUrl}`;
+            console.error('Discord send failed:', err);
+            // show fallback as an alert with copy instruction
+            if (confirm('El envío directo a Discord falló. ¿Deseas descargar el archivo para enviarlo manualmente?')) {
+                // trigger download
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'registro-inv-backup.json';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                URL.revokeObjectURL(url);
+                alert('Archivo descargado. Usa el siguiente comando curl (en tu terminal) para subirlo al webhook:\n\n' + curlCmd);
+            }
+        }
+    }
+
+    // --- Gestión de Opciones (Ajustes) ---
+    function renderOptions() {
+        const optionsContainers = {
+            apps: document.getElementById('appsOptions'),
+            plazos: document.getElementById('plazosOptions'),
+            metodosPago: document.getElementById('metodosPagoOptions')
+        };
+
+        for (const key in optionsContainers) {
+            optionsContainers[key].innerHTML = '';
+            state.options[key].forEach(option => {
+                const div = document.createElement('div');
+                div.className = 'flex justify-between items-center p-2 rounded';
+                div.style.backgroundColor = option.color;
+                const plazoLabel = option.length ? `(${option.length} ${option.unit === 'months' ? 'meses' : 'días'})` : '';
+                div.innerHTML = `
+                    <span style="color: ${getContrastYIQ(option.color)}">${option.name} ${plazoLabel}</span>
+                    <button onclick="deleteOption('${key}', ${option.id})" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
+                `;
+                optionsContainers[key].appendChild(div);
+            });
+        }
+        populateFilterSelects();
+    }
+
+    window.addOption = function(type) {
+        let newOption;
+        if (type === 'apps') {
+            const name = document.getElementById('newAppName').value;
+            const color = document.getElementById('newAppColor').value;
+            if (!name) return;
+            newOption = { id: Date.now(), name, color };
+        } else if (type === 'plazos') {
+            const name = document.getElementById('newPlazoName').value;
+            const length = parseInt(document.getElementById('newPlazoLength').value);
+            const unit = document.getElementById('newPlazoUnit').value; // 'days' or 'months'
+            const color = document.getElementById('newPlazoColor').value;
+            if (!name || isNaN(length) || !unit) return;
+            newOption = { id: Date.now(), name, length, unit, color };
+        } else if (type === 'metodosPago') {
+            const name = document.getElementById('newMetodoPagoName').value;
+            const color = document.getElementById('newMetodoPagoColor').value;
+            if (!name) return;
+            newOption = { id: Date.now(), name, color };
+        }
+
+        state.options[type].push(newOption);
+        saveState();
+        renderOptions();
+        // Limpiar inputs
+    if (type === 'apps') { document.getElementById('newAppName').value = ''; }
+    if (type === 'plazos') { document.getElementById('newPlazoName').value = ''; document.getElementById('newPlazoLength').value = ''; document.getElementById('newPlazoUnit').value = 'days'; }
+    if (type === 'metodosPago') { document.getElementById('newMetodoPagoName').value = ''; }
+    }
+
+    window.deleteOption = function(type, id) {
+        state.options[type] = state.options[type].filter(option => option.id !== id);
+        saveState();
+        renderOptions();
+    }
+
+    // --- Llenar Selects (Formulario y Filtros) ---
+    function populateSelects() {
+        const selects = {
+            app: document.getElementById('app'),
+            plazo: document.getElementById('plazo'),
+            metodoPago: document.getElementById('metodoPago')
+        };
+        
+        fillSelectWithOptions(selects.app, state.options.apps, 'name');
+        fillSelectWithOptions(selects.plazo, state.options.plazos, 'name');
+        fillSelectWithOptions(selects.metodoPago, state.options.metodosPago, 'name');
+    }
+    
+    function populateFilterSelects() {
+        const filterSelects = {
+            app: document.getElementById('filterApp'),
+            plazo: document.getElementById('filterPlazo'),
+            metodoPago: document.getElementById('filterMetodoPago')
+        };
+
+        fillSelectWithOptions(filterSelects.app, state.options.apps, 'name', true);
+        fillSelectWithOptions(filterSelects.plazo, state.options.plazos, 'name', true);
+        fillSelectWithOptions(filterSelects.metodoPago, state.options.metodosPago, 'name', true);
+    }
+    
+    function fillSelectWithOptions(selectElement, options, valueKey, includeAll = false) {
+        selectElement.innerHTML = '';
+        if (includeAll) {
+            const allOption = document.createElement('option');
+            allOption.value = 'all';
+            allOption.textContent = 'Todos';
+            selectElement.appendChild(allOption);
+        }
+        options.forEach(option => {
+            const opt = document.createElement('option');
+            // keep option value as name for backward compatibility with records stored as name
+            opt.value = option.name;
+            opt.textContent = option.name;
+            opt.style.backgroundColor = option.color;
+            opt.style.color = getContrastYIQ(option.color);
+            selectElement.appendChild(opt);
+        });
+    }
+
+    // --- Filtros ---
+    document.getElementById('filterApp').addEventListener('change', (e) => {
+        state.filters.app = e.target.value;
+        renderTable();
+    });
+    document.getElementById('filterPlazo').addEventListener('change', (e) => {
+        state.filters.plazo = e.target.value;
+        renderTable();
+    });
+    document.getElementById('filterMetodoPago').addEventListener('change', (e) => {
+        state.filters.metodoPago = e.target.value;
+        renderTable();
+    });
+
+    // --- Inicialización ---
+    function init() {
+        switchTab('dashboard');
+        renderTable();
+        renderOptions();
+        updateStorageSummary();
+    }
+
+    init();
+});
+
+    </script>
+
+</body>
+</html>

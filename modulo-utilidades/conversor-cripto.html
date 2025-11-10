@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Conversor Cripto ↔ MXN</title>
+  <meta name="theme-color" content="#2563eb">
+  <link rel="icon" href="/pwa/logo-app.png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      transition: background 0.5s ease;
+    }
+
+    /* --- Tema BTC (Naranja) --- */
+    body.btc-theme { background: linear-gradient(135deg, #fef5e7 0%, #fde3c4 100%); }
+    .btc-theme .price-display { background: linear-gradient(135deg, #f7931a 0%, #ffab2d 100%); }
+    .btc-theme input:focus { box-shadow: 0 0 0 3px rgba(247, 147, 26, 0.3); border-color: #f7931a; }
+    .btc-theme .btn-convert:enabled { background: linear-gradient(135deg, #f7931a 0%, #ffab2d 100%); }
+    .btc-theme .btn-convert:enabled:hover { box-shadow: 0 5px 15px rgba(247, 147, 26, 0.4); }
+    .btc-theme .input-icon, .btc-theme .crypto-icon { color: #f7931a; }
+    .btc-theme .mode-btn.active { background-color: #f7931a; color: white; }
+    .btc-theme .mode-btn:not(.active) { background-color: #fde3c4; color: #f7931a; }
+    
+    /* --- Tema ETH (Púrpura) --- */
+    body.eth-theme { background: linear-gradient(135deg, #f0f2ff 0%, #e0e4ff 100%); }
+    .eth-theme .price-display { background: linear-gradient(135deg, #627eea 0%, #8c88ff 100%); }
+    .eth-theme input:focus { box-shadow: 0 0 0 3px rgba(98, 126, 234, 0.3); border-color: #627eea; }
+    .eth-theme .btn-convert:enabled { background: linear-gradient(135deg, #627eea 0%, #8c88ff 100%); }
+    .eth-theme .btn-convert:enabled:hover { box-shadow: 0 5px 15px rgba(98, 126, 234, 0.4); }
+    .eth-theme .input-icon, .eth-theme .crypto-icon { color: #627eea; }
+    .eth-theme .mode-btn.active { background-color: #627eea; color: white; }
+    .eth-theme .mode-btn:not(.active) { background-color: #e0e4ff; color: #627eea; }
+
+    /* --- Tema LTC (Plata) --- */
+    body.ltc-theme { background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%); }
+    .ltc-theme .price-display { background: linear-gradient(135deg, #b0bec5 0%, #90a4ae 100%); }
+    .ltc-theme input:focus { box-shadow: 0 0 0 3px rgba(144, 164, 174, 0.3); border-color: #90a4ae; }
+    .ltc-theme .btn-convert:enabled { background: linear-gradient(135deg, #b0bec5 0%, #90a4ae 100%); }
+    .ltc-theme .btn-convert:enabled:hover { box-shadow: 0 5px 15px rgba(144, 164, 174, 0.4); }
+    .ltc-theme .input-icon, .ltc-theme .crypto-icon { color: #90a4ae; }
+    .ltc-theme .mode-btn.active { background-color: #78909c; color: white; }
+    .ltc-theme .mode-btn:not(.active) { background-color: #e0e0e0; color: #78909c; }
+
+    /* --- Tema Personalizado (Celeste) --- */
+    body.custom-theme { background: linear-gradient(135deg, #ecfeff 0%, #cffafe 100%); }
+    .custom-theme .price-display { background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%); }
+    .custom-theme input:focus { box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.3); border-color: #0ea5e9; }
+    .custom-theme .btn-convert:enabled { background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%); }
+    .custom-theme .btn-convert:enabled:hover { box-shadow: 0 5px 15px rgba(14, 165, 233, 0.4); }
+    .custom-theme .input-icon, .custom-theme .crypto-icon { color: #0ea5e9; }
+    .custom-theme .mode-btn.active { background-color: #0ea5e9; color: white; }
+    .custom-theme .mode-selector { background: linear-gradient(135deg, rgba(56, 189, 248, 0.18) 0%, rgba(14, 165, 233, 0.24) 100%); border-color: rgba(14, 165, 233, 0.25); }
+    .custom-theme .mode-btn { background-color: transparent; color: #0ea5e9; }
+    .custom-theme .mode-btn:hover { background-color: rgba(14, 165, 233, 0.15); }
+
+    /* --- Estilos Comunes --- */
+    .converter-card { box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); border-radius: 16px; overflow: hidden; transition: transform 0.3s ease; background: white; }
+    .converter-card:hover { transform: translateY(-5px); }
+    .price-display { color: white; border-radius: 12px; transition: background 0.5s ease; }
+    .btn-convert { transition: all 0.3s ease; }
+    .result-box { transition: all 0.3s ease; min-height: 64px; }
+    .fade-in { animation: fadeIn 0.5s ease-in; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .input-group { position: relative; }
+    .input-icon { position: absolute; left: 12px; top: 38px; transition: color 0.5s ease; }
+    .mxn-result { color: #10b981; font-weight: 600; }
+    .crypto-icon { margin-right: 8px; transition: color 0.5s ease; }
+    .mode-selector { display: flex; border-radius: 8px; overflow: hidden; border: 1px solid rgba(0,0,0,0.05); width: fit-content; margin: 0 auto 1.25rem auto; }
+    .mode-btn { padding: 0.5rem 1.25rem; border: none; font-weight: 500; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 0.5rem; }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 btc-theme">
+
+  <div class="w-full max-w-lg p-6 converter-card">
+    <div class="flex justify-start mb-4">
+      <a href="../utilidades.html" class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white rounded-full shadow-lg bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-400 transition">
+        <i class="fas fa-arrow-left text-white"></i>
+        <span>Regresar a utilidades</span>
+      </a>
+    </div>
+    <header class="mb-6 text-center">
+      <h1 class="text-2xl font-bold text-gray-800">
+        <i id="header-icon" class="fab fa-btc crypto-icon"></i>
+        <span id="header-text">BTC ↔ MXN — Conversor</span>
+      </h1>
+      <p class="text-sm text-gray-600">Interfaz minimalista · actualización automática del precio</p>
+    </header>
+
+    <main class="space-y-5">
+      <!-- Selector de modo -->
+      <div class="mode-selector">
+        <button id="btcModeBtn" class="mode-btn active"><i class="fab fa-btc"></i> Bitcoin</button>
+        <button id="ethModeBtn" class="mode-btn"><i class="fab fa-ethereum"></i> Ethereum</button>
+        <button id="ltcModeBtn" class="mode-btn"><i class="fa-solid fa-litecoin-sign"></i> Litecoin</button>
+      </div>
+
+      <div class="mt-4 p-4 rounded-lg border border-sky-100 bg-sky-50/70">
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <h2 class="text-sm font-semibold text-sky-900">Otras criptomonedas</h2>
+            <p class="text-xs text-sky-700">Selecciona un par listado en OKX para convertirlo con MXN.</p>
+          </div>
+          <i class="fas fa-coins text-sky-500 text-lg"></i>
+        </div>
+        <select id="customCryptoSelect" class="mt-3 w-full border border-sky-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-300">
+          <option value="">Selecciona una criptomoneda adicional</option>
+          <option value="SOL-USDT" data-symbol="SOL" data-name="Solana" data-decimals="6">Solana (SOL)</option>
+          <option value="XRP-USDT" data-symbol="XRP" data-name="XRP" data-decimals="4">XRP (XRP)</option>
+          <option value="ADA-USDT" data-symbol="ADA" data-name="Cardano" data-decimals="6">Cardano (ADA)</option>
+          <option value="DOGE-USDT" data-symbol="DOGE" data-name="Dogecoin" data-decimals="8">Dogecoin (DOGE)</option>
+        </select>
+      </div>
+
+      <!-- Precio actual -->
+      <div class="text-center py-4 px-3 price-display">
+        <div id="price-label" class="text-sm opacity-90">Precio actual BTC</div>
+        <div id="crypto-price" class="mt-1 text-2xl font-mono font-bold">Cargando...</div>
+        <div id="price-update" class="mt-1 text-xs opacity-80">Última actualización: —</div>
+      </div>
+
+      <!-- Conversor -->
+      <section class="grid gap-4">
+        <div class="input-group">
+          <i class="fas fa-peso-sign input-icon"></i>
+          <label for="mxnInput" class="block text-sm mb-1 ml-1 text-gray-700">MXN</label>
+          <input id="mxnInput" inputmode="decimal" type="text" placeholder="Ej. 1,234.56" class="w-full pl-10 pr-3 py-2 rounded-md bg-white border border-gray-300">
+        </div>
+
+        <!-- Campos de Bitcoin -->
+        <div id="btc-fields" class="grid gap-4">
+            <div class="input-group">
+                <i class="fab fa-btc input-icon"></i>
+                <label for="btcInput" class="block text-sm mb-1 ml-1 text-gray-700">BTC</label>
+                <input id="btcInput" inputmode="decimal" type="text" placeholder="Ej. 0.001" class="w-full pl-10 pr-3 py-2 rounded-md bg-white border border-gray-300">
+            </div>
+            <div class="input-group">
+                <i class="fas fa-satellite input-icon"></i>
+                <label for="satInput" class="block text-sm mb-1 ml-1 text-gray-700">SATs (satoshis)</label>
+                <input id="satInput" inputmode="numeric" type="text" placeholder="Ej. 250000" class="w-full pl-10 pr-3 py-2 rounded-md bg-white border border-gray-300">
+            </div>
+        </div>
+
+        <!-- Campos de Ethereum -->
+        <div id="eth-fields" class="grid gap-4 hidden">
+            <div class="input-group">
+                <i class="fab fa-ethereum input-icon"></i>
+                <label for="ethInput" class="block text-sm mb-1 ml-1 text-gray-700">ETH</label>
+                <input id="ethInput" inputmode="decimal" type="text" placeholder="Ej. 0.5" class="w-full pl-10 pr-3 py-2 rounded-md bg-white border border-gray-300">
+            </div>
+            <div class="input-group">
+                <i class="fas fa-atom input-icon"></i>
+                <label for="gweiInput" class="block text-sm mb-1 ml-1 text-gray-700">Gwei</label>
+                <input id="gweiInput" inputmode="numeric" type="text" placeholder="Ej. 1000000000" class="w-full pl-10 pr-3 py-2 rounded-md bg-white border border-gray-300">
+            </div>
+        </div>
+
+        <!-- Campos de Litecoin -->
+        <div id="ltc-fields" class="grid gap-4 hidden">
+            <div class="input-group">
+                <i class="fa-solid fa-litecoin-sign input-icon"></i>
+                <label for="ltcInput" class="block text-sm mb-1 ml-1 text-gray-700">LTC</label>
+                <input id="ltcInput" inputmode="decimal" type="text" placeholder="Ej. 1.5" class="w-full pl-10 pr-3 py-2 rounded-md bg-white border border-gray-300">
+            </div>
+            <div class="input-group">
+                <i class="fas fa-coins input-icon"></i>
+                <label for="litoshiInput" class="block text-sm mb-1 ml-1 text-gray-700">Litoshi</label>
+                <input id="litoshiInput" inputmode="numeric" type="text" placeholder="Ej. 50000000" class="w-full pl-10 pr-3 py-2 rounded-md bg-white border border-gray-300">
+            </div>
+        </div>
+
+        <div id="custom-fields" class="grid gap-4 hidden">
+            <div class="input-group">
+                <i class="fas fa-coins input-icon"></i>
+                <label id="customInputLabel" for="customInput" class="block text-sm mb-1 ml-1 text-gray-700">Cripto</label>
+                <input id="customInput" inputmode="decimal" type="text" placeholder="Ej. 12.5" class="w-full pl-10 pr-3 py-2 rounded-md bg-white border border-gray-300">
+            </div>
+        </div>
+
+        <div class="flex items-center justify-between gap-3">
+          <div id="helperMsg" class="text-sm text-gray-600 min-h-[20px]">Ingresa un valor para convertir.</div>
+          <button id="convertBtn" disabled class="ml-auto px-4 py-2 rounded-md btn-convert bg-gray-300 text-gray-600 cursor-not-allowed">Convertir</button>
+        </div>
+
+        <div id="resultado" class="min-h-[64px] p-3 rounded-md bg-gray-50 border border-gray-200 font-mono text-sm"></div>
+      </section>
+
+      <footer class="text-xs text-center text-gray-500">
+        Nota: los resultados usan el precio proporcionado por OKX y se actualizan cada 10 segundos.
+      </footer>
+    </main>
+  </div>
+
+  <script>
+    // --- ESTADO DE LA APLICACIÓN ---
+    let state = {
+        mode: 'btc', // 'btc', 'eth', 'ltc' o 'custom'
+        btcPrice: 0,
+        ethPrice: 0,
+        ltcPrice: 0,
+        customPrice: 0,
+        customSymbol: '',
+        customName: '',
+        customInstId: '',
+        customDecimals: 8
+    };
+    const BTC_TO_SATS = 100_000_000;
+    const ETH_TO_GWEI = 1_000_000_000;
+    const LTC_TO_LITOSHI = 100_000_000;
+
+    // --- ELEMENTOS DEL DOM ---
+    const body = document.body;
+    const cryptoPriceEl = document.getElementById('crypto-price');
+    const priceUpdateEl = document.getElementById('price-update');
+    const priceLabelEl = document.getElementById('price-label');
+    const mxnInput = document.getElementById('mxnInput');
+    const btcInput = document.getElementById('btcInput');
+    const satInput = document.getElementById('satInput');
+    const ethInput = document.getElementById('ethInput');
+    const gweiInput = document.getElementById('gweiInput');
+    const ltcInput = document.getElementById('ltcInput');
+    const litoshiInput = document.getElementById('litoshiInput');
+    const convertBtn = document.getElementById('convertBtn');
+    const resultadoEl = document.getElementById('resultado');
+    const helperMsg = document.getElementById('helperMsg');
+    const btcModeBtn = document.getElementById('btcModeBtn');
+    const ethModeBtn = document.getElementById('ethModeBtn');
+    const ltcModeBtn = document.getElementById('ltcModeBtn');
+    const customSelect = document.getElementById('customCryptoSelect');
+    const btcFields = document.getElementById('btc-fields');
+    const ethFields = document.getElementById('eth-fields');
+    const ltcFields = document.getElementById('ltc-fields');
+    const customFields = document.getElementById('custom-fields');
+    const customInput = document.getElementById('customInput');
+    const customInputLabel = document.getElementById('customInputLabel');
+    const headerIcon = document.getElementById('header-icon');
+    const headerText = document.getElementById('header-text');
+    const allInputs = [mxnInput, btcInput, satInput, ethInput, gweiInput, ltcInput, litoshiInput, customInput];
+
+    const customMarkets = new Map([
+        ['SOL-USDT', { symbol: 'SOL', name: 'Solana', decimals: 6 }],
+        ['XRP-USDT', { symbol: 'XRP', name: 'XRP', decimals: 4 }],
+        ['ADA-USDT', { symbol: 'ADA', name: 'Cardano', decimals: 6 }],
+        ['DOGE-USDT', { symbol: 'DOGE', name: 'Dogecoin', decimals: 8 }],
+    ]);
+
+    // --- FUNCIONES DE PARSEO Y FORMATO ---
+    function parseNumberSafe(str) {
+      if (str === null || str === undefined) return NaN;
+      let s = String(str).trim().replace(/\s+/g, '').replace(/[$€£¥]/g, '');
+      if (s === '') return NaN;
+      const lastDot = s.lastIndexOf('.'); const lastComma = s.lastIndexOf(',');
+      if (lastDot !== -1 && lastComma !== -1) { s = lastDot > lastComma ? s.replace(/,/g, '') : s.replace(/\./g, '').replace(/,/g, '.'); } 
+      else if (lastComma !== -1) { s = s.replace(/\./g, '').replace(/,/g, '.'); }
+      const n = parseFloat(s.replace(/[^\d.-]/g, ''));
+      return Number.isFinite(n) ? n : NaN;
+    }
+
+    function formatMXN(v) { return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(v); }
+    function formatBTC(v) { return Number(v).toFixed(8).replace(/\.?0+$/, ''); }
+    function formatSats(v) { return Math.round(v).toLocaleString('es-MX'); }
+    function formatETH(v) { return Number(v).toFixed(9).replace(/\.?0+$/, ''); }
+    function formatGwei(v) { return Math.round(v).toLocaleString('es-MX'); }
+    function formatLTC(v) { return Number(v).toFixed(8).replace(/\.?0+$/, ''); }
+    function formatLitoshi(v) { return Math.round(v).toLocaleString('es-MX'); }
+    function formatToken(v, decimals = 8) {
+        return Number(v).toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: decimals });
+    }
+    
+    // --- LÓGICA DE LA INTERFAZ ---
+    function setMode(newMode, options = {}) {
+        if (!options.force && state.mode === newMode) return;
+        state.mode = newMode;
+        allInputs.forEach(input => input.value = '');
+        resultadoEl.innerHTML = '';
+        updateButtonState();
+
+        // Ocultar todos los campos y temas
+        body.className = body.className.replace(/\b\w+-theme\b/g, '');
+        [btcFields, ethFields, ltcFields, customFields].forEach(f => f.classList.add('hidden'));
+        [btcModeBtn, ethModeBtn, ltcModeBtn].forEach(b => b.classList.remove('active'));
+        
+        customInputLabel.textContent = 'Cripto';
+        customInput.placeholder = 'Ej. 12.5';
+
+        switch (newMode) {
+            case 'btc':
+                body.classList.add('btc-theme');
+                btcFields.classList.remove('hidden');
+                btcModeBtn.classList.add('active');
+                priceLabelEl.textContent = 'Precio actual BTC';
+                headerIcon.className = 'fab fa-btc crypto-icon';
+                headerText.textContent = 'BTC ↔ MXN — Conversor';
+                customSelect.value = '';
+                break;
+            case 'eth':
+                body.classList.add('eth-theme');
+                ethFields.classList.remove('hidden');
+                ethModeBtn.classList.add('active');
+                priceLabelEl.textContent = 'Precio actual ETH';
+                headerIcon.className = 'fab fa-ethereum crypto-icon';
+                headerText.textContent = 'ETH ↔ MXN — Conversor';
+                customSelect.value = '';
+                break;
+            case 'ltc':
+                body.classList.add('ltc-theme');
+                ltcFields.classList.remove('hidden');
+                ltcModeBtn.classList.add('active');
+                priceLabelEl.textContent = 'Precio actual LTC';
+                headerIcon.className = 'fa-solid fa-litecoin-sign crypto-icon';
+                headerText.textContent = 'LTC ↔ MXN — Conversor';
+                customSelect.value = '';
+                break;
+            case 'custom':
+                body.classList.add('custom-theme');
+                customFields.classList.remove('hidden');
+                const displayName = state.customName || state.customSymbol || 'Cripto';
+                priceLabelEl.textContent = `Precio actual ${displayName}`;
+                headerIcon.className = 'fas fa-coins crypto-icon';
+                headerText.textContent = `${displayName} ↔ MXN — Conversor`;
+                customInputLabel.textContent = displayName;
+                customInput.placeholder = state.customSymbol ? `Ej. 1.5 ${state.customSymbol}` : 'Ej. 12.5';
+                break;
+        }
+        fetchPrice();
+    }
+
+    function updateButtonState() {
+      let activeInputs = [];
+      switch(state.mode) {
+          case 'btc': activeInputs = [mxnInput.value, btcInput.value, satInput.value]; break;
+          case 'eth': activeInputs = [mxnInput.value, ethInput.value, gweiInput.value]; break;
+          case 'ltc': activeInputs = [mxnInput.value, ltcInput.value, litoshiInput.value]; break;
+          case 'custom':
+              activeInputs = [mxnInput.value, customInput.value];
+              if (!state.customInstId) {
+                  convertBtn.disabled = true;
+                  convertBtn.classList.add('bg-gray-300', 'text-gray-600', 'cursor-not-allowed');
+                  convertBtn.classList.remove('text-white');
+                  helperMsg.textContent = 'Selecciona una criptomoneda para habilitar la conversión.';
+                  helperMsg.classList.remove('text-red-600');
+                  return;
+              }
+              break;
+      }
+      
+      const nonEmptyCount = activeInputs.filter(val => String(val || '').trim() !== '').length;
+
+      if (nonEmptyCount === 1) {
+        convertBtn.disabled = false;
+        convertBtn.classList.remove('bg-gray-300', 'text-gray-600', 'cursor-not-allowed', 'text-white');
+        convertBtn.classList.add('text-white');
+        helperMsg.textContent = 'Listo para convertir.';
+        helperMsg.classList.remove('text-red-600');
+      } else {
+        convertBtn.disabled = true;
+        convertBtn.classList.add('bg-gray-300', 'text-gray-600', 'cursor-not-allowed');
+        convertBtn.classList.remove('text-white');
+        helperMsg.textContent = nonEmptyCount === 0 ? 'Ingresa un valor para convertir.' : 'Solo se permite un campo a la vez.';
+        helperMsg.classList.toggle('text-red-600', nonEmptyCount > 1);
+      }
+    }
+
+    // --- LÓGICA DE CONVERSIÓN ---
+    function convertir() {
+        resultadoEl.textContent = '';
+        let currentPrice = 0;
+        switch(state.mode) {
+            case 'btc': currentPrice = state.btcPrice; break;
+            case 'eth': currentPrice = state.ethPrice; break;
+            case 'ltc': currentPrice = state.ltcPrice; break;
+            case 'custom': currentPrice = state.customPrice; break;
+        }
+
+        if (!currentPrice || currentPrice <= 0) {
+            helperMsg.textContent = 'Esperando precio. Intenta de nuevo en segundos.';
+            helperMsg.classList.add('text-red-600');
+            return;
+        }
+        
+        switch(state.mode) {
+            case 'btc': convertBTC(currentPrice); break;
+            case 'eth': convertETH(currentPrice); break;
+            case 'ltc': convertLTC(currentPrice); break;
+            case 'custom': convertCustom(currentPrice); break;
+        }
+
+        allInputs.forEach(input => input.value = '');
+        updateButtonState();
+    }
+    
+    function convertBTC(price) {
+        const vMxn = parseNumberSafe(mxnInput.value);
+        const vBtc = parseNumberSafe(btcInput.value);
+        const vSats = parseNumberSafe(satInput.value);
+        let outputLines = [];
+
+        if (!isNaN(vMxn)) {
+            const btc = vMxn / price;
+            outputLines.push(`${formatMXN(vMxn)} ≈ ${formatBTC(btc)} BTC`);
+            outputLines.push(`Equivale a ${formatSats(btc * BTC_TO_SATS)} SATs`);
+        } else if (!isNaN(vBtc)) {
+            const mxn = vBtc * price;
+            outputLines.push(`${formatBTC(vBtc)} BTC ≈ <span class="mxn-result">${formatMXN(mxn)} MXN</span>`);
+            outputLines.push(`Equivale a ${formatSats(vBtc * BTC_TO_SATS)} SATs`);
+        } else if (!isNaN(vSats)) {
+            const btc = vSats / BTC_TO_SATS;
+            const mxn = btc * price;
+            outputLines.push(`${formatSats(vSats)} SATs ≈ <span class="mxn-result">${formatMXN(mxn)} MXN</span>`);
+            outputLines.push(`Equivale a ${formatBTC(btc)} BTC`);
+        }
+
+        if (outputLines.length) {
+            helperMsg.textContent = '';
+            helperMsg.classList.remove('text-red-600');
+        }
+
+        resultadoEl.innerHTML = outputLines.map(l => `<div class="fade-in">${l}</div>`).join('');
+    }
+
+    function convertETH(price) {
+        const vMxn = parseNumberSafe(mxnInput.value);
+        const vEth = parseNumberSafe(ethInput.value);
+        const vGwei = parseNumberSafe(gweiInput.value);
+        let outputLines = [];
+
+        if (!isNaN(vMxn)) {
+            const eth = vMxn / price;
+            outputLines.push(`${formatMXN(vMxn)} ≈ ${formatETH(eth)} ETH`);
+            outputLines.push(`Equivale a ${formatGwei(eth * ETH_TO_GWEI)} Gwei`);
+        } else if (!isNaN(vEth)) {
+            const mxn = vEth * price;
+            outputLines.push(`${formatETH(vEth)} ETH ≈ <span class="mxn-result">${formatMXN(mxn)} MXN</span>`);
+            outputLines.push(`Equivale a ${formatGwei(vEth * ETH_TO_GWEI)} Gwei`);
+        } else if (!isNaN(vGwei)) {
+            const eth = vGwei / ETH_TO_GWEI;
+            const mxn = eth * price;
+            outputLines.push(`${formatGwei(vGwei)} Gwei ≈ <span class="mxn-result">${formatMXN(mxn)} MXN</span>`);
+            outputLines.push(`Equivale a ${formatETH(eth)} ETH`);
+        }
+
+        if (outputLines.length) {
+            helperMsg.textContent = '';
+            helperMsg.classList.remove('text-red-600');
+        }
+
+        resultadoEl.innerHTML = outputLines.map(l => `<div class="fade-in">${l}</div>`).join('');
+    }
+
+    function convertLTC(price) {
+        const vMxn = parseNumberSafe(mxnInput.value);
+        const vLtc = parseNumberSafe(ltcInput.value);
+        const vLitoshi = parseNumberSafe(litoshiInput.value);
+        let outputLines = [];
+
+        if (!isNaN(vMxn)) {
+            const ltc = vMxn / price;
+            outputLines.push(`${formatMXN(vMxn)} ≈ ${formatLTC(ltc)} LTC`);
+            outputLines.push(`Equivale a ${formatLitoshi(ltc * LTC_TO_LITOSHI)} Litoshi`);
+        } else if (!isNaN(vLtc)) {
+            const mxn = vLtc * price;
+            outputLines.push(`${formatLTC(vLtc)} LTC ≈ <span class="mxn-result">${formatMXN(mxn)} MXN</span>`);
+            outputLines.push(`Equivale a ${formatLitoshi(vLtc * LTC_TO_LITOSHI)} Litoshi`);
+        } else if (!isNaN(vLitoshi)) {
+            const ltc = vLitoshi / LTC_TO_LITOSHI;
+            const mxn = ltc * price;
+            outputLines.push(`${formatLitoshi(vLitoshi)} Litoshi ≈ <span class="mxn-result">${formatMXN(mxn)} MXN</span>`);
+            outputLines.push(`Equivale a ${formatLTC(ltc)} LTC`);
+        }
+
+        if (outputLines.length) {
+            helperMsg.textContent = '';
+            helperMsg.classList.remove('text-red-600');
+        }
+
+        resultadoEl.innerHTML = outputLines.map(l => `<div class="fade-in">${l}</div>`).join('');
+    }
+
+    function convertCustom(price) {
+        const vMxn = parseNumberSafe(mxnInput.value);
+        const vCustom = parseNumberSafe(customInput.value);
+        const symbol = state.customSymbol || 'Cripto';
+        const decimals = state.customDecimals ?? 8;
+        const displayName = state.customName || symbol;
+        let outputLines = [];
+
+        if (!isNaN(vMxn)) {
+            const qty = vMxn / price;
+            outputLines.push(`${formatMXN(vMxn)} ≈ ${formatToken(qty, decimals)} ${symbol}`);
+        } else if (!isNaN(vCustom)) {
+            const mxn = vCustom * price;
+            outputLines.push(`${formatToken(vCustom, decimals)} ${symbol} ≈ <span class="mxn-result">${formatMXN(mxn)} MXN</span>`);
+        }
+
+        if (outputLines.length) {
+            helperMsg.textContent = '';
+            helperMsg.classList.remove('text-red-600');
+            resultadoEl.innerHTML = outputLines.map(l => `<div class="fade-in">${l}</div>`).join('');
+        } else {
+            helperMsg.textContent = `Ingresa un valor en MXN o ${displayName}.`;
+            helperMsg.classList.add('text-red-600');
+            resultadoEl.innerHTML = '';
+        }
+    }
+
+
+    // --- API (OKX) ---
+    let usdToMxnRate = 0;
+    let lastExchangeRateUpdate = null;
+
+    async function fetchExchangeRate() {
+        try {
+            const res = await fetch('https://api.frankfurter.app/latest?from=USD&to=MXN');
+            if (!res.ok) {
+                throw new Error(`HTTP ${res.status}`);
+            }
+            const data = await res.json();
+            const rate = data?.rates?.MXN;
+
+            if (typeof rate === 'number' && Number.isFinite(rate)) {
+                usdToMxnRate = rate;
+                lastExchangeRateUpdate = Date.now();
+            } else {
+                throw new Error('Respuesta de tipo de cambio inválida');
+            }
+        } catch (e) {
+            console.error('Error obteniendo tasa USD/MXN:', e);
+            if (!usdToMxnRate) {
+                usdToMxnRate = 18.50; // Valor de respaldo
+            }
+        }
+    }
+    
+    async function fetchPrice() {
+        let instId = '';
+        switch(state.mode) {
+            case 'btc': instId = 'BTC-USDT'; break;
+            case 'eth': instId = 'ETH-USDT'; break;
+            case 'ltc': instId = 'LTC-USDT'; break;
+            case 'custom': instId = state.customInstId; break;
+        }
+
+        try {
+            if (state.mode === 'custom' && !instId) {
+                cryptoPriceEl.textContent = 'Selecciona una cripto';
+                return;
+            }
+            if (!usdToMxnRate) {
+                await fetchExchangeRate();
+            }
+
+            const res = await fetch(`https://www.okx.com/api/v5/market/ticker?instId=${instId}`);
+            const data = await res.json();
+            const priceInUsdt = data?.data?.[0]?.last;
+
+            if (priceInUsdt) {
+                const priceInMxn = Number(priceInUsdt) * usdToMxnRate;
+                
+                switch(state.mode) {
+                    case 'btc': state.btcPrice = priceInMxn; break;
+                    case 'eth': state.ethPrice = priceInMxn; break;
+                    case 'ltc': state.ltcPrice = priceInMxn; break;
+                    case 'custom': state.customPrice = priceInMxn; break;
+                }
+                cryptoPriceEl.textContent = formatMXN(priceInMxn);
+                priceUpdateEl.textContent = `Actualizado: ${new Date().toLocaleTimeString()}`;
+            } else {
+                cryptoPriceEl.textContent = 'Error de precio';
+            }
+        } catch (e) {
+            console.error('Error en fetchPrice:', e);
+            cryptoPriceEl.textContent = 'Error de red';
+        }
+    }
+
+    // --- INICIALIZACIÓN Y EVENTOS ---
+    async function init() {
+        allInputs.forEach(el => {
+            el.addEventListener('input', updateButtonState);
+            el.addEventListener('change', updateButtonState);
+        });
+
+        convertBtn.addEventListener('click', convertir);
+        btcModeBtn.addEventListener('click', () => setMode('btc'));
+        ethModeBtn.addEventListener('click', () => setMode('eth'));
+        ltcModeBtn.addEventListener('click', () => setMode('ltc'));
+        customSelect.addEventListener('change', handleCustomSelection);
+
+        await fetchExchangeRate();
+        fetchPrice(); // Cargar precio inicial para el modo BTC por defecto
+        setInterval(fetchPrice, 10000); // Actualiza el precio cada 10s
+        setInterval(fetchExchangeRate, 600000); // Actualiza el tipo de cambio cada 10 minutos
+    }
+
+    function handleCustomSelection(event) {
+        const instId = event.target.value;
+
+        if (!instId) {
+            state.customInstId = '';
+            state.customSymbol = '';
+            state.customName = '';
+            state.customDecimals = 8;
+            state.customPrice = 0;
+            if (state.mode === 'custom') {
+                cryptoPriceEl.textContent = 'Selecciona una cripto';
+                priceLabelEl.textContent = 'Precio actual Cripto';
+                headerIcon.className = 'fas fa-coins crypto-icon';
+                headerText.textContent = 'Cripto ↔ MXN — Conversor';
+                customInputLabel.textContent = 'Cripto';
+                customInput.placeholder = 'Ej. 12.5';
+            }
+            updateButtonState();
+            return;
+        }
+
+        const meta = customMarkets.get(instId);
+        if (!meta) {
+            console.warn(`Par ${instId} no mapeado en customMarkets`);
+            return;
+        }
+
+        state.customInstId = instId;
+        state.customSymbol = meta.symbol;
+        state.customName = meta.name;
+        state.customDecimals = meta.decimals ?? 8;
+        state.customPrice = 0;
+
+        setMode('custom', { force: true });
+        fetchPrice();
+    }
+
+    init();
+  </script>
+</body>
+</html>

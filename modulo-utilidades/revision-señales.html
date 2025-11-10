@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Analizador Semiautomático - EUR/USD & GBP/USD</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-gray-900 text-gray-100 font-sans">
+  <div class="max-w-4xl mx-auto p-6">
+    <header class="mb-6">
+      <h1 class="text-2xl font-semibold text-white">Analizador Semiautomático — EUR/USD & GBP/USD</h1>
+      <p class="text-sm text-gray-300 mt-1">Presiona <span class="font-medium">"Ejecutar análisis"</span> para recuperar H1(220) + M1 de cada par y evaluar los cruces EMA21/EMA200 en la vela en curso.</p>
+    </header>
+
+    <main class="grid grid-cols-1 gap-6">
+      <div class="bg-gray-800 p-4 rounded-lg shadow">
+        <button id="runBtn" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 rounded-md font-semibold transition-colors">Ejecutar análisis</button>
+      </div>
+
+      <div id="status" class="bg-gray-800 p-4 rounded-lg text-sm text-gray-300"></div>
+
+      <div id="summary" class="bg-gray-800 p-4 rounded-lg hidden">
+        <h2 class="text-lg font-semibold mb-2">Resumen</h2>
+        <div id="cards" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+      </div>
+
+      <div id="details" class="bg-gray-800 p-4 rounded-lg hidden">
+        <h2 class="text-lg font-semibold mb-2">Detalles técnicos</h2>
+        <pre id="detailsPre" class="text-xs text-gray-300 overflow-auto max-h-64 bg-gray-900 p-2 rounded"></pre>
+      </div>
+
+      <div id="decision" class="bg-gray-800 p-4 rounded-lg hidden">
+        <h2 class="text-lg font-semibold mb-2">Decisión</h2>
+        <div id="decisionCard"></div>
+      </div>
+    </main>
+
+    <footer class="mt-6 text-xs text-gray-500">
+      <p>Nota: Esta es una herramienta de uso personal. La API Key se incluye en el código para simplificar la prueba. Considera moverla al backend si la vas a publicar.</p>
+    </footer>
+  </div>
+
+<script>
+// -------------------------- CONFIG --------------------------
+const API_KEY = 'a1191162bb5846a48f173ea3465d98d5'; // proporcionada
+const BASE_URL = 'https://api.twelvedata.com';
+const SYMBOLS = ['EUR/USD', 'GBP/USD'];
+const H1_COUNT = 220;
+// ------------------------------------------------------------
+
+// Utilidades de fechas (parseo UTC fiable de formatos 'YYYY-MM-DD HH:MM:SS')
+function parseTdDateToUTC(s) {
+  // Parsea el datetime de Twelve Data 'YYYY-MM-DD HH:MM:SS' explícitamente como UTC para evitar ambigüedades del navegador
+  const parts = s.split(' ');
+  if (parts.length < 2) return new Date(s);
+  const [datePart, timePart] = parts;
+  const [year, month, day] = datePart.split('-').map(Number);
+  const [hour, minute, second] = timePart.split(':').map(Number);
+  return new Date(Date.UTC(year, month - 1, day, hour, minute, second));
+}
+
+function formatUTC(d) {
+  return d.toISOString().replace('T', ' ').replace('.000Z','');
+}
+
+// -------------------------- INDICADORES --------------------------
+function sma(values, period) {
+  const res = [];
+  for (let i = 0; i < values.length; i++) {
+    if (i < period - 1) { res.push(null); continue; }
+    let sum = 0;
+    for (let j = i - period + 1; j <= i; j++) sum += values[j];
+    res.push(sum / period);
+  }
+  return res;
+}
+
+function ema(values, period) {
+  const res = [];
+  const k = 2 / (period + 1);
+  let prev = null;
+  for (let i = 0; i < values.length; i++) {
+    const v = values[i];
+    if (v == null) { res.push(null); continue; }
+    if (prev === null) {
+      // Inicia con el SMA de los primeros 'period' valores si es posible
+      if (i >= period - 1) {
+        const seed = values.slice(i - period + 1, i + 1).reduce((a,b)=>a+b,0) / period;
+        prev = seed;
+        res.push(prev);
+      } else {
+        res.push(null);
+      }
+    } else {
+      prev = (v - prev) * k + prev;
+      res.push(prev);
+    }
+  }
+  return res;
+}
+
+// -------------------------- LÓGICA DE RECONSTRUCCIÓN --------------------------
+function reconstructH1FromM1(m1Values) {
+  const asc = [...m1Values].reverse(); // API entrega del más nuevo al más viejo, lo invertimos.
+  const opens = asc.map(v => Number(v.open));
+  const highs = asc.map(v => Number(v.high));
+  const lows = asc.map(v => Number(v.low));
+  const closes = asc.map(v => Number(v.close));
+  const open = opens.length ? opens[0] : null;
+  const high = highs.length ? Math.max(...highs) : null;
+  const low = lows.length ? Math.min(...lows) : null;
+  const close = closes.length ? closes[closes.length -1] : null; // El cierre del último minuto
+  const firstDt = asc.length ? asc[0].datetime : null;
+  const lastDt = asc.length ? asc[asc.length-1].datetime : null;
+  return { open, high, low, close, firstDt, lastDt, minutes: asc.length };
+}
+
+// -------------------------- ESTRATEGIA BÁSICA --------------------------
+function evaluateStrategy(h1SeriesChrono, reconstructedH1) {
+  const series = h1SeriesChrono.slice();
+  if (reconstructedH1 && reconstructedH1.close != null) {
+    const last = series[series.length-1];
+    series.push({
+      datetime: reconstructedH1.firstDt || (last ? last.datetime : new Date().toISOString()),
+      open: String(reconstructedH1.open),
+      high: String(reconstructedH1.high),
+      low: String(reconstructedH1.low),
+      close: String(reconstructedH1.close)
+    });
+  }
+
+  const closes = series.map(c => Number(c.close));
+  const highs = series.map(c => Number(c.high));
+  const lows = series.map(c => Number(c.low));
+
+  const ema21 = ema(closes, 21);
+  const ema200 = ema(closes, 200);
+
+  const lastIdx = closes.length - 1;
+  const lastClose = closes[lastIdx];
+  const lastOpen = Number(series[lastIdx].open);
+  const lastHigh = highs[lastIdx];
+  const lastLow = lows[lastIdx];
+
+  const lastEMA21 = ema21[lastIdx];
+  const lastEMA200 = ema200[lastIdx];
+  const prevIdx = lastIdx - 1;
+  const prevEMA21 = prevIdx >= 0 ? ema21[prevIdx] : null;
+  const prevEMA200 = prevIdx >= 0 ? ema200[prevIdx] : null;
+
+  // Reglas simples:
+  let direction = 'none';
+  let reason = [];
+  if (lastEMA21 != null && lastEMA200 != null && prevEMA21 != null && prevEMA200 != null) {
+    const prevDiff = prevEMA21 - prevEMA200;
+    const currDiff = lastEMA21 - lastEMA200;
+
+    if (prevDiff <= 0 && currDiff > 0) {
+      direction = 'buy';
+      reason.push('EMA21 cruzó al alza la EMA200 en la última vela.');
+    } else if (prevDiff >= 0 && currDiff < 0) {
+      direction = 'sell';
+      reason.push('EMA21 cruzó a la baja la EMA200 en la última vela.');
+    }
+  }
+
+  // SL/TP: usa la vela H1 cerrada anterior como referencia
+  const prevClosed = series[series.length - 2] || series[series.length - 1];
+  let SL = null, TP = null;
+  if (direction === 'buy') {
+    const baseSL = Number(prevClosed.low);
+    SL = +(baseSL - 0.0005).toFixed(5);
+    const risk = (lastClose - SL);
+    TP = +(lastClose + 2 * risk).toFixed(5); // RR 1:2
+  } else if (direction === 'sell') {
+    const baseSL = Number(prevClosed.high);
+    SL = +(baseSL + 0.0005).toFixed(5);
+    const risk = (SL - lastClose);
+    TP = +(lastClose - 2 * risk).toFixed(5);
+  }
+
+  return {
+    direction, reason, SL, TP,
+    metrics: {
+      lastClose,
+      lastOpen,
+      lastHigh,
+      lastLow,
+      lastEMA21,
+      lastEMA200,
+      prevEMA21,
+      prevEMA200
+    }
+  };
+}
+
+// -------------------------- UI / Lógica principal --------------------------
+const runBtn = document.getElementById('runBtn');
+const statusDiv = document.getElementById('status');
+const summaryDiv = document.getElementById('summary');
+const cardsDiv = document.getElementById('cards');
+const detailsDiv = document.getElementById('details');
+const detailsPre = document.getElementById('detailsPre');
+const decisionDiv = document.getElementById('decision');
+const decisionCard = document.getElementById('decisionCard');
+
+function createAnalysisCard(symbol, h1Values, m1Values, reconstructed, strategy, diffMin, lastM1) {
+  const lastH1 = h1Values[0];
+  const lastM1Date = parseTdDateToUTC(lastM1.datetime);
+  const lastM1UTC = lastM1Date.toISOString().replace('T',' ').replace('.000Z','');
+  const lastM1Local = lastM1Date.toLocaleString();
+
+  return `
+    <section class="space-y-4 border border-gray-700 rounded-lg p-4 bg-gray-800">
+      <header>
+        <h2 class="text-xl font-semibold text-white">${symbol}</h2>
+      </header>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="p-3 bg-gray-700/60 rounded">
+          <h3 class="font-semibold text-green-300">Velas H1</h3>
+          <p>Total: ${h1Values.length}</p>
+          <p>Última H1 (API): ${lastH1.datetime} — Close: ${Number(lastH1.close).toFixed(5)}</p>
+        </div>
+        <div class="p-3 bg-gray-700/60 rounded">
+          <h3 class="font-semibold text-yellow-300">Velas M1</h3>
+          <p>Solicitadas: ${m1Values.requested}, Recibidas: ${m1Values.values.length}</p>
+          <p>Última M1 (UTC): ${lastM1UTC} — Close: ${Number(lastM1.close).toFixed(5)}</p>
+          <p>Última M1 (Local): ${lastM1Local}</p>
+          <p>Tiempo desde última M1: ${diffMin} min(s)</p>
+        </div>
+        <div class="p-3 bg-gray-700/60 rounded md:col-span-2">
+          <h3 class="font-semibold text-cyan-300">Vela H1 en curso (reconstruida)</h3>
+          <p>Minutos capturados: ${reconstructed.minutes}</p>
+          <p>Open: ${reconstructed.open != null ? reconstructed.open.toFixed(5) : '-'} | High: ${reconstructed.high != null ? reconstructed.high.toFixed(5) : '-'} | Low: ${reconstructed.low != null ? reconstructed.low.toFixed(5) : '-'} | Close: ${reconstructed.close != null ? reconstructed.close.toFixed(5) : '-'}</p>
+          <p>Rango M1 utilizado: ${reconstructed.firstDt || '-'} → ${reconstructed.lastDt || '-'}</p>
+        </div>
+      </div>
+      <div>
+        ${renderDecision(strategy)}
+      </div>
+      <footer>
+        ${diffMin > 2
+          ? `<p class="text-red-400">Aviso: la última vela M1 tiene ${diffMin} minutos de antigüedad.</p>`
+          : `<p class="text-green-400">Datos M1 recientes (última a ${lastM1.datetime}, ${diffMin} min(s) de antigüedad).</p>`}
+      </footer>
+    </section>
+  `;
+}
+
+function renderDecision(strategy) {
+  if (strategy.direction === 'none') {
+    return `<div class="p-4 bg-gray-800 rounded border border-gray-700">
+      <p class="font-semibold text-gray-300">No hay oportunidad clara en este momento.</p>
+    </div>`;
+  }
+
+  const isBuy = strategy.direction === 'buy';
+  return `<div class="p-4 rounded border ${isBuy ? 'border-green-500 bg-green-900/30' : 'border-red-500 bg-red-900/30'}">
+    <p class="font-semibold text-2xl text-${isBuy ? 'green' : 'red'}-300">Señal detectada: ${isBuy ? 'COMPRA' : 'VENTA'}</p>
+    <div class="mt-3 grid grid-cols-3 gap-2 text-sm">
+      <p><strong>Precio Actual:</strong> ${strategy.metrics.lastClose.toFixed(5)}</p>
+      <p><strong>SL Sugerido:</strong> ${strategy.SL ?? '-'}</p>
+      <p><strong>TP Sugerido:</strong> ${strategy.TP ?? '-'}</p>
+    </div>
+    <p class="mt-3 text-xs text-gray-300">Motivos:</p>
+    <ul class="text-xs text-gray-400 list-disc list-inside">${strategy.reason.map(r => `<li>${r}</li>`).join('')}</ul>
+  </div>`;
+}
+
+async function fetchTimeSeries(symbol, interval, outputsize) {
+  const url = `${BASE_URL}/time_series?symbol=${encodeURIComponent(symbol)}&interval=${interval}&outputsize=${outputsize}&format=JSON&apikey=${API_KEY}`;
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`Error en API ${interval.toUpperCase()} (${symbol}): ${resp.statusText}`);
+  const json = await resp.json();
+  if (json.code >= 400 || !json.values) throw new Error(json.message || `No se recibieron velas ${interval.toUpperCase()} para ${symbol}`);
+  return json.values;
+}
+
+async function analyzeSymbol(symbol) {
+  const nowUtc = new Date();
+  const minutesPastHour = nowUtc.getUTCMinutes();
+  const m1Count = Math.max(1, minutesPastHour + 2);
+
+  const [h1Values, m1ValuesRaw] = await Promise.all([
+    fetchTimeSeries(symbol, '1h', H1_COUNT),
+    fetchTimeSeries(symbol, '1min', m1Count)
+  ]);
+
+  const lastM1 = m1ValuesRaw[0];
+  const lastM1Date = parseTdDateToUTC(lastM1.datetime);
+  const diffMs = nowUtc.getTime() - lastM1Date.getTime();
+  const diffMin = Math.round(diffMs / 60000);
+
+  const hourStart = new Date(Date.UTC(nowUtc.getUTCFullYear(), nowUtc.getUTCMonth(), nowUtc.getUTCDate(), nowUtc.getUTCHours(), 0, 0));
+  const m1InHour = m1ValuesRaw.filter(v => parseTdDateToUTC(v.datetime) >= hourStart);
+  const reconstructed = reconstructH1FromM1(m1InHour.length ? m1InHour : []);
+
+  const h1Chrono = [...h1Values].reverse().map(v => ({ datetime: v.datetime, open: v.open, high: v.high, low: v.low, close: v.close }));
+  const strategy = evaluateStrategy(h1Chrono, reconstructed);
+
+  return {
+    symbol,
+    h1Values,
+    m1: { values: m1ValuesRaw, requested: m1Count },
+    reconstructed,
+    strategy,
+    diffMin,
+    lastM1
+  };
+}
+
+function showStatus(html) { statusDiv.innerHTML = html; }
+
+runBtn.addEventListener('click', async () => {
+  runBtn.disabled = true;
+  runBtn.textContent = 'Analizando...';
+  summaryDiv.classList.add('hidden'); detailsDiv.classList.add('hidden'); decisionDiv.classList.add('hidden');
+  showStatus('<p class="text-yellow-400">Solicitando datos a Twelve Data para todos los símbolos...</p>');
+  
+  try {
+    const analyses = [];
+    for (const symbol of SYMBOLS) {
+      showStatus(`<p class="text-yellow-400">Analizando ${symbol}...</p>`);
+      const result = await analyzeSymbol(symbol);
+      analyses.push(result);
+    }
+
+    cardsDiv.innerHTML = analyses.map(a => createAnalysisCard(a.symbol, a.h1Values, a.m1, a.reconstructed, a.strategy, a.diffMin, a.lastM1)).join('');
+
+    summaryDiv.classList.remove('hidden');
+    detailsDiv.classList.remove('hidden');
+    decisionDiv.classList.remove('hidden');
+
+    detailsPre.textContent = JSON.stringify(
+      analyses.map(({ symbol, strategy, reconstructed }) => ({ symbol, strategy, reconstructed })),
+      null,
+      2
+    );
+
+    decisionCard.innerHTML = analyses.map(a => renderDecision(a.strategy)).join('<div class="my-2"></div>');
+
+    showStatus(`<p class="text-green-400">Análisis completado para ${analyses.length} símbolo(s).</p>`);
+
+  } catch (err) {
+    showStatus(`<p class="text-red-500">Error: ${err.message}</p>`);
+    console.error(err);
+  } finally {
+      runBtn.disabled = false;
+      runBtn.textContent = 'Ejecutar análisis';
+  }
+});
+</script>
+</body>
+</html>

@@ -1,1 +1,1012 @@
-ghghg
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resumen Financiero Personalizado</title>
+    <meta name="theme-color" content="#2563eb">
+    <link rel="icon" href="/pwa/logo-app.png">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js for graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Estilos adicionales para el gráfico de ingresos */
+        .chart-container {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .chart-container:hover {
+            transform: scale(1.02);
+        }
+        
+        #incomeSourceChart {
+            transition: all 0.3s ease;
+            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+        }
+        
+        #incomeSourceLegend > div {
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+        }
+        
+        #incomeSourceLegend > div:hover {
+            background-color: rgba(59, 130, 246, 0.05);
+            border-left-color: #3b82f6;
+            transform: translateX(2px);
+        }
+        
+        /* Animación de carga para el gráfico */
+        @keyframes chartFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        .chart-animate {
+            animation: chartFadeIn 0.6s ease-out;
+        }
+        
+        /* Estilos para el resumen del total */
+        #incomeSourceLegend .border-t {
+            border-color: #e5e7eb;
+            margin-top: 1rem;
+            padding-top: 0.75rem;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 640px) {
+            .chart-container {
+                height: 250px !important;
+            }
+            
+            #incomeSourceLegend > div {
+                flex-direction: column;
+                align-items: flex-start !important;
+                gap: 0.5rem;
+            }
+        }
+        
+        /* Efecto de brillo en hover para las rebanadas del gráfico */
+        .chart-highlight {
+            filter: brightness(1.1) drop-shadow(0 0 8px rgba(255, 255, 255, 0.5));
+        }
+    </style>
+    <style>
+        /* Light Theme Styles */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* bg-gray-100 */
+            color: #374151; /* text-gray-700 */
+        }
+        .card {
+            background-color: #ffffff; /* bg-white */
+            border: 1px solid #e5e7eb; /* border-gray-200 */
+            border-radius: 0.75rem; /* rounded-xl */
+            padding: 1.5rem; /* p-6 */
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+        .table-custom th, .table-custom td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+        }
+        .table-custom thead {
+            background-color: #f9fafb; /* bg-gray-50 */
+        }
+        .table-custom tbody tr {
+            transition: background-color 0.15s ease-in-out;
+        }
+        .table-custom tbody tr:nth-child(even) {
+            background-color: #ffffff; /* bg-white */
+        }
+         .table-custom tbody tr:nth-child(odd) {
+            background-color: #f9fafb; /* bg-gray-50 */
+        }
+        /* Tab Styles */
+        .tab-button {
+            transition: all 0.2s ease-in-out;
+            padding: 0.75rem 1.5rem;
+            font-size: 0.95rem;
+            border-bottom: 3px solid transparent;
+        }
+        .tab-button.active {
+            color: #0891b2; /* text-cyan-600 */
+            font-weight: 600;
+            border-bottom-color: #0891b2; /* border-cyan-600 */
+        }
+        /* Spinner for loading state */
+        .loader {
+          display: inline-block;
+          width: 14px; height: 14px;
+          border-radius: 50%;
+          border: 2px solid #e5e7eb; /* border-gray-200 */
+          border-top-color: #0891b2; /* border-cyan-600 */
+          animation: spin 1s linear infinite;
+          vertical-align: middle;
+          margin-left: 8px;
+        }
+        @keyframes spin{to{transform:rotate(360deg)}}
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-7xl">
+
+        <!-- Header -->
+        <header class="mb-6">
+            <div class="mb-6 text-left">
+                <a href="index.html" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5 mr-2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h17" />
+                    </svg>
+                    Volver a Inversiones
+                </a>
+            </div>
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-900">Resumen Financiero Personalizado</h1>
+            <p class="text-gray-600 mt-1">Tu panorama financiero actualizado en un solo lugar.</p>
+        </header>
+
+        <!-- Tab Navigation -->
+        <div class="border-b border-gray-200 mb-6">
+            <nav class="-mb-px flex space-x-4" aria-label="Tabs">
+                <button class="tab-button active" data-tab="general">Resumen General</button>
+                <button class="tab-button" data-tab="mensual">Gastos Mensuales</button>
+                <button class="tab-button" data-tab="unicos">Costos Únicos</button>
+            </nav>
+        </div>
+
+        <!-- Tab Content -->
+        <div>
+            <!-- Tab 1: Resumen General -->
+            <div id="tab-content-general" class="tab-content">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Left Column -->
+                    <div class="lg:col-span-1 flex flex-col gap-6">
+                        <!-- Ganancias -->
+                        <div class="card">
+                            <h2 class="text-xl font-semibold text-gray-800 mb-4">Resumen de Ganancias</h2>
+                            <div class="space-y-4">
+                                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                    <span class="text-gray-500">Ganancia Diaria</span>
+                                    <span id="ganancia-diaria" class="font-bold text-green-600 text-lg"></span>
+                                </div>
+                                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                    <span class="text-gray-500">Ganancia Semanal</span>
+                                    <span id="ganancia-semanal" class="font-semibold text-gray-900"></span>
+                                </div>
+                                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                    <span class="text-gray-500">Ganancia (15 días)</span>
+                                    <span id="ganancia-quincenal" class="font-semibold text-gray-900"></span>
+                                </div>
+                                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                    <span class="text-gray-500">Ganancia Mensual</span>
+                                    <span id="ganancia-mensual" class="font-semibold text-gray-900"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Costos y ROI -->
+                        <div class="card">
+                            <h2 class="text-xl font-semibold text-gray-800 mb-4">Costos y Retorno de Inversión (ROI)</h2>
+                            <div class="space-y-4">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-500">Costos Mensuales</span>
+                                    <span id="costos-mensuales" class="font-semibold text-gray-900"></span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-500">Costos Únicos</span>
+                                    <span id="costos-unicos" class="font-semibold text-gray-900"></span>
+                                </div>
+                                <div class="flex justify-between items-center pt-4 mt-4 border-t border-gray-200">
+                                    <span class="text-gray-500">Tiempo para Break-Even</span>
+                                    <span id="break-even-time" class="font-semibold text-amber-600"></span>
+                                </div>
+                                 <hr class="border-gray-200 my-2">
+                                <div class="text-center py-2">
+                                     <span class="text-gray-500 text-sm">ROI Anual Estimado</span>
+                                    <div class="flex items-center justify-center gap-2 mt-1">
+                                        <span id="roi-calculado" class="text-3xl font-bold text-cyan-600"></span>
+                                        <span id="roi-calificacion" class="text-xs font-semibold px-2 py-1 rounded-full"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column -->
+                    <div class="lg:col-span-2 flex flex-col gap-6">
+                        <!-- Gráfico de Evolución de Ingresos -->
+                        <div class="card">
+                            <h2 id="evolution-chart-title" class="text-xl font-semibold text-gray-800 mb-4"></h2>
+                            <div class="chart-container">
+                                <canvas id="incomeEvolutionChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Gráfico de Evolución del ROI -->
+                        <div class="card">
+                            <h2 id="roi-evolution-chart-title" class="text-xl font-semibold text-gray-800 mb-4"></h2>
+                            <div class="chart-container">
+                                <canvas id="roiEvolutionChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Gráficos Circulares y Tabla ROI -->
+                        <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
+                            <div class="md:col-span-2 flex flex-col gap-6">
+                                <!-- Gráfico de Procedencia de Ingresos -->
+                                <div class="card chart-animate">
+                                    <div class="flex items-center justify-between mb-4">
+                                        <h2 class="text-xl font-semibold text-gray-800">
+                                            <i class="fas fa-chart-pie text-cyan-600 mr-2"></i>
+                                            Procedencia de Ingresos
+                                        </h2>
+                                        <div class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                                            Actualizado en tiempo real
+                                        </div>
+                                    </div>
+                                    <div class="chart-container !h-[200px] my-2">
+                                        <canvas id="incomeSourceChart" class="rounded-lg"></canvas>
+                                    </div>
+                                    <div id="incomeSourceLegend" class="border-t border-gray-200 pt-3 mt-3 space-y-2"></div>
+                                </div>
+                                <!-- Gráfico de Aporte al ROI -->
+                                <div class="card">
+                                    <h2 class="text-xl font-semibold text-gray-800 mb-2">Aporte al ROI Total</h2>
+                                    <div class="chart-container !h-[200px] my-2">
+                                        <canvas id="roiSourceChart"></canvas>
+                                    </div>
+                                    <div id="roiSourceLegend" class="border-t border-gray-200 pt-3 mt-3 space-y-2"></div>
+                                </div>
+                            </div>
+                            <div class="md:col-span-3 card">
+                                <h2 class="text-xl font-semibold text-gray-800 mb-4">Comparativa de ROI (Ordenado)</h2>
+                                <div class="overflow-x-auto">
+                                    <table class="w-full text-sm text-gray-700 table-custom rounded-lg overflow-hidden">
+                                        <thead class="text-xs text-gray-500 uppercase">
+                                            <tr>
+                                                <th>Tipo de Inversión</th>
+                                                <th>ROI Anual</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="roi-comparison-body">
+                                            <tr>
+                                                <td colspan="2" class="text-center text-gray-500 py-4">
+                                                    Cargando y ordenando datos... <span class="loader"></span>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 2: Gastos Mensuales -->
+            <div id="tab-content-mensual" class="tab-content hidden"><div class="card"><h2 class="text-2xl font-semibold text-gray-800">Desglose de Gastos Mensuales</h2><p class="mt-2 text-gray-600">Esta sección mostrará un análisis detallado de los costos recurrentes.</p></div></div>
+            
+            <!-- Tab 3: Costos Únicos -->
+            <div id="tab-content-unicos" class="tab-content hidden">
+                 <div class="card">
+                    <!-- Main Header -->
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 pb-6 border-b border-gray-200">
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-800">Inversión Inicial del Proyecto</h2>
+                            <p class="mt-1 text-gray-500">Desglose de los planes de inversión que componen el costo inicial.</p>
+                            <!-- Botón "Ver más" -->
+                            <a href="#" class="inline-flex items-center gap-2 text-sm font-semibold text-cyan-600 hover:text-cyan-700 mt-4 transition-colors">
+                                Ver más detalles
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-right-short" viewBox="0 0 16 16">
+                                    <path fill-rule="evenodd" d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"/>
+                                </svg>
+                            </a>
+                        </div>
+                        <div class="text-left md:text-right mt-4 md:mt-0 flex-shrink-0">
+                            <span class="text-sm text-gray-500 block">Costo Total</span>
+                            <span class="text-3xl font-bold text-cyan-600" id="total-cost-unicos"></span>
+                        </div>
+                    </div>
+
+                    <!-- Plans/Phases container -->
+                    <div class="space-y-6">
+                        <!-- Plan 1 Card -->
+                        <div class="p-4 border border-gray-200 rounded-lg bg-gray-50/50">
+                            <div class="flex justify-between items-center">
+                                <h3 class="text-lg font-semibold text-gray-800">Plan 1 - Equipo de Cómputo</h3>
+                                <span class="text-xl font-bold text-gray-900">$2,000.00</span>
+                            </div>
+                            <div class="mt-2 text-sm text-gray-500">
+                                <span class="font-medium">Fecha: 15 de Enero, 2024</span>
+                                <p class="mt-1">Compra de hardware esencial, incluyendo laptops y monitores para el equipo de desarrollo.</p>
+                            </div>
+                        </div>
+
+                        <!-- Plan 2 Card -->
+                        <div class="p-4 border border-gray-200 rounded-lg bg-gray-50/50">
+                            <div class="flex justify-between items-center">
+                                <h3 class="text-lg font-semibold text-gray-800">Plan 2 - Licencias de Software</h3>
+                                <span class="text-xl font-bold text-gray-900">$1,500.00</span>
+                            </div>
+                            <div class="mt-2 text-sm text-gray-500">
+                                <span class="font-medium">Fecha: 20 de Enero, 2024</span>
+                                <p class="mt-1">Adquisición de licencias anuales para herramientas de diseño, desarrollo y gestión de proyectos.</p>
+                            </div>
+                        </div>
+
+                        <!-- Plan 3 Card -->
+                        <div class="p-4 border border-gray-200 rounded-lg bg-gray-50/50">
+                            <div class="flex justify-between items-center">
+                                <h3 class="text-lg font-semibold text-gray-800">Plan 3 - Marketing Inicial</h3>
+                                <span class="text-xl font-bold text-gray-900">$700.00</span>
+                            </div>
+                            <div class="mt-2 text-sm text-gray-500">
+                                <span class="font-medium">Fecha: 01 de Febrero, 2024</span>
+                                <p class="mt-1">Inversión en campañas publicitarias de lanzamiento en redes sociales y buscadores.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Currency formatter
+        const currencyFormatter = new Intl.NumberFormat('es-MX', {
+            style: 'currency',
+            currency: 'MXN',
+            minimumFractionDigits: 2
+        });
+
+        // Function to calculate total daily income from a specific mining type
+        function calculateMiningDailyIncome(storageKey) {
+            try {
+                const investmentsData = localStorage.getItem(storageKey);
+                if (!investmentsData) return 0;
+                
+                const investments = JSON.parse(investmentsData);
+                if (!Array.isArray(investments)) return 0;
+                
+                // Filter active investments (not expired)
+                const now = new Date();
+                const activeInvestments = investments.filter(inv => {
+                    if (!inv.hasExpiration || !inv.expirationDate) return true;
+                    return new Date(inv.expirationDate) >= now;
+                });
+                
+                // Sum up daily income from all active investments
+                return activeInvestments.reduce((sum, inv) => sum + (inv.dailyIncome || 0), 0);
+            } catch (error) {
+                console.error(`Error calculating daily income for ${storageKey}:`, error);
+                return 0;
+            }
+        }
+
+        // Function to get the most recent daily income from Cryptotab IndexedDB
+        function getCryptotabDailyIncome(dbName) {
+            return new Promise((resolve) => {
+                try {
+                    const request = indexedDB.open(dbName);
+                    
+                    request.onsuccess = function(event) {
+                        const db = event.target.result;
+                        
+                        // Check if the object store exists
+                        if (!db.objectStoreNames.contains('records')) {
+                            console.log(`Object store 'records' not found in ${dbName}`);
+                            resolve(0);
+                            return;
+                        }
+                        
+                        try {
+                            const transaction = db.transaction(['records'], 'readonly');
+                            const store = transaction.objectStore('records');
+                            
+                            // Get all records and find the most recent one
+                            const getAllRequest = store.getAll();
+                            
+                            getAllRequest.onsuccess = function(event) {
+                                const records = event.target.result;
+                                if (!records || records.length === 0) {
+                                    resolve(0);
+                                    return;
+                                }
+                                
+                                // Sort by dateISO in descending order to get the most recent
+                                records.sort((a, b) => new Date(b.dateISO) - new Date(a.dateISO));
+                                const mostRecentRecord = records[0];
+                                
+                                // Return the mxn_static value (daily income in MXN)
+                                resolve(mostRecentRecord.mxn_static || 0);
+                            };
+                            
+                            getAllRequest.onerror = function() {
+                                console.error(`Error getting records from ${dbName}`);
+                                resolve(0);
+                            };
+                        } catch (transactionError) {
+                            console.error(`Transaction error in ${dbName}:`, transactionError);
+                            resolve(0);
+                        }
+                    };
+                    
+                    request.onerror = function() {
+                        console.error(`Error opening database ${dbName}`);
+                        resolve(0);
+                    };
+                } catch (error) {
+                    console.error(`Error accessing IndexedDB ${dbName}:`, error);
+                    resolve(0);
+                }
+            });
+        }
+
+        // Function to update the statistics with total daily income
+        async function updateStatistics() {
+            // Calculate daily income from each mining type
+            const btcDailyIncome = calculateMiningDailyIncome('btcMiningInvestments');
+            const goDailyIncome = calculateMiningDailyIncome('goMiningInvestments');
+            const tapDailyIncome = calculateMiningDailyIncome('tapMiningInvestments');
+            
+            // Get daily income from Cryptotab databases
+            const ctFarmIncome = await getCryptotabDailyIncome('ctFarm_registroDiario_db_v1');
+            const ctPoolIncome = await getCryptotabDailyIncome('ctPool_registroDiario_db_v1');
+            const ctBrowserIncome = await getCryptotabDailyIncome('ctBrowser_registroDiario_db_v1');
+            
+            // Calculate total daily income
+            const totalDailyIncome = btcDailyIncome + goDailyIncome + tapDailyIncome + ctFarmIncome + ctPoolIncome + ctBrowserIncome;
+            
+            // Update the daily income field
+            document.getElementById('ganancia-diaria').textContent = currencyFormatter.format(totalDailyIncome);
+            
+            // Calculate and update other time periods
+            document.getElementById('ganancia-semanal').textContent = currencyFormatter.format(totalDailyIncome * 7);
+            document.getElementById('ganancia-quincenal').textContent = currencyFormatter.format(totalDailyIncome * 15);
+            document.getElementById('ganancia-mensual').textContent = currencyFormatter.format(totalDailyIncome * 30);
+            
+            console.log(`Daily income updated: BTC=${btcDailyIncome}, GO=${goDailyIncome}, TAP=${tapDailyIncome}, CT-FARM=${ctFarmIncome}, CT-POOL=${ctPoolIncome}, CT-BROWSER=${ctBrowserIncome}, TOTAL=${totalDailyIncome}`);
+        }
+
+        // Function to create and update the income source chart
+        async function updateIncomeSourceChart() {
+            try {
+                // Get all income sources
+                const btcDailyIncome = calculateMiningDailyIncome('btcMiningInvestments');
+                const goDailyIncome = calculateMiningDailyIncome('goMiningInvestments');
+                const tapDailyIncome = calculateMiningDailyIncome('tapMiningInvestments');
+                const ctFarmIncome = await getCryptotabDailyIncome('ctFarm_registroDiario_db_v1');
+                const ctPoolIncome = await getCryptotabDailyIncome('ctPool_registroDiario_db_v1');
+                const ctBrowserIncome = await getCryptotabDailyIncome('ctBrowser_registroDiario_db_v1');
+                
+                // Create data structure with all sources
+                const incomeSources = [
+                    { name: 'BTC Mining', value: btcDailyIncome, color: '#F7931A' },
+                    { name: 'GO Mining', value: goDailyIncome, color: '#4285F4' },
+                    { name: 'TAP Mining', value: tapDailyIncome, color: '#34A853' },
+                    { name: 'CT Farm', value: ctFarmIncome, color: '#FBBC04' },
+                    { name: 'CT Pool', value: ctPoolIncome, color: '#EA4335' },
+                    { name: 'CT Browser', value: ctBrowserIncome, color: '#9C27B0' }
+                ];
+                
+                // Filter out sources with 0 income and calculate total
+                const activeSources = incomeSources.filter(source => source.value > 0);
+                const totalIncome = activeSources.reduce((sum, source) => sum + source.value, 0);
+                
+                if (totalIncome === 0) {
+                    // Show empty state
+                    showEmptyChart();
+                    return;
+                }
+                
+                // Calculate percentages
+                const chartData = activeSources.map(source => ({
+                    ...source,
+                    percentage: ((source.value / totalIncome) * 100).toFixed(1)
+                }));
+                
+                // Create the chart
+                createPieChart(chartData);
+                
+                // Create the legend
+                createInteractiveLegend(chartData);
+                
+            } catch (error) {
+                console.error('Error updating income source chart:', error);
+                showEmptyChart();
+            }
+        }
+        
+        // Function to show empty chart state
+        function showEmptyChart() {
+            const canvas = document.getElementById('incomeSourceChart');
+            const ctx = canvas.getContext('2d');
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw empty state
+            ctx.fillStyle = '#f8fafc';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.fillStyle = '#64748b';
+            ctx.font = '14px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('No hay datos de ingresos disponibles', canvas.width / 2, canvas.height / 2);
+            
+            // Update legend
+            document.getElementById('incomeSourceLegend').innerHTML = 
+                '<p class="text-gray-500 text-center">Sin datos para mostrar</p>';
+        }
+        
+        // Function to create the pie chart
+        function createPieChart(data) {
+            const canvas = document.getElementById('incomeSourceChart');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas size
+            const container = canvas.parentElement;
+            canvas.width = container.offsetWidth;
+            canvas.height = container.offsetHeight;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Calculate center and radius
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = Math.min(centerX, centerY) - 20;
+            
+            // Calculate total for angles
+            const total = data.reduce((sum, item) => sum + parseFloat(item.value), 0);
+            
+            // Draw pie slices
+            let currentAngle = -Math.PI / 2; // Start from top
+            const slices = [];
+            
+            data.forEach((item, index) => {
+                const sliceAngle = (parseFloat(item.value) / total) * 2 * Math.PI;
+                
+                // Store slice info for hover detection
+                slices.push({
+                    startAngle: currentAngle,
+                    endAngle: currentAngle + sliceAngle,
+                    color: item.color,
+                    data: item
+                });
+                
+                // Draw slice
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + sliceAngle);
+                ctx.closePath();
+                ctx.fillStyle = item.color;
+                ctx.fill();
+                
+                // Add subtle border
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                currentAngle += sliceAngle;
+            });
+            
+            // Add hover effect
+            canvas.addEventListener('mousemove', (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                const dx = x - centerX;
+                const dy = y - centerY;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance <= radius) {
+                    let angle = Math.atan2(dy, dx);
+                    if (angle < -Math.PI / 2) angle += 2 * Math.PI;
+                    
+                    const hoveredSlice = slices.find(slice => 
+                        angle >= slice.startAngle && angle <= slice.endAngle
+                    );
+                    
+                    if (hoveredSlice) {
+                        canvas.style.cursor = 'pointer';
+                        // Redraw with highlight
+                        redrawChartWithHighlight(data, hoveredSlice);
+                    } else {
+                        canvas.style.cursor = 'default';
+                        createPieChart(data);
+                    }
+                } else {
+                    canvas.style.cursor = 'default';
+                    createPieChart(data);
+                }
+            });
+            
+            canvas.addEventListener('mouseleave', () => {
+                canvas.style.cursor = 'default';
+                createPieChart(data);
+            });
+            
+            // Store chart data for redraws
+            canvas.chartData = data;
+        }
+        
+        // Function to redraw chart with highlight
+        function redrawChartWithHighlight(data, highlightSlice) {
+            const canvas = document.getElementById('incomeSourceChart');
+            const ctx = canvas.getContext('2d');
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = Math.min(centerX, centerY) - 20;
+            
+            const total = data.reduce((sum, item) => sum + parseFloat(item.value), 0);
+            let currentAngle = -Math.PI / 2;
+            
+            data.forEach((item, index) => {
+                const sliceAngle = (parseFloat(item.value) / total) * 2 * Math.PI;
+                const isHighlighted = item.name === highlightSlice.data.name;
+                const currentRadius = isHighlighted ? radius + 5 : radius;
+                
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, currentRadius, currentAngle, currentAngle + sliceAngle);
+                ctx.closePath();
+                ctx.fillStyle = item.color;
+                ctx.fill();
+                
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = isHighlighted ? 3 : 2;
+                ctx.stroke();
+                
+                currentAngle += sliceAngle;
+            });
+        }
+        
+        // Function to create interactive legend
+        function createInteractiveLegend(data) {
+            const legendContainer = document.getElementById('incomeSourceLegend');
+            legendContainer.innerHTML = '';
+            
+            const total = data.reduce((sum, item) => sum + parseFloat(item.value), 0);
+            
+            data.forEach(item => {
+                const legendItem = document.createElement('div');
+                legendItem.className = 'flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer';
+                legendItem.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <div class="w-4 h-4 rounded-full" style="background-color: ${item.color}"></div>
+                        <span class="text-sm font-medium text-gray-700">${item.name}</span>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-sm font-semibold text-gray-900">${item.percentage}%</div>
+                        <div class="text-xs text-gray-500">${currencyFormatter.format(item.value)}</div>
+                    </div>
+                `;
+                
+                // Add hover effect
+                legendItem.addEventListener('mouseenter', () => {
+                    const canvas = document.getElementById('incomeSourceChart');
+                    const ctx = canvas.getContext('2d');
+                    
+                    // Find the corresponding slice and highlight it
+                    const total = data.reduce((sum, d) => sum + parseFloat(d.value), 0);
+                    let currentAngle = -Math.PI / 2;
+                    
+                    const sliceAngle = (parseFloat(item.value) / total) * 2 * Math.PI;
+                    const centerX = canvas.width / 2;
+                    const centerY = canvas.height / 2;
+                    const radius = Math.min(centerX, centerY) - 20 + 5;
+                    
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    createPieChart(data);
+                    
+                    // Draw highlight
+                    ctx.beginPath();
+                    ctx.moveTo(centerX, centerY);
+                    ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + sliceAngle);
+                    ctx.closePath();
+                    ctx.fillStyle = item.color;
+                    ctx.fill();
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+                });
+                
+                legendItem.addEventListener('mouseleave', () => {
+                    createPieChart(data);
+                });
+                
+                legendContainer.appendChild(legendItem);
+            });
+            
+            // Add summary
+            const summary = document.createElement('div');
+            summary.className = 'mt-4 pt-3 border-t border-gray-200';
+            const totalIncome = data.reduce((sum, item) => sum + parseFloat(item.value), 0);
+            summary.innerHTML = `
+                <div class="flex justify-between items-center">
+                    <span class="text-sm font-semibold text-gray-700">Total Diario:</span>
+                    <span class="text-lg font-bold text-cyan-600">${currencyFormatter.format(totalIncome)}</span>
+                </div>
+            `;
+            legendContainer.appendChild(summary);
+        }
+
+        // --- Income Evolution (últimos 30 días) ---
+        const incomeEvolutionColors = {
+            'BTC Mining': '#F7931A',
+            'GO Mining': '#4285F4',
+            'TAP Mining': '#34A853',
+            'CT Farm': '#FBBC04',
+            'CT Pool': '#EA4335',
+            'CT Browser': '#9C27B0',
+            'Total': '#0891b2'
+        };
+
+        function getDateKey(date) {
+            return date.toISOString().slice(0, 10); // YYYY-MM-DD
+        }
+
+        function getLastNDates(n) {
+            const dates = [];
+            for (let i = n - 1; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                dates.push(new Date(d));
+            }
+            return dates;
+        }
+
+        // Fetch all records from a Cryptotab DB and build a map by date (YYYY-MM-DD) -> mxn_static
+        function fetchCryptotabRecordsMap(dbName) {
+            return new Promise((resolve) => {
+                try {
+                    const request = indexedDB.open(dbName);
+                    request.onsuccess = function(event) {
+                        const db = event.target.result;
+                        if (!db.objectStoreNames.contains('records')) {
+                            resolve({});
+                            return;
+                        }
+                        try {
+                            const tx = db.transaction(['records'], 'readonly');
+                            const store = tx.objectStore('records');
+                            const getAllReq = store.getAll();
+                            getAllReq.onsuccess = function(ev) {
+                                const records = ev.target.result || [];
+                                const map = {};
+                                records.forEach(r => {
+                                    if (!r || !r.dateISO) return;
+                                    try {
+                                        const key = new Date(r.dateISO).toISOString().slice(0,10);
+                                        // keep the latest record for the date
+                                        if (!map[key] || new Date(r.dateISO) > new Date(map[key].dateISO)) {
+                                            map[key] = r;
+                                        }
+                                    } catch(e) { /* ignore malformed dates */ }
+                                });
+                                resolve(map);
+                            };
+                            getAllReq.onerror = function() { resolve({}); };
+                        } catch(e) { resolve({}); }
+                    };
+                    request.onerror = function() { resolve({}); };
+                } catch(e) { resolve({}); }
+            });
+        }
+
+        // Build array of mxn_static for last N dates from a given records map
+        function buildValuesForLastNDatesFromMap(map, dates) {
+            return dates.map(d => {
+                const key = getDateKey(d);
+                const rec = map[key];
+                return (rec && (rec.mxn_static || rec.mxn_static === 0)) ? Number(rec.mxn_static) : 0;
+            });
+        }
+
+        // Build per-day series for investments stored in localStorage. Supports incomeHistory on each investment.
+        function buildSeriesFromLocalStorage(storageKey, dates) {
+            try {
+                const investmentsData = localStorage.getItem(storageKey);
+                if (!investmentsData) return Array(dates.length).fill(0);
+
+                const investments = JSON.parse(investmentsData);
+                if (!Array.isArray(investments)) return Array(dates.length).fill(0);
+
+                const keys = dates.map(d => getDateKey(d));
+                const series = Array(dates.length).fill(0);
+
+                investments.forEach(inv => {
+                    const startKey = inv.date ? getDateKey(new Date(inv.date)) : null;
+                    const endKey = (inv.hasExpiration && inv.expirationDate) ? getDateKey(new Date(inv.expirationDate)) : null;
+
+                    let history = Array.isArray(inv.incomeHistory) ? inv.incomeHistory.map(h => ({ date: getDateKey(new Date(h.date || h.dateISO || h.date)), dailyIncome: Number(h.dailyIncome) })) : null;
+
+                    if (!history) {
+                        if (inv.date && (inv.dailyIncome !== undefined)) {
+                            history = [{ date: getDateKey(new Date(inv.date)), dailyIncome: Number(inv.dailyIncome) }];
+                        } else if (inv.dailyIncome !== undefined) {
+                            history = [{ date: '1970-01-01', dailyIncome: Number(inv.dailyIncome) }];
+                        } else {
+                            history = [];
+                        }
+                    }
+
+                    history.sort((a,b) => new Date(a.date) - new Date(b.date));
+
+                    keys.forEach((key, idx) => {
+                        if (startKey && key < startKey) return;
+                        if (endKey && key > endKey) return;
+
+                        let rate = null;
+                        for (let i = history.length - 1; i >= 0; i--) {
+                            if (history[i].date <= key) { rate = history[i].dailyIncome; break; }
+                        }
+                        if (rate === null) {
+                            if (inv.dailyIncome !== undefined && (!inv.date || inv.date <= key)) rate = Number(inv.dailyIncome);
+                            else rate = 0;
+                        }
+
+                        series[idx] += Number(rate || 0);
+                    });
+                });
+
+                return series;
+            } catch (e) {
+                console.error('Error building series from localStorage', storageKey, e);
+                return Array(dates.length).fill(0);
+            }
+        }
+
+        let incomeEvolutionChart = null;
+
+        async function updateIncomeEvolutionChart(days = 30) {
+            try {
+                const dates = getLastNDates(days);
+                const labels = dates.map(d => d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }));
+
+                // Constant daily incomes from localStorage-based investments
+                const btcDaily = calculateMiningDailyIncome('btcMiningInvestments');
+                const goDaily = calculateMiningDailyIncome('goMiningInvestments');
+                const tapDaily = calculateMiningDailyIncome('tapMiningInvestments');
+
+                // Fetch CT DBs maps in parallel
+                const [farmMap, poolMap, browserMap] = await Promise.all([
+                    fetchCryptotabRecordsMap('ctFarm_registroDiario_db_v1'),
+                    fetchCryptotabRecordsMap('ctPool_registroDiario_db_v1'),
+                    fetchCryptotabRecordsMap('ctBrowser_registroDiario_db_v1')
+                ]);
+
+                const farmValues = buildValuesForLastNDatesFromMap(farmMap, dates);
+                const poolValues = buildValuesForLastNDatesFromMap(poolMap, dates);
+                const browserValues = buildValuesForLastNDatesFromMap(browserMap, dates);
+
+                // Build source-series for BTC/GO/TAP using their change history in localStorage
+                const btcSeries = buildSeriesFromLocalStorage('btcMiningInvestments', dates);
+                const goSeries = buildSeriesFromLocalStorage('goMiningInvestments', dates);
+                const tapSeries = buildSeriesFromLocalStorage('tapMiningInvestments', dates);
+
+                // Total per day
+                const totalSeries = [];
+                for (let i = 0; i < days; i++) {
+                    const total = (btcSeries[i] || 0) + (goSeries[i] || 0) + (tapSeries[i] || 0)
+                        + (farmValues[i] || 0) + (poolValues[i] || 0) + (browserValues[i] || 0);
+                    totalSeries.push(Number(total));
+                }
+
+                // Prepare Chart.js datasets: one per source + total
+                const datasets = [
+                    { label: 'BTC Mining', data: btcSeries, borderColor: incomeEvolutionColors['BTC Mining'], backgroundColor: incomeEvolutionColors['BTC Mining'], fill: false, tension: 0.2 },
+                    { label: 'GO Mining', data: goSeries, borderColor: incomeEvolutionColors['GO Mining'], backgroundColor: incomeEvolutionColors['GO Mining'], fill: false, tension: 0.2 },
+                    { label: 'TAP Mining', data: tapSeries, borderColor: incomeEvolutionColors['TAP Mining'], backgroundColor: incomeEvolutionColors['TAP Mining'], fill: false, tension: 0.2 },
+                    { label: 'CT Farm', data: farmValues, borderColor: incomeEvolutionColors['CT Farm'], backgroundColor: incomeEvolutionColors['CT Farm'], fill: false, tension: 0.2 },
+                    { label: 'CT Pool', data: poolValues, borderColor: incomeEvolutionColors['CT Pool'], backgroundColor: incomeEvolutionColors['CT Pool'], fill: false, tension: 0.2 },
+                    { label: 'CT Browser', data: browserValues, borderColor: incomeEvolutionColors['CT Browser'], backgroundColor: incomeEvolutionColors['CT Browser'], fill: false, tension: 0.2 },
+                    { label: 'Total', data: totalSeries, borderColor: incomeEvolutionColors['Total'], backgroundColor: incomeEvolutionColors['Total'], fill: true, tension: 0.15, pointRadius: 2 }
+                ];
+
+                // Create or update Chart.js instance
+                const ctx = document.getElementById('incomeEvolutionChart').getContext('2d');
+                // ensure canvas parent has a fixed height for responsiveness
+                const parent = document.getElementById('incomeEvolutionChart').parentElement;
+                parent.style.minHeight = '220px';
+
+                if (incomeEvolutionChart) {
+                    incomeEvolutionChart.data.labels = labels;
+                    incomeEvolutionChart.data.datasets = datasets;
+                    incomeEvolutionChart.update();
+                } else {
+                    document.getElementById('evolution-chart-title').textContent = 'Evolución de Ingresos (últimos 30 días)';
+                    incomeEvolutionChart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: datasets
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            interaction: { mode: 'index', intersect: false },
+                            stacked: false,
+                            plugins: {
+                                legend: { position: 'top', labels: { usePointStyle: true } },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            const v = context.parsed.y || 0;
+                                            return context.dataset.label + ': ' + currencyFormatter.format(v);
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                x: { title: { display: true, text: 'Fecha' } },
+                                y: { title: { display: true, text: 'Ganancia diaria (MXN)' }, ticks: { callback: value => currencyFormatter.format(value) } }
+                            }
+                        }
+                    });
+                }
+            } catch (err) {
+                console.error('Error updating income evolution chart:', err);
+            }
+        }
+
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', async function() {
+            await updateStatistics();
+            await updateIncomeSourceChart();
+            // Create and update income evolution chart (últimos 30 días)
+            await updateIncomeEvolutionChart();
+
+            // Update statistics and charts every 30 seconds to reflect any changes
+            setInterval(updateStatistics, 30000);
+            setInterval(updateIncomeSourceChart, 30000);
+            setInterval(updateIncomeEvolutionChart, 30000);
+        });
+
+        // Tab functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const targetTab = button.getAttribute('data-tab');
+                    
+                    // Remove active class from all buttons and contents
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    tabContents.forEach(content => content.classList.add('hidden'));
+                    
+                    // Add active class to clicked button and corresponding content
+                    button.classList.add('active');
+                    document.getElementById(`tab-content-${targetTab}`).classList.remove('hidden');
+                });
+            });
+        });
+    </script>
+</body>
+</html>
+

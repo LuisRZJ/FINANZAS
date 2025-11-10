@@ -713,8 +713,8 @@
 (async function(){
   // IndexedDB wrapper for records
   const DB_NAME = 'ctPool_registroDiario_db_v1';
-  const DB_VERSION = 1;
-  const STORE_RECORDS = 'records';
+const DB_VERSION = 2; // Incrementar versión para forzar onupgradeneeded
+const STORE_RECORDS = 'records';
   const SATS_PER_BTC = 100_000_000;
 
   // Date helpers
@@ -746,13 +746,20 @@
 
   // Simple promisified IndexedDB open
   function openDB(){
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve,reject)=>{
       const req = indexedDB.open(DB_NAME, DB_VERSION);
       req.onupgradeneeded = (ev) => {
         const db = ev.target.result;
+        console.log(`[DB] onupgradeneeded: version ${ev.oldVersion} -> ${ev.newVersion}`);
+        console.log(`[DB] Object stores existentes: ${Array.from(db.objectStoreNames)}`);
+        
         if (!db.objectStoreNames.contains(STORE_RECORDS)){
+          console.log(`[DB] Creando object store: ${STORE_RECORDS}`);
           const store = db.createObjectStore(STORE_RECORDS, { keyPath: 'id' });
           store.createIndex('dateISO', 'dateISO', { unique: false });
+          console.log(`[DB] Object store ${STORE_RECORDS} creado exitosamente`);
+        } else {
+          console.log(`[DB] Object store ${STORE_RECORDS} ya existe`);
         }
       };
       req.onsuccess = () => resolve(req.result);
@@ -763,32 +770,48 @@
   async function getAllRecordsFromDB(){
     const db = await openDB();
     return new Promise((resolve, reject)=>{
-      const tx = db.transaction(STORE_RECORDS, 'readonly');
-      const store = tx.objectStore(STORE_RECORDS);
-      const req = store.getAll();
-      req.onsuccess = ()=> resolve(req.result || []);
-      req.onerror = ()=> reject(req.error);
+      try {
+        if (!db.objectStoreNames.contains(STORE_RECORDS)){
+          throw new Error(`Object store ${STORE_RECORDS} no encontrado`);
+        }
+        const tx = db.transaction(STORE_RECORDS, 'readonly');
+        const store = tx.objectStore(STORE_RECORDS);
+        const req = store.getAll();
+        req.onsuccess = ()=> resolve(req.result || []);
+        req.onerror = ()=> reject(req.error);
+      } catch (error) {
+        console.error('[DB] Error en getAllRecordsFromDB:', error);
+        reject(error);
+      }
     });
   }
 
   async function clearAndSaveRecords(list){
     const db = await openDB();
     return new Promise((resolve, reject)=>{
-      const tx = db.transaction(STORE_RECORDS, 'readwrite');
-      const store = tx.objectStore(STORE_RECORDS);
-      const clearReq = store.clear();
-      clearReq.onsuccess = ()=>{
-        let i = 0;
-        if (!list.length) { tx.oncomplete = ()=> resolve(); return; }
-        for (const item of list){
-          const putReq = store.put(item);
-          putReq.onerror = ()=> console.error('Error guardando registro', putReq.error);
-          putReq.onsuccess = ()=>{
-            i++; if (i===list.length) tx.oncomplete = ()=> resolve();
-          };
+      try {
+        if (!db.objectStoreNames.contains(STORE_RECORDS)){
+          throw new Error(`Object store ${STORE_RECORDS} no encontrado`);
         }
-      };
-      clearReq.onerror = ()=> reject(clearReq.error);
+        const tx = db.transaction(STORE_RECORDS, 'readwrite');
+        const store = tx.objectStore(STORE_RECORDS);
+        const clearReq = store.clear();
+        clearReq.onsuccess = ()=>{
+          let i = 0;
+          if (!list.length) { tx.oncomplete = ()=> resolve(); return; }
+          for (const item of list){
+            const putReq = store.put(item);
+            putReq.onerror = ()=> console.error('Error guardando registro', putReq.error);
+            putReq.onsuccess = ()=>{
+              i++; if (i===list.length) tx.oncomplete = ()=> resolve();
+            };
+          }
+        };
+        clearReq.onerror = ()=> reject(clearReq.error);
+      } catch (error) {
+        console.error('[DB] Error en clearAndSaveRecords:', error);
+        reject(error);
+      }
     });
   }
 

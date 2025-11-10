@@ -1,0 +1,1699 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bitácora FTT - Registro de Trading de Tiempo Fijo</title>
+    <meta name="theme-color" content="#2563eb">
+    <link rel="icon" href="/pwa/logo-app.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* Fondo claro */
+            color: #1f2937; /* Texto oscuro */
+        }
+        .tab-active {
+            border-color: #2563eb;
+            color: #1d4ed8;
+            background-color: #e0f2fe;
+        }
+        .tab-inactive {
+            border-color: transparent;
+            color: #6b7280;
+        }
+        /* Estilos para el scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #e2e8f0;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+        /* Ocultar flechas en input number */
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+        /* Estilos para botones deshabilitados */
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div id="app" class="container mx-auto p-4 sm:p-6 md:p-8 max-w-7xl">
+
+        <div class="mb-6 flex justify-start">
+            <a href="../../index.html" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-lg transition-transform duration-200 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6 4.5 12m0 0 6 6m-6-6h15" />
+                </svg>
+                <span>Volver al inicio</span>
+            </a>
+        </div>
+
+        <header class="text-center mb-8">
+            <h1 class="text-3xl sm:text-4xl font-bold text-gray-900">Bitácora FTT</h1>
+            <p class="text-lg text-gray-600 mt-2">Registra y analiza tus operaciones de tiempo fijo.</p>
+        </header>
+
+        <!-- Pestañas de Navegación -->
+        <div class="mb-6 border-b border-gray-200">
+            <nav class="flex space-x-4" aria-label="Tabs">
+                <button id="tab-registro" class="py-4 px-1 border-b-2 font-medium text-sm sm:text-base transition-colors duration-200 tab-active">
+                    Registro de Operaciones
+                </button>
+                <button id="tab-estadisticas" class="py-4 px-1 border-b-2 font-medium text-sm sm:text-base transition-colors duration-200 tab-inactive">
+                    Panel de Estadísticas
+                </button>
+                <button id="tab-ajustes" class="py-4 px-1 border-b-2 font-medium text-sm sm:text-base transition-colors duration-200 tab-inactive">
+                    Ajustes
+                </button>
+            </nav>
+        </div>
+
+        <!-- Contenido de las Pestañas -->
+        <main>
+            <!-- Pestaña 1: Formulario de Registro -->
+            <div id="content-registro">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-1">
+                        <div class="bg-white p-6 rounded-lg shadow-lg border border-gray-200">
+                            <h2 class="text-xl font-semibold mb-4 text-gray-900">Nueva Operación</h2>
+                            <form id="trade-form" class="space-y-4">
+                                <div>
+                                    <label for="fecha" class="block text-sm font-medium text-gray-700">Fecha y Hora</label>
+                                    <input type="datetime-local" id="fecha" name="fecha" required class="mt-1 block w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-gray-900 p-2">
+                                </div>
+                                <div>
+                                    <label for="activo" class="block text-sm font-medium text-gray-700">Activo</label>
+                                    <div id="asset-warning" class="hidden mt-1 text-sm bg-yellow-100 text-yellow-700 p-2 rounded-md border border-yellow-200">
+                                        Primero debes <a href="#" id="go-to-settings" class="font-bold underline">añadir un activo</a> en la pestaña de Ajustes.
+                                    </div>
+                                    <select id="activo" name="activo" required class="mt-1 block w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-gray-900 p-2">
+                                        <!-- Opciones de activos cargadas por JS -->
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="monto" class="block text-sm font-medium text-gray-700">Monto Invertido (MXN)</label>
+                                    <input type="number" id="monto" name="monto" min="0.01" step="any" required class="mt-1 block w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-gray-900 p-2" placeholder="Ej: 150.00">
+                                </div>
+                                <div>
+                                    <label for="tipo" class="block text-sm font-medium text-gray-700">Tipo de Pronóstico</label>
+                                    <select id="tipo" name="tipo" required class="mt-1 block w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-gray-900 p-2">
+                                        <option value="Compra">Compra (Sube)</option>
+                                        <option value="Venta">Venta (Baja)</option>
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Tiempo de Expiración</label>
+                                    <div class="mt-1 grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                        <div>
+                                            <input type="number" name="expiracion_dias" class="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm text-gray-900 p-2 text-center" placeholder="Días" min="0">
+                                        </div>
+                                        <div>
+                                            <input type="number" name="expiracion_horas" class="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm text-gray-900 p-2 text-center" placeholder="Horas" min="0" max="23">
+                                        </div>
+                                        <div>
+                                            <input type="number" name="expiracion_minutos" class="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm text-gray-900 p-2 text-center" placeholder="Min" min="0" max="59">
+                                        </div>
+                                        <div>
+                                            <input type="number" name="expiracion_segundos" class="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm text-gray-900 p-2 text-center" placeholder="Seg" min="0" max="59">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label for="estrategia" class="block text-sm font-medium text-gray-700">Estrategia Utilizada</label>
+                                    <select id="estrategia" name="estrategia" class="mt-1 block w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-gray-900 p-2">
+                                        <!-- Estrategias cargadas por JS -->
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="notas" class="block text-sm font-medium text-gray-700">Notas</label>
+                                    <textarea id="notas" name="notas" rows="3" class="mt-1 block w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-gray-900 p-2" placeholder="Añade observaciones sobre la operación..."></textarea>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Resultado</label>
+                                    <div class="mt-2 flex items-center space-x-4">
+                                        <label class="flex items-center">
+                                            <input type="radio" name="resultado" value="Éxito" required class="form-radio h-4 w-4 text-green-600 bg-white border-gray-300 focus:ring-green-500">
+                                            <span class="ml-2 text-green-600">Éxito</span>
+                                        </label>
+                                        <label class="flex items-center">
+                                            <input type="radio" name="resultado" value="Fracaso" class="form-radio h-4 w-4 text-red-600 bg-white border-gray-300 focus:ring-red-500">
+                                            <span class="ml-2 text-red-600">Fracaso</span>
+                                        </label>
+                                        <label class="flex items-center">
+                                            <input type="radio" name="resultado" value="Empate" class="form-radio h-4 w-4 text-blue-600 bg-white border-gray-300 focus:ring-blue-500">
+                                            <span class="ml-2 text-blue-600">Empate</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors duration-200">
+                                    Registrar Operación
+                                </button>
+                                <button type="button" id="cancel-edit-btn" class="hidden w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg shadow-md transition-colors duration-200 mt-2">
+                                    Cancelar Edición
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="lg:col-span-2">
+                        <div class="bg-white p-6 rounded-lg shadow-lg h-full border border-gray-200">
+                            <h2 class="text-xl font-semibold mb-4 text-gray-900">Historial de Operaciones</h2>
+                            <div id="trades-card-container" class="space-y-4 max-h-[600px] overflow-y-auto pr-2">
+                                <!-- Las tarjetas de operaciones se generan aquí -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pestaña 2: Estadísticas -->
+            <div id="content-estadisticas" class="hidden">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <!-- Cards de resumen -->
+                    <div class="bg-white p-6 rounded-lg shadow-lg flex flex-col justify-between border border-gray-200"><h3 class="text-sm font-medium text-gray-500 uppercase">Rentabilidad Acumulada</h3><p id="stat-rentabilidad" class="text-3xl font-bold mt-2 text-gray-900">$0.00</p></div>
+                    <div class="bg-white p-6 rounded-lg shadow-lg flex flex-col justify-between border border-gray-200"><h3 class="text-sm font-medium text-gray-500 uppercase">G / P / E</h3><p id="stat-ratio" class="text-3xl font-bold mt-2 text-gray-900">0 / 0 / 0</p></div>
+                    <div class="bg-white p-6 rounded-lg shadow-lg flex flex-col justify-between border border-gray-200"><h3 class="text-sm font-medium text-gray-500 uppercase">Porcentaje de Aciertos</h3><p id="stat-winrate" class="text-3xl font-bold mt-2 text-gray-900">0%</p></div>
+                    <div class="bg-white p-6 rounded-lg shadow-lg flex flex-col justify-between border border-gray-200"><h3 class="text-sm font-medium text-gray-500 uppercase">Operaciones Totales</h3><p id="stat-total-trades" class="text-3xl font-bold mt-2 text-gray-900">0</p></div>
+                    <div class="bg-white p-6 rounded-lg shadow-lg border border-gray-200">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-sm font-medium text-gray-500 uppercase">Promedio Trades</h3>
+                            <select id="avg-trades-period" class="bg-white text-xs text-gray-700 rounded border border-gray-300 p-1 focus:ring-2 focus:ring-blue-500">
+                                <option value="Día">por Día</option>
+                                <option value="Semana">por Semana</option>
+                                <option value="Mes">por Mes</option>
+                                <option value="Año">por Año</option>
+                            </select>
+                        </div>
+                        <p id="stat-avg-trades" class="text-3xl font-bold mt-2 text-gray-900">0.0</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-lg border border-gray-200">
+                        <h3 class="text-sm font-medium text-gray-500 uppercase">Franja Horaria Más Operada (4H)</h3>
+                        <p id="stat-peak-hour" class="text-2xl xl:text-3xl font-bold mt-2 flex items-baseline justify-center text-center sm:text-left sm:justify-start text-gray-900">N/A</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-lg border border-gray-200">
+                        <h3 class="text-sm font-medium text-gray-500 uppercase">Día con Más Operaciones</h3>
+                        <p id="stat-peak-day" class="text-3xl font-bold mt-2 flex items-baseline gap-x-2 text-gray-900">N/A</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-lg border border-gray-200">
+                        <h3 class="text-sm font-medium text-gray-500 uppercase">Días con Registros</h3>
+                        <p id="stat-active-days" class="text-3xl font-bold mt-2 text-gray-900">0</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                    <!-- Estadísticas por grupo -->
+                    <div class="bg-white p-6 rounded-lg shadow-lg border border-gray-200"><h3 class="text-lg font-semibold text-gray-900 mb-4">Efectividad por Estrategia</h3><div id="stat-estrategias" class="space-y-3"><p class="text-gray-500">No hay datos suficientes.</p></div></div>
+                    <div class="bg-white p-6 rounded-lg shadow-lg border border-gray-200"><h3 class="text-lg font-semibold text-gray-900 mb-4">Rendimiento por Activo</h3><div id="stat-activos" class="space-y-3"><p class="text-gray-500">No hay datos suficientes.</p></div></div>
+                </div>
+                <!-- Gráfico de tendencia -->
+                <div class="bg-white p-6 rounded-lg shadow-lg mt-6 border border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Tendencia de Rentabilidad Acumulada</h3>
+                    <div id="chart-container" class="w-full h-64 bg-gray-100 rounded-lg p-4 pl-12 relative flex items-center justify-center">
+                        <div id="chart-svg-container" class="w-full h-full"></div>
+                        <span id="chart-label-max" class="absolute text-xs text-gray-500" style="display: none; right: 100%; margin-right: 8px; transform: translateY(-50%);"></span>
+                        <span id="chart-label-zero" class="absolute text-xs text-gray-500" style="display: none; right: 100%; margin-right: 8px; transform: translateY(-50%);"></span>
+                        <span id="chart-label-min" class="absolute text-xs text-gray-500" style="display: none; right: 100%; margin-right: 8px; transform: translateY(-50%);"></span>
+                        <p id="chart-placeholder" class="text-gray-500">El gráfico de tendencia aparecerá aquí.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pestaña 3: Ajustes -->
+            <div id="content-ajustes" class="hidden">
+                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+                    <!-- Sección de gestión de cuentas -->
+                    <div class="md:col-span-2 bg-white p-6 rounded-lg shadow-lg border border-gray-200">
+                        <div class="flex items-center justify-between mb-4">
+                            <div>
+                                <h2 class="text-xl font-semibold text-gray-900">Gestionar Cuentas</h2>
+                                <p class="text-sm text-gray-600 mt-1">Organiza tus cuentas y cambia entre ellas sin salir de este panel.</p>
+                            </div>
+                            <span class="inline-flex items-center gap-2 bg-blue-50 text-blue-700 text-xs font-semibold px-3 py-1 rounded-full border border-blue-100">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75A2.25 2.25 0 0014.25 4.5h-4.5A2.25 2.25 0 007.5 6.75v3.75m9 0h1.5a2.25 2.25 0 012.25 2.25v6.75A2.25 2.25 0 0118 21H6a2.25 2.25 0 01-2.25-2.25V12.75A2.25 2.25 0 016 10.5h1.5m9 0h-9" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 14.25a1.125 1.125 0 112.25 0A1.125 1.125 0 019 14.25zm4.5 0a1.125 1.125 0 112.25 0 1.125 1.125 0 01-2.25 0z" />
+                                </svg>
+                                Multicuenta
+                            </span>
+                        </div>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div>
+                                <label for="account-select" class="block text-sm font-medium text-gray-700 mb-2">Cuenta activa</label>
+                                <div class="flex flex-col sm:flex-row gap-3">
+                                    <select id="account-select" class="flex-1 bg-gray-100 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-gray-900 p-2"></select>
+                                    <button type="button" id="delete-account-btn" class="px-4 py-2 bg-red-100 text-red-600 font-semibold rounded-lg border border-red-200 transition-colors focus:outline-none focus:ring-2 focus:ring-red-300 disabled:opacity-50 disabled:cursor-not-allowed">Eliminar</button>
+                                </div>
+                                <p id="account-lock-info" class="text-xs text-gray-500 mt-2"></p>
+                            </div>
+                            <form id="add-account-form" class="bg-blue-50 border border-blue-100 rounded-lg p-4">
+                                <h3 class="text-sm font-semibold text-blue-900 mb-3">Crear nueva cuenta</h3>
+                                <label for="new-account-input" class="block text-xs font-medium text-blue-800 mb-1">Nombre de la cuenta</label>
+                                <div class="flex flex-col sm:flex-row gap-3">
+                                    <input type="text" id="new-account-input" required class="flex-1 bg-white border border-blue-200 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-gray-900 p-2" placeholder="Ej: Cuenta Scalping">
+                                    <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500">Crear y usar</button>
+                                </div>
+                                <p class="text-xs text-blue-700 mt-2">El nombre debe ser único para identificar fácilmente cada cuenta.</p>
+                            </form>
+                        </div>
+                    </div>
+                    <!-- Sección resumen almacenamiento -->
+                    <div class="md:col-span-2 grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-lg">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-2">Uso de almacenamiento total</h3>
+                            <p class="text-sm text-gray-600 mb-4">Resumen del espacio usado por todos los datos guardados en el navegador para esta aplicación.</p>
+                            <div class="flex items-center justify-between bg-blue-50 border border-blue-100 rounded-lg p-4">
+                                <div>
+                                    <span class="text-sm text-blue-700 font-medium">Total ocupado</span>
+                                    <p class="text-2xl font-bold text-blue-900" id="total-storage-used">0 KB</p>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-xs text-blue-600 uppercase tracking-wide">Cuentas registradas</span>
+                                    <p class="text-lg font-semibold text-blue-800" id="accounts-count">0</p>
+                                </div>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-3" id="storage-breakdown"></p>
+                        </div>
+                        <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-lg">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-2">Detalles por cuenta</h3>
+                            <p class="text-sm text-gray-600 mb-4">Cada cuenta incluye operaciones, activos y estrategias. Estos datos se suman al total.</p>
+                            <div id="storage-list" class="space-y-3 max-h-64 overflow-y-auto pr-1">
+                                <p class="text-sm text-gray-500">Sin información disponible.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Columna para gestionar activos y estrategias -->
+                    <div class="bg-white p-6 rounded-lg shadow-lg flex flex-col border border-gray-200">
+                        <h2 class="text-xl font-semibold mb-4 text-gray-900">Gestionar Activos</h2>
+                        <form id="add-asset-form" class="mb-4">
+                            <label for="new-asset-input" class="block text-sm font-medium text-gray-600 mb-2">Añadir nuevo activo</label>
+                            <div class="flex">
+                                <input type="text" id="new-asset-input" required class="block w-full bg-gray-100 border border-gray-300 rounded-l-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-gray-900 p-2" placeholder="Ej: EUR/USD">
+                                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-r-md transition-colors duration-200">Añadir</button>
+                            </div>
+                        </form>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2 mt-4">Mis Activos</h3>
+                        <ul id="asset-list" class="space-y-3 flex-grow overflow-y-auto max-h-80"></ul>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-lg flex flex-col border border-gray-200">
+                        <h2 class="text-xl font-semibold mb-4 text-gray-900">Gestionar Estrategias</h2>
+                        <form id="add-strategy-form" class="mb-4">
+                            <label for="new-strategy-input" class="block text-sm font-medium text-gray-600 mb-2">Añadir nueva estrategia</label>
+                            <div class="flex">
+                                <input type="text" id="new-strategy-input" required class="block w-full bg-gray-100 border border-gray-300 rounded-l-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-gray-900 p-2" placeholder="Ej: Acción del Precio">
+                                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-r-md transition-colors duration-200">Añadir</button>
+                            </div>
+                        </form>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2 mt-4">Mis Estrategias</h3>
+                        <ul id="strategy-list" class="space-y-3 flex-grow overflow-y-auto max-h-80"></ul>
+                    </div>
+                    <!-- Sección de Gestión de Datos -->
+                    <div class="md:col-span-2 bg-white p-6 rounded-lg shadow-lg border border-gray-200">
+                        <h2 class="text-xl font-semibold mb-4 text-gray-900">Gestión de Datos</h2>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 text-center">
+                            <div class="bg-blue-50 p-4 rounded-lg">
+                                <p class="text-sm text-blue-700">Total de Registros</p>
+                                <p id="data-usage-records" class="text-2xl font-bold text-blue-900">0</p>
+                            </div>
+                            <div class="bg-blue-50 p-4 rounded-lg">
+                                <p class="text-sm text-blue-700">Tamaño Estimado</p>
+                                <p id="data-usage-size" class="text-2xl font-bold text-blue-900">0 KB</p>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <button id="import-data-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">Importar Datos</button>
+                            <button id="export-data-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">Exportar Datos</button>
+                            <button id="export-discord-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">Exportación a Discord</button>
+                            <button id="delete-all-data-btn" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">Eliminar Todo</button>
+                            <input type="file" id="import-file-input" class="hidden" accept=".json">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <!-- Toast Notification -->
+        <div id="toast" class="fixed bottom-5 right-5 text-white py-2 px-4 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300"></div>
+
+    </div>
+
+    <!-- Modales -->
+    <div id="delete-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden z-50"><div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm mx-4 border border-gray-200"><h3 class="text-lg font-bold text-gray-900 mb-4">Confirmar Eliminación</h3><p class="text-gray-600 mb-6">¿Estás seguro de que quieres eliminar esta operación? Esta acción no se puede deshacer.</p><div class="flex justify-end space-x-4"><button id="cancel-delete-btn" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-lg transition-colors">Cancelar</button><button id="confirm-delete-btn" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors">Eliminar</button></div></div></div>
+    <div id="edit-asset-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden z-50"><div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm mx-4 border border-gray-200"><h3 class="text-lg font-bold text-gray-900 mb-4">Editar Activo</h3><form id="edit-asset-form"><input type="text" id="edit-asset-input" required class="block w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm text-gray-900 p-2 mb-6"><div class="flex justify-end space-x-4"><button type="button" id="cancel-edit-asset-btn" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-lg">Cancelar</button><button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg">Guardar</button></div></form></div></div>
+    <div id="delete-asset-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden z-50"><div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm mx-4 border border-gray-200"><h3 class="text-lg font-bold text-gray-900 mb-4">Confirmar Eliminación de Activo</h3><p class="text-gray-600 mb-6">¿Seguro que quieres eliminar este activo?</p><div class="flex justify-end space-x-4"><button id="cancel-delete-asset-btn" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-lg">Cancelar</button><button id="confirm-delete-asset-btn" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg">Eliminar</button></div></div></div>
+    <div id="edit-strategy-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden z-50"><div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm mx-4 border border-gray-200"><h3 class="text-lg font-bold text-gray-900 mb-4">Editar Estrategia</h3><form id="edit-strategy-form"><input type="text" id="edit-strategy-input" required class="block w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm text-gray-900 p-2 mb-6"><div class="flex justify-end space-x-4"><button type="button" id="cancel-edit-strategy-btn" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-lg">Cancelar</button><button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg">Guardar</button></div></form></div></div>
+    <div id="delete-strategy-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden z-50"><div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm mx-4 border border-gray-200"><h3 class="text-lg font-bold text-gray-900 mb-4">Confirmar Eliminación de Estrategia</h3><p class="text-gray-600 mb-6">¿Seguro que quieres eliminar esta estrategia?</p><div class="flex justify-end space-x-4"><button id="cancel-delete-strategy-btn" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-lg">Cancelar</button><button id="confirm-delete-strategy-btn" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg">Eliminar</button></div></div></div>
+    <div id="import-data-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden z-50"><div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm mx-4 border border-gray-200"><h3 class="text-lg font-bold text-gray-900 mb-4">Confirmar Importación</h3><p class="text-gray-600 mb-6">Esto reemplazará todos los datos actuales. ¿Estás seguro?</p><div class="flex justify-end space-x-4"><button id="cancel-import-btn" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-lg">Cancelar</button><button id="confirm-import-btn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg">Importar</button></div></div></div>
+    <div id="delete-all-data-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden z-50"><div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm mx-4 border border-gray-200"><h3 class="text-lg font-bold text-gray-900 mb-4">¡Atención!</h3><p class="text-gray-600 mb-6">Estás a punto de borrar TODOS los datos. Esta acción es irreversible. ¿Deseas continuar?</p><div class="flex justify-end space-x-4"><button id="cancel-delete-all-btn" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-lg">Cancelar</button><button id="confirm-delete-all-btn" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg">Borrar Todo</button></div></div></div>
+    <div id="export-data-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden z-50"><div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-4 flex flex-col border border-gray-200"><h3 class="text-lg font-bold text-gray-900 mb-4">Exportar Datos</h3><p class="text-gray-600 mb-4 text-sm">Usa el botón "Descargar" para guardar el archivo. Si falla, usa "Copiar" y pega el contenido en un archivo de texto nuevo guardado como `.json`.</p><button id="download-json-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg mb-4">Descargar Archivo</button><div class="relative"><textarea id="export-json-textarea" readonly class="w-full h-40 bg-gray-100 text-gray-800 text-xs p-2 rounded-md border border-gray-300 font-mono"></textarea><button id="copy-json-btn" class="absolute top-2 right-2 bg-gray-200 hover:bg-gray-300 text-gray-800 text-xs font-bold py-1 px-2 rounded">Copiar</button></div><button id="close-export-modal-btn" class="mt-4 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-lg self-center">Cerrar</button></div></div>
+    <div id="import-options-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden z-50"><div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-4 flex flex-col border border-gray-200"><h3 class="text-lg font-bold text-gray-900 mb-4">Importar Datos</h3><p class="text-gray-600 mb-4 text-sm">Elige un método para importar. Esto reemplazará todos los datos actuales.</p><button id="trigger-file-import-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg mb-4">Cargar Archivo (.json)</button><div class="relative"><label for="import-json-textarea" class="block text-sm font-medium text-gray-600 mb-2">O pega el contenido de tu archivo .json aquí:</label><textarea id="import-json-textarea" class="w-full h-40 bg-gray-100 text-gray-800 text-xs p-2 rounded-md border border-gray-300 font-mono" placeholder="Pega el contenido JSON aquí..."></textarea></div><button id="import-from-text-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg mt-4">Importar desde Texto</button><button id="close-import-options-modal-btn" class="mt-4 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-lg self-center">Cerrar</button></div></div>
+    
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- CONSTANTES Y ESTADO ---
+        const PROFIT_RATE = 0.85;
+        const LOSS_RATE = -1.00;
+        const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1422270357695627378/aVoXvmBfL-OD92_R7ZEDJ9hFusdyaMLpZvBA3UiBb6IbTlAo7zzStlKhRh62OpUJ0sir';
+
+        const ACCOUNT_STORAGE_KEY = 'btMultiAccountState_v1';
+        const DEFAULT_ACCOUNT_NAME = 'Cuenta Predeterminada';
+
+        const createId = () => Date.now().toString(36) + Math.random().toString(36).substr(2);
+        const createEmptyCollections = () => ({ trades: [], assets: [], strategies: [] });
+
+        const getDefaultAccountMeta = (state) => {
+            if (!state || !Array.isArray(state.accounts) || state.accounts.length === 0) return null;
+            return state.accounts.find(account => account.locked) || state.accounts[0];
+        };
+
+        const createDefaultAccountState = (legacyData = null) => {
+            const defaultAccountId = createId();
+            const collections = createEmptyCollections();
+            if (legacyData) {
+                collections.trades = legacyData.trades || [];
+                collections.assets = legacyData.assets || [];
+                collections.strategies = legacyData.strategies || [];
+            }
+            return {
+                accounts: [{ id: defaultAccountId, name: DEFAULT_ACCOUNT_NAME, locked: true, createdAt: Date.now() }],
+                activeAccountId: defaultAccountId,
+                data: { [defaultAccountId]: collections }
+            };
+        };
+
+        const loadAccountState = () => {
+            const stored = localStorage.getItem(ACCOUNT_STORAGE_KEY);
+            if (stored) {
+                try {
+                    const parsed = JSON.parse(stored);
+                    if (parsed && Array.isArray(parsed.accounts) && parsed.accounts.length > 0 && parsed.data) {
+                        parsed.accounts.forEach(account => {
+                            if (!parsed.data[account.id]) {
+                                parsed.data[account.id] = createEmptyCollections();
+                            } else {
+                                parsed.data[account.id].trades = parsed.data[account.id].trades || [];
+                                parsed.data[account.id].assets = parsed.data[account.id].assets || [];
+                                parsed.data[account.id].strategies = parsed.data[account.id].strategies || [];
+                            }
+                        });
+                        if (!parsed.activeAccountId || !parsed.data[parsed.activeAccountId]) {
+                            parsed.activeAccountId = parsed.accounts[0].id;
+                        }
+                        return parsed;
+                    }
+                } catch (error) {
+                    console.warn('No se pudo analizar el estado de cuentas, se inicializará nuevamente.', error);
+                }
+            }
+
+            const legacyData = {
+                trades: JSON.parse(localStorage.getItem('trades') || '[]'),
+                assets: JSON.parse(localStorage.getItem('assets') || '[]'),
+                strategies: JSON.parse(localStorage.getItem('strategies') || '[]')
+            };
+            const hasLegacy = legacyData.trades.length > 0 || legacyData.assets.length > 0 || legacyData.strategies.length > 0;
+            const defaultState = createDefaultAccountState(hasLegacy ? legacyData : null);
+            if (hasLegacy) {
+                ['trades', 'assets', 'strategies'].forEach(key => localStorage.removeItem(key));
+            }
+            localStorage.setItem(ACCOUNT_STORAGE_KEY, JSON.stringify(defaultState));
+            return defaultState;
+        };
+
+        let accountState = loadAccountState();
+        const defaultAccountMeta = getDefaultAccountMeta(accountState);
+        let currentAccountId = defaultAccountMeta ? defaultAccountMeta.id : null;
+
+        if (currentAccountId && !accountState.data[currentAccountId]) {
+            accountState.data[currentAccountId] = createEmptyCollections();
+        }
+
+        accountState.activeAccountId = currentAccountId;
+
+        let trades = currentAccountId ? accountState.data[currentAccountId].trades || [] : [];
+        let strategies = currentAccountId ? accountState.data[currentAccountId].strategies || [] : [];
+        let assets = currentAccountId ? accountState.data[currentAccountId].assets || [] : [];
+
+        const saveAccountState = () => localStorage.setItem(ACCOUNT_STORAGE_KEY, JSON.stringify(accountState));
+
+        if (currentAccountId) {
+            saveAccountState();
+        }
+
+        const cloneTrade = (trade) => ({
+            ...trade,
+            expiracion: trade && typeof trade.expiracion === 'object'
+                ? { dias: trade.expiracion.dias || 0, horas: trade.expiracion.horas || 0, minutos: trade.expiracion.minutos || 0, segundos: trade.expiracion.segundos || 0 }
+                : { dias: 0, horas: 0, minutos: 0, segundos: 0 }
+        });
+        const cloneSimpleItem = (item) => ({ ...item });
+
+        const persistCurrentAccount = () => {
+            if (!currentAccountId) return;
+            accountState.data[currentAccountId] = {
+                trades: (trades || []).map(cloneTrade),
+                assets: (assets || []).map(cloneSimpleItem),
+                strategies: (strategies || []).map(cloneSimpleItem)
+            };
+            saveAccountState();
+            ensureAccountDataStructure(currentAccountId);
+        };
+
+        const getAccountById = (accountId) => accountState.accounts.find(account => account.id === accountId);
+
+        const setCurrentAccountToDefault = () => {
+            const defaultMeta = getDefaultAccountMeta(accountState);
+            if (!defaultMeta) return;
+            currentAccountId = defaultMeta.id;
+            accountState.activeAccountId = currentAccountId;
+            ensureAccountDataStructure(currentAccountId);
+            saveAccountState();
+        };
+
+        const ensureAccountDataStructure = (accountId) => {
+            if (!accountState.data[accountId]) {
+                accountState.data[accountId] = createEmptyCollections();
+            } else {
+                accountState.data[accountId].trades = accountState.data[accountId].trades || [];
+                accountState.data[accountId].assets = accountState.data[accountId].assets || [];
+                accountState.data[accountId].strategies = accountState.data[accountId].strategies || [];
+            }
+            trades = accountState.data[accountId].trades;
+            assets = accountState.data[accountId].assets;
+            strategies = accountState.data[accountId].strategies;
+        };
+
+        const renderAccountSection = () => {
+            if (!accountSelect) return;
+            accountSelect.innerHTML = accountState.accounts
+                .map(account => `<option value="${account.id}">${account.name}</option>`)
+                .join('');
+            accountSelect.value = currentAccountId;
+
+            if (deleteAccountBtn) {
+                const currentAccount = getAccountById(currentAccountId);
+                const isLocked = currentAccount && currentAccount.locked;
+                const cannotDelete = isLocked || accountState.accounts.length <= 1;
+                deleteAccountBtn.disabled = cannotDelete;
+                if (accountLockInfo) {
+                    accountLockInfo.textContent = isLocked
+                        ? 'Esta es la cuenta predeterminada y no puede editarse ni eliminarse.'
+                        : 'Puedes eliminar esta cuenta si ya no la necesitas. Se eliminarán sus datos asociados.';
+                }
+            }
+        };
+
+        const handleAccountChange = () => {
+            const selectedId = accountSelect.value;
+            if (!selectedId || selectedId === currentAccountId) {
+                renderAccountSection();
+                return;
+            }
+
+            persistCurrentAccount();
+            currentAccountId = selectedId;
+            accountState.activeAccountId = currentAccountId;
+            ensureAccountDataStructure(currentAccountId);
+            migrateData();
+            cancelEditMode();
+            fullRefreshUI();
+            const meta = getAccountById(currentAccountId);
+            const accountName = meta && meta.name ? meta.name : 'Sin nombre';
+            showToast(`Cuenta "${accountName}" cargada.`);
+        };
+
+        const handleAddAccount = (e) => {
+            e.preventDefault();
+            const name = newAccountInput.value.trim();
+            if (!name) {
+                showToast('Ingresa un nombre válido para la cuenta.', true);
+                return;
+            }
+            if (accountState.accounts.some(account => account.name.toLowerCase() === name.toLowerCase())) {
+                showToast('Ya existe una cuenta con ese nombre.', true);
+                return;
+            }
+
+            persistCurrentAccount();
+
+            const newAccountId = createId();
+            accountState.accounts.push({ id: newAccountId, name, locked: false, createdAt: Date.now() });
+            accountState.data[newAccountId] = createEmptyCollections();
+            saveAccountState();
+
+            if (addAccountForm) addAccountForm.reset();
+            cancelEditMode();
+            fullRefreshUI();
+            showToast(`Cuenta "${name}" creada. Selecciónala desde Ajustes para usarla.`);
+        };
+
+        const handleDeleteAccount = () => {
+            const account = getAccountById(currentAccountId);
+            if (!account) return;
+            if (account.locked || accountState.accounts.length <= 1) {
+                showToast('La cuenta predeterminada no puede eliminarse.', true);
+                return;
+            }
+
+            if (!window.confirm(`Se eliminará la cuenta "${account.name}" y todos sus datos asociados. ¿Deseas continuar?`)) {
+                return;
+            }
+
+            persistCurrentAccount();
+
+            accountState.accounts = accountState.accounts.filter(item => item.id !== currentAccountId);
+            delete accountState.data[currentAccountId];
+
+            setCurrentAccountToDefault();
+
+            cancelEditMode();
+            fullRefreshUI();
+            showToast(`Cuenta "${account.name}" eliminada.`, true);
+        };
+
+        const isValidSingleAccountPayload = (payload) => payload && Array.isArray(payload.trades) && Array.isArray(payload.assets) && Array.isArray(payload.strategies);
+
+        const isValidMultiAccountPayload = (payload) => payload && Array.isArray(payload.accounts) && payload.accounts.length > 0 && typeof payload.data === 'object';
+
+        const normalizeImportedState = (rawState) => {
+            if (!isValidMultiAccountPayload(rawState)) {
+                return createDefaultAccountState();
+            }
+
+            const normalized = {
+                accounts: [],
+                activeAccountId: rawState.activeAccountId,
+                data: {}
+            };
+
+            rawState.accounts.forEach((account, index) => {
+                const id = account.id || createId();
+                const name = account.name || `Cuenta ${index + 1}`;
+                const locked = index === 0 ? true : !!account.locked;
+                normalized.accounts.push({ id, name, locked, createdAt: account.createdAt || Date.now() });
+
+                const rawData = rawState.data || {};
+                const sourceData = rawData[account.id] || rawData[id] || createEmptyCollections();
+                normalized.data[id] = {
+                    trades: Array.isArray(sourceData.trades) ? sourceData.trades.map(cloneTrade) : [],
+                    assets: Array.isArray(sourceData.assets) ? sourceData.assets.map(cloneSimpleItem) : [],
+                    strategies: Array.isArray(sourceData.strategies) ? sourceData.strategies.map(cloneSimpleItem) : []
+                };
+            });
+
+            if (!normalized.accounts.some(account => account.locked)) {
+                normalized.accounts[0].locked = true;
+            }
+
+            if (!normalized.activeAccountId || !normalized.data[normalized.activeAccountId]) {
+                normalized.activeAccountId = normalized.accounts[0].id;
+            }
+
+            return normalized;
+        };
+
+        const buildExportableState = () => {
+            persistCurrentAccount();
+            return {
+                version: 'bt-multi-account-v1',
+                exportedAt: new Date().toISOString(),
+                accounts: accountState.accounts.map(account => ({ ...account })),
+                activeAccountId: accountState.activeAccountId,
+                data: Object.fromEntries(accountState.accounts.map(account => {
+                    const accountData = accountState.data[account.id] || createEmptyCollections();
+                    return [
+                        account.id,
+                        {
+                            trades: (accountData.trades || []).map(cloneTrade),
+                            assets: (accountData.assets || []).map(cloneSimpleItem),
+                            strategies: (accountData.strategies || []).map(cloneSimpleItem)
+                        }
+                    ];
+                }))
+            };
+        };
+
+        const prepareSingleAccountPayload = (payload) => ({
+            trades: (payload.trades || []).map(cloneTrade),
+            assets: (payload.assets || []).map(cloneSimpleItem),
+            strategies: (payload.strategies || []).map(cloneSimpleItem)
+        });
+
+        const parseImportPayload = (raw) => {
+            if (raw && raw.version === 'bt-multi-account-v1' && raw.accounts && raw.data) {
+                return { type: 'multi', state: normalizeImportedState(raw) };
+            }
+            if (isValidMultiAccountPayload(raw)) {
+                return { type: 'multi', state: normalizeImportedState(raw) };
+            }
+            if (isValidSingleAccountPayload(raw)) {
+                return { type: 'single', state: prepareSingleAccountPayload(raw) };
+            }
+            if (raw && raw.state && isValidMultiAccountPayload(raw.state)) {
+                return { type: 'multi', state: normalizeImportedState(raw.state) };
+            }
+            if (raw && raw.state && isValidSingleAccountPayload(raw.state)) {
+                return { type: 'single', state: prepareSingleAccountPayload(raw.state) };
+            }
+            return null;
+        };
+
+        let editingTradeId = null;
+        let tradeIdToDelete = null;
+        let editingStrategyId = null;
+        let strategyIdToDelete = null;
+        let editingAssetId = null;
+        let assetIdToDelete = null;
+        let dataToImport = null;
+
+        // --- REFERENCIAS AL DOM ---
+        const tabs = { registro: document.getElementById('tab-registro'), estadisticas: document.getElementById('tab-estadisticas'), ajustes: document.getElementById('tab-ajustes') };
+        const contents = { registro: document.getElementById('content-registro'), estadisticas: document.getElementById('content-estadisticas'), ajustes: document.getElementById('content-ajustes') };
+        const tradeForm = document.getElementById('trade-form');
+        const fechaInput = document.getElementById('fecha');
+        const activoSelect = document.getElementById('activo');
+        const assetWarning = document.getElementById('asset-warning');
+        const goToSettingsLink = document.getElementById('go-to-settings');
+        const estrategiaSelect = document.getElementById('estrategia');
+        const tradesCardContainer = document.getElementById('trades-card-container');
+        const toast = document.getElementById('toast');
+        const cancelEditBtn = document.getElementById('cancel-edit-btn');
+        const avgTradesPeriodSelect = document.getElementById('avg-trades-period');
+        const totalStorageUsedEl = document.getElementById('total-storage-used');
+        const storageBreakdownEl = document.getElementById('storage-breakdown');
+        const accountsCountEl = document.getElementById('accounts-count');
+        const storageListEl = document.getElementById('storage-list');
+        const accountSelect = document.getElementById('account-select');
+        const addAccountForm = document.getElementById('add-account-form');
+        const newAccountInput = document.getElementById('new-account-input');
+        const deleteAccountBtn = document.getElementById('delete-account-btn');
+        const accountLockInfo = document.getElementById('account-lock-info');
+
+        const deleteModal = document.getElementById('delete-modal');
+        const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
+        const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
+        const addStrategyForm = document.getElementById('add-strategy-form');
+        const newStrategyInput = document.getElementById('new-strategy-input');
+        const strategyList = document.getElementById('strategy-list');
+        const editStrategyModal = document.getElementById('edit-strategy-modal');
+        const editStrategyForm = document.getElementById('edit-strategy-form');
+        const editStrategyInput = document.getElementById('edit-strategy-input');
+        const cancelEditStrategyBtn = document.getElementById('cancel-edit-strategy-btn');
+        const deleteStrategyModal = document.getElementById('delete-strategy-modal');
+        const confirmDeleteStrategyBtn = document.getElementById('confirm-delete-strategy-btn');
+        const cancelDeleteStrategyBtn = document.getElementById('cancel-delete-strategy-btn');
+        const addAssetForm = document.getElementById('add-asset-form');
+        const newAssetInput = document.getElementById('new-asset-input');
+        const assetList = document.getElementById('asset-list');
+        const editAssetModal = document.getElementById('edit-asset-modal');
+        const editAssetForm = document.getElementById('edit-asset-form');
+        const editAssetInput = document.getElementById('edit-asset-input');
+        const cancelEditAssetBtn = document.getElementById('cancel-edit-asset-btn');
+        const deleteAssetModal = document.getElementById('delete-asset-modal');
+        const confirmDeleteAssetBtn = document.getElementById('confirm-delete-asset-btn');
+        const cancelDeleteAssetBtn = document.getElementById('cancel-delete-asset-btn');
+        const importDataBtn = document.getElementById('import-data-btn');
+        const exportDataBtn = document.getElementById('export-data-btn');
+        const deleteAllDataBtn = document.getElementById('delete-all-data-btn');
+        const exportDiscordBtn = document.getElementById('export-discord-btn');
+        const importFileInput = document.getElementById('import-file-input');
+        const importDataModal = document.getElementById('import-data-modal');
+        const confirmImportBtn = document.getElementById('confirm-import-btn');
+        const cancelImportBtn = document.getElementById('cancel-import-btn');
+        const deleteAllDataModal = document.getElementById('delete-all-data-modal');
+        const confirmDeleteAllBtn = document.getElementById('confirm-delete-all-btn');
+        const cancelDeleteAllBtn = document.getElementById('cancel-delete-all-btn');
+        const exportDataModal = document.getElementById('export-data-modal');
+        const downloadJsonBtn = document.getElementById('download-json-btn');
+        const copyJsonBtn = document.getElementById('copy-json-btn');
+        const exportJsonTextarea = document.getElementById('export-json-textarea');
+        const closeExportModalBtn = document.getElementById('close-export-modal-btn');
+        const importOptionsModal = document.getElementById('import-options-modal');
+        const triggerFileImportBtn = document.getElementById('trigger-file-import-btn');
+        const importJsonTextarea = document.getElementById('import-json-textarea');
+        const importFromTextBtn = document.getElementById('import-from-text-btn');
+        const closeImportOptionsModalBtn = document.getElementById('close-import-options-modal-btn');
+        const chartSvgContainer = document.getElementById('chart-svg-container');
+        const chartLabelMax = document.getElementById('chart-label-max');
+        const chartLabelZero = document.getElementById('chart-label-zero');
+        const chartLabelMin = document.getElementById('chart-label-min');
+        const chartPlaceholder = document.getElementById('chart-placeholder');
+
+
+        // --- INICIALIZACIÓN ---
+        const init = () => {
+            migrateData();
+            fechaInput.value = getCurrentDateTimeLocalString();
+            fullRefreshUI();
+            setupEventListeners();
+        };
+        
+        const migrateData = () => {
+            let dataWasMigrated = false;
+            if (strategies.length > 0 && typeof strategies[0] === 'string') {
+                strategies = strategies.map(name => ({ id: createId(), name }));
+                dataWasMigrated = true;
+            }
+            if (assets.length > 0 && typeof assets[0] === 'string') {
+                assets = assets.map(name => ({ id: createId(), name }));
+                dataWasMigrated = true;
+            }
+            trades.forEach(trade => {
+                if (!trade.createdAt) {
+                    trade.createdAt = new Date(trade.fecha).getTime();
+                    dataWasMigrated = true;
+                }
+            });
+
+            if (dataWasMigrated) {
+                persistCurrentAccount();
+            }
+        };
+
+        // --- MANEJO DE EVENTOS ---
+        const setupEventListeners = () => {
+            Object.keys(tabs).forEach(key => tabs[key].addEventListener('click', () => switchTab(key)));
+            goToSettingsLink.addEventListener('click', (e) => { e.preventDefault(); switchTab('ajustes'); });
+            
+            tradeForm.addEventListener('submit', handleFormSubmit);
+            cancelEditBtn.addEventListener('click', cancelEditMode);
+            tradesCardContainer.addEventListener('click', handleTradesTableActions);
+            confirmDeleteBtn.addEventListener('click', confirmDeleteTrade);
+            cancelDeleteBtn.addEventListener('click', () => toggleModal('delete-modal', false));
+
+            if (accountSelect) accountSelect.addEventListener('change', handleAccountChange);
+            if (addAccountForm) addAccountForm.addEventListener('submit', handleAddAccount);
+            if (deleteAccountBtn) deleteAccountBtn.addEventListener('click', handleDeleteAccount);
+
+            avgTradesPeriodSelect.addEventListener('change', updateAverageTradesStat);
+
+            addStrategyForm.addEventListener('submit', handleAddStrategy);
+            strategyList.addEventListener('click', handleStrategyListActions);
+            editStrategyForm.addEventListener('submit', handleUpdateStrategy);
+            cancelEditStrategyBtn.addEventListener('click', () => toggleModal('edit-strategy-modal', false));
+            confirmDeleteStrategyBtn.addEventListener('click', confirmDeleteStrategy);
+            cancelDeleteStrategyBtn.addEventListener('click', () => toggleModal('delete-strategy-modal', false));
+
+            addAssetForm.addEventListener('submit', handleAddAsset);
+            assetList.addEventListener('click', handleAssetListActions);
+            editAssetForm.addEventListener('submit', handleUpdateAsset);
+            cancelEditAssetBtn.addEventListener('click', () => toggleModal('edit-asset-modal', false));
+            confirmDeleteAssetBtn.addEventListener('click', confirmDeleteAsset);
+            cancelDeleteAssetBtn.addEventListener('click', () => toggleModal('delete-asset-modal', false));
+            
+            exportDataBtn.addEventListener('click', handleExportData);
+            downloadJsonBtn.addEventListener('click', handleDownloadJson);
+            copyJsonBtn.addEventListener('click', handleCopyJson);
+            closeExportModalBtn.addEventListener('click', () => toggleModal('export-data-modal', false));
+            
+            importDataBtn.addEventListener('click', () => toggleModal('import-options-modal', true));
+            triggerFileImportBtn.addEventListener('click', () => importFileInput.click());
+            importFileInput.addEventListener('change', handleFileImport);
+            importFromTextBtn.addEventListener('click', handleTextImport);
+            closeImportOptionsModalBtn.addEventListener('click', () => toggleModal('import-options-modal', false));
+
+            confirmImportBtn.addEventListener('click', confirmImportData);
+            cancelImportBtn.addEventListener('click', () => toggleModal('import-data-modal', false));
+            
+            deleteAllDataBtn.addEventListener('click', () => toggleModal('delete-all-data-modal', true));
+            if (exportDiscordBtn) exportDiscordBtn.addEventListener('click', handleExportToDiscord);
+            confirmDeleteAllBtn.addEventListener('click', confirmDeleteAllData);
+            cancelDeleteAllBtn.addEventListener('click', () => toggleModal('delete-all-data-modal', false));
+        };
+
+        // --- LÓGICA DE OPERACIONES (TRADES) ---
+        const handleFormSubmit = (e) => {
+            e.preventDefault();
+            const formData = new FormData(tradeForm);
+            const monto = parseFloat(formData.get('monto'));
+            const resultado = formData.get('resultado');
+            
+            let pnl = 0;
+            if (resultado === 'Éxito') pnl = monto * PROFIT_RATE;
+            else if (resultado === 'Fracaso') pnl = monto * LOSS_RATE;
+
+            const expiracion = {
+                dias: parseInt(formData.get('expiracion_dias')) || 0,
+                horas: parseInt(formData.get('expiracion_horas')) || 0,
+                minutos: parseInt(formData.get('expiracion_minutos')) || 0,
+                segundos: parseInt(formData.get('expiracion_segundos')) || 0,
+            };
+            const tradeData = {
+                fecha: formData.get('fecha'), activo: formData.get('activo'), monto, tipo: formData.get('tipo'), expiracion,
+                estrategia: formData.get('estrategia') || '', resultado, pnl, notas: formData.get('notas')
+            };
+
+            if (editingTradeId) {
+                const tradeIndex = trades.findIndex(trade => trade.id === editingTradeId);
+                if (tradeIndex > -1) {
+                    const originalTrade = trades[tradeIndex];
+                    trades[tradeIndex] = { ...originalTrade, ...tradeData };
+                }
+                showToast('Operación actualizada con éxito.');
+                cancelEditMode();
+            } else {
+                trades.push({ id: createId(), createdAt: Date.now(), ...tradeData });
+                showToast('Operación registrada con éxito.');
+                tradeForm.reset();
+                fechaInput.value = getCurrentDateTimeLocalString();
+            }
+            persistCurrentAccount();
+            fullRefreshUI();
+        };
+        
+        const handleTradesTableActions = (e) => {
+            const button = e.target.closest('button');
+            if (!button) return;
+            const id = button.dataset.id;
+            if (button.classList.contains('edit-btn')) handleEditTrade(id);
+            if (button.classList.contains('delete-btn')) {
+                tradeIdToDelete = id;
+                toggleModal('delete-modal', true);
+            }
+        };
+
+        const handleEditTrade = (id) => {
+            const tradeToEdit = trades.find(trade => trade.id === id);
+            if (!tradeToEdit) return;
+            editingTradeId = id;
+
+            tradeForm.fecha.value = tradeToEdit.fecha;
+            tradeForm.activo.value = tradeToEdit.activo;
+            tradeForm.monto.value = tradeToEdit.monto;
+            tradeForm.tipo.value = tradeToEdit.tipo;
+            
+            const exp = tradeToEdit.expiracion || {};
+            tradeForm.expiracion_dias.value = exp.dias || '';
+            tradeForm.expiracion_horas.value = exp.horas || '';
+            tradeForm.expiracion_minutos.value = exp.minutos || '';
+            tradeForm.expiracion_segundos.value = exp.segundos || '';
+
+            tradeForm.estrategia.value = tradeToEdit.estrategia;
+            tradeForm.notas.value = tradeToEdit.notas;
+            tradeForm.querySelector(`input[name="resultado"][value="${tradeToEdit.resultado}"]`).checked = true;
+
+            tradeForm.querySelector('button[type="submit"]').textContent = 'Actualizar Operación';
+            cancelEditBtn.classList.remove('hidden');
+            tradeForm.scrollIntoView({ behavior: 'smooth' });
+        };
+
+        const cancelEditMode = () => {
+            editingTradeId = null;
+            tradeForm.reset();
+            fechaInput.value = getCurrentDateTimeLocalString();
+            tradeForm.querySelector('button[type="submit"]').textContent = 'Registrar Operación';
+            cancelEditBtn.classList.add('hidden');
+        };
+
+        const confirmDeleteTrade = () => {
+            if (tradeIdToDelete) {
+                trades = trades.filter(trade => trade.id !== tradeIdToDelete);
+                persistCurrentAccount();
+                fullRefreshUI();
+                showToast('Operación eliminada.', true);
+                toggleModal('delete-modal', false);
+                tradeIdToDelete = null;
+            }
+        };
+
+        // --- LÓGICA DE GESTIÓN (ACTIVOS Y ESTRATEGIAS) ---
+        
+        const handleAddAsset = (e) => {
+            e.preventDefault();
+            const name = newAssetInput.value.trim();
+            if (name && !assets.some(item => item.name.toLowerCase() === name.toLowerCase())) {
+                assets.push({ id: createId(), name });
+                persistCurrentAccount();
+                fullRefreshUI();
+                newAssetInput.value = '';
+                showToast('Activo añadido.');
+            } else {
+                showToast('Ese activo ya existe o el nombre es inválido.', true);
+            }
+        };
+        
+        const handleAddStrategy = (e) => {
+            e.preventDefault();
+            const name = newStrategyInput.value.trim();
+            if (name && !strategies.some(item => item.name.toLowerCase() === name.toLowerCase())) {
+                strategies.push({ id: createId(), name });
+                persistCurrentAccount();
+                fullRefreshUI();
+                newStrategyInput.value = '';
+                showToast('Estrategia añadida.');
+            } else {
+                showToast('Esa estrategia ya existe o el nombre es inválido.', true);
+            }
+        };
+        
+        const handleAssetListActions = (e) => {
+            const button = e.target.closest('button');
+            if (!button) return;
+            const id = button.dataset.id;
+            if (button.classList.contains('edit-btn')) {
+                const item = assets.find(i => i.id === id);
+                if (item) {
+                    editingAssetId = id;
+                    editAssetInput.value = item.name;
+                    toggleModal('edit-asset-modal', true);
+                    editAssetInput.focus();
+                }
+            }
+            if (button.classList.contains('delete-btn')) {
+                assetIdToDelete = id;
+                toggleModal('delete-asset-modal', true);
+            }
+        };
+        
+        const handleStrategyListActions = (e) => {
+            const button = e.target.closest('button');
+            if (!button) return;
+            const id = button.dataset.id;
+            if (button.classList.contains('edit-btn')) {
+                const item = strategies.find(i => i.id === id);
+                if (item) {
+                    editingStrategyId = id;
+                    editStrategyInput.value = item.name;
+                    toggleModal('edit-strategy-modal', true);
+                    editStrategyInput.focus();
+                }
+            }
+            if (button.classList.contains('delete-btn')) {
+                strategyIdToDelete = id;
+                toggleModal('delete-strategy-modal', true);
+            }
+        };
+
+        const handleUpdateAsset = (e) => {
+            e.preventDefault();
+            const newName = editAssetInput.value.trim();
+            const isDuplicate = assets.some(item => item.name.toLowerCase() === newName.toLowerCase() && item.id !== editingAssetId);
+            if (newName && !isDuplicate) {
+                const itemIndex = assets.findIndex(item => item.id === editingAssetId);
+                if (itemIndex > -1) assets[itemIndex].name = newName;
+                persistCurrentAccount();
+                fullRefreshUI();
+                showToast('Activo actualizado.');
+                toggleModal('edit-asset-modal', false);
+            } else {
+                showToast(isDuplicate ? 'Ese activo ya existe.' : 'El nombre no puede estar vacío.', true);
+            }
+        };
+        
+        const handleUpdateStrategy = (e) => {
+            e.preventDefault();
+            const newName = editStrategyInput.value.trim();
+            const isDuplicate = strategies.some(item => item.name.toLowerCase() === newName.toLowerCase() && item.id !== editingStrategyId);
+            if (newName && !isDuplicate) {
+                const itemIndex = strategies.findIndex(item => item.id === editingStrategyId);
+                if(itemIndex > -1) strategies[itemIndex].name = newName;
+                persistCurrentAccount();
+                fullRefreshUI();
+                showToast('Estrategia actualizada.');
+                toggleModal('edit-strategy-modal', false);
+            } else {
+                showToast(isDuplicate ? 'Esa estrategia ya existe.' : 'El nombre no puede estar vacío.', true);
+            }
+        };
+
+        const confirmDeleteAsset = () => {
+            if (assetIdToDelete) {
+                assets = assets.filter(item => item.id !== assetIdToDelete);
+                persistCurrentAccount();
+                fullRefreshUI();
+                showToast('Activo eliminado.', true);
+                toggleModal('delete-asset-modal', false);
+                assetIdToDelete = null;
+            }
+        };
+
+        const confirmDeleteStrategy = () => {
+            if (strategyIdToDelete) {
+                strategies = strategies.filter(item => item.id !== strategyIdToDelete);
+                persistCurrentAccount();
+                fullRefreshUI();
+                showToast('Estrategia eliminada.', true);
+                toggleModal('delete-strategy-modal', false);
+                strategyIdToDelete = null;
+            }
+        };
+        
+        // --- GESTIÓN DE DATOS ---
+        
+        const handleExportData = () => {
+            const exportState = buildExportableState();
+            const dataStr = JSON.stringify(exportState, null, 2);
+            exportJsonTextarea.value = dataStr;
+            toggleModal('export-data-modal', true);
+        };
+
+        const buildDiscordEmbed = (exportState) => {
+            const totalAccounts = Array.isArray(exportState.accounts) ? exportState.accounts.length : 0;
+            const totalTrades = Object.values(exportState.data || {}).reduce((sum, accountData) => sum + (Array.isArray(accountData.trades) ? accountData.trades.length : 0), 0);
+            const totalAssets = Object.values(exportState.data || {}).reduce((sum, accountData) => sum + (Array.isArray(accountData.assets) ? accountData.assets.length : 0), 0);
+            const totalStrategies = Object.values(exportState.data || {}).reduce((sum, accountData) => sum + (Array.isArray(accountData.strategies) ? accountData.strategies.length : 0), 0);
+
+            const activeAccount = exportState.accounts?.find(account => account.id === exportState.activeAccountId);
+
+            return {
+                title: 'Bitácora FTT exportada',
+                description: 'Exportación enviada desde la aplicación Bitácora FTT.',
+                color: 0x4f46e5,
+                timestamp: new Date().toISOString(),
+                fields: [
+                    {
+                        name: 'Cuentas totales',
+                        value: `${totalAccounts}`,
+                        inline: true
+                    },
+                    {
+                        name: 'Operaciones registradas',
+                        value: `${totalTrades}`,
+                        inline: true
+                    },
+                    {
+                        name: 'Activo actual',
+                        value: activeAccount ? activeAccount.name : 'No definido',
+                        inline: true
+                    },
+                    {
+                        name: 'Activos configurados',
+                        value: `${totalAssets}`,
+                        inline: true
+                    },
+                    {
+                        name: 'Estrategias configuradas',
+                        value: `${totalStrategies}`,
+                        inline: true
+                    }
+                ]
+            };
+        };
+
+        const handleExportToDiscord = async () => {
+            if (!DISCORD_WEBHOOK_URL) {
+                showToast('No se ha configurado el webhook de Discord.', true);
+                return;
+            }
+
+            const exportState = buildExportableState();
+            const dataStr = JSON.stringify(exportState, null, 2);
+
+            const embed = buildDiscordEmbed(exportState);
+            const payload = {
+                username: 'Bitácora FTT',
+                embeds: [embed]
+            };
+
+            const formData = new FormData();
+            const filename = `bitacora_ftt_export_${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            formData.append('payload_json', JSON.stringify(payload));
+            formData.append('files[0]', blob, filename);
+
+            if (exportDiscordBtn) {
+                exportDiscordBtn.disabled = true;
+                exportDiscordBtn.classList.add('opacity-70');
+            }
+
+            try {
+                const response = await fetch(DISCORD_WEBHOOK_URL, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Error HTTP ${response.status}`);
+                }
+
+                showToast('Exportación enviada a Discord.');
+            } catch (error) {
+                console.error('Error enviando exportación a Discord:', error);
+                showToast('No se pudo enviar la exportación a Discord.', true);
+            } finally {
+                if (exportDiscordBtn) {
+                    exportDiscordBtn.disabled = false;
+                    exportDiscordBtn.classList.remove('opacity-70');
+                }
+            }
+        };
+        
+        const handleDownloadJson = () => {
+            const exportState = buildExportableState();
+            const dataStr = JSON.stringify(exportState, null, 2);
+            exportJsonTextarea.value = dataStr;
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const date = new Date().toISOString().slice(0, 10);
+            a.href = url;
+            a.download = `bitacora_ftt_backup_${date}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast("Descarga iniciada.");
+        };
+
+        const handleCopyJson = () => {
+            const exportState = buildExportableState();
+            const dataStr = JSON.stringify(exportState, null, 2);
+            exportJsonTextarea.value = dataStr;
+            exportJsonTextarea.select();
+            exportJsonTextarea.setSelectionRange(0, 99999);
+            document.execCommand('copy');
+            showToast("¡Copiado al portapapeles!");
+            window.getSelection().removeAllRanges();
+        };
+
+        const handleFileImport = (event) => {
+            toggleModal('import-options-modal', false);
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const parsedData = JSON.parse(e.target.result);
+                    const payload = parseImportPayload(parsedData);
+                    if (!payload) throw new Error("El archivo no tiene el formato correcto.");
+                    dataToImport = payload;
+                    toggleModal('import-data-modal', true);
+                } catch (error) {
+                    showToast("Error: El archivo no es un JSON válido.", true);
+                }
+            };
+            reader.readAsText(file);
+            importFileInput.value = '';
+        };
+
+        const handleTextImport = () => {
+            const jsonString = importJsonTextarea.value.trim();
+            if (!jsonString) {
+                showToast("El campo de texto está vacío.", true);
+                return;
+            }
+            
+            try {
+                const parsedData = JSON.parse(jsonString);
+                const payload = parseImportPayload(parsedData);
+                if (!payload) throw new Error("El JSON no tiene el formato correcto.");
+                dataToImport = payload;
+                toggleModal('import-options-modal', false);
+                toggleModal('import-data-modal', true);
+                importJsonTextarea.value = '';
+            } catch (error) {
+                showToast("Error: El texto no es un JSON válido.", true);
+            }
+        };
+        
+        const confirmImportData = () => {
+            if (!dataToImport) return;
+
+            if (dataToImport.type === 'multi') {
+                accountState = dataToImport.state;
+                setCurrentAccountToDefault();
+                cancelEditMode();
+                fullRefreshUI();
+                showToast("Se importaron todas las cuentas correctamente.");
+            } else if (dataToImport.type === 'single') {
+                const payload = dataToImport.state;
+                trades = payload.trades;
+                assets = payload.assets;
+                strategies = payload.strategies;
+                persistCurrentAccount();
+                setCurrentAccountToDefault();
+                cancelEditMode();
+                fullRefreshUI();
+                showToast("Datos de la cuenta actual importados correctamente.");
+            }
+
+            dataToImport = null;
+            toggleModal('import-data-modal', false);
+        };
+        
+        const confirmDeleteAllData = () => {
+            trades = [];
+            assets = [];
+            strategies = [];
+            persistCurrentAccount();
+            fullRefreshUI();
+            showToast("Todos los datos han sido eliminados.", true);
+            toggleModal('delete-all-data-modal', false);
+        };
+
+        // --- FUNCIONES DE RENDERIZADO Y UTILIDADES ---
+
+        const fullRefreshUI = () => {
+            renderAccountSection();
+            populateAssetSelect();
+            populateStrategiesSelect();
+            renderAssetList();
+            renderStrategyList();
+            renderTradesHistory();
+            checkAssetsAndToggleForm();
+            updateAllStatistics();
+            updateDataUsageStats();
+            renderStorageSummary();
+        };
+
+        const checkAssetsAndToggleForm = () => {
+            const hasAssets = assets.length > 0;
+            const submitButton = tradeForm.querySelector('button[type="submit"]');
+            submitButton.disabled = !hasAssets;
+            assetWarning.classList.toggle('hidden', hasAssets);
+            activoSelect.classList.toggle('hidden', !hasAssets);
+        };
+        
+        const populateAssetSelect = () => populateSelect(activoSelect, assets.map(a => a.name));
+        const populateStrategiesSelect = () => populateSelect(estrategiaSelect, strategies.map(s => s.name), '-- Sin estrategia --');
+        
+        const populateSelect = (selectElement, options, defaultOptionText = null) => {
+            const currentValue = selectElement.value;
+            selectElement.innerHTML = '';
+            if(defaultOptionText) selectElement.innerHTML = `<option value="">${defaultOptionText}</option>`;
+            options.forEach(option => {
+                const opt = document.createElement('option');
+                opt.value = opt.textContent = option;
+                selectElement.appendChild(opt);
+            });
+            selectElement.value = currentValue;
+        };
+        
+        const renderAssetList = () => renderList(assetList, assets, 'Aún no has añadido ningún activo.');
+        const renderStrategyList = () => renderList(strategyList, strategies, 'Aún no has añadido ninguna estrategia.');
+
+        const renderList = (ulElement, collection, emptyMessage) => {
+            if (collection.length > 0) {
+                ulElement.innerHTML = collection.map(item => `
+                    <li class="flex items-center justify-between bg-white border border-gray-200 p-3 rounded-md shadow-sm">
+                        <span class="text-gray-900 font-medium">${item.name}</span>
+                        <div class="space-x-2">
+                            <button data-id="${item.id}" class="edit-btn text-gray-500 hover:text-blue-600 transition-colors">Editar</button>
+                            <button data-id="${item.id}" class="delete-btn text-gray-500 hover:text-red-600 transition-colors">Borrar</button>
+                        </div>
+                    </li>`).join('');
+            } else {
+                ulElement.innerHTML = `<p class="text-center text-gray-500">${emptyMessage}</p>`;
+            }
+        };
+        
+        const formatDateForHeader = (dateString) => {
+            const getLocalDateKey = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+            const today = getLocalDateKey(new Date());
+            const yesterdayDate = new Date();
+            yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+            const yesterday = getLocalDateKey(yesterdayDate);
+
+            if (dateString === today) return 'Hoy';
+            if (dateString === yesterday) return 'Ayer';
+            
+            const [year, month, day] = dateString.split('-').map(Number);
+            return new Date(year, month - 1, day).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+        };
+        
+        const renderTradesHistory = () => {
+            if (trades.length === 0) {
+                tradesCardContainer.innerHTML = `<p class="text-center py-8 text-gray-500">No hay operaciones registradas.</p>`;
+                return;
+            }
+
+            const sortedTrades = [...trades].sort((a, b) => {
+                const dateComparison = new Date(b.fecha) - new Date(a.fecha);
+                if (dateComparison !== 0) return dateComparison;
+                return b.createdAt - a.createdAt;
+            });
+            
+            const groupedTrades = sortedTrades.reduce((acc, trade) => {
+                const dateKey = trade.fecha.slice(0, 10);
+                if (!acc[dateKey]) acc[dateKey] = [];
+                acc[dateKey].push(trade);
+                return acc;
+            }, {});
+
+            let finalHtml = '';
+            for (const dateKey in groupedTrades) {
+                finalHtml += `<h3 class="text-lg font-semibold text-gray-600 my-4 border-b border-gray-200 pb-2">${formatDateForHeader(dateKey)}</h3>`;
+                
+                finalHtml += groupedTrades[dateKey].map(trade => {
+                    const resultadoClasses = {
+                        'Éxito': 'bg-green-100 text-green-700',
+                        'Fracaso': 'bg-red-100 text-red-700',
+                        'Empate': 'bg-blue-100 text-blue-700'
+                    };
+                    const pnlClass = trade.pnl > 0 ? 'text-green-600' : trade.pnl < 0 ? 'text-red-600' : 'text-gray-600';
+                    const pnlSign = trade.pnl > 0 ? '+' : '';
+                    const time = new Date(trade.fecha).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+
+                    return `
+                        <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm flex flex-col space-y-3">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <span class="font-bold text-lg text-gray-900">${trade.activo}</span>
+                                    <span class="ml-2 text-sm text-gray-500">${time}</span>
+                                </div>
+                                <span class="text-xs font-semibold px-2 py-1 rounded-full ${resultadoClasses[trade.resultado] || ''}">${trade.resultado}</span>
+                            </div>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2 text-sm">
+                                <div><span class="text-gray-500">Inversión:</span> <span class="font-medium text-gray-900">$${(trade.monto || 0).toFixed(2)}</span></div>
+                                <div><span class="text-gray-500">P/L:</span> <span class="font-semibold ${pnlClass}">${pnlSign}${(trade.pnl || 0).toFixed(2)}</span></div>
+                                <div><span class="text-gray-500">Expiración:</span> <span class="font-medium text-gray-900">${formatExpiration(trade.expiracion)}</span></div>
+                                <div class="col-span-2 sm:col-span-3"><span class="text-gray-500">Estrategia:</span> <span class="font-medium text-gray-900">${trade.estrategia || 'N/A'}</span></div>
+                            </div>
+                            ${trade.notas ? `<p class="text-sm text-gray-700 bg-gray-100 p-2 rounded-md whitespace-pre-wrap">${trade.notas}</p>` : ''}
+                            <div class="flex justify-end items-center space-x-3 pt-3 border-t border-gray-200">
+                                <button data-id="${trade.id}" class="edit-btn text-sm font-medium text-gray-500 hover:text-blue-600 transition-colors">Editar</button>
+                                <button data-id="${trade.id}" class="delete-btn text-sm font-medium text-gray-500 hover:text-red-600 transition-colors">Eliminar</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+            tradesCardContainer.innerHTML = finalHtml;
+        };
+
+        const getAccountCollections = (accountId) => accountState.data[accountId] || createEmptyCollections();
+
+        const getAccountDataSize = (accountId) => {
+            const accountData = getAccountCollections(accountId);
+            return new Blob([JSON.stringify(accountData)]).size;
+        };
+
+        const formatBytes = (bytes) => {
+            if (!bytes) return '0 KB';
+            const units = ['bytes', 'KB', 'MB', 'GB'];
+            let size = bytes;
+            let unitIndex = 0;
+            while (size >= 1024 && unitIndex < units.length - 1) {
+                size /= 1024;
+                unitIndex++;
+            }
+            const decimals = unitIndex === 0 ? 0 : 2;
+            return `${size.toFixed(decimals)} ${units[unitIndex]}`;
+        };
+
+        const renderStorageSummary = () => {
+            if (!totalStorageUsedEl || !accountsCountEl || !storageListEl) return;
+
+            let totalBytes = 0;
+            const breakdown = accountState.accounts.map(account => {
+                const bytes = getAccountDataSize(account.id);
+                totalBytes += bytes;
+                return { account, bytes };
+            });
+
+            totalStorageUsedEl.textContent = formatBytes(totalBytes);
+            accountsCountEl.textContent = accountState.accounts.length;
+            if (storageBreakdownEl) {
+                storageBreakdownEl.textContent = `Incluye operaciones, activos y estrategias de ${accountState.accounts.length} cuenta${accountState.accounts.length === 1 ? '' : 's'}.`;
+            }
+
+            if (breakdown.length === 0) {
+                storageListEl.innerHTML = '<p class="text-sm text-gray-500">Sin información disponible.</p>';
+                return;
+            }
+
+            storageListEl.innerHTML = breakdown.map(({ account, bytes }) => `
+                <div class="border border-gray-200 rounded-lg p-3 bg-gray-50">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-semibold text-gray-900">${account.name}</p>
+                            <p class="text-xs text-gray-500">${account.locked ? 'Cuenta predeterminada' : 'Cuenta personalizada'}</p>
+                        </div>
+                        <span class="text-sm font-medium text-gray-700">${formatBytes(bytes)}</span>
+                    </div>
+                </div>
+            `).join('');
+        };
+        
+        const getWeekNumber = (d) => {
+            d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+            d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+            const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+            const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+            return `${d.getUTCFullYear()}-${weekNo}`;
+        };
+
+        const updateDataUsageStats = () => {
+            const recordsEl = document.getElementById('data-usage-records');
+            const sizeEl = document.getElementById('data-usage-size');
+            if (!recordsEl || !sizeEl) return;
+
+            const accountData = getAccountCollections(currentAccountId);
+            const totalRecords = accountData.trades.length + accountData.assets.length + accountData.strategies.length;
+            const sizeLabel = formatBytes(getAccountDataSize(currentAccountId));
+
+            recordsEl.textContent = totalRecords;
+            sizeEl.textContent = sizeLabel;
+        };
+
+        const updateAverageTradesStat = () => {
+            const avgTradesStat = document.getElementById('stat-avg-trades');
+            if (trades.length === 0) {
+                avgTradesStat.textContent = "0.0";
+                return;
+            }
+
+            const period = avgTradesPeriodSelect.value;
+            const uniquePeriods = new Set();
+
+            trades.forEach(trade => {
+                const date = new Date(trade.fecha);
+                if (period === 'Día') uniquePeriods.add(date.toISOString().slice(0, 10));
+                else if (period === 'Semana') uniquePeriods.add(getWeekNumber(date));
+                else if (period === 'Mes') uniquePeriods.add(date.toISOString().slice(0, 7));
+                else if (period === 'Año') uniquePeriods.add(date.getFullYear());
+            });
+
+            const average = uniquePeriods.size > 0 ? trades.length / uniquePeriods.size : 0;
+            avgTradesStat.textContent = average.toFixed(1);
+        };
+
+        const updatePeakHourStat = () => {
+            const peakHourStat = document.getElementById('stat-peak-hour');
+            if (trades.length < 1) {
+                peakHourStat.innerHTML = "N/A";
+                return;
+            }
+            
+            const hourCounts = Array(24).fill(0);
+            trades.forEach(trade => hourCounts[new Date(trade.fecha).getHours()]++);
+
+            let maxTradesInWindow = -1;
+            let bestStartHour = -1;
+
+            for (let i = 0; i <= 20; i++) {
+                const currentWindowTrades = hourCounts[i] + hourCounts[i+1] + hourCounts[i+2] + hourCounts[i+3];
+                if (currentWindowTrades > maxTradesInWindow) {
+                    maxTradesInWindow = currentWindowTrades;
+                    bestStartHour = i;
+                }
+            }
+
+            if (maxTradesInWindow <= 0) {
+                peakHourStat.innerHTML = "N/A";
+                return;
+            }
+
+            const formatHour = (h) => String(h).padStart(2, '0');
+            const startHour = bestStartHour;
+            const endHour = startHour + 4;
+            
+            peakHourStat.innerHTML = `
+                <span class="whitespace-nowrap">${formatHour(startHour)}:00 - ${formatHour(endHour)}:00</span>
+                <span class="text-lg text-gray-500 ml-2">| ${maxTradesInWindow} trades</span>
+            `;
+        };
+        
+        const updateAllStatistics = () => {
+            if(document.getElementById('content-estadisticas').classList.contains('hidden')) return;
+
+            const statsElements = {
+                rentabilidad: document.getElementById('stat-rentabilidad'), ratio: document.getElementById('stat-ratio'),
+                winrate: document.getElementById('stat-winrate'), totalTrades: document.getElementById('stat-total-trades'),
+                estrategias: document.getElementById('stat-estrategias'), activos: document.getElementById('stat-activos'),
+                avgTrades: document.getElementById('stat-avg-trades'), peakHour: document.getElementById('stat-peak-hour'),
+                peakDay: document.getElementById('stat-peak-day'), activeDays: document.getElementById('stat-active-days')
+            };
+            if(trades.length === 0) {
+                statsElements.rentabilidad.textContent = "$0.00";
+                statsElements.rentabilidad.className = "text-3xl font-bold mt-2";
+                statsElements.ratio.textContent = "0 / 0 / 0";
+                statsElements.winrate.textContent = "0%";
+                statsElements.totalTrades.textContent = "0";
+                statsElements.avgTrades.textContent = "0.0";
+                statsElements.peakHour.textContent = "N/A";
+                statsElements.peakDay.innerHTML = "N/A";
+                statsElements.activeDays.textContent = "0";
+                statsElements.estrategias.innerHTML = `<p class="text-gray-500">No hay datos suficientes.</p>`;
+                statsElements.activos.innerHTML = `<p class="text-gray-500">No hay datos suficientes.</p>`;
+                renderTrendChart(); // Clear chart
+                return;
+            }
+            const totalTrades = trades.length;
+            const wins = trades.filter(t => t.resultado === 'Éxito').length;
+            const ties = trades.filter(t => t.resultado === 'Empate').length;
+            const losses = totalTrades - wins - ties;
+            const totalPnl = trades.reduce((acc, t) => acc + (t.pnl || 0), 0);
+            const winRate = (wins + losses) > 0 ? (wins / (wins + losses) * 100) : 0;
+            
+            statsElements.rentabilidad.textContent = `$${totalPnl.toFixed(2)}`;
+            statsElements.rentabilidad.className = `text-3xl font-bold mt-2 ${totalPnl >= 0 ? 'text-green-600' : 'text-red-600'}`;
+            statsElements.ratio.textContent = `${wins} / ${losses} / ${ties}`;
+            statsElements.winrate.textContent = `${winRate.toFixed(1)}%`;
+            statsElements.totalTrades.textContent = totalTrades;
+            
+            updateAverageTradesStat();
+            updatePeakHourStat();
+
+            const dayCounts = trades.reduce((acc, trade) => {
+                const day = trade.fecha.slice(0, 10);
+                acc[day] = (acc[day] || 0) + 1;
+                return acc;
+            }, {});
+
+            const activeDaysCount = Object.keys(dayCounts).length;
+            statsElements.activeDays.textContent = activeDaysCount;
+            
+            if(activeDaysCount > 0){
+                const [day, count] = Object.entries(dayCounts).reduce((a, b) => a[1] > b[1] ? a : b);
+                const [year, month, dayNum] = day.split('-').map(Number);
+                const peakDate = new Date(year, month - 1, dayNum).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
+                statsElements.peakDay.innerHTML = `<span class="text-2xl text-gray-900">${peakDate}</span> <span class="text-lg text-gray-500">| ${count} trades</span>`;
+            } else {
+                statsElements.peakDay.innerHTML = "N/A";
+            }
+            
+            updateStatsByGroup('estrategia', statsElements.estrategias);
+            updateStatsByGroup('activo', statsElements.activos);
+            renderTrendChart();
+        };
+
+        const updateStatsByGroup = (groupKey, container) => {
+            const grouped = trades.reduce((acc, trade) => {
+                const key = trade[groupKey] || 'No especificada';
+                if (!acc[key]) acc[key] = { wins: 0, losses: 0, ties: 0, total: 0, pnl: 0 };
+                
+                if (trade.resultado === 'Éxito') acc[key].wins++;
+                else if (trade.resultado === 'Fracaso') acc[key].losses++;
+                else acc[key].ties++;
+
+                acc[key].total++;
+                acc[key].pnl += (trade.pnl || 0);
+                return acc;
+            }, {});
+
+            const sortedGroups = Object.entries(grouped).sort(([,a], [,b]) => b.total - a.total);
+            if (sortedGroups.length > 0) {
+                container.innerHTML = sortedGroups.map(([key, data]) => {
+                    const winRate = (data.wins + data.losses) > 0 ? (data.wins / (data.wins + data.losses)) * 100 : 0;
+                    const pnlClass = data.pnl > 0 ? 'text-green-600' : data.pnl < 0 ? 'text-red-600' : 'text-gray-600';
+                    return `<div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm"><div class="flex justify-between items-center mb-2"><span class="text-base font-semibold text-gray-900">${key} <span class="text-xs text-gray-500">(${data.wins}/${data.losses}/${data.ties})</span></span><span class="text-sm font-semibold ${pnlClass}">$${data.pnl.toFixed(2)}</span></div><div class="w-full bg-gray-200 rounded-full h-2.5"><div class="bg-blue-500 h-2.5 rounded-full" style="width: ${winRate}%"></div></div></div>`;
+                }).join('');
+            } else container.innerHTML = `<p class="text-gray-500">No hay datos suficientes.</p>`;
+        };
+        
+        const renderTrendChart = () => {
+            chartPlaceholder.style.display = 'block';
+            [chartLabelMax, chartLabelZero, chartLabelMin].forEach(el => el.style.display = 'none');
+            chartSvgContainer.innerHTML = '';
+
+            if (trades.length < 2) {
+                chartPlaceholder.textContent = 'Se necesitan al menos 2 operaciones para mostrar una tendencia.';
+                return;
+            }
+
+            const sortedTrades = [...trades].sort((a, b) => {
+                const dateComparison = new Date(a.fecha) - new Date(b.fecha);
+                if (dateComparison !== 0) return dateComparison;
+                return a.createdAt - b.createdAt;
+            });
+
+            let cumulativePnl = 0;
+            const dataPoints = sortedTrades.map(trade => cumulativePnl += (trade.pnl || 0));
+            const maxVal = Math.max(0, ...dataPoints);
+            const minVal = Math.min(0, ...dataPoints);
+            const range = maxVal - minVal;
+
+            if (range === 0) {
+                chartPlaceholder.textContent = 'La rentabilidad no ha variado.';
+                return;
+            }
+            
+            chartPlaceholder.style.display = 'none';
+            [chartLabelMax, chartLabelZero, chartLabelMin].forEach(el => el.style.display = 'block');
+
+            const points = dataPoints.map((val, i) => `${(i / (dataPoints.length - 1)) * 100},${100 - ((val - minVal) / range) * 100}`).join(' ');
+            
+            const zeroLineY = 100 - ((0 - minVal) / range) * 100;
+
+            chartSvgContainer.innerHTML = `<svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none"><line x1="0" y1="${zeroLineY}" x2="100" y2="${zeroLineY}" stroke="#4B5563" stroke-width="0.5" stroke-dasharray="2"/><defs><linearGradient id="gradient" x1="0" y1="0" x2="0" y2="100%"><stop offset="0%" stop-color="${dataPoints[dataPoints.length-1] >= 0 ? 'rgba(52,211,153,.3)' : 'rgba(248,113,113,.3)'}" /><stop offset="100%" stop-color="${dataPoints[dataPoints.length-1] >= 0 ? 'rgba(52,211,153,0)' : 'rgba(248,113,113,0)'}" /></linearGradient></defs><polyline fill="url(#gradient)" points="0,100 ${points} 100,100" /><polyline fill="none" stroke="${dataPoints[dataPoints.length-1] >= 0 ? '#34D399' : '#F87171'}" stroke-width="1.5" points="${points}" /></svg>`;
+
+            chartLabelMax.textContent = `$${maxVal.toFixed(0)}`;
+            chartLabelMax.style.top = `2%`;
+            chartLabelZero.textContent = '$0';
+            chartLabelZero.style.top = `${zeroLineY}%`;
+            chartLabelMin.textContent = `$${minVal.toFixed(0)}`;
+            chartLabelMin.style.top = `98%`;
+        };
+
+        const toggleModal = (modalId, show) => document.getElementById(modalId).classList.toggle('hidden', !show);
+        const switchTab = (activeTabKey) => {
+            Object.keys(tabs).forEach(key => {
+                tabs[key].classList.remove('tab-active', 'tab-inactive');
+                contents[key].classList.add('hidden');
+                tabs[key].classList.add('tab-inactive');
+            });
+            tabs[activeTabKey].classList.add('tab-active');
+            contents[activeTabKey].classList.remove('hidden');
+            if (activeTabKey === 'estadisticas') updateAllStatistics();
+            if (activeTabKey === 'ajustes') updateDataUsageStats();
+        };
+        const formatExpiration = (exp) => {
+            if (!exp || typeof exp !== 'object') return 'N/A';
+            const parts = [];
+            if (exp.dias > 0) parts.push(`${exp.dias}d`);
+            if (exp.horas > 0) parts.push(`${exp.horas}h`);
+            if (exp.minutos > 0) parts.push(`${exp.minutos}m`);
+            if (exp.segundos > 0) parts.push(`${exp.segundos}s`);
+            return parts.length > 0 ? parts.join(' ') : '-';
+        };
+        const getCurrentDateTimeLocalString = () => {
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            return now.toISOString().slice(0, 16);
+        };
+        const showToast = (message, isError = false) => {
+            toast.textContent = message;
+            toast.classList.remove('bg-green-500', 'bg-red-500', 'translate-y-20', 'opacity-0');
+            toast.classList.add(isError ? 'bg-red-500' : 'bg-green-500', 'translate-y-0', 'opacity-100');
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        };
+        init();
+    });
+    </script>
+</body>
+</html>
+

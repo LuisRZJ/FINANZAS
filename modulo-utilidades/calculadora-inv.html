@@ -364,9 +364,11 @@
         document.addEventListener('DOMContentLoaded', function() {
             // Establecer fecha mínima como hoy
             const today = new Date();
-            const formattedDate = today.toISOString().split('T')[0];
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            const formattedDate = `${year}-${month}-${day}`;
             document.getElementById('start-date').value = formattedDate;
-            document.getElementById('start-date').min = formattedDate;
             
             // Manejar el envío del formulario
             document.getElementById('investment-form').addEventListener('submit', function(e) {
@@ -403,7 +405,7 @@
             const netProfit = grossProfit - totalCosts;
             
             // Calcular tiempo para break even
-            const breakEvenData = calculateBreakEven(initialInvestment, maintenanceCost, expectedReturn, returnFrequency);
+            const breakEvenData = calculateBreakEven(startDate, initialInvestment, maintenanceCost, expectedReturn, returnFrequency);
             
             // Calcular días libres después del break even
             const freeDaysAfterBreakEven = calculateFreeDaysAfterBreakEven(startDate, endDate, breakEvenData.breakEvenDate);
@@ -475,7 +477,7 @@
             return monthlyCost * monthsDiff;
         }
         
-        function calculateBreakEven(initialInvestment, maintenanceCost, expectedReturn, returnFrequency) {
+        function calculateBreakEven(startDate, initialInvestment, maintenanceCost, expectedReturn, returnFrequency) {
             // Calcular ganancia diaria aproximada según frecuencia
             let dailyGain = 0;
             
@@ -514,8 +516,8 @@
             const breakEvenDays = initialInvestment / dailyNetGain;
             
             // Calcular fecha de break even
-            const breakEvenDate = new Date();
-            breakEvenDate.setDate(breakEvenDate.getDate() + breakEvenDays);
+            const breakEvenDate = new Date(startDate);
+            breakEvenDate.setDate(startDate.getDate() + breakEvenDays);
             
             return {
                 breakEvenDays: breakEvenDays,

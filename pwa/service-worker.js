@@ -1,8 +1,8 @@
 // Configuración del Service Worker
 // Version bump: actualice estos valores cuando necesite invalidar caches en despliegues
-const CACHE_NAME = 'mi-pwa-v1.0.1';
-const STATIC_CACHE = 'pwa-static-v2';
-const DYNAMIC_CACHE = 'pwa-dynamic-v1';
+const CACHE_NAME = 'mi-pwa-v1.0.2';
+const STATIC_CACHE = 'pwa-static-v3';
+const DYNAMIC_CACHE = 'pwa-dynamic-v2';
 
 // Archivos estáticos a cachear
 // Archivos estáticos a cachear (intencionalmente sin '/index.html')
@@ -64,9 +64,14 @@ const networkFirst = async (request) => {
   try {
     const response = await fetch(request);
     // Solo cachear respuestas válidas
-    if (response.status === 200) {
+    // Evitar cachear documentos HTML (navegación) para no servir páginas antiguas
+    const isDocument = request.destination === 'document' || request.mode === 'navigate';
+    if (response.status === 200 && !isDocument) {
       const cache = await caches.open(DYNAMIC_CACHE);
       cache.put(request, response.clone());
+      console.log('[SW] Cached dynamic resource:', request.url);
+    } else if (isDocument) {
+      console.log('[SW] Skipping cache for navigation/document request:', request.url);
     }
     return response;
   } catch (error) {

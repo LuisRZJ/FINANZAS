@@ -1,0 +1,27 @@
+::-webkit-scrollbar {
+    width: 12px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+::selection {
+    background-color: #60a5fa; /* Un tono de azul más claro */
+    color: #ffffff;
+}
+
+::-moz-selection {
+    background-color: #60a5fa;
+    color: #ffffff;
+}

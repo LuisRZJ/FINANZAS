@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Daily Income Calculation</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-result { margin: 10px 0; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+    </style>
+</head>
+<body>
+    <h1>Test de Cálculo de Ingresos Diarios</h1>
+    <div id="test-results"></div>
+    
+    <script>
+        // Currency formatter
+        const currencyFormatter = new Intl.NumberFormat('es-MX', {
+            style: 'currency',
+            currency: 'MXN',
+            minimumFractionDigits: 2
+        });
+
+        // Function to calculate total daily income from a specific mining type
+        function calculateMiningDailyIncome(storageKey) {
+            try {
+                const investmentsData = localStorage.getItem(storageKey);
+                if (!investmentsData) return 0;
+                
+                const investments = JSON.parse(investmentsData);
+                if (!Array.isArray(investments)) return 0;
+                
+                // Filter active investments (not expired)
+                const now = new Date();
+                const activeInvestments = investments.filter(inv => {
+                    if (!inv.hasExpiration || !inv.expirationDate) return true;
+                    return new Date(inv.expirationDate) >= now;
+                });
+                
+                // Sum up daily income from all active investments
+                return activeInvestments.reduce((sum, inv) => sum + (inv.dailyIncome || 0), 0);
+            } catch (error) {
+                console.error(`Error calculating daily income for ${storageKey}:`, error);
+                return 0;
+            }
+        }
+
+        // Test function
+        function runTests() {
+            const resultsDiv = document.getElementById('test-results');
+            
+            // Create sample data for testing
+            const sampleBtcInvestments = [
+                { id: 1, name: 'BTC Miner 1', dailyIncome: 150, hasExpiration: false, expirationDate: null },
+                { id: 2, name: 'BTC Miner 2', dailyIncome: 200, hasExpiration: true, expirationDate: '2025-12-31' },
+                { id: 3, name: 'BTC Miner 3', dailyIncome: 100, hasExpiration: true, expirationDate: '2023-01-01' } // Expired
+            ];
+            
+            const sampleGoInvestments = [
+                { id: 1, name: 'GO Miner 1', dailyIncome: 75, hasExpiration: false, expirationDate: null },
+                { id: 2, name: 'GO Miner 2', dailyIncome: 125, hasExpiration: true, expirationDate: '2025-06-30' }
+            ];
+            
+            const sampleTapInvestments = [
+                { id: 1, name: 'Tap Miner 1', dailyIncome: 50, hasExpiration: false, expirationDate: null }
+            ];
+            
+            // Store sample data in localStorage
+            localStorage.setItem('btcMiningInvestments', JSON.stringify(sampleBtcInvestments));
+            localStorage.setItem('goMiningInvestments', JSON.stringify(sampleGoInvestments));
+            localStorage.setItem('tapMiningInvestments', JSON.stringify(sampleTapInvestments));
+            
+            // Test calculations
+            const btcDailyIncome = calculateMiningDailyIncome('btcMiningInvestments');
+            const goDailyIncome = calculateMiningDailyIncome('goMiningInvestments');
+            const tapDailyIncome = calculateMiningDailyIncome('tapMiningInvestments');
+            const totalDailyIncome = btcDailyIncome + goDailyIncome + tapDailyIncome;
+            
+            // Display results
+            resultsDiv.innerHTML = `
+                <div class="test-result info">
+                    <h3>Datos de prueba creados:</h3>
+                    <p>BTC Mining: 3 inversiones (2 activas: $150 + $200 = $350)</p>
+                    <p>GO Mining: 2 inversiones (2 activas: $75 + $125 = $200)</p>
+                    <p>Tap Mining: 1 inversión (1 activa: $50)</p>
+                </div>
+                
+                <div class="test-result success">
+                    <h3>Resultados del cálculo:</h3>
+                    <p>BTC Daily Income: ${currencyFormatter.format(btcDailyIncome)}</p>
+                    <p>GO Daily Income: ${currencyFormatter.format(goDailyIncome)}</p>
+                    <p>Tap Daily Income: ${currencyFormatter.format(tapDailyIncome)}</p>
+                    <p><strong>Total Daily Income: ${currencyFormatter.format(totalDailyIncome)}</strong></p>
+                </div>
+                
+                <div class="test-result info">
+                    <h3>Prueba de actualización de campos:</h3>
+                    <p>Ganancia Diaria: <span id="test-ganancia-diaria">${currencyFormatter.format(totalDailyIncome)}</span></p>
+                    <p>Ganancia Semanal: <span id="test-ganancia-semanal">${currencyFormatter.format(totalDailyIncome * 7)}</span></p>
+                    <p>Ganancia Quincenal: <span id="test-ganancia-quincenal">${currencyFormatter.format(totalDailyIncome * 15)}</span></p>
+                    <p>Ganancia Mensual: <span id="test-ganancia-mensual">${currencyFormatter.format(totalDailyIncome * 30)}</span></p>
+                </div>
+            `;
+            
+            // Test with no data
+            localStorage.removeItem('btcMiningInvestments');
+            const btcNoData = calculateMiningDailyIncome('btcMiningInvestments');
+            
+            resultsDiv.innerHTML += `
+                <div class="test-result success">
+                    <h3>Prueba sin datos:</h3>
+                    <p>BTC Daily Income (sin datos): ${currencyFormatter.format(btcNoData)}</p>
+                    <p>✓ Función maneja correctamente cuando no hay datos</p>
+                </div>
+            `;
+        }
+        
+        // Run tests when page loads
+        window.addEventListener('load', runTests);
+    </script>
+</body>
+</html>

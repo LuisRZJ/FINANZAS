@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Página de Inicio</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #6e8efb, #a777e3);
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            opacity: 1;
+            transition: opacity 0.5s ease-in-out;
+        }
+        
+        body.fade-out {
+            opacity: 0;
+        }
+        
+        .container {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        h1 {
+            margin-bottom: 20px;
+            color: #6e8efb;
+            font-size: 2.5rem;
+        }
+        
+        p {
+            margin-bottom: 25px;
+            line-height: 1.6;
+            font-size: 1.1rem;
+        }
+        
+        .btn {
+            display: inline-block;
+            background: linear-gradient(to right, #6e8efb, #a777e3);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            margin: 10px;
+            box-shadow: 0 4px 15px rgba(110, 142, 251, 0.4);
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(110, 142, 251, 0.6);
+        }
+        
+        .instructions {
+            margin-top: 40px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            text-align: left;
+            max-width: 800px;
+            width: 100%;
+        }
+        
+        .instructions h2 {
+            color: #6e8efb;
+            margin-bottom: 15px;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 25px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Página de Inicio</h1>
+        <p>Esta es la página principal. Haz clic en el botón para experimentar el efecto de transición suave hacia la página destino.</p>
+        
+        <a href="2.html" class="btn transition-link">Ir a Página Destino</a>
+    </div>
+    
+    <div class="instructions">
+        <h2>Instrucciones</h2>
+        <p>Esta página utiliza un efecto de desvanecimiento al hacer clic en el enlace. Al hacer clic, la página actual se desvanecerá antes de redirigir a la página destino.</p>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const links = document.querySelectorAll('.transition-link');
+            
+            links.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Aplicar efecto de desvanecimiento
+                    document.body.classList.add('fade-out');
+                    
+                    // Redirigir después de la transición
+                    setTimeout(() => {
+                        window.location.href = this.href;
+                    }, 500);
+                });
+            });
+
+            // Verificar si venimos de una transición
+            if (sessionStorage.getItem('transitioning') === 'true') {
+                document.body.style.opacity = '0';
+                sessionStorage.removeItem('transitioning');
+                
+                // Aplicar efecto de aparición
+                setTimeout(() => {
+                    document.body.style.transition = 'opacity 0.5s ease-in-out';
+                    document.body.style.opacity = '1';
+                }, 10);
+            }
+        });
+    </script>
+</body>
+</html>

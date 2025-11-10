@@ -13,6 +13,12 @@
     <div class="container">
         <div class="header">
             <h1>Registrar Trade</h1>
+            <div class="account-switcher">
+                <label for="account-select">Cuenta:</label>
+                <select id="account-select"></select>
+                <button type="button" id="add-account-btn" class="nav-btn">Nueva cuenta</button>
+                <span id="active-account-name" class="account-name"></span>
+            </div>
             <div id="datetime" class="datetime"></div>
         </div>
 
@@ -20,35 +26,49 @@
             <div class="form-group">
                 <label for="asset">Símbolo:</label>
                 <select id="asset" required>
-                    <option value="EURUSD">EUR/USD</option>
-                    <option value="GBPUSD">GBP/USD</option>
-                    <option value="USDJPY">USD/JPY</option>
-                    <option value="AUDUSD">AUD/USD</option>
-                    <option value="USDCAD">USD/CAD</option>
-                    <option value="NZDUSD">NZD/USD</option>
-                    <option value="USDCHF">USD/CHF</option>
-                    <option value="EURGBP">EUR/GBP</option>
-                    <option value="EURJPY">EUR/JPY</option>
-                    <option value="GBPJPY">GBP/JPY</option>
-                    <option value="USDMXN">USD/MXN</option>
-                    <option value="EURMXN">EUR/MXN</option>
-                    <option value="EURCHF">EUR/CHF</option>
-                    <option value="AUDJPY">AUD/JPY</option>
-                    <option value="AUDNZD">AUD/NZD</option>
-                    <option value="AUDCAD">AUD/CAD</option>
-                    <option value="AUDCHF">AUD/CHF</option>
-                    <option value="CADCHF">CAD/CHF</option>
-                    <option value="CADJPY">CAD/JPY</option>
-                    <option value="CHFJPY">CHF/JPY</option>
-                    <option value="EURAUD">EUR/AUD</option>
-                    <option value="EURCAD">EUR/CAD</option>
-                    <option value="EURNZD">EUR/NZD</option>
-                    <option value="GBPAUD">GBP/AUD</option>
-                    <option value="GBPCAD">GBP/CAD</option>
-                    <option value="GBPNZD">GBP/NZD</option>
-                    <option value="NZDCAD">NZD/CAD</option>
-                    <option value="NZDCHF">NZD/CHF</option>
-                    <option value="NZDJPY">NZD/JPY</option>
+                    <optgroup label="Forex">
+                        <option value="EURUSD" data-market="forex">EUR/USD</option>
+                        <option value="GBPUSD" data-market="forex">GBP/USD</option>
+                        <option value="USDJPY" data-market="forex">USD/JPY</option>
+                        <option value="AUDUSD" data-market="forex">AUD/USD</option>
+                        <option value="USDCAD" data-market="forex">USD/CAD</option>
+                        <option value="NZDUSD" data-market="forex">NZD/USD</option>
+                        <option value="USDCHF" data-market="forex">USD/CHF</option>
+                        <option value="EURGBP" data-market="forex">EUR/GBP</option>
+                        <option value="EURJPY" data-market="forex">EUR/JPY</option>
+                        <option value="GBPJPY" data-market="forex">GBP/JPY</option>
+                        <option value="USDMXN" data-market="forex">USD/MXN</option>
+                        <option value="EURMXN" data-market="forex">EUR/MXN</option>
+                        <option value="EURCHF" data-market="forex">EUR/CHF</option>
+                        <option value="AUDJPY" data-market="forex">AUD/JPY</option>
+                        <option value="AUDNZD" data-market="forex">AUD/NZD</option>
+                        <option value="AUDCAD" data-market="forex">AUD/CAD</option>
+                        <option value="AUDCHF" data-market="forex">AUD/CHF</option>
+                        <option value="CADCHF" data-market="forex">CAD/CHF</option>
+                        <option value="CADJPY" data-market="forex">CAD/JPY</option>
+                        <option value="CHFJPY" data-market="forex">CHF/JPY</option>
+                        <option value="EURAUD" data-market="forex">EUR/AUD</option>
+                        <option value="EURCAD" data-market="forex">EUR/CAD</option>
+                        <option value="EURNZD" data-market="forex">EUR/NZD</option>
+                        <option value="GBPAUD" data-market="forex">GBP/AUD</option>
+                        <option value="GBPCAD" data-market="forex">GBP/CAD</option>
+                        <option value="GBPNZD" data-market="forex">GBP/NZD</option>
+                        <option value="NZDCAD" data-market="forex">NZD/CAD</option>
+                        <option value="NZDCHF" data-market="forex">NZD/CHF</option>
+                        <option value="NZDJPY" data-market="forex">NZD/JPY</option>
+                    </optgroup>
+                    <optgroup label="Criptomonedas">
+                        <option value="BTCUSDT" data-market="crypto">BTC/USDT</option>
+                        <option value="ETHUSDT" data-market="crypto">ETH/USDT</option>
+                        <option value="BNBUSDT" data-market="crypto">BNB/USDT</option>
+                        <option value="SOLUSDT" data-market="crypto">SOL/USDT</option>
+                        <option value="ADAUSDT" data-market="crypto">ADA/USDT</option>
+                        <option value="XRPUSDT" data-market="crypto">XRP/USDT</option>
+                        <option value="DOGEUSDT" data-market="crypto">DOGE/USDT</option>
+                        <option value="DOTUSDT" data-market="crypto">DOT/USDT</option>
+                        <option value="MATICUSDT" data-market="crypto">MATIC/USDT</option>
+                        <option value="LTCUSDT" data-market="crypto">LTC/USDT</option>
+                    </optgroup>
                 </select>
             </div>
 
@@ -90,29 +110,15 @@
                 <input type="number" id="resultMxn" step="0.01" required>
             </div>
 
-            <div class="form-group">
-                <label for="pips">Resultado (Pips):</label>
+            <div class="form-group" id="resultMetricGroup">
+                <label for="pips" id="resultMetricLabel">Resultado (Pips):</label>
                 <input type="number" id="pips" name="pips" step="0.001" min="-999.999" max="999.999" pattern="^-?\d{1,3}(\.\d{1,3})?$" required placeholder="Ej: 25.500 o -12.345">
+                <input type="hidden" id="resultMetricType" value="pips">
             </div>
 
             <div class="form-group">
                 <label for="strategy">Estrategia:</label>
-                <select id="strategy" required>
-                    <option value="Script CCI">Script CCI</option>
-                    <option value="Script RSI">Script RSI</option>
-                    <option value="Script MACD">Script MACD</option>
-                    <option value="Script AO">Script AO</option>
-                    <option value="Script TII">Script TII</option>
-                    <option value="Script DeMarker">Script DeMarker</option>
-                    <option value="Script Estocastico">Script Estocastico</option>
-                    <option value="Script Cruce de MMs">Script Cruce de MMs</option>
-                    <option value="Script SAR">Script SAR</option>
-                    <option value="Script BMSB">Script BMSB</option>
-                    <option value="Script CDM-RSI">Script CDM-RSI</option>
-                    <option value="Script EMA Grupos">Script EMA Grupos</option>
-                    <option value="Script FCT">Script FCT</option>
-                    <option value="Señales app">Señales app</option>
-                    <option value="Análisis técnico">Análisis técnico</option>
+                <select id="strategy" required data-strategy-select="true" data-strategy-placeholder="Selecciona una estrategia">
                 </select>
             </div>
 
@@ -162,6 +168,44 @@
                 second: '2-digit'
             };
             document.getElementById('datetime').textContent = now.toLocaleDateString('es-ES', options);
+        }
+
+        function updateResultMetricUI() {
+            const assetSelect = document.getElementById('asset');
+            if (!assetSelect) return;
+            const selectedOption = assetSelect.options[assetSelect.selectedIndex];
+            const market = selectedOption ? selectedOption.dataset.market : 'forex';
+            const label = document.getElementById('resultMetricLabel');
+            const input = document.getElementById('pips');
+            const typeInput = document.getElementById('resultMetricType');
+            if (!label || !input || !typeInput) return;
+            if (market === 'crypto') {
+                label.textContent = 'Resultado (%)';
+                input.placeholder = 'Ej: 2.50 o -1.25';
+                input.step = '0.01';
+                input.min = '-1000';
+                input.max = '1000';
+                input.pattern = '^-?\\d{1,4}(\\.\\d{1,2})?$';
+                typeInput.value = 'percent';
+            } else {
+                label.textContent = 'Resultado (Pips):';
+                input.placeholder = 'Ej: 25.500 o -12.345';
+                input.step = '0.001';
+                input.min = '-999.999';
+                input.max = '999.999';
+                input.pattern = '^-?\\d{1,3}(\\.\\d{1,3})?$';
+                typeInput.value = 'pips';
+            }
+        }
+
+        const assetSelect = document.getElementById('asset');
+        if (assetSelect) {
+            assetSelect.addEventListener('change', function() {
+                updateResultMetricUI();
+                const metricInput = document.getElementById('pips');
+                if (metricInput) metricInput.value = '';
+            });
+            updateResultMetricUI();
         }
 
         // Event listener para el formulario

@@ -1,5 +1,826 @@
 // Service Worker registrado globalmente desde /app.js; evitar registro duplicado aquí
 
+const ACCOUNT_META_KEY = 'tradingAccountsMeta';
+const ACCOUNT_ACTIVE_KEY = 'activeTradingAccountId';
+const ACCOUNT_DATA_PREFIX = 'tradingAccountData:';
+const ACCOUNT_SCOPED_KEYS = new Set(['trades', 'capitalMovements', 'initialCapital', 'username', 'capitalStartDate', 'strategies']);
+const ACCOUNT_SELECT_ID = 'account-select';
+const ACCOUNT_CREATE_BUTTON_ID = 'add-account-btn';
+const ACCOUNT_NAME_ID = 'active-account-name';
+let capitalEvolutionChartInstance = null;
+const CAPITAL_MONTH_NAMES_ES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+const MS_PER_YEAR = 365 * 24 * 60 * 60 * 1000;
+const STRATEGY_STORAGE_KEY = 'strategies';
+const STRATEGY_ID_PREFIX = 'strategy-';
+const STRATEGIES_UPDATED_EVENT = 'tradingStrategiesUpdated';
+const STRATEGY_NAME_MAX_LENGTH = 80;
+const DEFAULT_STRATEGIES = [
+  'Script CCI',
+  'Script RSI',
+  'Script MACD',
+  'Script AO',
+  'Script TII',
+  'Script DeMarker',
+  'Script Estocastico',
+  'Script Cruce de MMs',
+  'Script SAR',
+  'Script BMSB',
+  'Script CDM-RSI',
+  'Script EMA Grupos',
+  'Script FCT',
+  'Señales app',
+  'Análisis técnico',
+  'Script SuperTrend',
+  'Script Ruptura EMA200 tendencia',
+  'Script Señales TradingView'
+];
+
+function slugifyStrategyName(name) {
+  return name
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '') || 'estrategia';
+}
+
+function generateStrategyId() {
+  return STRATEGY_ID_PREFIX + Date.now() + '-' + Math.floor(Math.random() * 1000000);
+}
+
+function getDefaultStrategyObjects() {
+  return DEFAULT_STRATEGIES.map(name => ({
+    id: `${STRATEGY_ID_PREFIX}default-${slugifyStrategyName(name)}`,
+    name,
+    builtIn: true
+  }));
+}
+
+function normalizeStrategyItem(item) {
+  if (!item || typeof item !== 'object') return null;
+  const name = typeof item.name === 'string' ? item.name.trim().slice(0, STRATEGY_NAME_MAX_LENGTH) : '';
+  if (!name) return null;
+  const lowerName = name.toLowerCase();
+  const isBuiltInName = DEFAULT_STRATEGIES.some(defaultName => defaultName.toLowerCase() === lowerName);
+  const id = typeof item.id === 'string' && item.id.trim() ? item.id.trim() : generateStrategyId();
+  return {
+    id,
+    name,
+    builtIn: item.builtIn === true && isBuiltInName
+  };
+}
+
+function normalizeStrategiesList(raw) {
+  const defaults = getDefaultStrategyObjects();
+  const custom = [];
+  const seenNames = new Set(defaults.map(item => item.name.toLowerCase()));
+  if (Array.isArray(raw)) {
+    raw.forEach(entry => {
+      const normalized = normalizeStrategyItem(entry);
+      if (!normalized) return;
+      if (normalized.builtIn) return;
+      const lower = normalized.name.toLowerCase();
+      if (seenNames.has(lower)) return;
+      seenNames.add(lower);
+      custom.push({ id: normalized.id, name: normalized.name, builtIn: false });
+    });
+  }
+  custom.sort((a, b) => a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }));
+  return defaults.concat(custom);
+}
+
+const originalLocalStorageGetItem = localStorage.getItem.bind(localStorage);
+const originalLocalStorageSetItem = localStorage.setItem.bind(localStorage);
+const originalLocalStorageRemoveItem = localStorage.removeItem.bind(localStorage);
+
+function normalizeAccountsMeta(meta) {
+  if (!Array.isArray(meta)) return [];
+  const sanitized = meta
+    .filter(account => account && account.id)
+    .map(account => ({
+      id: account.id,
+      nombre: account.nombre || 'Cuenta',
+      creadoEn: account.creadoEn || new Date().toISOString(),
+      esPrincipal: account.esPrincipal === true
+    }));
+  if (!sanitized.length) return [];
+  if (!sanitized.some(account => account.esPrincipal)) {
+    sanitized[0].esPrincipal = true;
+  }
+  return sanitized;
+}
+
+function readAccountsMeta() {
+  const raw = originalLocalStorageGetItem(ACCOUNT_META_KEY);
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    return normalizeAccountsMeta(parsed);
+  } catch (error) {
+    return [];
+  }
+}
+
+function writeAccountsMeta(meta) {
+  const normalized = normalizeAccountsMeta(meta);
+  originalLocalStorageSetItem(ACCOUNT_META_KEY, JSON.stringify(normalized));
+}
+
+function normalizeAccountData(data) {
+  const trades = Array.isArray(data && data.trades) ? data.trades : [];
+  const capitalMovements = Array.isArray(data && data.capitalMovements) ? data.capitalMovements : [];
+  const initialCapital = data && data.initialCapital !== undefined && data.initialCapital !== null ? String(data.initialCapital) : null;
+  const username = data && data.username !== undefined && data.username !== null ? String(data.username) : null;
+  const capitalStartDate = data && data.capitalStartDate ? data.capitalStartDate : null;
+  const strategies = normalizeStrategiesList(data && data.strategies);
+  return { trades, capitalMovements, initialCapital, username, capitalStartDate, strategies };
+}
+
+function readAccountData(accountId) {
+  const raw = originalLocalStorageGetItem(ACCOUNT_DATA_PREFIX + accountId);
+  if (!raw) return normalizeAccountData({});
+  try {
+    const parsed = JSON.parse(raw);
+    return normalizeAccountData(parsed);
+  } catch (error) {
+    return normalizeAccountData({});
+  }
+}
+
+function writeAccountData(accountId, data) {
+  const payload = normalizeAccountData(data);
+  originalLocalStorageSetItem(ACCOUNT_DATA_PREFIX + accountId, JSON.stringify(payload));
+}
+
+function readStrategies(accountId) {
+  const data = readAccountData(accountId || getActiveAccountId());
+  return data.strategies;
+}
+
+function writeStrategies(accountId, strategies) {
+  const id = accountId || getActiveAccountId();
+  const current = readAccountData(id);
+  current.strategies = normalizeStrategiesList(strategies);
+  writeAccountData(id, current);
+  return current.strategies;
+}
+
+function getActiveAccountStrategies() {
+  return readStrategies(getActiveAccountId());
+}
+
+function dispatchStrategiesUpdated(strategies, options) {
+  const event = new CustomEvent(STRATEGIES_UPDATED_EVENT, {
+    detail: {
+      strategies,
+      accountId: options && options.accountId ? options.accountId : getActiveAccountId(),
+      reason: options && options.reason ? options.reason : 'update'
+    }
+  });
+  window.dispatchEvent(event);
+}
+
+function getActiveStrategyList() {
+  return getActiveAccountStrategies();
+}
+
+function setActiveStrategyList(strategies, reason) {
+  const updated = writeStrategies(getActiveAccountId(), strategies);
+  dispatchStrategiesUpdated(updated, { reason: reason || 'update' });
+  return updated;
+}
+
+function fillStrategySelectOptions(select, selectedValue) {
+  if (!select) return;
+  const strategies = ensureStrategyDataInitialized();
+  const placeholder = select.dataset.strategyPlaceholder || '';
+  const allowEmpty = select.dataset.strategyAllowEmpty === 'true';
+  const previousValue = selectedValue !== undefined ? selectedValue : select.value;
+  select.innerHTML = '';
+  if (placeholder) {
+    const option = document.createElement('option');
+    option.value = '';
+    option.textContent = placeholder;
+    if (!allowEmpty) option.disabled = true;
+    select.appendChild(option);
+  } else if (allowEmpty) {
+    const option = document.createElement('option');
+    option.value = '';
+    option.textContent = '';
+    select.appendChild(option);
+  }
+  let matched = false;
+  strategies.forEach(strategy => {
+    const option = document.createElement('option');
+    option.value = strategy.name;
+    option.textContent = strategy.name;
+    if (previousValue && strategy.name === previousValue) {
+      option.selected = true;
+      matched = true;
+    }
+    select.appendChild(option);
+  });
+  if (!matched) {
+    if (placeholder && select.options.length > 1 && select.options[0].disabled) {
+      select.selectedIndex = 1;
+    } else if (select.options.length) {
+      select.selectedIndex = placeholder && allowEmpty ? 0 : 0;
+    }
+  }
+}
+
+function populateStrategySelects() {
+  const selects = document.querySelectorAll('[data-strategy-select="true"]');
+  selects.forEach(select => {
+    const selected = select.value;
+    fillStrategySelectOptions(select, selected);
+  });
+}
+
+function populateStrategySelectOptions(select, placeholder) {
+  if (!select) return;
+  const strategies = ensureStrategyDataInitialized();
+  select.innerHTML = '';
+  if (placeholder) {
+    const option = document.createElement('option');
+    option.value = '';
+    option.textContent = placeholder;
+    option.disabled = true;
+    option.selected = true;
+    select.appendChild(option);
+  }
+  strategies.forEach(strategy => {
+    const option = document.createElement('option');
+    option.value = strategy.name;
+    option.textContent = strategy.name;
+    select.appendChild(option);
+  });
+}
+
+function addCustomStrategy(name) {
+  const trimmed = typeof name === 'string' ? name.trim().slice(0, STRATEGY_NAME_MAX_LENGTH) : '';
+  if (!trimmed) return { success: false, error: 'Nombre inválido' };
+  const current = getActiveStrategyList();
+  if (current.some(item => item.name.toLowerCase() === trimmed.toLowerCase())) {
+    return { success: false, error: 'Ya existe una estrategia con ese nombre' };
+  }
+  const newStrategy = { id: generateStrategyId(), name: trimmed, builtIn: false };
+  const updated = setActiveStrategyList(current.concat([newStrategy]), 'create');
+  return { success: true, strategy: newStrategy, strategies: updated };
+}
+
+function updateCustomStrategy(id, newName) {
+  const trimmed = typeof newName === 'string' ? newName.trim().slice(0, STRATEGY_NAME_MAX_LENGTH) : '';
+  if (!trimmed) return { success: false, error: 'Nombre inválido' };
+  const current = getActiveStrategyList();
+  const targetIndex = current.findIndex(item => item.id === id);
+  if (targetIndex === -1) return { success: false, error: 'Estrategia no encontrada' };
+  const target = current[targetIndex];
+  if (target.builtIn) return { success: false, error: 'No se puede editar una estrategia predeterminada' };
+  if (current.some(item => item.id !== id && item.name.toLowerCase() === trimmed.toLowerCase())) {
+    return { success: false, error: 'Ya existe una estrategia con ese nombre' };
+  }
+  const updated = current.slice();
+  updated[targetIndex] = { ...target, name: trimmed };
+  const normalized = setActiveStrategyList(updated, 'update');
+  return { success: true, strategy: normalized.find(item => item.id === id), strategies: normalized };
+}
+
+function deleteCustomStrategy(id) {
+  const current = getActiveStrategyList();
+  const target = current.find(item => item.id === id);
+  if (!target) return { success: false, error: 'Estrategia no encontrada' };
+  if (target.builtIn) return { success: false, error: 'No se puede eliminar una estrategia predeterminada' };
+  const updated = current.filter(item => item.id !== id);
+  const normalized = setActiveStrategyList(updated, 'delete');
+  return { success: true, strategies: normalized };
+}
+
+function ensureStrategyDataInitialized() {
+  const current = getActiveStrategyList();
+  if (!Array.isArray(current) || !current.length) {
+    setActiveStrategyList(getDefaultStrategyObjects(), 'initialize');
+  }
+  return getActiveStrategyList();
+}
+
+function renderStrategyManagementSection() {
+  const container = document.getElementById('strategy-management');
+  if (!container) return;
+  const builtInList = container.querySelector('#built-in-strategy-list');
+  const customList = container.querySelector('#custom-strategy-list');
+  const emptyMessage = container.querySelector('#custom-strategy-empty');
+  const strategies = ensureStrategyDataInitialized();
+  if (builtInList) {
+    builtInList.innerHTML = '';
+    strategies.filter(item => item.builtIn).forEach(strategy => {
+      const li = document.createElement('li');
+      const span = document.createElement('span');
+      span.textContent = strategy.name;
+      li.appendChild(span);
+      builtInList.appendChild(li);
+    });
+  }
+  if (customList) {
+    customList.innerHTML = '';
+    const customs = strategies.filter(item => !item.builtIn);
+    customs.forEach(strategy => {
+      const li = document.createElement('li');
+      li.dataset.id = strategy.id;
+      const span = document.createElement('span');
+      span.textContent = strategy.name;
+      const actions = document.createElement('div');
+      actions.className = 'strategy-actions';
+      const editButton = document.createElement('button');
+      editButton.type = 'button';
+      editButton.className = 'nav-btn secondary';
+      editButton.dataset.action = 'edit';
+      editButton.dataset.id = strategy.id;
+      editButton.textContent = 'Editar';
+      const deleteButton = document.createElement('button');
+      deleteButton.type = 'button';
+      deleteButton.className = 'nav-btn clear';
+      deleteButton.dataset.action = 'delete';
+      deleteButton.dataset.id = strategy.id;
+      deleteButton.textContent = 'Eliminar';
+      actions.appendChild(editButton);
+      actions.appendChild(deleteButton);
+      li.appendChild(span);
+      li.appendChild(actions);
+      customList.appendChild(li);
+    });
+    if (emptyMessage) {
+      emptyMessage.style.display = customs.length ? 'none' : 'block';
+    }
+  }
+}
+
+function setupStrategyManagementUI() {
+  const container = document.getElementById('strategy-management');
+  if (!container || container.dataset.bound === 'true') return;
+  const form = container.querySelector('#strategy-add-form');
+  const input = container.querySelector('#new-strategy-name');
+  const list = container.querySelector('#custom-strategy-list');
+  if (form && input) {
+    form.addEventListener('submit', function(event) {
+      event.preventDefault();
+      const name = input.value.trim();
+      if (!name) {
+        alert('Ingresa un nombre de estrategia.');
+        return;
+      }
+      const result = addCustomStrategy(name);
+      if (!result.success) {
+        alert(result.error);
+        return;
+      }
+      input.value = '';
+    });
+  }
+  if (list) {
+    list.addEventListener('click', function(event) {
+      const button = event.target.closest('button');
+      if (!button) return;
+      const id = button.dataset.id;
+      if (!id) return;
+      if (button.dataset.action === 'edit') {
+        const strategies = ensureStrategyDataInitialized();
+        const target = strategies.find(item => item.id === id);
+        if (!target) return;
+        const newName = prompt('Nuevo nombre de la estrategia:', target.name);
+        if (newName === null) return;
+        const result = updateCustomStrategy(id, newName);
+        if (!result.success) {
+          alert(result.error);
+        }
+      } else if (button.dataset.action === 'delete') {
+        if (!confirm('¿Deseas eliminar esta estrategia?')) return;
+        const result = deleteCustomStrategy(id);
+        if (!result.success) {
+          alert(result.error);
+        }
+      }
+    });
+  }
+  container.dataset.bound = 'true';
+  renderStrategyManagementSection();
+}
+
+window.addEventListener(STRATEGIES_UPDATED_EVENT, function() {
+  populateStrategySelects();
+  renderStrategyManagementSection();
+});
+
+function getAccountsMeta() {
+  return readAccountsMeta();
+}
+
+function setActiveAccountId(accountId) {
+  const meta = readAccountsMeta();
+  if (!meta.find(account => account.id === accountId)) return false;
+  originalLocalStorageSetItem(ACCOUNT_ACTIVE_KEY, accountId);
+  return true;
+}
+
+function ensureActiveAccount() {
+  let meta = readAccountsMeta();
+  let activeId = originalLocalStorageGetItem(ACCOUNT_ACTIVE_KEY);
+  if (!meta.length) {
+    const defaultId = `account-${Date.now()}`;
+    let legacyTrades = [];
+    const legacyTradesRaw = originalLocalStorageGetItem('trades');
+    if (legacyTradesRaw) {
+      try {
+        legacyTrades = JSON.parse(legacyTradesRaw);
+      } catch (error) {
+        legacyTrades = [];
+      }
+    }
+    let legacyMovements = [];
+    const legacyMovementsRaw = originalLocalStorageGetItem('capitalMovements');
+    if (legacyMovementsRaw) {
+      try {
+        legacyMovements = JSON.parse(legacyMovementsRaw);
+      } catch (error) {
+        legacyMovements = [];
+      }
+    }
+    const legacyInitialCapital = originalLocalStorageGetItem('initialCapital');
+    const legacyUsername = originalLocalStorageGetItem('username');
+    const legacyCapitalStartDate = originalLocalStorageGetItem('capitalStartDate');
+    meta = [{ id: defaultId, nombre: 'Cuenta Principal', creadoEn: new Date().toISOString(), esPrincipal: true }];
+    writeAccountsMeta(meta);
+    writeAccountData(defaultId, {
+      trades: legacyTrades,
+      capitalMovements: legacyMovements,
+      initialCapital: legacyInitialCapital,
+      username: legacyUsername,
+      capitalStartDate: legacyCapitalStartDate,
+      strategies: getDefaultStrategyObjects()
+    });
+    originalLocalStorageRemoveItem('trades');
+    originalLocalStorageRemoveItem('capitalMovements');
+    originalLocalStorageRemoveItem('initialCapital');
+    originalLocalStorageRemoveItem('username');
+    originalLocalStorageRemoveItem('capitalStartDate');
+    activeId = defaultId;
+    originalLocalStorageSetItem(ACCOUNT_ACTIVE_KEY, activeId);
+  }
+  if (!meta.some(account => account.esPrincipal)) {
+    meta[0].esPrincipal = true;
+    writeAccountsMeta(meta);
+    meta = readAccountsMeta();
+  }
+  if (!activeId || !meta.find(account => account.id === activeId)) {
+    activeId = meta[0].id;
+    originalLocalStorageSetItem(ACCOUNT_ACTIVE_KEY, activeId);
+  }
+  return activeId;
+}
+
+function getActiveAccountId() {
+  return ensureActiveAccount();
+}
+
+function getActiveAccountMeta() {
+  const id = getActiveAccountId();
+  const meta = readAccountsMeta();
+  return meta.find(account => account.id === id) || null;
+}
+
+function createTradingAccount(name) {
+  const trimmed = name.trim();
+  if (!trimmed) return null;
+  const meta = readAccountsMeta();
+  const id = `account-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
+  meta.push({ id, nombre: trimmed, creadoEn: new Date().toISOString(), esPrincipal: false });
+  writeAccountsMeta(meta);
+  writeAccountData(id, { trades: [], capitalMovements: [], initialCapital: null, username: null, capitalStartDate: null, strategies: getDefaultStrategyObjects() });
+  return id;
+}
+
+function deleteAccountData(accountId) {
+  originalLocalStorageRemoveItem(ACCOUNT_DATA_PREFIX + accountId);
+}
+
+function renameTradingAccount(accountId, newName) {
+  const trimmed = (newName || '').trim();
+  if (!trimmed) return false;
+  const meta = readAccountsMeta();
+  const account = meta.find(item => item.id === accountId);
+  if (!account) return false;
+  account.nombre = trimmed;
+  writeAccountsMeta(meta);
+  const activeId = originalLocalStorageGetItem(ACCOUNT_ACTIVE_KEY);
+  if (activeId === accountId) {
+    updateActiveAccountNameDisplay();
+  }
+  populateAccountSelectElement();
+  return true;
+}
+
+function deleteTradingAccount(accountId) {
+  const meta = readAccountsMeta();
+  const accountIndex = meta.findIndex(item => item.id === accountId);
+  if (accountIndex === -1) return false;
+  if (meta[accountIndex].esPrincipal) return false;
+  const updatedMeta = [...meta.slice(0, accountIndex), ...meta.slice(accountIndex + 1)];
+  if (!updatedMeta.length) return false;
+  writeAccountsMeta(updatedMeta);
+  deleteAccountData(accountId);
+  const activeId = originalLocalStorageGetItem(ACCOUNT_ACTIVE_KEY);
+  if (activeId === accountId) {
+    originalLocalStorageSetItem(ACCOUNT_ACTIVE_KEY, updatedMeta[0].id);
+  }
+  populateAccountSelectElement();
+  updateActiveAccountNameDisplay();
+  return true;
+}
+
+function getActiveAccountSnapshot() {
+  const id = getActiveAccountId();
+  const data = readAccountData(id);
+  const meta = getActiveAccountMeta();
+  return {
+    accountId: id,
+    accountName: meta ? meta.nombre : '',
+    trades: data.trades,
+    capitalMovements: data.capitalMovements,
+    initialCapital: data.initialCapital,
+    username: data.username,
+    capitalStartDate: data.capitalStartDate,
+    strategies: data.strategies
+  };
+}
+
+function applySnapshotToActiveAccount(snapshot) {
+  if (!snapshot || typeof snapshot !== 'object') return;
+  const id = getActiveAccountId();
+  const current = readAccountData(id);
+  if (Array.isArray(snapshot.trades)) current.trades = snapshot.trades;
+  if (Array.isArray(snapshot.capitalMovements)) current.capitalMovements = snapshot.capitalMovements;
+  if (snapshot.initialCapital !== undefined) current.initialCapital = snapshot.initialCapital !== null ? String(snapshot.initialCapital) : null;
+  if (snapshot.username !== undefined) current.username = snapshot.username !== null ? String(snapshot.username) : null;
+  if (snapshot.capitalStartDate !== undefined) current.capitalStartDate = snapshot.capitalStartDate || null;
+  if (Array.isArray(snapshot.strategies)) current.strategies = normalizeStrategiesList(snapshot.strategies);
+  writeAccountData(id, current);
+  dispatchStrategiesUpdated(current.strategies, { accountId: id, reason: 'snapshot' });
+}
+
+function populateAccountSelectElement() {
+  const select = document.getElementById(ACCOUNT_SELECT_ID);
+  if (!select) return;
+  const meta = readAccountsMeta();
+  const activeId = getActiveAccountId();
+  select.innerHTML = '';
+  meta.forEach(account => {
+    const option = document.createElement('option');
+    option.value = account.id;
+    option.textContent = account.nombre;
+    if (account.id === activeId) option.selected = true;
+    select.appendChild(option);
+  });
+}
+
+function updateActiveAccountNameDisplay() {
+  const label = document.getElementById(ACCOUNT_NAME_ID);
+  if (!label) return;
+  const meta = getActiveAccountMeta();
+  label.textContent = meta ? meta.nombre : '';
+}
+
+function setupAccountUI() {
+  ensureActiveAccount();
+  populateAccountSelectElement();
+  updateActiveAccountNameDisplay();
+  const select = document.getElementById(ACCOUNT_SELECT_ID);
+  if (select && !select.dataset.bound) {
+    select.addEventListener('change', function(event) {
+      if (setActiveAccountId(event.target.value)) {
+        populateAccountSelectElement();
+        updateActiveAccountNameDisplay();
+        location.reload();
+      }
+    });
+    select.dataset.bound = 'true';
+  }
+  const button = document.getElementById(ACCOUNT_CREATE_BUTTON_ID);
+  if (button && !button.dataset.bound) {
+    button.addEventListener('click', function() {
+      const proposedName = prompt('Nombre de la nueva cuenta');
+      if (!proposedName) return;
+      const newId = createTradingAccount(proposedName);
+      if (newId && setActiveAccountId(newId)) {
+        populateAccountSelectElement();
+        updateActiveAccountNameDisplay();
+        location.reload();
+      }
+    });
+    button.dataset.bound = 'true';
+  }
+}
+
+localStorage.getItem = function(key) {
+  if (ACCOUNT_SCOPED_KEYS.has(key)) {
+    const accountId = getActiveAccountId();
+    const data = readAccountData(accountId);
+    if (key === 'trades') return JSON.stringify(data.trades);
+    if (key === 'capitalMovements') return JSON.stringify(data.capitalMovements);
+    if (key === 'initialCapital') return data.initialCapital !== null ? String(data.initialCapital) : null;
+    if (key === 'username') return data.username !== null ? String(data.username) : null;
+    if (key === 'capitalStartDate') return data.capitalStartDate;
+    if (key === STRATEGY_STORAGE_KEY) return JSON.stringify(data.strategies);
+  }
+  return originalLocalStorageGetItem(key);
+};
+
+localStorage.setItem = function(key, value) {
+  if (ACCOUNT_SCOPED_KEYS.has(key)) {
+    const accountId = getActiveAccountId();
+    const data = readAccountData(accountId);
+    if (key === 'trades' || key === 'capitalMovements') {
+      try {
+        data[key] = value ? JSON.parse(value) : [];
+      } catch (error) {
+        data[key] = [];
+      }
+    } else if (key === 'initialCapital') {
+      data.initialCapital = value !== null && value !== undefined ? String(value) : null;
+    } else if (key === 'username') {
+      data.username = value !== null && value !== undefined ? String(value) : null;
+    } else if (key === 'capitalStartDate') {
+      data.capitalStartDate = value || null;
+    } else if (key === STRATEGY_STORAGE_KEY) {
+      try {
+        data.strategies = normalizeStrategiesList(value ? JSON.parse(value) : []);
+      } catch (error) {
+        data.strategies = normalizeStrategiesList([]);
+      }
+    }
+    writeAccountData(accountId, data);
+    return;
+  }
+  originalLocalStorageSetItem(key, value);
+};
+
+localStorage.removeItem = function(key) {
+  if (ACCOUNT_SCOPED_KEYS.has(key)) {
+    const accountId = getActiveAccountId();
+    const data = readAccountData(accountId);
+    if (key === 'trades' || key === 'capitalMovements') {
+      data[key] = [];
+    } else if (key === 'initialCapital') {
+      data.initialCapital = null;
+    } else if (key === 'username') {
+      data.username = null;
+    } else if (key === 'capitalStartDate') {
+      data.capitalStartDate = null;
+    } else if (key === STRATEGY_STORAGE_KEY) {
+      data.strategies = getDefaultStrategyObjects();
+    }
+    writeAccountData(accountId, data);
+    return;
+  }
+  originalLocalStorageRemoveItem(key);
+};
+
+function clearActiveAccountData() {
+  const accountId = getActiveAccountId();
+  writeAccountData(accountId, {
+    trades: [],
+    capitalMovements: [],
+    initialCapital: null,
+    username: null,
+    capitalStartDate: null,
+    strategies: getDefaultStrategyObjects()
+  });
+  dispatchStrategiesUpdated(getDefaultStrategyObjects(), { accountId: accountId, reason: 'clear' });
+}
+
+function exportActiveAccountData() {
+  const snapshot = getActiveAccountSnapshot();
+  return {
+    account: {
+      id: snapshot.accountId,
+      nombre: snapshot.accountName
+    },
+    trades: snapshot.trades,
+    capitalMovements: snapshot.capitalMovements,
+    initialCapital: snapshot.initialCapital,
+    username: snapshot.username,
+    capitalStartDate: snapshot.capitalStartDate,
+    strategies: snapshot.strategies
+  };
+}
+
+function importDataToActiveAccount(payload) {
+  if (!payload || typeof payload !== 'object') return false;
+  const snapshot = {};
+  if ('trades' in payload) {
+    snapshot.trades = Array.isArray(payload.trades) ? payload.trades : [];
+  }
+  if ('capitalMovements' in payload) {
+    snapshot.capitalMovements = Array.isArray(payload.capitalMovements) ? payload.capitalMovements : [];
+  }
+  if ('initialCapital' in payload) {
+    snapshot.initialCapital = payload.initialCapital !== null && payload.initialCapital !== undefined ? payload.initialCapital : null;
+  }
+  if ('username' in payload) {
+    snapshot.username = payload.username !== null && payload.username !== undefined ? payload.username : null;
+  }
+  if ('capitalStartDate' in payload) {
+    snapshot.capitalStartDate = payload.capitalStartDate || null;
+  }
+  if ('strategies' in payload) {
+    snapshot.strategies = Array.isArray(payload.strategies) ? payload.strategies : [];
+  }
+  applySnapshotToActiveAccount(snapshot);
+  return true;
+}
+
+ensureActiveAccount();
+document.addEventListener('DOMContentLoaded', function() {
+  setupAccountUI();
+  setupNavigationMenu();
+  ensureStrategyDataInitialized();
+  setupStrategyManagementUI();
+  populateStrategySelects();
+});
+
+function setupNavigationMenu() {
+  const navMenu = document.querySelector('.nav-menu');
+  const menuOverlay = document.querySelector('.menu-overlay');
+  const menuItems = document.querySelectorAll('.menu-items a');
+  const menuToggleButton = document.querySelector('.menu-toggle');
+  if (!navMenu || !menuOverlay) {
+    window.toggleMenu = function() {};
+    window.setActiveLink = function() {};
+    return;
+  }
+
+  let scrollPosition = 0;
+
+  function openMenu() {
+    scrollPosition = window.pageYOffset;
+    document.body.classList.add('menu-open');
+    document.body.style.top = `-${scrollPosition}px`;
+    menuOverlay.classList.add('visible');
+    navMenu.classList.add('visible');
+    if (menuToggleButton) {
+      menuToggleButton.classList.add('opened');
+    }
+  }
+
+  function closeMenu() {
+    if (!navMenu.classList.contains('visible')) return;
+    navMenu.classList.remove('visible');
+    menuOverlay.classList.remove('visible');
+    document.body.classList.remove('menu-open');
+    document.body.style.top = '';
+    window.scrollTo(0, scrollPosition);
+    if (menuToggleButton) {
+      menuToggleButton.classList.remove('opened');
+    }
+  }
+
+  window.toggleMenu = function() {
+    if (navMenu.classList.contains('visible')) {
+      closeMenu();
+    } else {
+      openMenu();
+    }
+  };
+
+  if (!menuOverlay.dataset.bound) {
+    menuOverlay.addEventListener('click', closeMenu);
+    menuOverlay.dataset.bound = 'true';
+  }
+
+  menuItems.forEach(link => {
+    if (!link.dataset.menuBound) {
+      link.addEventListener('click', () => {
+        closeMenu();
+      });
+      link.dataset.menuBound = 'true';
+    }
+  });
+
+  function setActiveLink() {
+    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+    menuItems.forEach(link => {
+      const href = link.getAttribute('href');
+      if (href === currentPage) {
+        link.classList.add('active');
+      } else {
+        link.classList.remove('active');
+      }
+    });
+  }
+
+  window.setActiveLink = setActiveLink;
+  setActiveLink();
+}
+
 function showTab(tab) {
   ['entry', 'diary', 'stats'].forEach(t => document.getElementById('tab-' + t).classList.remove('active'));
   ['entry', 'diary', 'stats'].forEach(t => document.getElementById('tab-' + t + '-btn').classList.remove('active'));
@@ -21,7 +842,8 @@ function addTrade() {
     closePrice: document.getElementById('closePrice').value,
     strategy: document.getElementById('strategy').value,
     notes: document.getElementById('notes').value,
-    pips: document.getElementById('pips').value
+    pips: document.getElementById('pips').value,
+    resultMetricType: document.getElementById('resultMetricType') ? document.getElementById('resultMetricType').value || 'pips' : 'pips'
   };
 
   if (!trade.asset || !trade.resultMxn || !trade.lots || !trade.direction || 
@@ -71,7 +893,7 @@ function renderTradesTable() {
       '<th>Dirección</th>' +
       '<th>Lotes</th>' +
       '<th>Resultado (MXN)</th>' +
-      '<th>Resultado (Pips)</th>' +
+      '<th>Resultado</th>' +
       '<th>Fecha Apertura</th>' +
       '<th>Fecha Cierre</th>' +
       '<th>Precio Entrada</th>' +
@@ -80,18 +902,28 @@ function renderTradesTable() {
       '<th>Notas</th>' +
       '</tr></thead><tbody>';
   trades.slice().reverse().forEach(trade => {
-    const formattedAsset = trade.asset.replace(/([A-Z]{3})([A-Z]{3})/, '$1/$2');
+    const formattedAsset = formatAssetSymbol(trade.asset);
     const isCompra = trade.direction === 'long';
     const direction = isCompra ? 'COMPRA' : 'VENTA';
     const directionClass = isCompra ? 'trade-direction-compra' : 'trade-direction-venta';
     const openDate = new Date(trade.openTime);
     const closeDate = new Date(trade.closeTime);
+    const metricType = trade.resultMetricType === 'percent' ? 'percent' : 'pips';
+    let metricDisplay = '-';
+    if (trade.pips !== undefined && trade.pips !== null && trade.pips !== '') {
+      const numericMetric = parseFloat(trade.pips);
+      if (!Number.isNaN(numericMetric)) {
+        metricDisplay = metricType === 'percent'
+          ? `${numericMetric.toFixed(2)}%`
+          : `${numericMetric.toFixed(3)} pips`;
+      }
+    }
     html += `<tr>` +
         `<td>${formattedAsset}</td>` +
         `<td class="${directionClass}">${direction}</td>` +
         `<td>${parseFloat(trade.lots).toFixed(3)}</td>` +
         `<td class="${parseFloat(trade.resultMxn) >= 0 ? 'positive' : 'negative'}">${parseFloat(trade.resultMxn).toFixed(2)}</td>` +
-        `<td>${trade.pips ? parseFloat(trade.pips).toFixed(3) : '-'}</td>` +
+        `<td>${metricDisplay}</td>` +
         `<td>${openDate.toLocaleString('es-ES')}</td>` +
         `<td>${closeDate.toLocaleString('es-ES')}</td>` +
         `<td>${trade.openPrice}</td>` +
@@ -104,111 +936,101 @@ function renderTradesTable() {
   tableContainer.innerHTML = html;
 }
 
-function clearForm() {
-  ['asset', 'resultMxn', 'lots', 'direction', 'openTime', 'closeTime', 'openPrice', 'closePrice', 'strategy', 'notes', 'pips']
-    .forEach(id => document.getElementById(id).value = '');
+function formatAssetSymbol(symbol) {
+  if (!symbol || typeof symbol !== 'string') return '-';
+  const upper = symbol.toUpperCase();
+  if (upper.includes('/')) return upper;
+  const knownQuotes = ['USDT', 'USDC', 'BUSD', 'BTC', 'ETH', 'USD', 'EUR', 'JPY', 'GBP', 'AUD', 'CAD', 'CHF', 'NZD', 'MXN'];
+  for (let i = 0; i < knownQuotes.length; i++) {
+    const quote = knownQuotes[i];
+    if (upper.endsWith(quote)) {
+      const base = upper.slice(0, upper.length - quote.length);
+      if (base) return `${base}/${quote}`;
+    }
+  }
+  if (upper.length > 3) {
+    const base = upper.slice(0, Math.max(upper.length - 3, 3));
+    const quote = upper.slice(base.length);
+    if (base && quote) return `${base}/${quote}`;
+  }
+  return upper;
 }
 
-function renderDiary() {
-  const diaryContainer = document.getElementById('diaryContainer');
-  if (!diaryContainer) return;
+function renderStorageInfo() {
+  const storageContainer = document.getElementById('storageContainer');
+  if (!storageContainer) return;
 
   const trades = JSON.parse(localStorage.getItem('trades')) || [];
-  diaryContainer.innerHTML = '';
+  const total = trades.length;
+  const jsonString = JSON.stringify(trades);
+  const storageUsed = jsonString.length * 2;
+  const storageUsedKB = (storageUsed / 1024).toFixed(2);
+  const storageUsedMB = (storageUsed / (1024 * 1024)).toFixed(4);
 
-  if (trades.length === 0) {
-    diaryContainer.innerHTML = '<p>No hay trades registrados aún.</p>';
-    return;
-  }
+  const initialCapital = localStorage.getItem('initialCapital');
+  const capitalStorageUsed = initialCapital ? initialCapital.length * 2 : 0;
+  const capitalStorageUsedKB = (capitalStorageUsed / 1024).toFixed(2);
 
-  // Agrupar trades por fecha de cierre (local, YYYY-MM-DD)
-  const tradesByDate = {};
-  trades.forEach(trade => {
-    const closeDate = new Date(trade.closeTime);
-    // Obtener fecha local en formato YYYY-MM-DD
-    const dateKey = closeDate.getFullYear() + '-' + String(closeDate.getMonth() + 1).padStart(2, '0') + '-' + String(closeDate.getDate()).padStart(2, '0');
-    if (!tradesByDate[dateKey]) tradesByDate[dateKey] = [];
-    tradesByDate[dateKey].push(trade);
-  });
+  const username = localStorage.getItem('username');
+  const usernameStorageUsed = username ? username.length * 2 : 0;
+  const usernameStorageUsedKB = (usernameStorageUsed / 1024).toFixed(2);
 
-  // Ordenar fechas de más reciente a más antigua
-  const sortedDates = Object.keys(tradesByDate).sort((a, b) => b.localeCompare(a));
+  const movements = JSON.parse(localStorage.getItem('capitalMovements')) || [];
+  const movementsJsonString = JSON.stringify(movements);
+  const movementsStorageUsed = movementsJsonString.length * 2;
+  const movementsStorageUsedKB = (movementsStorageUsed / 1024).toFixed(2);
 
-  sortedDates.forEach(dateKey => {
-    // Usar la fecha local del primer trade del grupo para el separador
-    const firstTrade = tradesByDate[dateKey][0];
-    const dateObj = new Date(firstTrade.closeTime);
-    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    const dateStr = dateObj.toLocaleDateString('es-ES', options);
-    const separator = document.createElement('div');
-    separator.className = 'trade-day-separator';
-    separator.innerHTML = `<hr class='trade-day-hr'><div class='trade-day-label'>${dateStr.charAt(0).toUpperCase() + dateStr.slice(1)}</div>`;
-    diaryContainer.appendChild(separator);
+  const strategies = ensureStrategyDataInitialized();
+  const customStrategies = strategies.filter(item => !item.builtIn);
+  const strategiesJsonString = JSON.stringify(strategies);
+  const strategiesStorageUsed = strategiesJsonString.length * 2;
+  const strategiesStorageUsedKB = (strategiesStorageUsed / 1024).toFixed(2);
+  const customStrategiesJsonString = JSON.stringify(customStrategies);
+  const customStrategiesStorageUsed = customStrategiesJsonString.length * 2;
+  const customStrategiesStorageUsedKB = (customStrategiesStorageUsed / 1024).toFixed(2);
+  const customStrategiesCount = customStrategies.length;
 
-    // Mostrar los trades de ese día (más recientes primero)
-    tradesByDate[dateKey].slice().reverse().forEach((trade, index) => {
-      const tradeCard = document.createElement('div');
-      tradeCard.className = `trade-card custom-trade-card ${parseFloat(trade.resultMxn) >= 0 ? 'gain' : 'loss'}`;
+  const totalStorageUsedBytes = storageUsed + capitalStorageUsed + usernameStorageUsed + movementsStorageUsed + strategiesStorageUsed;
+  const totalStorageUsedKB = (totalStorageUsedBytes / 1024).toFixed(2);
+  const totalStorageUsedMB = (totalStorageUsedBytes / (1024 * 1024)).toFixed(4);
 
-      // Calcular el índice real en el array original (no invertido)
-      const realIndex = trades.length - 1 - trades.findIndex(t => t === trade);
+  const avgSizePerTrade = total > 0 ? storageUsed / total : 0;
+  const remainingSpace5MB = 5 * 1024 * 1024 - totalStorageUsedBytes;
+  const remainingSpace10MB = 10 * 1024 * 1024 - totalStorageUsedBytes;
+  const remainingTrades5MB = avgSizePerTrade > 0 ? Math.max(Math.floor(remainingSpace5MB / avgSizePerTrade), 0) : 0;
+  const remainingTrades10MB = avgSizePerTrade > 0 ? Math.max(Math.floor(remainingSpace10MB / avgSizePerTrade), 0) : 0;
 
-      // Formatear el par de divisas
-      const formattedAsset = trade.asset.replace(/([A-Z]{3})([A-Z]{3})/, '$1/$2');
-
-      // Traducir la dirección y asignar color
-      const isCompra = trade.direction === 'long';
-      const direction = isCompra ? 'COMPRA' : 'VENTA';
-      const directionClass = isCompra ? 'trade-direction-compra' : 'trade-direction-venta';
-
-      // Formatear fecha y hora de cierre
-      const closeDate = new Date(trade.closeTime);
-      const closeDateStr = closeDate.toLocaleDateString('es-ES', { year: '2-digit', month: '2-digit', day: '2-digit' });
-      const closeTimeStr = closeDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-
-      // Formatear fecha y hora de apertura
-      const openDate = new Date(trade.openTime);
-      const openDateStr = openDate.toLocaleDateString('es-ES', { year: '2-digit', month: '2-digit', day: '2-digit' });
-      const openTimeStr = openDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-
-      // Usar openTime y closeTime como identificadores únicos
-      tradeCard.innerHTML = `
-        <div class="trade-row trade-date-row">
-          <span class="trade-date">${closeDateStr} | ${closeTimeStr}</span>
-        </div>
-        <div class="trade-row trade-asset-row">
-          <span class="trade-asset">${formattedAsset}</span>
-          <span class="trade-direction ${directionClass}">${direction}</span>
-        </div>
-        <div class="trade-row trade-details-row">
-          <span class="trade-lots">${parseFloat(trade.lots).toFixed(3)}</span>
-          <span class="trade-prices">${trade.openPrice} - ${trade.closePrice}</span>
-          <span class="trade-pips">${trade.pips ? parseFloat(trade.pips).toFixed(3) + ' pips' : '-'}</span>
-        </div>
-        <div class="trade-row trade-result-row">
-          <span class="trade-result ${parseFloat(trade.resultMxn) >= 0 ? 'positive' : 'negative'}">
-            ${parseFloat(trade.resultMxn) >= 0 ? '+' : ''}${parseFloat(trade.resultMxn).toFixed(2)} MXN
-          </span>
-          <button class="btn-details" title="Ver detalles">🔍</button>
-          <button class="btn-edit" title="Editar trade">✏️</button>
-          <button class="btn-delete" onclick="deleteTradeById('${trade.openTime}','${trade.closeTime}','${trade.asset}','${trade.resultMxn}','${trade.lots}')" title="Eliminar trade">
-            <span class="delete-icon">×</span>
-          </button>
-        </div>
-      `;
-
-      // Evento para mostrar detalles
-      tradeCard.querySelector('.btn-details').onclick = function() {
-        showTradeDetails(trade);
-      };
-      // Evento para editar trade
-      tradeCard.querySelector('.btn-edit').onclick = function() {
-        showEditTradeModal(trade);
-      };
-
-      diaryContainer.appendChild(tradeCard);
-    });
-  });
+  storageContainer.innerHTML = `
+      <div class="storage-info">
+          <h3>Uso de Almacenamiento</h3>
+          <div class="storage-details">
+              <p>Has registrado un total de ${total} trades, lo que supone un uso de memoria de ${storageUsedKB} KB</p>
+              ${initialCapital ? `<p>El capital inicial ocupa ${capitalStorageUsedKB} KB de almacenamiento</p>` : ''}
+              ${username ? `<p>El nombre de usuario ocupa ${usernameStorageUsedKB} KB de almacenamiento</p>` : ''}
+              <p>Tu historial de movimientos ocupa ${movementsStorageUsedKB} KB de almacenamiento</p>
+              <p>Las estrategias guardadas ocupan ${strategiesStorageUsedKB} KB de almacenamiento total</p>
+              <p>Tus estrategias personalizadas (${customStrategiesCount}) ocupan ${customStrategiesStorageUsedKB} KB</p>
+              <p class="storage-limit-info">Uso total estimado: ${totalStorageUsedKB} KB (${totalStorageUsedMB} MB)</p>
+              <p class="storage-limit-info">El límite de LocalStorage es aproximadamente 5-10 MB</p>
+          </div>
+          ${total > 0 && avgSizePerTrade > 0 ? `
+              <div class="storage-limit-info">
+                  En base a un límite de 5MB y el tamaño promedio del registro (${(avgSizePerTrade / 1024).toFixed(2)} KB por trade), 
+                  se estima que esa capacidad te permita registrar un restante de ${remainingTrades5MB.toLocaleString()} trades.
+              </div>
+              <div class="storage-limit-info">
+                  Si el límite fuera de 10MB, podrías registrar aproximadamente ${remainingTrades10MB.toLocaleString()} trades adicionales.
+              </div>
+              <div class="storage-capacidad-info">
+                  <strong>Capacidad a largo plazo:</strong>
+                  <ul>
+                      <li>Con el límite de 5MB: Podrías registrar aproximadamente ${(remainingTrades5MB / 600).toFixed(1)} años más de operaciones (asumiendo 600 trades por año)</li>
+                      <li>Con el límite de 10MB: Podrías registrar aproximadamente ${(remainingTrades10MB / 600).toFixed(1)} años más de operaciones</li>
+                  </ul>
+              </div>
+          ` : `<div class="storage-capacity-info"><strong>No hay suficientes datos de trades para estimar la capacidad futura.</strong></div>`}
+      </div>
+  `;
 }
 
 // Nueva función para eliminar trade por identificadores únicos
@@ -235,7 +1057,7 @@ function showTradeDetails(trade) {
   if (oldModal) oldModal.remove();
 
   // Formatear datos
-  const formattedAsset = trade.asset.replace(/([A-Z]{3})([A-Z]{3})/, '$1/$2');
+  const formattedAsset = formatAssetSymbol(trade.asset);
   const isCompra = trade.direction === 'long';
   const direction = isCompra ? 'COMPRA' : 'VENTA';
   const directionClass = isCompra ? 'trade-direction-compra' : 'trade-direction-venta';
@@ -245,6 +1067,17 @@ function showTradeDetails(trade) {
   const openDate = new Date(trade.openTime);
   const openDateStr = openDate.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
   const openTimeStr = openDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+
+  const metricType = trade.resultMetricType === 'percent' ? 'percent' : 'pips';
+  let metricDisplay = '-';
+  if (trade.pips !== undefined && trade.pips !== null && trade.pips !== '') {
+    const numericMetric = parseFloat(trade.pips);
+    if (!Number.isNaN(numericMetric)) {
+      metricDisplay = metricType === 'percent'
+        ? `${numericMetric.toFixed(2)}%`
+        : `${numericMetric.toFixed(3)} pips`;
+    }
+  }
 
   // Crear modal
   const modal = document.createElement('div');
@@ -259,7 +1092,7 @@ function showTradeDetails(trade) {
         <div><strong>Dirección:</strong> <span class="${directionClass}">${direction}</span></div>
         <div><strong>Lotes:</strong> <span>${parseFloat(trade.lots).toFixed(3)}</span></div>
         <div><strong>Resultado:</strong> <span class="${parseFloat(trade.resultMxn) >= 0 ? 'positive' : 'negative'}">${parseFloat(trade.resultMxn) >= 0 ? '+' : ''}${parseFloat(trade.resultMxn).toFixed(2)} MXN</span></div>
-        <div><strong>Resultado (Pips):</strong> <span>${trade.pips ? parseFloat(trade.pips).toFixed(3) : '-'}</span></div>
+        <div><strong>Resultado:</strong> <span>${metricDisplay}</span></div>
         <div><strong>Fecha de Apertura:</strong> <span>${openDateStr} | ${openTimeStr}</span></div>
         <div><strong>Fecha de Cierre:</strong> <span>${closeDateStr} | ${closeTimeStr}</span></div>
         <div><strong>Precio de Entrada:</strong> <span>${trade.openPrice}</span></div>
@@ -295,6 +1128,253 @@ function deleteTrade(index) {
       loadCardData();
     }
   }
+}
+
+function getTradeEffectiveDate(trade) {
+  if (!trade) return null;
+  const rawDate = trade.closeTime || trade.openTime;
+  if (!rawDate) return null;
+  const date = new Date(rawDate);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function calculateCapitalEvolutionData() {
+  const initialCapitalRaw = localStorage.getItem('initialCapital');
+  if (initialCapitalRaw === null || initialCapitalRaw === '') {
+    return { labels: [], values: [], pnl: null, roi: null, baseCapital: null, finalCapital: null };
+  }
+
+  const initialCapital = parseFloat(initialCapitalRaw);
+  if (!Number.isFinite(initialCapital)) {
+    return { labels: [], values: [], pnl: null, roi: null, baseCapital: null, finalCapital: null };
+  }
+
+  const capitalStartDateRaw = localStorage.getItem('capitalStartDate');
+  let capitalStartDate = capitalStartDateRaw ? new Date(capitalStartDateRaw) : null;
+  if (capitalStartDate && Number.isNaN(capitalStartDate.getTime())) {
+    capitalStartDate = null;
+  }
+
+  const trades = JSON.parse(localStorage.getItem('trades')) || [];
+  const movements = JSON.parse(localStorage.getItem('capitalMovements')) || [];
+
+  const tradesData = trades
+    .map(trade => {
+      const date = getTradeEffectiveDate(trade);
+      if (!date) return null;
+      const value = parseFloat(trade.resultMxn);
+      if (!Number.isFinite(value)) return null;
+      return { date, value };
+    })
+    .filter(Boolean);
+
+  const movementsData = movements
+    .map(movement => {
+      if (!movement) return null;
+      const date = movement.date ? new Date(movement.date) : null;
+      if (!date || Number.isNaN(date.getTime())) return null;
+      const rawAmount = parseFloat(movement.amount);
+      if (!Number.isFinite(rawAmount)) return null;
+      const value = movement.type === 'retiro' ? -Math.abs(rawAmount) : Math.abs(rawAmount);
+      return { date, value };
+    })
+    .filter(Boolean);
+
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const monthlyNet = new Array(12).fill(0);
+  let contributionsBeforeYear = 0;
+  const baselineDate = capitalStartDate || null;
+  const isFirstYear = !baselineDate || (now.getTime() - baselineDate.getTime() < MS_PER_YEAR);
+
+  tradesData.forEach(item => {
+    if (baselineDate && item.date < baselineDate) return;
+    const year = item.date.getFullYear();
+    if (year < currentYear) {
+      contributionsBeforeYear += item.value;
+    } else if (year === currentYear) {
+      monthlyNet[item.date.getMonth()] += item.value;
+    }
+  });
+
+  movementsData.forEach(item => {
+    if (baselineDate && item.date < baselineDate) return;
+    const year = item.date.getFullYear();
+    if (year < currentYear) {
+      contributionsBeforeYear += item.value;
+    } else if (year === currentYear) {
+      monthlyNet[item.date.getMonth()] += item.value;
+    }
+  });
+
+  let runningCapital = initialCapital;
+  if (!isFirstYear) {
+    runningCapital += contributionsBeforeYear;
+  }
+  const baseCapital = Number(runningCapital.toFixed(2));
+
+  const labels = [];
+  const values = [];
+
+  for (let month = 0; month < 12; month++) {
+    const monthStart = new Date(currentYear, month, 1);
+    if (monthStart > now) break;
+    runningCapital += monthlyNet[month];
+    labels.push(`${CAPITAL_MONTH_NAMES_ES[month]} ${currentYear}`);
+    values.push(Number(runningCapital.toFixed(2)));
+  }
+
+  if (!labels.length) {
+    const month = now.getMonth();
+    labels.push(`${CAPITAL_MONTH_NAMES_ES[month]} ${currentYear}`);
+    values.push(Number(runningCapital.toFixed(2)));
+  }
+
+  const finalCapital = values.length ? values[values.length - 1] : Number(runningCapital.toFixed(2));
+  const pnl = Number((finalCapital - baseCapital).toFixed(2));
+  const roi = baseCapital !== 0 ? Number(((pnl / baseCapital) * 100).toFixed(2)) : null;
+
+  return { labels, values, pnl, roi, baseCapital, finalCapital };
+}
+
+function renderCapitalEvolutionChart() {
+  const canvas = document.getElementById('capitalEvolutionChart');
+  const emptyState = document.getElementById('capitalEvolutionEmptyState');
+  const pnlElement = document.getElementById('capitalEvolutionPnl');
+  const roiElement = document.getElementById('capitalEvolutionRoi');
+  if (!canvas || typeof Chart === 'undefined') {
+    if (pnlElement) pnlElement.textContent = '-';
+    if (roiElement) roiElement.textContent = '-';
+    return;
+  }
+
+  const { labels, values, pnl, roi, baseCapital } = calculateCapitalEvolutionData();
+  const hasSeries = labels.length && values.length;
+
+  if (!hasSeries) {
+    if (capitalEvolutionChartInstance) {
+      capitalEvolutionChartInstance.destroy();
+      capitalEvolutionChartInstance = null;
+    }
+    if (emptyState) emptyState.style.display = 'block';
+    canvas.style.display = 'none';
+    if (pnlElement) {
+      pnlElement.textContent = '-';
+      pnlElement.style.color = '';
+    }
+    if (roiElement) {
+      roiElement.textContent = '-';
+      roiElement.style.color = '';
+    }
+    return;
+  }
+
+  canvas.style.display = 'block';
+  if (emptyState) emptyState.style.display = 'none';
+
+  if (pnlElement) {
+    const formattedPnl = pnl >= 0 ? `+$${Math.abs(pnl).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : `-$${Math.abs(pnl).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    pnlElement.textContent = formattedPnl;
+    pnlElement.style.color = pnl >= 0 ? '#16a085' : '#e74c3c';
+  }
+
+  if (roiElement) {
+    if (roi === null || baseCapital === 0) {
+      roiElement.textContent = 'N/A';
+      roiElement.style.color = '';
+    } else {
+      const formattedRoi = `${roi >= 0 ? '+' : ''}${roi.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`;
+      roiElement.textContent = formattedRoi;
+      roiElement.style.color = roi >= 0 ? '#16a085' : '#e74c3c';
+    }
+  }
+
+  const minValue = Math.min(...values);
+  const maxValue = Math.max(...values);
+  let suggestedMin = minValue;
+  let suggestedMax = maxValue;
+  if (minValue === maxValue) {
+    const padding = minValue === 0 ? 100 : Math.abs(minValue) * 0.05;
+    suggestedMin = minValue - padding;
+    suggestedMax = maxValue + padding;
+  }
+
+  const datasetConfig = {
+    label: 'Capital acumulado',
+    data: values,
+    fill: true,
+    borderColor: '#1abc9c',
+    backgroundColor: 'rgba(26, 188, 156, 0.15)',
+    borderWidth: 2,
+    tension: 0.25,
+    pointRadius: 3,
+    pointBackgroundColor: '#16a085',
+    pointBorderColor: '#16a085',
+    pointHoverRadius: 4
+  };
+
+  if (capitalEvolutionChartInstance) {
+    capitalEvolutionChartInstance.data.labels = labels;
+    const dataset = capitalEvolutionChartInstance.data.datasets[0];
+    dataset.label = datasetConfig.label;
+    dataset.data = datasetConfig.data;
+    dataset.fill = datasetConfig.fill;
+    dataset.borderColor = datasetConfig.borderColor;
+    dataset.backgroundColor = datasetConfig.backgroundColor;
+    dataset.borderWidth = datasetConfig.borderWidth;
+    dataset.tension = datasetConfig.tension;
+    dataset.pointRadius = datasetConfig.pointRadius;
+    dataset.pointBackgroundColor = datasetConfig.pointBackgroundColor;
+    dataset.pointBorderColor = datasetConfig.pointBorderColor;
+    dataset.pointHoverRadius = datasetConfig.pointHoverRadius;
+    capitalEvolutionChartInstance.options.scales.y.suggestedMin = suggestedMin;
+    capitalEvolutionChartInstance.options.scales.y.suggestedMax = suggestedMax;
+    capitalEvolutionChartInstance.update();
+    return;
+  }
+
+  capitalEvolutionChartInstance = new Chart(canvas.getContext('2d'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [datasetConfig]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: {
+          title: { display: true, text: 'Meses' },
+          ticks: {
+            autoSkip: false,
+            maxRotation: 0,
+            minRotation: 0
+          }
+        },
+        y: {
+          title: { display: true, text: 'Capital acumulado (MXN)' },
+          suggestedMin,
+          suggestedMax,
+          ticks: {
+            callback: function(value) {
+              return `$${Number(value).toLocaleString('es-MX', { maximumFractionDigits: 0 })}`;
+            }
+          }
+        }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              const value = context.parsed.y ?? 0;
+              return `Capital: $${value.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            }
+          }
+        }
+      }
+    }
+  });
 }
 
 function renderStats() {
@@ -426,7 +1506,7 @@ function renderStats() {
   }
 
   // Cálculo de PNL Pips y Promedio Pips por Trade
-  const tradesWithPips = trades.filter(t => t.pips !== undefined && t.pips !== null && t.pips !== '');
+  const tradesWithPips = trades.filter(t => t.pips !== undefined && t.pips !== null && t.pips !== '' && t.resultMetricType !== 'percent');
   const totalPips = tradesWithPips.reduce((sum, t) => sum + parseFloat(t.pips), 0);
   const avgPips = tradesWithPips.length ? (totalPips / tradesWithPips.length) : 0;
 
@@ -446,6 +1526,8 @@ function renderStats() {
   const avgProfitElement = document.getElementById('avgProfit');
   if (maxProfitElement) maxProfitElement.textContent = `$${maxProfit.toFixed(2)}`;
   if (avgProfitElement) avgProfitElement.textContent = `$${avgProfit.toFixed(2)}`;
+
+  renderCapitalEvolutionChart();
 
   // === Cálculo de Holding Promedio ===
   const tradesWithTimes = trades.filter(t => t.openTime && t.closeTime);
@@ -1002,11 +2084,32 @@ function updateCapitalHeader(period) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    const periodButtons = Array.from(document.querySelectorAll('.period-filter'));
+    const activeClasses = ['active', 'text-orange-600', 'dark:text-orange-400', 'border-orange-600'];
+    const inactiveClasses = ['text-gray-500', 'dark:text-gray-400', 'border-transparent'];
+
+    function setActivePeriodButton(button) {
+        periodButtons.forEach(btn => {
+            btn.classList.remove(...activeClasses);
+            inactiveClasses.forEach(cls => {
+                if (!btn.classList.contains(cls)) {
+                    btn.classList.add(cls);
+                }
+            });
+        });
+        if (button) {
+            button.classList.remove(...inactiveClasses);
+            button.classList.add(...activeClasses);
+        }
+    }
+
     updateCapitalHeader('monthly');
-    document.querySelectorAll('.period-filter').forEach(btn => {
+    const defaultButton = periodButtons.find(btn => btn.dataset.period === 'monthly') || periodButtons[0];
+    setActivePeriodButton(defaultButton);
+
+    periodButtons.forEach(btn => {
         btn.addEventListener('click', function() {
-            document.querySelectorAll('.period-filter').forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
+            setActivePeriodButton(this);
             const period = this.dataset.period;
             updateCapitalHeader(period);
         });
@@ -1023,6 +2126,12 @@ function showEditTradeModal(trade) {
   const modal = document.createElement('div');
   modal.id = 'trade-details-modal';
   modal.className = 'trade-details-modal-bg';
+  const metricType = trade.resultMetricType === 'percent' ? 'percent' : 'pips';
+  const editMetricStep = metricType === 'percent' ? '0.01' : '0.001';
+  const editMetricMin = metricType === 'percent' ? '-1000' : '-999.999';
+  const editMetricMax = metricType === 'percent' ? '1000' : '999.999';
+  const editMetricPlaceholder = metricType === 'percent' ? 'Ej: 2.50 o -1.25' : 'Ej: 25.500 o -12.345';
+
   modal.innerHTML = `
     <div class="trade-details-modal-card">
       <button class="trade-details-close" title="Cerrar">&times;</button>
@@ -1036,8 +2145,14 @@ function showEditTradeModal(trade) {
           </select>
         </div>
         <div><strong>Lotes:</strong> <input type="number" step="0.001" name="lots" value="${trade.lots}" required></div>
-        <div><strong>Resultado:</strong> <input type="number" step="0.01" name="resultMxn" value="${trade.resultMxn}" required> MXN</div>
-        <div><strong>Resultado (Pips):</strong> <input type="number" step="0.001" min="-999.999" max="999.999" name="pips" value="${trade.pips ? trade.pips : ''}" required placeholder="Ej: 25.500 o -12.345"></div>
+        <div><strong>Resultado (MXN):</strong> <input type="number" step="0.01" name="resultMxn" value="${trade.resultMxn}" required></div>
+        <div><strong>Métrica:</strong> 
+          <select name="resultMetricType" id="editMetricType">
+            <option value="pips" ${metricType === 'pips' ? 'selected' : ''}>Pips</option>
+            <option value="percent" ${metricType === 'percent' ? 'selected' : ''}>%</option>
+          </select>
+        </div>
+        <div><strong id="editMetricLabel">Resultado (${metricType === 'percent' ? '%' : 'Pips'}):</strong> <input type="number" step="${editMetricStep}" min="${editMetricMin}" max="${editMetricMax}" name="pips" value="${trade.pips ? trade.pips : ''}" required placeholder="${editMetricPlaceholder}"></div>
         <div><strong>Fecha de Apertura:</strong> <input type="datetime-local" name="openTime" value="${trade.openTime}" required></div>
         <div><strong>Fecha de Cierre:</strong> <input type="datetime-local" name="closeTime" value="${trade.closeTime}" required></div>
         <div><strong>Precio de Entrada:</strong> <input type="number" step="0.00001" name="openPrice" value="${trade.openPrice}" required></div>
@@ -1078,6 +2193,35 @@ function showEditTradeModal(trade) {
     modal.remove();
   };
 
+  const editMetricTypeSelect = modal.querySelector('#editMetricType');
+  const metricInput = modal.querySelector('input[name="pips"]');
+  const metricLabel = modal.querySelector('#editMetricLabel');
+
+  function syncEditMetricControls(type) {
+    if (!metricInput || !metricLabel) return;
+    if (type === 'percent') {
+      metricLabel.textContent = 'Resultado (%):';
+      metricInput.step = '0.01';
+      metricInput.min = '-1000';
+      metricInput.max = '1000';
+      metricInput.placeholder = 'Ej: 2.50 o -1.25';
+    } else {
+      metricLabel.textContent = 'Resultado (Pips):';
+      metricInput.step = '0.001';
+      metricInput.min = '-999.999';
+      metricInput.max = '999.999';
+      metricInput.placeholder = 'Ej: 25.500 o -12.345';
+    }
+  }
+
+  if (editMetricTypeSelect) {
+    syncEditMetricControls(editMetricTypeSelect.value);
+    editMetricTypeSelect.addEventListener('change', function() {
+      syncEditMetricControls(this.value);
+      if (metricInput) metricInput.value = '';
+    });
+  }
+
   // Evento de guardado
   modal.querySelector('#edit-trade-form').onsubmit = function(e) {
     e.preventDefault();
@@ -1088,6 +2232,7 @@ function showEditTradeModal(trade) {
       lots: formData.get('lots'),
       resultMxn: formData.get('resultMxn'),
       pips: formData.get('pips'),
+      resultMetricType: formData.get('resultMetricType') || 'pips',
       openTime: formData.get('openTime'),
       closeTime: formData.get('closeTime'),
       openPrice: formData.get('openPrice'),

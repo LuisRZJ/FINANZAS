@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backtesting Trading</title>
+    <meta name="theme-color" content="#2563eb">
+    <link rel="icon" href="/pwa/logo-app.png">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .table-container {
+            max-height: 70vh; /* Altura máxima para la tabla */
+            overflow-y: auto;
+        }
+        /* Tooltip para el gráfico */
+        #tooltip {
+            position: absolute;
+            display: none;
+            padding: 12px;
+            background-color: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            color: #111827;
+            border: 1px solid rgba(17, 24, 39, 0.06);
+            border-radius: 12px;
+            font-size: 14px;
+            pointer-events: none;
+            box-shadow: 0 4px 10px rgba(2, 6, 23, 0.08);
+            transition: opacity 0.2s;
+            z-index: 50;
+        }
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            font-size: 16px;
+            color: #374151;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-4">
+    <div class="container mx-auto bg-white rounded-lg shadow-lg p-6">
+        <div class="mb-6">
+            <a href="/index.html" class="inline-flex items-center bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-300">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                Volver al Inicio
+            </a>
+        </div>
+        <h1 class="text-3xl font-bold mb-6 text-gray-800">Backtesting de Datos Históricos</h1>
+        
+        <div class="mb-4 flex items-center space-x-4">
+            <div class="flex-grow">
+                <label for="currency-select" class="mr-2 text-gray-700">Seleccionar Divisa:</label>
+                <select id="currency-select" class="border border-gray-300 rounded-md p-2 w-full md:w-auto"></select>
+            </div>
+            <button id="load-data-btn" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none" disabled>Cargar Datos</button>
+        </div>
+
+        <div class="flex justify-between items-center mb-4">
+            <div class="text-gray-600">Mostrando <span id="current-entries">0</span> de <span id="total-entries">0</span> registros</div>
+            <div>
+                <label for="rows-per-page" class="mr-2 text-gray-700">Registros por página:</label>
+                <select id="rows-per-page" class="border border-gray-300 rounded-md p-2">
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                    <option value="200">200</option>
+                    <option value="500">500</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="table-container border border-gray-200 rounded-lg">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50 sticky top-0">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha Apertura</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Apertura</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Máximo</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mínimo</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cierre</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Volumen</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Spread</th>
+                    </tr>
+                </thead>
+                <tbody id="data-table-body" class="bg-white divide-y divide-gray-200"></tbody>
+            </table>
+        </div>
+
+        <div class="flex justify-center items-center mt-4">
+            <button id="prev-page" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-l focus:outline-none">Anterior</button>
+            <span id="page-info" class="mx-4 text-gray-700">Página X de Y</span>
+            <button id="next-page" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-r focus:outline-none">Siguiente</button>
+        </div>
+
+        <!-- Gráfico de velas: contenedor debajo de la tabla -->
+        <div class="mt-6">
+            <h2 class="text-2xl font-semibold mb-3 text-gray-800">Gráfico de Velas Interactivo</h2>
+            <div class="w-full bg-white rounded-lg p-2 relative border border-gray-200" style="height: 500px;">
+                <canvas id="candlestickChart"></canvas>
+                <div id="chart-loading" class="loading absolute inset-0 bg-white bg-opacity-90" style="display: none;">
+                    Preparando gráfico...
+                </div>
+            </div>
+            <!-- Panel de Herramientas del gráfico -->
+            <div id="toolbar" class="flex justify-center items-center space-x-2 mt-4">
+                <button id="pan-left" class="p-2 bg-gray-200 hover:bg-gray-300 rounded-md transition-colors duration-200" title="Desplazar a la izquierda">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+                </button>
+                <button id="pan-right" class="p-2 bg-gray-200 hover:bg-gray-300 rounded-md transition-colors duration-200" title="Desplazar a la derecha">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                </button>
+                <div class="w-px h-8 bg-gray-200 mx-2"></div>
+                <button id="zoom-in" class="p-2 bg-gray-200 hover:bg-gray-300 rounded-md transition-colors duration-200" title="Acercar">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                </button>
+                <button id="zoom-out" class="p-2 bg-gray-200 hover:bg-gray-300 rounded-md transition-colors duration-200" title="Alejar">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" /></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tooltip del gráfico -->
+    <div id="tooltip"></div>
+
+    <script>
+        const dataTableBody = document.getElementById('data-table-body');
+        const prevPageBtn = document.getElementById('prev-page');
+        const nextPageBtn = document.getElementById('next-page');
+        const pageInfoSpan = document.getElementById('page-info');
+        const rowsPerPageSelect = document.getElementById('rows-per-page');
+        const currentEntriesSpan = document.getElementById('current-entries');
+        const totalEntriesSpan = document.getElementById('total-entries');
+        
+        let currentPage = 1;
+        let rowsPerPage = parseInt(rowsPerPageSelect.value);
+        let allData = []; // Almacenará todos los datos cargados
+
+        // Función utilitaria: detecta si una fila está separada por comas (CSV estándar)
+        function isCommaSeparated(row) {
+            return row.indexOf(',') !== -1 && row.split(',').length > 3;
+        }
+
+        // Función utilitaria para intentar parsear un número y devolver null si falla
+        function toNumber(v) {
+            const n = Number(v);
+            return Number.isFinite(n) ? n : null;
+        }
+
+        let currentFormat = 'fx'; // 'fx' o 'btc'
+
+        // Actualiza el encabezado de la tabla según el formato (btc o fx)
+        function setTableHeader(format) {
+            const thead = document.querySelector('table thead');
+            let labels = [];
+            if (format === 'btc') {
+                labels = ['Open time', 'Open', 'High', 'Low', 'Close', 'Volume', 'Spread'];
+            } else {
+                labels = ['Fecha Apertura', 'Apertura', 'Máximo', 'Mínimo', 'Cierre', 'Volumen', 'Spread'];
+            }
+            thead.innerHTML = `
+                <tr>
+                    ${labels.map(l => `<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">${l}</th>`).join('')}
+                </tr>
+            `;
+        }
+
+        // Inicializar encabezado por defecto (FX)
+        setTableHeader(currentFormat);
+
+        // --- Gráfico: normalización y render ---
+        let chartApi = null;
+        let candleData = [];
+
+        function parseDateFlexible(value) {
+            if (value == null) return null;
+            if (typeof value === 'number') return new Date(value);
+            const s = String(value).trim();
+            if (/^\d+$/.test(s)) {
+                const ms = Number(s);
+                return Number.isFinite(ms) ? new Date(ms) : new Date(s);
+            }
+            if (s.includes(' ')) {
+                const [datePart, timePart] = s.split(' ');
+                const normalizedDate = datePart.replace(/\./g, '-').replace(/\//g, '-');
+                return new Date(`${normalizedDate}T${timePart}`);
+            }
+            return new Date(s);
+        }
+
+        function prepareCandleData(rows) {
+            const out = rows.map(r => {
+                const date = parseDateFlexible(r.date);
+                const open = Number(r.open);
+                const high = Number(r.high);
+                const low = Number(r.low);
+                const close = Number(r.close);
+                const volume = r.volume != null ? Number(r.volume) : 0;
+                const spread = r.spread != null ? Number(r.spread) : (
+                    Number.isFinite(high) && Number.isFinite(low) ? (high - low) : 0
+                );
+                return { date, open, high, low, close, volume, spread };
+            }).filter(d => d && d.date instanceof Date && !isNaN(d.date.getTime()) && Number.isFinite(d.open));
+            out.sort((a, b) => a.date - b.date);
+            return out;
+        }
+
+        function createCandlestickChart() {
+            const canvas = document.getElementById('candlestickChart');
+            const ctx = canvas.getContext('2d');
+            const tooltip = document.getElementById('tooltip');
+            const zoomInBtn = document.getElementById('zoom-in');
+            const zoomOutBtn = document.getElementById('zoom-out');
+            const panLeftBtn = document.getElementById('pan-left');
+            const panRightBtn = document.getElementById('pan-right');
+            const loadingEl = document.getElementById('chart-loading');
+
+            let data = [];
+            let candleObjects = [];
+            let selectedCandleIndex = -1;
+            let startIndex = 0;
+            let candleWidth = 20;
+            const candleSpacing = 8;
+            const minCandleWidth = 3;
+            const maxCandleWidth = 100;
+            let visibleCandlesCount = 0;
+
+            let isDragging = false;
+            let lastMouseX = 0;
+            let dragStartX = 0;
+            let dragPixelAccumulator = 0;
+
+            function resizeCanvas() {
+                const container = canvas.parentElement;
+                canvas.width = container.clientWidth;
+                canvas.height = container.clientHeight;
+                drawChart();
+            }
+
+            function updateToolbarState() {
+                const margin = { top: 20, right: 50, bottom: 30, left: 10 };
+                const chartWidth = canvas.width - margin.left - margin.right;
+                const maxVisibleCandlesAllowed = 25;
+                const dynamicMinCandleWidth = (chartWidth / maxVisibleCandlesAllowed) - candleSpacing;
+                const effectiveMinCandleWidth = Math.max(minCandleWidth, dynamicMinCandleWidth);
+                zoomInBtn.disabled = candleWidth >= maxCandleWidth;
+                zoomOutBtn.disabled = candleWidth <= effectiveMinCandleWidth;
+                [zoomInBtn, zoomOutBtn].forEach(btn => {
+                    if (btn.disabled) btn.classList.add('opacity-50', 'cursor-not-allowed');
+                    else btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                });
+                panLeftBtn.disabled = startIndex <= 0;
+                panRightBtn.disabled = (startIndex + visibleCandlesCount) >= data.length;
+                [panLeftBtn, panRightBtn].forEach(btn => {
+                    if (btn.disabled) btn.classList.add('opacity-50', 'cursor-not-allowed');
+                    else btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                });
+            }
+
+            function drawChart() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                candleObjects = [];
+
+                const margin = { top: 20, right: 50, bottom: 30, left: 10 };
+                const chartWidth = canvas.width - margin.left - margin.right;
+                const chartHeight = canvas.height - margin.top - margin.bottom;
+
+                visibleCandlesCount = Math.floor(chartWidth / (candleWidth + candleSpacing));
+                const endIndex = Math.min(startIndex + visibleCandlesCount, data.length);
+                const visibleData = data.slice(startIndex, endIndex);
+                if (visibleData.length === 0) { updateToolbarState(); return; }
+
+                const minPrice = Math.min(...visibleData.map(d => d.low));
+                const maxPrice = Math.max(...visibleData.map(d => d.high));
+                const priceRange = Math.max(1e-9, maxPrice - minPrice);
+
+                let timeAxisInterval = 1;
+                const totalCandleFootprint = candleWidth + candleSpacing;
+                if (totalCandleFootprint < 30) timeAxisInterval = 4;
+                else if (totalCandleFootprint < 55) timeAxisInterval = 2;
+
+                ctx.strokeStyle = '#e5e7eb';
+                ctx.fillStyle = '#374151';
+                ctx.font = '12px Inter, system-ui, -apple-system, Segoe UI, Roboto';
+                ctx.textAlign = 'left';
+                const numPriceLevels = 6;
+                for (let i = 0; i <= numPriceLevels; i++) {
+                    const price = minPrice + (priceRange / numPriceLevels) * i;
+                    const y = margin.top + chartHeight - (chartHeight * (price - minPrice) / priceRange);
+                    ctx.beginPath(); ctx.moveTo(margin.left, y); ctx.lineTo(margin.left + chartWidth, y); ctx.stroke();
+                    ctx.fillText(price.toFixed(5), margin.left + chartWidth + 5, y + 4);
+                }
+
+                ctx.textAlign = 'center';
+                visibleData.forEach((d, i) => {
+                    const date = d.date;
+                    if (date.getHours() % timeAxisInterval === 0) {
+                        const x = margin.left + i * (candleWidth + candleSpacing) + candleWidth / 2;
+                        ctx.beginPath(); ctx.moveTo(x, margin.top); ctx.lineTo(x, margin.top + chartHeight);
+                        ctx.setLineDash([2, 4]); ctx.stroke(); ctx.setLineDash([]);
+                        const h = String(date.getHours()).padStart(2, '0');
+                        const m = String(date.getMinutes()).padStart(2, '0');
+                        ctx.fillText(`${h}:${m}`, x, margin.top + chartHeight + 20);
+                    }
+                });
+
+                visibleData.forEach((d, i) => {
+                    const isBullish = d.close >= d.open;
+                    const color = isBullish ? '#059669' : '#dc2626';
+                    ctx.strokeStyle = color; ctx.fillStyle = color;
+
+                    const x = margin.left + i * (candleWidth + candleSpacing);
+                    const getY = price => margin.top + chartHeight - (chartHeight * (price - minPrice) / priceRange);
+                    const openY = getY(d.open);
+                    const closeY = getY(d.close);
+                    const highY = getY(d.high);
+                    const lowY = getY(d.low);
+
+                    ctx.beginPath(); ctx.moveTo(x + candleWidth / 2, highY); ctx.lineTo(x + candleWidth / 2, lowY);
+                    ctx.lineWidth = 1.5; ctx.stroke();
+
+                    const bodyHeight = Math.abs(openY - closeY);
+                    const bodyY = Math.min(openY, closeY);
+                    ctx.fillRect(x, bodyY, candleWidth, bodyHeight > 1 ? bodyHeight : 1);
+
+                    candleObjects.push({ x, y: highY, width: candleWidth, height: lowY - highY, data: d });
+
+                    if ((startIndex + i) === selectedCandleIndex) {
+                        ctx.strokeStyle = '#2563eb'; ctx.lineWidth = 2; const padding = 2;
+                        ctx.strokeRect(x - padding, highY - padding, candleWidth + (padding * 2), (lowY - highY) + (padding * 2));
+                    }
+                });
+
+                updateToolbarState();
+            }
+
+            // Click en vela para tooltip
+            canvas.addEventListener('click', (event) => {
+                if (Math.abs(event.clientX - dragStartX) > 5) return;
+                const rect = canvas.getBoundingClientRect();
+                const mouseX = event.clientX - rect.left; const mouseY = event.clientY - rect.top;
+                let clickedIndexInVisible = -1;
+                const candleClicked = candleObjects.find((candle, index) => {
+                    if (mouseX >= candle.x && mouseX <= candle.x + candle.width && mouseY >= candle.y && mouseY <= candle.y + candle.height) {
+                        clickedIndexInVisible = index; return true;
+                    } return false;
+                });
+                if (candleClicked) {
+                    selectedCandleIndex = startIndex + clickedIndexInVisible; drawChart();
+                    const date = candleClicked.data.date;
+                    const formattedDate = `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+                    tooltip.innerHTML = `<div style="font-weight:700;margin-bottom:6px">${formattedDate}</div>`+
+                        `<div><strong style="font-weight:600;color:#374151;">Apertura:</strong> ${candleClicked.data.open.toFixed(5)}</div>`+
+                        `<div><strong style="font-weight:600;color:#374151;">Máximo:</strong> ${candleClicked.data.high.toFixed(5)}</div>`+
+                        `<div><strong style="font-weight:600;color:#374151;">Mínimo:</strong> ${candleClicked.data.low.toFixed(5)}</div>`+
+                        `<div><strong style="font-weight:600;color:#374151;">Cierre:</strong> ${candleClicked.data.close.toFixed(5)}</div>`+
+                        `<div><strong style="font-weight:600;color:#374151;">Volumen:</strong> ${candleClicked.data.volume ?? ''}</div>`+
+                        `<div style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(15,23,42,0.06)"><strong style="font-weight:600;color:#374151;">Spread:</strong> ${candleClicked.data.spread ?? ''}</div>`;
+                    tooltip.style.display = 'block';
+                    const tooltipWidth = tooltip.offsetWidth; const tooltipHeight = tooltip.offsetHeight;
+                    const windowWidth = window.innerWidth; const windowHeight = window.innerHeight;
+                    let left = event.pageX + 15; let top = event.pageY + 15;
+                    if (left + tooltipWidth > windowWidth) left = event.pageX - tooltipWidth - 15;
+                    if (top + tooltipHeight > windowHeight) top = event.pageY - tooltipHeight - 15;
+                    tooltip.style.left = `${left}px`; tooltip.style.top = `${top}px`;
+                } else { if (selectedCandleIndex !== -1) { selectedCandleIndex = -1; drawChart(); } tooltip.style.display = 'none'; }
+            });
+
+            // Arrastre para desplazamiento
+            canvas.addEventListener('mousedown', (e) => { isDragging = true; lastMouseX = e.clientX; dragStartX = e.clientX; dragPixelAccumulator = 0; canvas.style.cursor = 'grabbing'; });
+            window.addEventListener('mouseup', () => { if (isDragging) { isDragging = false; canvas.style.cursor = 'grab'; } });
+            canvas.addEventListener('mouseleave', () => { canvas.style.cursor = 'default'; });
+            canvas.addEventListener('mouseenter', () => { canvas.style.cursor = 'grab'; });
+            window.addEventListener('mousemove', (e) => {
+                if (!isDragging) return; const deltaX = e.clientX - lastMouseX; lastMouseX = e.clientX; dragPixelAccumulator += deltaX;
+                const pixelsPerCandle = candleWidth + candleSpacing;
+                if (Math.abs(dragPixelAccumulator) >= pixelsPerCandle) {
+                    const candleShift = Math.floor(dragPixelAccumulator / pixelsPerCandle);
+                    let newStartIndex = startIndex - candleShift; newStartIndex = Math.max(0, newStartIndex);
+                    newStartIndex = Math.min(data.length - visibleCandlesCount, newStartIndex);
+                    if (startIndex !== newStartIndex) { startIndex = newStartIndex; tooltip.style.display = 'none'; selectedCandleIndex = -1; drawChart(); }
+                    dragPixelAccumulator -= candleShift * pixelsPerCandle;
+                }
+            });
+
+            // Zoom con rueda
+            canvas.addEventListener('wheel', (event) => { event.preventDefault(); const zoomDirection = event.deltaY < 0 ? 1 : -1; handleZoom(zoomDirection, event.clientX); });
+
+            function handlePan(direction) {
+                const panAmount = 5; let newStartIndex = startIndex + (panAmount * direction);
+                newStartIndex = Math.max(0, newStartIndex); newStartIndex = Math.min(data.length - visibleCandlesCount, newStartIndex);
+                if (startIndex !== newStartIndex) { startIndex = newStartIndex; tooltip.style.display = 'none'; selectedCandleIndex = -1; drawChart(); }
+            }
+
+            function handleZoom(direction, mouseX = null) {
+                const zoomSpeed = 0.1; const margin = { top: 20, right: 50, bottom: 30, left: 10 };
+                const chartWidth = canvas.width - margin.left - margin.right; const maxVisibleCandlesAllowed = 25;
+                const dynamicMinCandleWidth = (chartWidth / maxVisibleCandlesAllowed) - candleSpacing;
+                const oldWidth = candleWidth; let newWidth = oldWidth * (1 + zoomSpeed * direction);
+                const effectiveMinCandleWidth = Math.max(minCandleWidth, dynamicMinCandleWidth);
+                newWidth = Math.max(effectiveMinCandleWidth, Math.min(maxCandleWidth, newWidth)); if (newWidth === oldWidth) return;
+                const rect = canvas.getBoundingClientRect(); const centerPoint = mouseX ? mouseX - rect.left : (margin.left + chartWidth / 2);
+                const mouseXInChart = centerPoint - margin.left; const candleIndexFromStart = Math.floor(mouseXInChart / (oldWidth + candleSpacing));
+                const absoluteCandleIndex = startIndex + candleIndexFromStart; candleWidth = newWidth;
+                const newVisibleCandles = Math.floor(chartWidth / (candleWidth + candleSpacing)); let newStartIndex;
+                if (newVisibleCandles >= data.length) newStartIndex = 0; else {
+                    newStartIndex = Math.round(absoluteCandleIndex - (mouseXInChart / (candleWidth + candleSpacing)));
+                    newStartIndex = Math.max(0, Math.min(data.length - newVisibleCandles, newStartIndex));
+                }
+                startIndex = newStartIndex; selectedCandleIndex = -1; tooltip.style.display = 'none'; drawChart();
+            }
+
+            panLeftBtn.addEventListener('click', () => handlePan(-1));
+            panRightBtn.addEventListener('click', () => handlePan(1));
+            zoomInBtn.addEventListener('click', () => handleZoom(1));
+            zoomOutBtn.addEventListener('click', () => handleZoom(-1));
+
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
+
+            return {
+                setData(newData) {
+                    if (loadingEl) loadingEl.style.display = 'flex';
+                    data = Array.isArray(newData) ? newData.slice() : [];
+                    data.sort((a, b) => a.date - b.date);
+                    selectedCandleIndex = -1; startIndex = 0;
+                    if (loadingEl) loadingEl.style.display = 'none';
+                    resizeCanvas();
+                }
+            };
+        }
+
+        // Función para cargar los datos del CSV; acepta nombres diferentes y formatos mixtos
+        async function loadCSV(filename) {
+            try {
+                dataTableBody.innerHTML = `<tr><td colspan="7" class="px-6 py-4 whitespace-nowrap text-blue-500 text-center">Cargando datos de ${filename}...</td></tr>`;
+                const response = await fetch(`./datos/${filename}`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const text = await response.text();
+                const rows = text.trim().split('\n').filter(r => r.trim() !== '');
+
+                // Detectar formato usando la primera data-row
+                const header = rows[0];
+                let dataRows = rows.slice(1);
+
+                // Some CSVs might not have a header (e.g., btc file starts with a header line 'Open time,Open,...')
+                // If first row contains non-date header words, keep as header and slice data.
+                if (header && header.toLowerCase().includes('open time')) {
+                    // header present; dataRows already correct (slice(1) above)
+                } else if (isCommaSeparated(header)) {
+                    // If header looks like data but comma-separated, assume first row is data and keep it
+                    dataRows = rows.slice(0);
+                } else if (!isCommaSeparated(header)) {
+                    // whitespace-separated with date/time columns; if header is not informative, assume first is header and remove it
+                    dataRows = rows.slice(1);
+                }
+
+                allData = dataRows.map(row => {
+                    // Detect comma-separated (BTC file) vs whitespace-separated (FX files)
+                    if (isCommaSeparated(row)) {
+                        // Comma-separated: expected format (as in btc_15m_data...):
+                        // Open time,Open,High,Low,Close,Volume,Close time, ...
+                        const parts = row.split(',').map(p => p.trim());
+                        // Ensure at least first 6 columns exist
+                        const openTime = parts[0];
+                        const open = toNumber(parts[1]);
+                        const high = toNumber(parts[2]);
+                        const low = toNumber(parts[3]);
+                        const close = toNumber(parts[4]);
+                        const volume = toNumber(parts[5]);
+                        // Spread is not present; compute as High-Low (or High-Close) / or set null
+                        const spread = (high !== null && low !== null) ? (high - low) : null;
+                        currentFormat = 'btc';
+                        return { date: openTime, open, high, low, close, volume, spread };
+                    } else {
+                        // Whitespace-separated: expected many columns, date and time in first two tokens
+                        const values = row.split(/\s+/).filter(v => v.trim() !== '');
+                        // Defensive: some rows may have commas inside; remove trailing commas
+                        const v0 = values[0] ? values[0].replace(/,$/, '') : '';
+                        const v1 = values[1] ? values[1].replace(/,$/, '') : '';
+                        const dateTime = v0 + ' ' + v1;
+                        const open = toNumber(values[2]);
+                        const high = toNumber(values[3]);
+                        const low = toNumber(values[4]);
+                        const close = toNumber(values[5]);
+                        const volume = toNumber(values[6]);
+                        const spread = toNumber(values[7]);
+                        currentFormat = 'fx';
+                        return { date: dateTime, open, high, low, close, volume, spread };
+                    }
+                });
+
+                // Filter out invalid parsed objects
+                allData = allData.filter(r => r && r.date !== undefined && r.open !== null);
+
+                // Ajustar encabezado según formato detectado
+                setTableHeader(currentFormat);
+
+                totalEntriesSpan.textContent = allData.length;
+                currentPage = 1;
+                renderTable();
+
+                // Actualizar gráfico con los mismos datos
+                candleData = prepareCandleData(allData);
+                if (!chartApi) chartApi = createCandlestickChart();
+                const chartLoading = document.getElementById('chart-loading');
+                if (chartLoading) chartLoading.style.display = 'flex';
+                chartApi.setData(candleData);
+            } catch (error) {
+                console.error(`Error al cargar el CSV ${filename}:`, error);
+                dataTableBody.innerHTML = `<tr><td colspan="7" class="px-6 py-4 whitespace-nowrap text-red-500 text-center">Error al cargar los datos de ${filename}. Asegúrate de que el archivo existe.</td></tr>`;
+                totalEntriesSpan.textContent = '0';
+                currentEntriesSpan.textContent = '0';
+                pageInfoSpan.textContent = 'Página 0 de 0';
+                allData = [];
+            }
+        }
+
+        // Función para renderizar la tabla con los datos actuales
+        function renderTable() {
+            dataTableBody.innerHTML = ''; // Limpiar tabla
+            const start = (currentPage - 1) * rowsPerPage;
+            const end = start + rowsPerPage;
+            const paginatedData = allData.slice(start, end);
+
+            paginatedData.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${row.date}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${row.open}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${row.high}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${row.low}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${row.close}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${row.volume}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${row.spread}</td>
+                `;
+                dataTableBody.appendChild(tr);
+            });
+
+            updatePaginationControls();
+        }
+
+        // Función para actualizar los controles de paginación
+        function updatePaginationControls() {
+            const totalPages = Math.ceil(allData.length / rowsPerPage);
+            pageInfoSpan.textContent = `Página ${currentPage} de ${totalPages}`;
+            prevPageBtn.disabled = currentPage === 1;
+            nextPageBtn.disabled = currentPage === totalPages;
+
+            const startEntry = (currentPage - 1) * rowsPerPage + 1;
+            const endEntry = Math.min(currentPage * rowsPerPage, allData.length);
+            currentEntriesSpan.textContent = `${startEntry}-${endEntry}`;
+        }
+
+        // Event Listeners
+        prevPageBtn.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                renderTable();
+            }
+        });
+
+        nextPageBtn.addEventListener('click', () => {
+            const totalPages = Math.ceil(allData.length / rowsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderTable();
+            }
+        });
+
+        rowsPerPageSelect.addEventListener('change', (e) => {
+            rowsPerPage = parseInt(e.target.value);
+            currentPage = 1; // Resetear a la primera página al cambiar el número de filas
+            renderTable();
+        });
+
+        // Cargar los datos al iniciar la página
+        const currencySelect = document.getElementById('currency-select');
+        const loadDataBtn = document.getElementById('load-data-btn');
+
+        let availableCurrencies = []; // Se inicializa como un array vacío
+
+        // Función para obtener la lista de archivos CSV del servidor
+        async function fetchAvailableCurrencies() {
+            try {
+                // Asumiendo que hay un endpoint o una manera de listar los archivos en './datos/'
+                // Para propósitos de este ejemplo, simularé la respuesta.
+                // En una aplicación real, necesitarías un backend para listar archivos.
+                const response = await fetch('./datos/list_currencies.json'); // Simular un archivo JSON con la lista
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                availableCurrencies = data;
+                populateCurrencySelector();
+                // Si solo hay una divisa disponible, cargarla automáticamente
+                if (availableCurrencies.length === 1) {
+                    currencySelect.value = availableCurrencies[0];
+                    loadDataBtn.disabled = false;
+                    loadCSV(availableCurrencies[0]);
+                } else if (availableCurrencies.length > 0) {
+                    loadDataBtn.disabled = true; // Deshabilitar hasta que se seleccione una divisa
+                }
+            } catch (error) {
+                console.error('Error al obtener la lista de divisas:', error);
+                // En caso de error, mantener la lista vacía o cargar un valor por defecto si existe
+            }
+        }
+
+        // Función para poblar el selector de divisa
+        function populateCurrencySelector() {
+            currencySelect.innerHTML = '<option value="">-- Seleccionar divisa --</option>'; // Opción por defecto
+            availableCurrencies.forEach(currencyFile => {
+                const option = document.createElement('option');
+                option.value = currencyFile;
+                // Mostrar etiqueta limpia: sin extensión y con guiones bajos reemplazados por espacios
+                const label = currencyFile.replace(/\.csv$/i, '').replace(/_/g, ' ');
+                option.textContent = label;
+                option.title = currencyFile;
+                currencySelect.appendChild(option);
+            });
+        }
+
+        // Habilitar/deshabilitar botón de carga según selección
+        currencySelect.addEventListener('change', () => {
+            loadDataBtn.disabled = !currencySelect.value;
+            // Limpiar tabla y resetear paginación cuando se cambia la selección
+            dataTableBody.innerHTML = '';
+            totalEntriesSpan.textContent = '0';
+            currentEntriesSpan.textContent = '0';
+            pageInfoSpan.textContent = 'Página 0 de 0';
+            currentPage = 1;
+            allData = []; // Limpiar datos cargados
+
+            // Limpiar gráfico cuando se cambia de activo
+            const tooltipEl = document.getElementById('tooltip');
+            if (tooltipEl) tooltipEl.style.display = 'none';
+            const chartLoadingEl = document.getElementById('chart-loading');
+            if (chartLoadingEl) chartLoadingEl.style.display = 'none';
+            candleData = [];
+            if (chartApi) {
+                chartApi.setData([]);
+            }
+        });
+
+        // (El cargador robusto loadCSV está definido arriba y maneja formatos CSV con comas y espacios.)
+
+        // Event listener para el botón Cargar Datos
+        loadDataBtn.addEventListener('click', () => {
+            const selectedCurrency = currencySelect.value;
+            if (selectedCurrency) {
+                loadCSV(selectedCurrency);
+            }
+        });
+
+        // Inicializar el selector al cargar la página y obtener divisas
+        fetchAvailableCurrencies();
+        updatePaginationControls(); // Asegurarse de que los controles se muestren correctamente al inicio
+
+        // Inicializar el gráfico al cargar la página (estructura y eventos); datos se asignan tras cargar CSV
+        document.addEventListener('DOMContentLoaded', () => { if (!chartApi) chartApi = createCandlestickChart(); });
+    </script>
+</body>
+</html>
