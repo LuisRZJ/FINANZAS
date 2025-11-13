@@ -53,6 +53,39 @@
             opacity: 0.5;
             cursor: not-allowed;
         }
+        .trade-card {
+            border-width: 2px;
+            transition: border-color 200ms ease;
+        }
+        :root{color-scheme: light}
+        .dark{color-scheme: dark}
+        .dark body{background-color:#0f172a;color:#e5e7eb}
+        .dark .bg-white{background-color:#1f2937 !important}
+        .dark .text-gray-900{color:#e5e7eb !important}
+        .dark .text-gray-700{color:#d1d5db !important}
+        .dark .text-gray-600{color:#9ca3af !important}
+        .dark .text-gray-500{color:#6b7280 !important}
+        .dark .border-gray-200{border-color:#374151 !important}
+        .dark .border-gray-300{border-color:#4b5563 !important}
+        .dark .bg-gray-100{background-color:#111827 !important}
+        .dark .bg-gray-50{background-color:#0f172a !important}
+        .dark .bg-blue-50{background-color:rgba(59,130,246,0.1) !important}
+        .dark .text-blue-700{color:#60a5fa !important}
+        .dark .text-blue-900{color:#93c5fd !important}
+        .dark .text-blue-800{color:#93c5fd !important}
+        .dark .text-gray-800{color:#e5e7eb !important}
+        .dark .tab-active{border-color:#3b82f6;color:#93c5fd;background-color:rgba(59,130,246,.15)}
+        .dark .tab-inactive{border-color:transparent;color:#9ca3af}
+        .dark .bg-gray-200{background-color:#0b1220 !important}
+        .dark .bg-green-100{background-color:rgba(34,197,94,.15) !important}
+        .dark .bg-red-100{background-color:rgba(239,68,68,.15) !important}
+        .dark .bg-blue-100{background-color:rgba(59,130,246,.15) !important}
+        .dark .text-green-700{color:#34d399 !important}
+        .dark .text-red-700{color:#f87171 !important}
+        .dark .border-blue-100{border-color:#1e40af !important}
+        .dark ::-webkit-scrollbar-track{background:#0b1220}
+        .dark ::-webkit-scrollbar-thumb{background:#334155}
+        .dark ::-webkit-scrollbar-thumb:hover{background:#475569}
     </style>
 </head>
 <body class="antialiased">
@@ -195,6 +228,7 @@
                     <div class="bg-white p-6 rounded-lg shadow-lg flex flex-col justify-between border border-gray-200"><h3 class="text-sm font-medium text-gray-500 uppercase">G / P / E</h3><p id="stat-ratio" class="text-3xl font-bold mt-2 text-gray-900">0 / 0 / 0</p></div>
                     <div class="bg-white p-6 rounded-lg shadow-lg flex flex-col justify-between border border-gray-200"><h3 class="text-sm font-medium text-gray-500 uppercase">Porcentaje de Aciertos</h3><p id="stat-winrate" class="text-3xl font-bold mt-2 text-gray-900">0%</p></div>
                     <div class="bg-white p-6 rounded-lg shadow-lg flex flex-col justify-between border border-gray-200"><h3 class="text-sm font-medium text-gray-500 uppercase">Operaciones Totales</h3><p id="stat-total-trades" class="text-3xl font-bold mt-2 text-gray-900">0</p></div>
+                    <div class="bg-white p-6 rounded-lg shadow-lg flex flex-col justify-between border border-gray-200"><h3 class="text-sm font-medium text-gray-500 uppercase">Volumen Promedio por Operación</h3><p id="stat-avg-volume" class="text-3xl font-bold mt-2 text-gray-900">$0.00</p></div>
                     <div class="bg-white p-6 rounded-lg shadow-lg border border-gray-200">
                         <div class="flex justify-between items-center">
                             <h3 class="text-sm font-medium text-gray-500 uppercase">Promedio Trades</h3>
@@ -206,6 +240,20 @@
                             </select>
                         </div>
                         <p id="stat-avg-trades" class="text-3xl font-bold mt-2 text-gray-900">0.0</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-lg border border-gray-200">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-sm font-medium text-gray-500 uppercase">Volumen por Período</h3>
+                            <select id="volume-period" class="bg-white text-xs text-gray-700 rounded border border-gray-300 p-1 focus:ring-2 focus:ring-blue-500">
+                                <option value="Todo el tiempo" selected>Todo el tiempo</option>
+                                <option value="Este año">Este año</option>
+                                <option value="Últimos 3 meses">Últimos 3 meses</option>
+                                <option value="Este mes">Este mes</option>
+                                <option value="Esta semana">Esta semana</option>
+                                <option value="Este día">Este día</option>
+                            </select>
+                        </div>
+                        <p id="stat-volume-period" class="text-3xl font-bold mt-2 text-gray-900">$0.00</p>
                     </div>
                     <div class="bg-white p-6 rounded-lg shadow-lg border border-gray-200">
                         <h3 class="text-sm font-medium text-gray-500 uppercase">Franja Horaria Más Operada (4H)</h3>
@@ -241,6 +289,58 @@
             <!-- Pestaña 3: Ajustes -->
             <div id="content-ajustes" class="hidden">
                  <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+                    <div class="md:col-span-2 bg-white p-6 rounded-lg shadow-lg border border-gray-200">
+                        <div class="flex items-center justify-between mb-4">
+                            <div>
+                                <h2 class="text-xl font-semibold text-gray-900">Preferencias de Tema</h2>
+                                <p class="text-sm text-gray-600 mt-1">Controla cómo se muestra el tema en la aplicación.</p>
+                            </div>
+                            <span class="inline-flex items-center gap-2 bg-blue-50 text-blue-700 text-xs font-semibold px-3 py-1 rounded-full border border-blue-100">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 16.5V21m6-4.5V21M3.75 7.5h16.5M6 3.75h12A2.25 2.25 0 0120.25 6v10.5A2.25 2.25 0 0118 18.75H6A2.25 2.25 0 013.75 16.5V6A2.25 2.25 0 016 3.75z" />
+                                </svg>
+                                Tema
+                            </span>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <label class="flex items-start gap-3 p-4 rounded-lg border border-gray-200 cursor-pointer hover:border-blue-300">
+                                <input type="radio" name="theme-preference" value="auto" id="theme-auto" class="mt-1 form-radio h-4 w-4 text-blue-600" checked>
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-gray-600">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 16.5V21m6-4.5V21M3.75 7.5h16.5M6 3.75h12A2.25 2.25 0 0120.25 6v10.5A2.25 2.25 0 0118 18.75H6A2.25 2.25 0 013.75 16.5V6A2.25 2.25 0 016 3.75z" />
+                                        </svg>
+                                        <span class="font-medium text-gray-900">Automático</span>
+                                    </div>
+                                    <p class="text-sm text-gray-600 mt-1">Usa la preferencia del sistema.</p>
+                                </div>
+                            </label>
+                            <label class="flex items-start gap-3 p-4 rounded-lg border border-gray-200 cursor-pointer hover:border-blue-300">
+                                <input type="radio" name="theme-preference" value="light" id="theme-light" class="mt-1 form-radio h-4 w-4 text-blue-600">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-yellow-500">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21M6.364 18.114l1.591-1.591M3 12h2.25m.386-6.364 1.591 1.591M12 6.75a5.25 5.25 0 110 10.5 5.25 5.25 0 010-10.5z" />
+                                        </svg>
+                                        <span class="font-medium text-gray-900">Modo Claro</span>
+                                    </div>
+                                    <p class="text-sm text-gray-600 mt-1">Fuerza el tema claro.</p>
+                                </div>
+                            </label>
+                            <label class="flex items-start gap-3 p-4 rounded-lg border border-gray-200 cursor-pointer hover:border-blue-300">
+                                <input type="radio" name="theme-preference" value="dark" id="theme-dark" class="mt-1 form-radio h-4 w-4 text-blue-600">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-indigo-500">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0112 21.75a9.75 9.75 0 01-9.75-9.75 9.717 9.717 0 016.748-9.002 7.5 7.5 0 1012.754 12.004z" />
+                                        </svg>
+                                        <span class="font-medium text-gray-900">Modo Oscuro</span>
+                                    </div>
+                                    <p class="text-sm text-gray-600 mt-1">Fuerza el tema oscuro.</p>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
                     <!-- Sección de gestión de cuentas -->
                     <div class="md:col-span-2 bg-white p-6 rounded-lg shadow-lg border border-gray-200">
                         <div class="flex items-center justify-between mb-4">
@@ -259,9 +359,10 @@
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                             <div>
                                 <label for="account-select" class="block text-sm font-medium text-gray-700 mb-2">Cuenta activa</label>
-                                <div class="flex flex-col sm:flex-row gap-3">
-                                    <select id="account-select" class="flex-1 bg-gray-100 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-gray-900 p-2"></select>
-                                    <button type="button" id="delete-account-btn" class="px-4 py-2 bg-red-100 text-red-600 font-semibold rounded-lg border border-red-200 transition-colors focus:outline-none focus:ring-2 focus:ring-red-300 disabled:opacity-50 disabled:cursor-not-allowed">Eliminar</button>
+                                <div class="flex flex-col sm:flex-row sm:flex-wrap gap-3">
+                                    <select id="account-select" class="flex-1 min-w-0 truncate bg-gray-100 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-gray-900 p-2"></select>
+                                    <button type="button" id="rename-account-btn" class="px-4 py-2 bg-gray-100 text-gray-700 font-semibold rounded-lg border border-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:opacity-50 disabled:cursor-not-allowed shrink-0">Renombrar</button>
+                                    <button type="button" id="delete-account-btn" class="px-4 py-2 bg-red-100 text-red-600 font-semibold rounded-lg border border-red-200 transition-colors focus:outline-none focus:ring-2 focus:ring-red-300 disabled:opacity-50 disabled:cursor-not-allowed shrink-0">Eliminar</button>
                                 </div>
                                 <p id="account-lock-info" class="text-xs text-gray-500 mt-2"></p>
                             </div>
@@ -366,6 +467,7 @@
     <div id="delete-all-data-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden z-50"><div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm mx-4 border border-gray-200"><h3 class="text-lg font-bold text-gray-900 mb-4">¡Atención!</h3><p class="text-gray-600 mb-6">Estás a punto de borrar TODOS los datos. Esta acción es irreversible. ¿Deseas continuar?</p><div class="flex justify-end space-x-4"><button id="cancel-delete-all-btn" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-lg">Cancelar</button><button id="confirm-delete-all-btn" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg">Borrar Todo</button></div></div></div>
     <div id="export-data-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden z-50"><div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-4 flex flex-col border border-gray-200"><h3 class="text-lg font-bold text-gray-900 mb-4">Exportar Datos</h3><p class="text-gray-600 mb-4 text-sm">Usa el botón "Descargar" para guardar el archivo. Si falla, usa "Copiar" y pega el contenido en un archivo de texto nuevo guardado como `.json`.</p><button id="download-json-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg mb-4">Descargar Archivo</button><div class="relative"><textarea id="export-json-textarea" readonly class="w-full h-40 bg-gray-100 text-gray-800 text-xs p-2 rounded-md border border-gray-300 font-mono"></textarea><button id="copy-json-btn" class="absolute top-2 right-2 bg-gray-200 hover:bg-gray-300 text-gray-800 text-xs font-bold py-1 px-2 rounded">Copiar</button></div><button id="close-export-modal-btn" class="mt-4 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-lg self-center">Cerrar</button></div></div>
     <div id="import-options-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden z-50"><div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-4 flex flex-col border border-gray-200"><h3 class="text-lg font-bold text-gray-900 mb-4">Importar Datos</h3><p class="text-gray-600 mb-4 text-sm">Elige un método para importar. Esto reemplazará todos los datos actuales.</p><button id="trigger-file-import-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg mb-4">Cargar Archivo (.json)</button><div class="relative"><label for="import-json-textarea" class="block text-sm font-medium text-gray-600 mb-2">O pega el contenido de tu archivo .json aquí:</label><textarea id="import-json-textarea" class="w-full h-40 bg-gray-100 text-gray-800 text-xs p-2 rounded-md border border-gray-300 font-mono" placeholder="Pega el contenido JSON aquí..."></textarea></div><button id="import-from-text-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg mt-4">Importar desde Texto</button><button id="close-import-options-modal-btn" class="mt-4 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-lg self-center">Cerrar</button></div></div>
+    <div id="edit-account-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden z-50"><div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm mx-4 border border-gray-200"><h3 class="text-lg font-bold text-gray-900 mb-4">Editar Cuenta</h3><form id="edit-account-form"><input type="text" id="edit-account-input" required class="block w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm text-gray-900 p-2 mb-6"><div class="flex justify-end space-x-4"><button type="button" id="cancel-edit-account-btn" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-lg">Cancelar</button><button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg">Guardar</button></div></form></div></div>
     
     <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -376,6 +478,7 @@
 
         const ACCOUNT_STORAGE_KEY = 'btMultiAccountState_v1';
         const DEFAULT_ACCOUNT_NAME = 'Cuenta Predeterminada';
+        const THEME_PREF_KEY = 'btThemePreference_v1';
 
         const createId = () => Date.now().toString(36) + Math.random().toString(36).substr(2);
         const createEmptyCollections = () => ({ trades: [], assets: [], strategies: [] });
@@ -514,6 +617,7 @@
                 const isLocked = currentAccount && currentAccount.locked;
                 const cannotDelete = isLocked || accountState.accounts.length <= 1;
                 deleteAccountBtn.disabled = cannotDelete;
+                if (renameAccountBtn) renameAccountBtn.disabled = isLocked;
                 if (accountLockInfo) {
                     accountLockInfo.textContent = isLocked
                         ? 'Esta es la cuenta predeterminada y no puede editarse ni eliminarse.'
@@ -588,6 +692,42 @@
             cancelEditMode();
             fullRefreshUI();
             showToast(`Cuenta "${account.name}" eliminada.`, true);
+        };
+
+        const openEditAccountModal = () => {
+            const account = getAccountById(currentAccountId);
+            if (!account || account.locked) {
+                showToast('La cuenta predeterminada no puede renombrarse.', true);
+                return;
+            }
+            editAccountInput.value = account.name || '';
+            toggleModal('edit-account-modal', true);
+            editAccountInput.focus();
+        };
+
+        const handleUpdateAccountName = (e) => {
+            e.preventDefault();
+            const account = getAccountById(currentAccountId);
+            if (!account || account.locked) {
+                showToast('La cuenta predeterminada no puede renombrarse.', true);
+                return;
+            }
+            const newName = (editAccountInput.value || '').trim();
+            if (!newName) {
+                showToast('Ingresa un nombre válido para la cuenta.', true);
+                return;
+            }
+            const isDuplicate = accountState.accounts.some(a => a.id !== currentAccountId && a.name.toLowerCase() === newName.toLowerCase());
+            if (isDuplicate) {
+                showToast('Ya existe una cuenta con ese nombre.', true);
+                return;
+            }
+            account.name = newName;
+            saveAccountState();
+            renderAccountSection();
+            renderStorageSummary();
+            showToast('Cuenta actualizada.');
+            toggleModal('edit-account-modal', false);
         };
 
         const isValidSingleAccountPayload = (payload) => payload && Array.isArray(payload.trades) && Array.isArray(payload.assets) && Array.isArray(payload.strategies);
@@ -698,6 +838,7 @@
         const toast = document.getElementById('toast');
         const cancelEditBtn = document.getElementById('cancel-edit-btn');
         const avgTradesPeriodSelect = document.getElementById('avg-trades-period');
+        const volumePeriodSelect = document.getElementById('volume-period');
         const totalStorageUsedEl = document.getElementById('total-storage-used');
         const storageBreakdownEl = document.getElementById('storage-breakdown');
         const accountsCountEl = document.getElementById('accounts-count');
@@ -706,7 +847,12 @@
         const addAccountForm = document.getElementById('add-account-form');
         const newAccountInput = document.getElementById('new-account-input');
         const deleteAccountBtn = document.getElementById('delete-account-btn');
+        const renameAccountBtn = document.getElementById('rename-account-btn');
         const accountLockInfo = document.getElementById('account-lock-info');
+        const editAccountModal = document.getElementById('edit-account-modal');
+        const editAccountForm = document.getElementById('edit-account-form');
+        const editAccountInput = document.getElementById('edit-account-input');
+        const cancelEditAccountBtn = document.getElementById('cancel-edit-account-btn');
 
         const deleteModal = document.getElementById('delete-modal');
         const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
@@ -764,6 +910,7 @@
             migrateData();
             fechaInput.value = getCurrentDateTimeLocalString();
             fullRefreshUI();
+            initTheme();
             setupEventListeners();
         };
         
@@ -803,8 +950,12 @@
             if (accountSelect) accountSelect.addEventListener('change', handleAccountChange);
             if (addAccountForm) addAccountForm.addEventListener('submit', handleAddAccount);
             if (deleteAccountBtn) deleteAccountBtn.addEventListener('click', handleDeleteAccount);
+            if (renameAccountBtn) renameAccountBtn.addEventListener('click', openEditAccountModal);
+            if (editAccountForm) editAccountForm.addEventListener('submit', handleUpdateAccountName);
+            if (cancelEditAccountBtn) cancelEditAccountBtn.addEventListener('click', () => toggleModal('edit-account-modal', false));
 
             avgTradesPeriodSelect.addEventListener('change', updateAverageTradesStat);
+            if (volumePeriodSelect) volumePeriodSelect.addEventListener('change', updateVolumeByPeriodStat);
 
             addStrategyForm.addEventListener('submit', handleAddStrategy);
             strategyList.addEventListener('click', handleStrategyListActions);
@@ -838,6 +989,7 @@
             if (exportDiscordBtn) exportDiscordBtn.addEventListener('click', handleExportToDiscord);
             confirmDeleteAllBtn.addEventListener('click', confirmDeleteAllData);
             cancelDeleteAllBtn.addEventListener('click', () => toggleModal('delete-all-data-modal', false));
+            document.querySelectorAll('input[name="theme-preference"]').forEach(r => r.addEventListener('change', handleThemeChange));
         };
 
         // --- LÓGICA DE OPERACIONES (TRADES) ---
@@ -1360,12 +1512,24 @@
                         'Fracaso': 'bg-red-100 text-red-700',
                         'Empate': 'bg-blue-100 text-blue-700'
                     };
+                    const tipoClasses = {
+                        'Compra': 'bg-green-100 text-green-700',
+                        'Venta': 'bg-red-100 text-red-700'
+                    };
+                    const borderColors = {
+                        'Éxito': '#4CAF50',
+                        'Fracaso': '#F44336',
+                        'Empate': '#FF9800'
+                    };
                     const pnlClass = trade.pnl > 0 ? 'text-green-600' : trade.pnl < 0 ? 'text-red-600' : 'text-gray-600';
                     const pnlSign = trade.pnl > 0 ? '+' : '';
                     const time = new Date(trade.fecha).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+                    const tipoClass = tipoClasses[trade.tipo] || 'bg-gray-100 text-gray-700';
+                    const tipoLabel = trade.tipo || 'N/A';
+                    const borderColor = borderColors[trade.resultado] || '#e5e7eb';
 
                     return `
-                        <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm flex flex-col space-y-3">
+                        <div class="bg-white border rounded-lg p-4 shadow-sm flex flex-col space-y-3 trade-card" style="border-color: ${borderColor}">
                             <div class="flex justify-between items-start">
                                 <div>
                                     <span class="font-bold text-lg text-gray-900">${trade.activo}</span>
@@ -1373,11 +1537,12 @@
                                 </div>
                                 <span class="text-xs font-semibold px-2 py-1 rounded-full ${resultadoClasses[trade.resultado] || ''}">${trade.resultado}</span>
                             </div>
-                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2 text-sm">
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-2 text-sm">
                                 <div><span class="text-gray-500">Inversión:</span> <span class="font-medium text-gray-900">$${(trade.monto || 0).toFixed(2)}</span></div>
                                 <div><span class="text-gray-500">P/L:</span> <span class="font-semibold ${pnlClass}">${pnlSign}${(trade.pnl || 0).toFixed(2)}</span></div>
                                 <div><span class="text-gray-500">Expiración:</span> <span class="font-medium text-gray-900">${formatExpiration(trade.expiracion)}</span></div>
-                                <div class="col-span-2 sm:col-span-3"><span class="text-gray-500">Estrategia:</span> <span class="font-medium text-gray-900">${trade.estrategia || 'N/A'}</span></div>
+                                <div><span class="text-gray-500">Dirección:</span> <span class="inline-flex items-center text-xs font-semibold px-2 py-1 rounded-full ${tipoClass}">${tipoLabel}</span></div>
+                                <div class="col-span-2 sm:col-span-4"><span class="text-gray-500">Estrategia:</span> <span class="font-medium text-gray-900">${trade.estrategia || 'N/A'}</span></div>
                             </div>
                             ${trade.notas ? `<p class="text-sm text-gray-700 bg-gray-100 p-2 rounded-md whitespace-pre-wrap">${trade.notas}</p>` : ''}
                             <div class="flex justify-end items-center space-x-3 pt-3 border-t border-gray-200">
@@ -1478,14 +1643,61 @@
 
             trades.forEach(trade => {
                 const date = new Date(trade.fecha);
-                if (period === 'Día') uniquePeriods.add(date.toISOString().slice(0, 10));
+                if (period === 'Día') {
+                    const dayKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+                    uniquePeriods.add(dayKey);
+                }
                 else if (period === 'Semana') uniquePeriods.add(getWeekNumber(date));
-                else if (period === 'Mes') uniquePeriods.add(date.toISOString().slice(0, 7));
+                else if (period === 'Mes') {
+                    const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                    uniquePeriods.add(monthKey);
+                }
                 else if (period === 'Año') uniquePeriods.add(date.getFullYear());
             });
 
             const average = uniquePeriods.size > 0 ? trades.length / uniquePeriods.size : 0;
             avgTradesStat.textContent = average.toFixed(1);
+        };
+
+        const updateAverageVolumeStat = () => {
+            const avgVolumeEl = document.getElementById('stat-avg-volume');
+            if (trades.length === 0) {
+                avgVolumeEl.textContent = "$0.00";
+                return;
+            }
+            const totalMonto = trades.reduce((sum, t) => sum + (t.monto || 0), 0);
+            const avg = totalMonto / trades.length;
+            avgVolumeEl.textContent = `$${avg.toFixed(2)}`;
+        };
+
+        const updateVolumeByPeriodStat = () => {
+            const volumeEl = document.getElementById('stat-volume-period');
+            if (!volumePeriodSelect || trades.length === 0) {
+                volumeEl.textContent = "$0.00";
+                return;
+            }
+            const now = new Date();
+            const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            const startOfYear = new Date(now.getFullYear(), 0, 1);
+            const dayOfWeek = now.getDay();
+            const diffToMonday = (dayOfWeek + 6) % 7;
+            const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - diffToMonday);
+            const startLast3Months = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            startLast3Months.setMonth(startLast3Months.getMonth() - 3);
+            startLast3Months.setHours(0,0,0,0);
+            const selected = volumePeriodSelect.value;
+            const sum = trades.reduce((acc, t) => {
+                const d = new Date(t.fecha);
+                if (selected === 'Todo el tiempo') return acc + (t.monto || 0);
+                if (selected === 'Este año') return d.getFullYear() === now.getFullYear() ? acc + (t.monto || 0) : acc;
+                if (selected === 'Últimos 3 meses') return d >= startLast3Months ? acc + (t.monto || 0) : acc;
+                if (selected === 'Este mes') return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() ? acc + (t.monto || 0) : acc;
+                if (selected === 'Esta semana') return d >= startOfWeek ? acc + (t.monto || 0) : acc;
+                if (selected === 'Este día') return d >= startOfDay ? acc + (t.monto || 0) : acc;
+                return acc;
+            }, 0);
+            volumeEl.textContent = `$${sum.toFixed(2)}`;
         };
 
         const updatePeakHourStat = () => {
@@ -1546,6 +1758,10 @@
                 statsElements.activeDays.textContent = "0";
                 statsElements.estrategias.innerHTML = `<p class="text-gray-500">No hay datos suficientes.</p>`;
                 statsElements.activos.innerHTML = `<p class="text-gray-500">No hay datos suficientes.</p>`;
+                const avgVolEl = document.getElementById('stat-avg-volume');
+                const volPeriodEl = document.getElementById('stat-volume-period');
+                if (avgVolEl) avgVolEl.textContent = "$0.00";
+                if (volPeriodEl) volPeriodEl.textContent = "$0.00";
                 renderTrendChart(); // Clear chart
                 return;
             }
@@ -1563,6 +1779,8 @@
             statsElements.totalTrades.textContent = totalTrades;
             
             updateAverageTradesStat();
+            updateAverageVolumeStat();
+            updateVolumeByPeriodStat();
             updatePeakHourStat();
 
             const dayCounts = trades.reduce((acc, trade) => {
@@ -1690,6 +1908,32 @@
                 toast.classList.remove('translate-y-0', 'opacity-100');
                 toast.classList.add('translate-y-20', 'opacity-0');
             }, 3000);
+        };
+        const prefersDarkMql = window.matchMedia('(prefers-color-scheme: dark)');
+        const setMetaThemeColor = (isDark) => {
+            const meta = document.querySelector('meta[name="theme-color"]');
+            if (meta) meta.setAttribute('content', isDark ? '#0f172a' : '#2563eb');
+        };
+        let themePreference = 'auto';
+        const applyTheme = (pref, notify=false) => {
+            themePreference = pref;
+            localStorage.setItem(THEME_PREF_KEY, pref);
+            const isDark = pref === 'dark' ? true : pref === 'light' ? false : prefersDarkMql.matches;
+            document.documentElement.classList.toggle('dark', isDark);
+            setMetaThemeColor(isDark);
+            if (notify) showToast('Preferencia de tema actualizada.');
+        };
+        const initTheme = () => {
+            const stored = localStorage.getItem(THEME_PREF_KEY);
+            themePreference = stored || 'auto';
+            applyTheme(themePreference);
+            const radios = document.querySelectorAll('input[name="theme-preference"]');
+            radios.forEach(r => r.checked = r.value === themePreference);
+            prefersDarkMql.addEventListener('change', () => { if (themePreference === 'auto') applyTheme('auto'); });
+        };
+        const handleThemeChange = (e) => {
+            const value = e.target.value;
+            applyTheme(value, true);
         };
         init();
     });
