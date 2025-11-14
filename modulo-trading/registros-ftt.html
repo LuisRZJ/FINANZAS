@@ -228,7 +228,10 @@
                     <div class="bg-white p-6 rounded-lg shadow-lg flex flex-col justify-between border border-gray-200"><h3 class="text-sm font-medium text-gray-500 uppercase">G / P / E</h3><p id="stat-ratio" class="text-3xl font-bold mt-2 text-gray-900">0 / 0 / 0</p></div>
                     <div class="bg-white p-6 rounded-lg shadow-lg flex flex-col justify-between border border-gray-200"><h3 class="text-sm font-medium text-gray-500 uppercase">Porcentaje de Aciertos</h3><p id="stat-winrate" class="text-3xl font-bold mt-2 text-gray-900">0%</p></div>
                     <div class="bg-white p-6 rounded-lg shadow-lg flex flex-col justify-between border border-gray-200"><h3 class="text-sm font-medium text-gray-500 uppercase">Operaciones Totales</h3><p id="stat-total-trades" class="text-3xl font-bold mt-2 text-gray-900">0</p></div>
+                    <div class="bg-white p-6 rounded-lg shadow-lg flex flex-col justify-between border border-gray-200"><h3 class="text-sm font-medium text-gray-500 uppercase">ROI Promedio</h3><p id="stat-avg-roi" class="text-3xl font-bold mt-2 text-gray-900">0%</p><p class="text-xs text-gray-600 mt-1">Porcentaje medio de ganancia/pérdida respecto al capital invertido.</p></div>
                     <div class="bg-white p-6 rounded-lg shadow-lg flex flex-col justify-between border border-gray-200"><h3 class="text-sm font-medium text-gray-500 uppercase">Volumen Promedio por Operación</h3><p id="stat-avg-volume" class="text-3xl font-bold mt-2 text-gray-900">$0.00</p></div>
+                    <div class="bg-white p-6 rounded-lg shadow-lg flex flex-col justify-between border border-gray-200"><h3 class="text-sm font-medium text-gray-500 uppercase">Racha Ganadora Máxima</h3><p id="stat-longest-win-streak" class="text-3xl font-bold mt-2 text-gray-900">0</p></div>
+                    <div class="bg-white p-6 rounded-lg shadow-lg flex flex-col justify-between border border-gray-200"><h3 class="text-sm font-medium text-gray-500 uppercase">Racha Perdedora Máxima</h3><p id="stat-longest-loss-streak" class="text-3xl font-bold mt-2 text-gray-900">0</p></div>
                     <div class="bg-white p-6 rounded-lg shadow-lg border border-gray-200">
                         <div class="flex justify-between items-center">
                             <h3 class="text-sm font-medium text-gray-500 uppercase">Promedio Trades</h3>
@@ -272,6 +275,8 @@
                     <!-- Estadísticas por grupo -->
                     <div class="bg-white p-6 rounded-lg shadow-lg border border-gray-200"><h3 class="text-lg font-semibold text-gray-900 mb-4">Efectividad por Estrategia</h3><div id="stat-estrategias" class="space-y-3"><p class="text-gray-500">No hay datos suficientes.</p></div></div>
                     <div class="bg-white p-6 rounded-lg shadow-lg border border-gray-200"><h3 class="text-lg font-semibold text-gray-900 mb-4">Rendimiento por Activo</h3><div id="stat-activos" class="space-y-3"><p class="text-gray-500">No hay datos suficientes.</p></div></div>
+                    <div class="bg-white p-6 rounded-lg shadow-lg border border-gray-200"><div class="flex justify-between items-center mb-4"><h3 class="text-lg font-semibold text-gray-900">Rendimiento por Dirección</h3><span id="stat-direction-best" class="inline-flex items-center gap-2 text-xs font-semibold px-2 py-1 rounded-full border border-gray-200 text-gray-700">N/A</span></div><div id="stat-direction" class="grid grid-cols-1 sm:grid-cols-2 gap-4"><p class="text-gray-500">No hay datos suficientes.</p></div></div>
+                    <div class="bg-white p-6 rounded-lg shadow-lg border border-gray-200 lg:col-span-2"><div class="flex items-center justify-between mb-4"><h3 class="text-lg font-semibold text-gray-900">Rendimiento por Mes</h3><div class="flex items-center gap-2"><button id="month-prev" class="px-3 py-1 bg-gray-100 text-gray-700 font-semibold rounded-lg border border-gray-200">Anterior</button><span id="month-label" class="text-xs font-semibold px-2 py-1 rounded-full border border-gray-200 text-gray-700">N/A</span><button id="month-next" class="px-3 py-1 bg-gray-100 text-gray-700 font-semibold rounded-lg border border-gray-200">Siguiente</button></div></div><div id="stat-monthly" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"><p class="text-gray-500">No hay datos suficientes.</p></div></div>
                 </div>
                 <!-- Gráfico de tendencia -->
                 <div class="bg-white p-6 rounded-lg shadow-lg mt-6 border border-gray-200">
@@ -568,6 +573,9 @@
                 ? { dias: trade.expiracion.dias || 0, horas: trade.expiracion.horas || 0, minutos: trade.expiracion.minutos || 0, segundos: trade.expiracion.segundos || 0 }
                 : { dias: 0, horas: 0, minutos: 0, segundos: 0 }
         });
+        let monthlyIndex = 0;
+        let monthlyKeysCache = [];
+        let monthlyInitialized = false;
         const cloneSimpleItem = (item) => ({ ...item });
 
         const persistCurrentAccount = () => {
@@ -842,6 +850,10 @@
         const totalStorageUsedEl = document.getElementById('total-storage-used');
         const storageBreakdownEl = document.getElementById('storage-breakdown');
         const accountsCountEl = document.getElementById('accounts-count');
+        const monthPrevBtn = document.getElementById('month-prev');
+        const monthNextBtn = document.getElementById('month-next');
+        const monthLabelEl = document.getElementById('month-label');
+        const monthlyContainer = document.getElementById('stat-monthly');
         const storageListEl = document.getElementById('storage-list');
         const accountSelect = document.getElementById('account-select');
         const addAccountForm = document.getElementById('add-account-form');
@@ -990,6 +1002,8 @@
             confirmDeleteAllBtn.addEventListener('click', confirmDeleteAllData);
             cancelDeleteAllBtn.addEventListener('click', () => toggleModal('delete-all-data-modal', false));
             document.querySelectorAll('input[name="theme-preference"]').forEach(r => r.addEventListener('change', handleThemeChange));
+            if (monthPrevBtn) monthPrevBtn.addEventListener('click', () => { monthlyIndex = Math.max(0, monthlyIndex - 1); renderMonthlyPerformance(); });
+            if (monthNextBtn) monthNextBtn.addEventListener('click', () => { if (monthlyKeysCache.length > 0) monthlyIndex = Math.min(monthlyKeysCache.length - 1, monthlyIndex + 1); renderMonthlyPerformance(); });
         };
 
         // --- LÓGICA DE OPERACIONES (TRADES) ---
@@ -1670,6 +1684,54 @@
             avgVolumeEl.textContent = `$${avg.toFixed(2)}`;
         };
 
+        const updateAverageROIStat = () => {
+            const avgRoiEl = document.getElementById('stat-avg-roi');
+            if (!avgRoiEl) return;
+            if (trades.length === 0) {
+                avgRoiEl.textContent = "0%";
+                avgRoiEl.className = "text-3xl font-bold mt-2 text-gray-900";
+                return;
+            }
+            const totalMonto = trades.reduce((sum, t) => sum + (t.monto || 0), 0);
+            const totalPnl = trades.reduce((sum, t) => sum + (t.pnl || 0), 0);
+            const roi = totalMonto > 0 ? (totalPnl / totalMonto) * 100 : 0;
+            avgRoiEl.textContent = `${roi.toFixed(1)}%`;
+            avgRoiEl.className = `text-3xl font-bold mt-2 ${roi >= 0 ? 'text-green-600' : 'text-red-600'}`;
+        };
+
+        const updateStreakStats = () => {
+            const winEl = document.getElementById('stat-longest-win-streak');
+            const lossEl = document.getElementById('stat-longest-loss-streak');
+            if (!winEl || !lossEl) return;
+            if (trades.length === 0) {
+                winEl.textContent = "0";
+                lossEl.textContent = "0";
+                return;
+            }
+            const sortedTrades = [...trades].sort((a, b) => {
+                const dateComparison = new Date(a.fecha) - new Date(b.fecha);
+                if (dateComparison !== 0) return dateComparison;
+                return (a.createdAt || 0) - (b.createdAt || 0);
+            });
+            let currentWin = 0, currentLoss = 0, maxWin = 0, maxLoss = 0;
+            for (const t of sortedTrades) {
+                if (t.resultado === 'Éxito') {
+                    currentWin++;
+                    maxWin = Math.max(maxWin, currentWin);
+                    currentLoss = 0;
+                } else if (t.resultado === 'Fracaso') {
+                    currentLoss++;
+                    maxLoss = Math.max(maxLoss, currentLoss);
+                    currentWin = 0;
+                } else {
+                    currentWin = 0;
+                    currentLoss = 0;
+                }
+            }
+            winEl.textContent = String(maxWin);
+            lossEl.textContent = String(maxLoss);
+        };
+
         const updateVolumeByPeriodStat = () => {
             const volumeEl = document.getElementById('stat-volume-period');
             if (!volumePeriodSelect || trades.length === 0) {
@@ -1760,8 +1822,19 @@
                 statsElements.activos.innerHTML = `<p class="text-gray-500">No hay datos suficientes.</p>`;
                 const avgVolEl = document.getElementById('stat-avg-volume');
                 const volPeriodEl = document.getElementById('stat-volume-period');
+                const avgRoiEl = document.getElementById('stat-avg-roi');
+                const winEl = document.getElementById('stat-longest-win-streak');
+                const lossEl = document.getElementById('stat-longest-loss-streak');
+                const directionContainer = document.getElementById('stat-direction');
+                const directionBestEl = document.getElementById('stat-direction-best');
                 if (avgVolEl) avgVolEl.textContent = "$0.00";
                 if (volPeriodEl) volPeriodEl.textContent = "$0.00";
+                if (avgRoiEl) { avgRoiEl.textContent = "0%"; avgRoiEl.className = "text-3xl font-bold mt-2 text-gray-900"; }
+                if (winEl) winEl.textContent = "0";
+                if (lossEl) lossEl.textContent = "0";
+                if (directionContainer) directionContainer.innerHTML = `<p class=\"text-gray-500\">No hay datos suficientes.</p>`;
+                if (directionBestEl) { directionBestEl.textContent = 'N/A'; directionBestEl.className = 'inline-flex items-center gap-2 text-xs font-semibold px-2 py-1 rounded-full border border-gray-200 text-gray-700'; }
+                renderMonthlyPerformance();
                 renderTrendChart(); // Clear chart
                 return;
             }
@@ -1780,8 +1853,10 @@
             
             updateAverageTradesStat();
             updateAverageVolumeStat();
+            updateAverageROIStat();
             updateVolumeByPeriodStat();
             updatePeakHourStat();
+            updateStreakStats();
 
             const dayCounts = trades.reduce((acc, trade) => {
                 const day = trade.fecha.slice(0, 10);
@@ -1803,6 +1878,8 @@
             
             updateStatsByGroup('estrategia', statsElements.estrategias);
             updateStatsByGroup('activo', statsElements.activos);
+            updateDirectionAnalysisStat();
+            renderMonthlyPerformance();
             renderTrendChart();
         };
 
@@ -1828,6 +1905,119 @@
                     return `<div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm"><div class="flex justify-between items-center mb-2"><span class="text-base font-semibold text-gray-900">${key} <span class="text-xs text-gray-500">(${data.wins}/${data.losses}/${data.ties})</span></span><span class="text-sm font-semibold ${pnlClass}">$${data.pnl.toFixed(2)}</span></div><div class="w-full bg-gray-200 rounded-full h-2.5"><div class="bg-blue-500 h-2.5 rounded-full" style="width: ${winRate}%"></div></div></div>`;
                 }).join('');
             } else container.innerHTML = `<p class="text-gray-500">No hay datos suficientes.</p>`;
+        };
+        const updateDirectionAnalysisStat = () => {
+            const container = document.getElementById('stat-direction');
+            const bestEl = document.getElementById('stat-direction-best');
+            if (!container || !bestEl) return;
+            if (trades.length === 0) {
+                container.innerHTML = `<p class="text-gray-500">No hay datos suficientes.</p>`;
+                bestEl.textContent = 'N/A';
+                bestEl.className = 'inline-flex items-center gap-2 text-xs font-semibold px-2 py-1 rounded-full border border-gray-200 text-gray-700';
+                return;
+            }
+            const calc = (dir) => {
+                const arr = trades.filter(t => (t.tipo || '').toLowerCase().startsWith(dir.toLowerCase()));
+                const wins = arr.filter(t => t.resultado === 'Éxito').length;
+                const losses = arr.filter(t => t.resultado === 'Fracaso').length;
+                const ties = arr.filter(t => t.resultado === 'Empate').length;
+                const totalMonto = arr.reduce((s,t) => s + (t.monto||0), 0);
+                const totalPnl = arr.reduce((s,t) => s + (t.pnl||0), 0);
+                const roi = totalMonto > 0 ? (totalPnl / totalMonto) * 100 : 0;
+                return { wins, losses, ties, totalMonto, totalPnl, roi, count: arr.length };
+            };
+            const compra = calc('Compra');
+            const venta = calc('Venta');
+            const roiClass = (v) => v > 0 ? 'text-green-600' : v < 0 ? 'text-red-600' : 'text-gray-600';
+            const pnlClass = (v) => v > 0 ? 'text-green-600' : v < 0 ? 'text-red-600' : 'text-gray-600';
+            container.innerHTML = [
+                `<div class="border border-gray-200 rounded-lg p-4 bg-gray-50"><div class="flex justify-between items-center mb-1"><span class="text-base font-semibold text-gray-900">Compra <span class="text-xs text-gray-500">(${compra.wins}/${compra.losses}/${compra.ties})</span></span><span class="text-sm font-semibold ${roiClass(compra.roi)}">${compra.roi.toFixed(1)}%</span></div><div class="flex justify-between items-center"><span class="text-xs text-gray-500">P/L</span><span class="text-sm font-semibold ${pnlClass(compra.totalPnl)}">$${compra.totalPnl.toFixed(2)}</span></div><div class="flex justify-between items-center mt-1"><span class="text-xs text-gray-500">Volumen</span><span class="text-sm font-medium text-gray-900">$${compra.totalMonto.toFixed(2)}</span></div></div>`,
+                `<div class="border border-gray-200 rounded-lg p-4 bg-gray-50"><div class="flex justify-between items-center mb-1"><span class="text-base font-semibold text-gray-900">Venta <span class="text-xs text-gray-500">(${venta.wins}/${venta.losses}/${venta.ties})</span></span><span class="text-sm font-semibold ${roiClass(venta.roi)}">${venta.roi.toFixed(1)}%</span></div><div class="flex justify-between items-center"><span class="text-xs text-gray-500">P/L</span><span class="text-sm font-semibold ${pnlClass(venta.totalPnl)}">$${venta.totalPnl.toFixed(2)}</span></div><div class="flex justify-between items-center mt-1"><span class="text-xs text-gray-500">Volumen</span><span class="text-sm font-medium text-gray-900">$${venta.totalMonto.toFixed(2)}</span></div></div>`
+            ].join('');
+            let bestLabel = 'N/A';
+            let bestClass = 'inline-flex items-center gap-2 text-xs font-semibold px-2 py-1 rounded-full border border-gray-200 text-gray-700';
+            if (compra.count === 0 && venta.count === 0) {
+                bestLabel = 'N/A';
+            } else {
+                if (compra.roi > venta.roi) {
+                    bestLabel = 'Mejor: Compra';
+                    bestClass = 'inline-flex items-center gap-2 text-xs font-semibold px-2 py-1 rounded-full border border-gray-200 text-green-600';
+                } else if (compra.roi < venta.roi) {
+                    bestLabel = 'Mejor: Venta';
+                    bestClass = 'inline-flex items-center gap-2 text-xs font-semibold px-2 py-1 rounded-full border border-gray-200 text-green-600';
+                } else {
+                    if (compra.roi < 0 && venta.roi < 0) {
+                        if (compra.roi > venta.roi) { bestLabel = 'Menor pérdida: Compra'; } else if (compra.roi < venta.roi) { bestLabel = 'Menor pérdida: Venta'; } else { bestLabel = 'Empate'; }
+                        bestClass = 'inline-flex items-center gap-2 text-xs font-semibold px-2 py-1 rounded-full border border-gray-200 text-red-600';
+                    } else {
+                        bestLabel = 'Empate';
+                    }
+                }
+            }
+            bestEl.textContent = bestLabel;
+            bestEl.className = bestClass;
+        };
+
+        const renderMonthlyPerformance = () => {
+            if (!monthlyContainer || !monthLabelEl) return;
+            if (trades.length === 0) {
+                monthlyContainer.innerHTML = `<p class="text-gray-500">No hay datos suficientes.</p>`;
+                monthLabelEl.textContent = 'N/A';
+                if (monthPrevBtn) monthPrevBtn.disabled = true;
+                if (monthNextBtn) monthNextBtn.disabled = true;
+                return;
+            }
+            const keysSet = new Set();
+            trades.forEach(t => {
+                const d = new Date(t.fecha);
+                const k = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+                keysSet.add(k);
+            });
+            monthlyKeysCache = Array.from(keysSet).sort((a,b)=>a.localeCompare(b));
+            if (monthlyKeysCache.length === 0) {
+                monthlyContainer.innerHTML = `<p class="text-gray-500">No hay datos suficientes.</p>`;
+                monthLabelEl.textContent = 'N/A';
+                if (monthPrevBtn) monthPrevBtn.disabled = true;
+                if (monthNextBtn) monthNextBtn.disabled = true;
+                return;
+            }
+            if (!monthlyInitialized) { monthlyIndex = monthlyKeysCache.length - 1; monthlyInitialized = true; }
+            if (monthlyIndex < 0) monthlyIndex = 0;
+            if (monthlyIndex >= monthlyKeysCache.length) monthlyIndex = monthlyKeysCache.length - 1;
+            const selectedKey = monthlyKeysCache[monthlyIndex];
+            const [yStr, mStr] = selectedKey.split('-');
+            const y = parseInt(yStr,10);
+            const m = parseInt(mStr,10)-1;
+            const label = new Date(y, m, 1).toLocaleDateString('es-ES', { year: 'numeric', month: 'long' });
+            monthLabelEl.textContent = label.charAt(0).toUpperCase()+label.slice(1);
+            const monthTrades = trades.filter(t => {
+                const d = new Date(t.fecha);
+                return d.getFullYear() === y && d.getMonth() === m;
+            });
+            if (monthTrades.length === 0) {
+                monthlyContainer.innerHTML = `<p class="text-gray-500">No hay datos suficientes.</p>`;
+            } else {
+                const wins = monthTrades.filter(t => t.resultado === 'Éxito').length;
+                const ties = monthTrades.filter(t => t.resultado === 'Empate').length;
+                const losses = monthTrades.length - wins - ties;
+                const totalMonto = monthTrades.reduce((s,t)=>s+(t.monto||0),0);
+                const totalPnl = monthTrades.reduce((s,t)=>s+(t.pnl||0),0);
+                const winRate = (wins+losses)>0 ? (wins/(wins+losses))*100 : 0;
+                const roi = totalMonto>0 ? (totalPnl/totalMonto)*100 : 0;
+                const avgVol = monthTrades.length>0 ? totalMonto/monthTrades.length : 0;
+                const roiClass = roi>0 ? 'text-green-600' : roi<0 ? 'text-red-600' : 'text-gray-600';
+                const pnlClass = totalPnl>0 ? 'text-green-600' : totalPnl<0 ? 'text-red-600' : 'text-gray-600';
+                monthlyContainer.innerHTML = `
+                    <div class="border border-gray-200 rounded-lg p-4 bg-gray-50"><span class="text-xs text-gray-500">Rentabilidad</span><p class="text-2xl font-bold ${pnlClass}">$${totalPnl.toFixed(2)}</p></div>
+                    <div class="border border-gray-200 rounded-lg p-4 bg-gray-50"><span class="text-xs text-gray-500">G / P / E</span><p class="text-2xl font-bold text-gray-900">${wins} / ${losses} / ${ties}</p></div>
+                    <div class="border border-gray-200 rounded-lg p-4 bg-gray-50"><span class="text-xs text-gray-500">Winrate</span><p class="text-2xl font-bold text-gray-900">${winRate.toFixed(1)}%</p></div>
+                    <div class="border border-gray-200 rounded-lg p-4 bg-gray-50"><span class="text-xs text-gray-500">Volumen</span><p class="text-2xl font-bold text-gray-900">$${totalMonto.toFixed(2)}</p></div>
+                    <div class="border border-gray-200 rounded-lg p-4 bg-gray-50"><span class="text-xs text-gray-500">ROI</span><p class="text-2xl font-bold ${roiClass}">${roi.toFixed(1)}%</p></div>
+                    <div class="border border-gray-200 rounded-lg p-4 bg-gray-50"><span class="text-xs text-gray-500">Volumen Promedio</span><p class="text-2xl font-bold text-gray-900">$${avgVol.toFixed(2)}</p></div>
+                `;
+            }
+            if (monthPrevBtn) monthPrevBtn.disabled = monthlyIndex === 0;
+            if (monthNextBtn) monthNextBtn.disabled = monthlyIndex === monthlyKeysCache.length - 1;
         };
         
         const renderTrendChart = () => {
