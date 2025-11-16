@@ -20,34 +20,34 @@
         :root { --app-font: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; }
     </style>
 </head>
-<body class="bg-gray-100 font-sans app-inter">
+<body class="bg-gradient-to-br from-slate-50 to-indigo-50 font-sans app-inter min-h-screen">
 
-    <div class="container mx-auto p-4">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
         <!-- Simple header for the page -->
-        <header class="mb-6 bg-white rounded-lg shadow-sm p-4 flex items-start justify-between">
+        <header class="mb-8 bg-white/80 backdrop-blur rounded-2xl shadow p-6 flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-semibold text-gray-800">Registro de Inversiones — CryptoTab</h1>
-                <p class="text-sm text-gray-600 mt-1">Aquí puedes añadir y gestionar tus registros de inversión en CryptoTab. Usa los filtros para encontrar registros rápidamente.</p>
+                <h1 class="text-3xl font-bold text-slate-900 tracking-tight">Registro de Inversiones — CryptoTab</h1>
+                <p class="text-sm text-slate-600 mt-1">Añade y gestiona tus registros de inversión. Usa los filtros para encontrar registros rápidamente.</p>
             </div>
             <div class="flex items-center gap-2">
-                <a href="../index.html" class="inline-flex items-center bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium py-2 px-3 rounded shadow">
+                <a href="../index.html" class="inline-flex items-center bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium py-2.5 px-3.5 rounded-full shadow-sm">
                     <i class="fas fa-arrow-left mr-2"></i>Volver al Panel
                 </a>
             </div>
         </header>
 
         <!-- Pestañas de Navegación -->
-        <div class="mb-4 border-b border-gray-200">
-            <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="myTab" role="tablist">
+        <div class="mb-6">
+            <ul class="flex flex-wrap gap-2 text-sm font-medium" id="myTab" role="tablist">
                 <li class="mr-2" role="presentation">
-                    <button class="inline-block p-4 border-b-2 rounded-t-lg" id="dashboard-tab" type="button" role="tab" aria-controls="dashboard" aria-selected="true"><i class="fas fa-tachometer-alt mr-2"></i>Dashboard</button>
+                    <button class="px-4 py-2 rounded-full border border-transparent text-slate-600 hover:text-slate-800 transition shadow-sm" id="dashboard-tab" type="button" role="tab" aria-controls="dashboard" aria-selected="true"><i class="fas fa-tachometer-alt mr-2"></i>Dashboard</button>
                 </li>
                 <li class="mr-2" role="presentation">
-                    <button class="inline-block p-4 border-b-2 rounded-t-lg hover:text-gray-600 hover:border-gray-300" id="settings-tab" type="button" role="tab" aria-controls="settings" aria-selected="false"><i class="fas fa-cog mr-2"></i>Ajustes</button>
+                    <button class="px-4 py-2 rounded-full border border-transparent text-slate-600 hover:text-slate-800 transition shadow-sm" id="settings-tab" type="button" role="tab" aria-controls="settings" aria-selected="false"><i class="fas fa-cog mr-2"></i>Ajustes</button>
                 </li>
                 <li class="mr-2" role="presentation">
-                    <button class="inline-block p-4 border-b-2 rounded-t-lg hover:text-gray-600 hover:border-gray-300" id="storage-tab" type="button" role="tab" aria-controls="storage" aria-selected="false"><i class="fas fa-database mr-2"></i>Almacenamiento</button>
+                    <button class="px-4 py-2 rounded-full border border-transparent text-slate-600 hover:text-slate-800 transition shadow-sm" id="storage-tab" type="button" role="tab" aria-controls="storage" aria-selected="false"><i class="fas fa-database mr-2"></i>Almacenamiento</button>
                 </li>
             </ul>
         </div>
@@ -58,47 +58,47 @@
             <!-- Pestaña Principal: Dashboard -->
             <div id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
                 <div class="flex justify-between items-center mb-4">
-                    <h1 class="text-2xl font-bold text-gray-800">Registros</h1>
-                    <button id="addRecordBtn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                    <h1 class="text-2xl font-bold text-slate-900">Registros</h1>
+                    <button id="addRecordBtn" class="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-semibold py-2 px-4 rounded-full shadow">
                         <i class="fas fa-plus mr-2"></i>Añadir Registro
                     </button>
                 </div>
 
                 <!-- Filtros -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 p-4 bg-white rounded-lg shadow">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 p-4 bg-white/80 backdrop-blur rounded-2xl shadow">
                     <div>
-                        <label for="filterApp" class="block text-sm font-medium text-gray-700">Filtrar por APP</label>
-                        <select id="filterApp" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"></select>
+                        <label for="filterApp" class="block text-sm font-medium text-slate-700">Filtrar por APP</label>
+                        <select id="filterApp" class="mt-1 block w-full rounded-xl border-0 ring-1 ring-inset ring-slate-300 bg-white/80 backdrop-blur px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-600"></select>
                     </div>
                     <div>
-                        <label for="filterPlazo" class="block text-sm font-medium text-gray-700">Filtrar por Plazo</label>
-                        <select id="filterPlazo" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"></select>
+                        <label for="filterPlazo" class="block text-sm font-medium text-slate-700">Filtrar por Plazo</label>
+                        <select id="filterPlazo" class="mt-1 block w-full rounded-xl border-0 ring-1 ring-inset ring-slate-300 bg-white/80 backdrop-blur px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-600"></select>
                     </div>
                     <div>
-                        <label for="filterMetodoPago" class="block text-sm font-medium text-gray-700">Filtrar por Método de Pago</label>
-                        <select id="filterMetodoPago" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"></select>
+                        <label for="filterMetodoPago" class="block text-sm font-medium text-slate-700">Filtrar por Método de Pago</label>
+                        <select id="filterMetodoPago" class="mt-1 block w-full rounded-xl border-0 ring-1 ring-inset ring-slate-300 bg-white/80 backdrop-blur px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-600"></select>
                     </div>
                 </div>
 
                 <!-- Tabla Principal -->
-                <div class="bg-white shadow-md rounded-lg overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
+                <div class="bg-white/80 backdrop-blur shadow rounded-2xl overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-200">
+                        <thead class="bg-slate-50">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">APP</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hash Rate</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Plazo Inversión</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Método Pago</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Costo</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Próx. Renovación</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notas</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">APP</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">Hash Rate</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">Plazo Inversión</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">Método Pago</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">Costo</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">Próx. Renovación</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">Notas</th>
+                                <th class="px-6 py-3 text-right text-xs font-semibold text-slate-600 uppercase tracking-wide">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody id="dataTableBody" class="bg-white divide-y divide-gray-200">
+                        <tbody id="dataTableBody" class="bg-white/0 divide-y divide-slate-100">
                             <!-- Filas de datos se insertarán aquí -->
                         </tbody>
-                        <tfoot class="bg-gray-50 font-bold">
+                        <tfoot class="bg-slate-50 font-bold">
                             <tr id="tableTotals">
                                 <td class="px-6 py-4">Total</td>
                                 <td id="totalHashRate" class="px-6 py-4"></td>
@@ -106,7 +106,7 @@
                                 <td class="px-6 py-4"></td>
                                 <td id="totalCosto" class="px-6 py-4"></td>
                                 <td class="px-6 py-4"></td>
-                                <td id="totalRegistros" class="px-6 py-4 text-center" colspan="2"></td>
+                                <td id="totalRegistros" class="px-6 py-4 text-center text-slate-700" colspan="2"></td>
                             </tr>
                         </tfoot>
                     </table>
@@ -115,51 +115,51 @@
 
             <!-- Pestaña de Ajustes -->
             <div id="settings" class="hidden" role="tabpanel" aria-labelledby="settings-tab">
-                <h2 class="text-xl font-bold text-gray-800 mb-4">Gestionar Opciones</h2>
+                <h2 class="text-xl font-bold text-slate-900 mb-4">Gestionar Opciones</h2>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                     <!-- Gestión de APPs -->
                     <div>
-                        <h3 class="font-semibold mb-2">APPs</h3>
+                        <h3 class="font-semibold mb-2 text-slate-900">APPs</h3>
                         <div id="appsOptions" class="space-y-2"></div>
                         <div class="mt-2">
-                            <input type="text" id="newAppName" placeholder="Nombre de la APP" class="w-full border p-2 rounded">
-                            <input type="color" id="newAppColor" class="w-full h-8 p-1 border rounded mt-1">
-                            <button onclick="addOption('apps')" class="mt-2 bg-blue-500 text-white w-full py-2 rounded">Añadir APP</button>
+                            <input type="text" id="newAppName" placeholder="Nombre de la APP" class="w-full rounded-xl border-0 ring-1 ring-inset ring-slate-300 bg-white/80 px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-600">
+                            <input type="color" id="newAppColor" class="w-full h-9 rounded-xl ring-1 ring-inset ring-slate-300 bg-white/80 mt-1">
+                            <button onclick="addOption('apps')" class="mt-2 bg-indigo-600 hover:bg-indigo-700 text-white w-full py-2 rounded-full">Añadir APP</button>
                         </div>
                     </div>
                     <!-- Gestión de Plazos de Inversión -->
                     <div>
-                        <h3 class="font-semibold mb-2">Plazos de Inversión</h3>
+                        <h3 class="font-semibold mb-2 text-slate-900">Plazos de Inversión</h3>
                         <div id="plazosOptions" class="space-y-2"></div>
                         <div class="mt-2">
-                            <input type="text" id="newPlazoName" placeholder="Ej: 30 días / 3 meses" class="w-full border p-2 rounded">
+                            <input type="text" id="newPlazoName" placeholder="Ej: 30 días / 3 meses" class="w-full rounded-xl border-0 ring-1 ring-inset ring-slate-300 bg-white/80 px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-600">
                             <div class="mt-1 flex gap-2">
-                                <input type="number" id="newPlazoLength" placeholder="Número" class="w-1/2 border p-2 rounded">
-                                <select id="newPlazoUnit" class="w-1/2 border p-2 rounded">
+                                <input type="number" id="newPlazoLength" placeholder="Número" class="w-1/2 rounded-xl border-0 ring-1 ring-inset ring-slate-300 bg-white/80 px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-600">
+                                <select id="newPlazoUnit" class="w-1/2 rounded-xl border-0 ring-1 ring-inset ring-slate-300 bg-white/80 px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-600">
                                     <option value="days">Días</option>
                                     <option value="months">Meses</option>
                                 </select>
                             </div>
-                            <input type="color" id="newPlazoColor" class="w-full h-8 p-1 border rounded mt-1">
-                            <button onclick="addOption('plazos')" class="mt-2 bg-blue-500 text-white w-full py-2 rounded">Añadir Plazo</button>
+                            <input type="color" id="newPlazoColor" class="w-full h-9 rounded-xl ring-1 ring-inset ring-slate-300 bg-white/80 mt-1">
+                            <button onclick="addOption('plazos')" class="mt-2 bg-indigo-600 hover:bg-indigo-700 text-white w-full py-2 rounded-full">Añadir Plazo</button>
                         </div>
                     </div>
                     <!-- Gestión de Métodos de Pago -->
                     <div>
-                        <h3 class="font-semibold mb-2">Métodos de Pago</h3>
+                        <h3 class="font-semibold mb-2 text-slate-900">Métodos de Pago</h3>
                         <div id="metodosPagoOptions" class="space-y-2"></div>
                         <div class="mt-2">
-                            <input type="text" id="newMetodoPagoName" placeholder="Nombre del método" class="w-full border p-2 rounded">
-                            <input type="color" id="newMetodoPagoColor" class="w-full h-8 p-1 border rounded mt-1">
-                            <button onclick="addOption('metodosPago')" class="mt-2 bg-blue-500 text-white w-full py-2 rounded">Añadir Método</button>
+                            <input type="text" id="newMetodoPagoName" placeholder="Nombre del método" class="w-full rounded-xl border-0 ring-1 ring-inset ring-slate-300 bg-white/80 px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-600">
+                            <input type="color" id="newMetodoPagoColor" class="w-full h-9 rounded-xl ring-1 ring-inset ring-slate-300 bg-white/80 mt-1">
+                            <button onclick="addOption('metodosPago')" class="mt-2 bg-indigo-600 hover:bg-indigo-700 text-white w-full py-2 rounded-full">Añadir Método</button>
                         </div>
                     </div>
                 </div>
             </div>
             <!-- Pestaña de Almacenamiento -->
-            <div id="storage" class="hidden p-4 bg-white rounded-lg shadow" role="tabpanel" aria-labelledby="storage-tab">
-                <h2 class="text-xl font-bold text-gray-800 mb-4">Almacenamiento</h2>
-                <p class="text-sm text-gray-600 mb-4">Resumen del almacenamiento usado por esta página (localStorage relacionado) y herramientas de respaldo/restauración.</p>
+            <div id="storage" class="hidden p-6 bg-white/80 backdrop-blur rounded-2xl shadow" role="tabpanel" aria-labelledby="storage-tab">
+                <h2 class="text-xl font-bold text-slate-900 mb-4">Almacenamiento</h2>
+                <p class="text-sm text-slate-600 mb-4">Resumen del almacenamiento usado por esta página y herramientas de respaldo/restauración.</p>
 
                 <div id="storageSummary" class="mb-4 space-y-2">
                     <div>Total registros: <span id="storageTotalRecords">0</span></div>
@@ -169,56 +169,57 @@
                     <div>Tamaño total (estimado): <span id="storageSizeTotal">0</span> bytes</div>
                 </div>
 
-                <div class="flex gap-2">
-                    <button id="exportBtn" class="inline-flex items-center bg-green-500 hover:bg-green-600 text-white py-2 px-3 rounded"><i class="fas fa-file-export mr-2"></i>Exportar datos</button>
-                    <button id="sendDiscordBtn" class="inline-flex items-center bg-indigo-500 hover:bg-indigo-600 text-white py-2 px-3 rounded"><i class="fab fa-discord mr-2"></i>Enviar a Discord</button>
-                    <label for="importFile" class="inline-flex items-center bg-blue-500 hover:bg-blue-600 text-white py-2 px-3 rounded cursor-pointer"><i class="fas fa-file-import mr-2"></i>Importar/Restaurar</label>
+                <div class="flex flex-wrap gap-2">
+                    <button id="exportBtn" class="inline-flex items-center rounded-full bg-green-600 hover:bg-green-700 text-white px-3 py-2 text-sm font-medium shadow-sm"><i class="fas fa-file-export mr-2"></i>Exportar datos</button>
+                    <button id="sendDiscordBtn" class="inline-flex items-center rounded-full bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 text-sm font-medium shadow-sm"><i class="fab fa-discord mr-2"></i>Enviar a Discord</button>
+                    <label for="importFile" class="inline-flex items-center rounded-full bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 text-sm font-medium shadow-sm cursor-pointer"><i class="fas fa-file-import mr-2"></i>Importar/Restaurar</label>
                     <input id="importFile" type="file" accept="application/json" class="hidden">
-                    <button id="clearBtn" class="inline-flex items-center bg-red-500 hover:bg-red-600 text-white py-2 px-3 rounded"><i class="fas fa-trash-alt mr-2"></i>Borrar datos</button>
+                    <button id="clearBtn" class="inline-flex items-center rounded-full bg-red-600 hover:bg-red-700 text-white px-3 py-2 text-sm font-medium shadow-sm"><i class="fas fa-trash-alt mr-2"></i>Borrar datos</button>
                 </div>
-                <p id="storageMessage" class="text-sm text-gray-600 mt-3"></p>
+                <p id="storageMessage" class="text-sm text-slate-600 mt-3"></p>
+                <div id="logPanel" class="mt-4 p-3 rounded-xl ring-1 ring-inset ring-slate-200 bg-white/60 text-sm max-h-56 overflow-auto"></div>
             </div>
         </div>
     </div>
 
     <!-- Modal para Añadir/Editar Registro -->
-    <div id="recordModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
-        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div class="mt-3 text-center">
-                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modalTitle">Añadir Nuevo Registro</h3>
-                <form id="recordForm" class="mt-2 space-y-4">
+    <div id="recordModal" class="fixed inset-0 hidden flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 sm:p-6">
+        <div class="relative mx-auto w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
+            <div class="mt-1">
+                <h3 class="text-xl font-semibold text-slate-900" id="modalTitle">Añadir Nuevo Registro</h3>
+                <form id="recordForm" class="mt-4 space-y-6">
                     <input type="hidden" id="recordId">
                     <div>
-                        <label for="app" class="block text-sm font-medium text-gray-700 text-left">APP</label>
-                        <select id="app" name="app" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required></select>
+                        <label for="app" class="block text-sm font-medium text-slate-700 text-left">APP</label>
+                        <select id="app" name="app" class="mt-1 block w-full rounded-xl border-0 ring-1 ring-inset ring-slate-300 bg-white/80 px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-600" required></select>
                     </div>
                     <div>
-                        <label for="hashRate" class="block text-sm font-medium text-gray-700 text-left">Hash Rate</label>
-                        <input type="number" name="hashRate" id="hashRate" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" required>
+                        <label for="hashRate" class="block text-sm font-medium text-slate-700 text-left">Hash Rate</label>
+                        <input type="number" name="hashRate" id="hashRate" class="mt-1 block w-full rounded-xl border-0 ring-1 ring-inset ring-slate-300 bg-white/80 px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-600" required>
                     </div>
                     <div>
-                        <label for="plazo" class="block text-sm font-medium text-gray-700 text-left">Plazo Inversión</label>
-                        <select id="plazo" name="plazo" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required></select>
+                        <label for="plazo" class="block text-sm font-medium text-slate-700 text-left">Plazo Inversión</label>
+                        <select id="plazo" name="plazo" class="mt-1 block w-full rounded-xl border-0 ring-1 ring-inset ring-slate-300 bg-white/80 px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-600" required></select>
                     </div>
                     <div>
-                        <label for="metodoPago" class="block text-sm font-medium text-gray-700 text-left">Método de Pago</label>
-                        <select id="metodoPago" name="metodoPago" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required></select>
+                        <label for="metodoPago" class="block text-sm font-medium text-slate-700 text-left">Método de Pago</label>
+                        <select id="metodoPago" name="metodoPago" class="mt-1 block w-full rounded-xl border-0 ring-1 ring-inset ring-slate-300 bg-white/80 px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-600" required></select>
                     </div>
                     <div>
-                        <label for="costo" class="block text-sm font-medium text-gray-700 text-left">Costo</label>
-                        <input type="number" step="0.01" name="costo" id="costo" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" required>
+                        <label for="costo" class="block text-sm font-medium text-slate-700 text-left">Costo</label>
+                        <input type="number" step="0.01" name="costo" id="costo" class="mt-1 block w-full rounded-xl border-0 ring-1 ring-inset ring-slate-300 bg-white/80 px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-600" required>
                     </div>
                     <div>
-                        <label for="fechaCompra" class="block text-sm font-medium text-gray-700 text-left">Fecha de Compra Inicial</label>
-                        <input type="date" name="fechaCompra" id="fechaCompra" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" required>
+                        <label for="fechaCompra" class="block text-sm font-medium text-slate-700 text-left">Fecha de Compra Inicial</label>
+                        <input type="date" name="fechaCompra" id="fechaCompra" class="mt-1 block w-full rounded-xl border-0 ring-1 ring-inset ring-slate-300 bg-white/80 px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-600" required>
                     </div>
                     <div>
-                        <label for="notas" class="block text-sm font-medium text-gray-700 text-left">Notas</label>
-                        <textarea id="notas" name="notas" rows="3" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 mt-1 block w-full sm:text-sm border border-gray-300 rounded-md"></textarea>
+                        <label for="notas" class="block text-sm font-medium text-slate-700 text-left">Notas</label>
+                        <textarea id="notas" name="notas" rows="3" class="mt-1 block w-full rounded-xl border-0 ring-1 ring-inset ring-slate-300 bg-white/80 px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-600"></textarea>
                     </div>
-                    <div class="items-center px-4 py-3">
-                        <button id="saveRecordBtn" class="px-4 py-2 bg-green-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-300">Guardar</button>
-                        <button id="cancelBtn" type="button" class="mt-2 px-4 py-2 bg-gray-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-300">Cancelar</button>
+                    <div class="items-center px-1 py-1 space-y-2">
+                        <button id="saveRecordBtn" class="w-full rounded-full bg-green-600 px-4 py-2 text-white text-base font-medium shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-400">Guardar</button>
+                        <button id="cancelBtn" type="button" class="w-full rounded-full bg-slate-600 px-4 py-2 text-white text-base font-medium shadow-sm hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400">Cancelar</button>
                     </div>
                 </form>
             </div>
@@ -227,7 +228,7 @@
 
     <script>
 
-        document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', () => {
     // Estado de la aplicación
     let state = {
         records: JSON.parse(localStorage.getItem('records')) || [],
@@ -275,26 +276,31 @@
     if (storageTabBtn) storageTabBtn.addEventListener('click', () => switchTab('storage'));
 
     function switchTab(tab) {
-        // hide all first
         dashboardContent.classList.add('hidden');
         settingsContent.classList.add('hidden');
         if (storageContent) storageContent.classList.add('hidden');
 
-        // deactivate all tab buttons
-        dashboardTab.classList.remove('border-blue-500', 'text-blue-600');
-        settingsTab.classList.remove('border-blue-500', 'text-blue-600');
-        if (storageTabBtn) storageTabBtn.classList.remove('border-blue-500', 'text-blue-600');
+        dashboardTab.classList.remove('bg-indigo-600', 'text-white', 'shadow');
+        settingsTab.classList.remove('bg-indigo-600', 'text-white', 'shadow');
+        if (storageTabBtn) storageTabBtn.classList.remove('bg-indigo-600', 'text-white', 'shadow');
+        dashboardTab.classList.add('text-slate-600');
+        settingsTab.classList.add('text-slate-600');
+        if (storageTabBtn) storageTabBtn.classList.add('text-slate-600');
 
-        // activate the requested tab
         if (tab === 'dashboard') {
             dashboardContent.classList.remove('hidden');
-            dashboardTab.classList.add('border-blue-500', 'text-blue-600');
+            dashboardTab.classList.add('bg-indigo-600', 'text-white', 'shadow');
+            dashboardTab.classList.remove('text-slate-600');
         } else if (tab === 'settings') {
             settingsContent.classList.remove('hidden');
-            settingsTab.classList.add('border-blue-500', 'text-blue-600');
+            settingsTab.classList.add('bg-indigo-600', 'text-white', 'shadow');
+            settingsTab.classList.remove('text-slate-600');
         } else if (tab === 'storage') {
             if (storageContent) storageContent.classList.remove('hidden');
-            if (storageTabBtn) storageTabBtn.classList.add('border-blue-500', 'text-blue-600');
+            if (storageTabBtn) {
+                storageTabBtn.classList.add('bg-indigo-600', 'text-white', 'shadow');
+                storageTabBtn.classList.remove('text-slate-600');
+            }
             updateStorageSummary();
         }
     }
@@ -386,6 +392,7 @@
         } else {
             filteredRecords.forEach(record => {
                 const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50/50 transition-colors';
                 const plazoOption = state.options.plazos.find(p => p.name === record.plazo);
                 let fechaRenovacion = 'N/A';
                 if (plazoOption && record.fechaCompra) {
@@ -408,16 +415,16 @@
                 const metodoOpt = state.options.metodosPago.find(m => m.name === record.metodoPago);
 
                 tr.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" style="background-color:${appOption?.color || '#ffffff'}; color: ${getContrastYIQ(appOption?.color)}">${record.app}</span></td>
+                    <td class="px-6 py-4 whitespace-nowrap"><span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ring-1 ring-inset ring-slate-200" style="background-color:${appOption?.color || '#ffffff'}; color: ${getContrastYIQ(appOption?.color)}">${record.app}</span></td>
                     <td class="px-6 py-4 whitespace-nowrap">${record.hashRate}</td>
-                    <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" style="background-color:${plazoOpt?.color || '#ffffff'}; color: ${getContrastYIQ(plazoOpt?.color)}">${record.plazo}</span></td>
-                    <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" style="background-color:${metodoOpt?.color || '#ffffff'}; color: ${getContrastYIQ(metodoOpt?.color)}">${record.metodoPago}</span></td>
+                    <td class="px-6 py-4 whitespace-nowrap"><span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ring-1 ring-inset ring-slate-200" style="background-color:${plazoOpt?.color || '#ffffff'}; color: ${getContrastYIQ(plazoOpt?.color)}">${record.plazo}</span></td>
+                    <td class="px-6 py-4 whitespace-nowrap"><span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ring-1 ring-inset ring-slate-200" style="background-color:${metodoOpt?.color || '#ffffff'}; color: ${getContrastYIQ(metodoOpt?.color)}">${record.metodoPago}</span></td>
                     <td class="px-6 py-4 whitespace-nowrap">${formatCurrency(parseFloat(record.costo) || 0)}</td>
                     <td class="px-6 py-4 whitespace-nowrap">${fechaRenovacion}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${record.notas}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">${record.notas}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button onclick="editRecord(${record.id})" class="text-indigo-600 hover:text-indigo-900"><i class="fas fa-edit"></i></button>
-                        <button onclick="deleteRecord(${record.id})" class="text-red-600 hover:text-red-900 ml-4"><i class="fas fa-trash"></i></button>
+                        <button onclick="editRecord(${record.id})" class="text-indigo-600 hover:text-indigo-700 transition-transform duration-200 hover:scale-105"><i class="fas fa-edit"></i></button>
+                        <button onclick="deleteRecord(${record.id})" class="text-red-600 hover:text-red-700 ml-4 transition-transform duration-200 hover:scale-105"><i class="fas fa-trash"></i></button>
                     </td>
                 `;
                 dataTableBody.appendChild(tr);
@@ -462,6 +469,7 @@
         document.getElementById('totalHashRate').textContent = totalHashRate.toFixed(2);
     document.getElementById('totalCosto').textContent = formatCurrency(totalCosto || 0);
         document.getElementById('totalRegistros').textContent = `Total Registros: ${records.length}`;
+        logMessage('Totales actualizados: HashRate ' + totalHashRate.toFixed(2) + ', Costo ' + (totalCosto || 0));
     }
 
     // --- Storage utilities ---
@@ -484,11 +492,40 @@
         })();
         document.getElementById('storageSizeOptions').textContent = optSize;
         document.getElementById('storageSizeTotal').textContent = (recSize + optSize);
+        logMessage('Resumen almacenamiento actualizado: registros ' + (state.records || []).length + ', tamaño ' + (recSize + optSize));
     }
 
     // Export data for this page (records + options)
+    function logMessage(message, level = 'info') {
+        const panel = document.getElementById('logPanel');
+        if (!panel) return;
+        const el = document.createElement('div');
+        el.className = level === 'error' ? 'text-red-600' : level === 'warn' ? 'text-yellow-700' : 'text-slate-700';
+        const ts = new Date().toLocaleString();
+        el.textContent = `[${ts}] ${message}`;
+        panel.appendChild(el);
+        panel.scrollTop = panel.scrollHeight;
+    }
+
+    function buildExportPayload() {
+        return { __page: 'registro-inv', exportedAt: new Date().toISOString(), records: state.records, options: state.options };
+    }
+
+    function validatePayloadStructure(payload) {
+        if (!payload || payload.__page !== 'registro-inv') return false;
+        if (!Array.isArray(payload.records) || typeof payload.options !== 'object' || payload.options === null) return false;
+        const okOptions = ['apps', 'plazos', 'metodosPago'].every(k => Array.isArray(payload.options[k]));
+        if (!okOptions) return false;
+        return true;
+    }
+
     function exportData() {
-        const payload = { __page: 'registro-inv', exportedAt: new Date().toISOString(), records: state.records, options: state.options };
+        const payload = buildExportPayload();
+        if (!validatePayloadStructure(payload)) {
+            document.getElementById('storageMessage').textContent = 'Validación fallida: payload inválido.';
+            logMessage('Exportación cancelada: estructura de payload inválida', 'error');
+            return;
+        }
         const dataStr = JSON.stringify(payload, null, 2);
         const blob = new Blob([dataStr], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
@@ -500,29 +537,62 @@
         a.remove();
         URL.revokeObjectURL(url);
         document.getElementById('storageMessage').textContent = 'Exportación completada.';
+        logMessage('Exportación local completada: registros ' + (state.records || []).length + ', opciones ' + (function(){let c=0;for(const k in state.options)if(Array.isArray(state.options[k]))c+=state.options[k].length;return c;})());
     }
 
     // Import data (file input change handler)
+    function resetFilters() {
+        state.filters = { app: 'all', plazo: 'all', metodoPago: 'all' };
+        const fa = document.getElementById('filterApp');
+        const fp = document.getElementById('filterPlazo');
+        const fm = document.getElementById('filterMetodoPago');
+        if (fa) fa.value = 'all';
+        if (fp) fp.value = 'all';
+        if (fm) fm.value = 'all';
+    }
+
+    function normalizePlazosInOptions() {
+        if (Array.isArray(state.options.plazos)) {
+            state.options.plazos = state.options.plazos.map(o => {
+                if (o && o.days && !o.length) {
+                    o.length = o.days;
+                    o.unit = 'days';
+                    delete o.days;
+                }
+                return o;
+            });
+        }
+    }
+
+    function performImport(parsed) {
+        if (!validatePayloadStructure(parsed)) {
+            document.getElementById('storageMessage').textContent = 'Archivo no válido o no corresponde a esta página.';
+            logMessage('Importación rechazada: estructura inválida', 'error');
+            return;
+        }
+        state.records = Array.isArray(parsed.records) ? parsed.records : [];
+        state.options = parsed.options || { apps: [], plazos: [], metodosPago: [] };
+        normalizePlazosInOptions();
+        resetFilters();
+        saveState();
+        renderTable();
+        renderOptions();
+        document.getElementById('storageMessage').textContent = 'Importación y restauración completadas.';
+        logMessage('Importación completada: registros ' + state.records.length);
+        verifySavedState();
+    }
+
     function handleImportFile(file) {
         if (!file) return;
         const reader = new FileReader();
         reader.onload = (e) => {
             try {
                 const parsed = JSON.parse(e.target.result);
-                // simple validation
-                if (!parsed || parsed.__page !== 'registro-inv' || !Array.isArray(parsed.records) || !parsed.options) {
-                    document.getElementById('storageMessage').textContent = 'Archivo no válido o no corresponde a esta página.';
-                    return;
-                }
                 if (!confirm('Restaurar los datos desde el archivo sobrescribirá los datos actuales. ¿Continuar?')) return;
-                state.records = parsed.records;
-                state.options = parsed.options;
-                saveState();
-                renderTable();
-                renderOptions();
-                document.getElementById('storageMessage').textContent = 'Importación y restauración completadas.';
+                performImport(parsed);
             } catch (err) {
                 document.getElementById('storageMessage').textContent = 'Error leyendo el archivo: ' + err.message;
+                logMessage('Error importando desde archivo: ' + err.message, 'error');
             }
         };
         reader.readAsText(file);
@@ -536,6 +606,7 @@
         renderTable();
         renderOptions();
         document.getElementById('storageMessage').textContent = 'Datos borrados.';
+        logMessage('Datos borrados en la página y persistidos');
     }
 
     // wire export/import/clear buttons
@@ -547,11 +618,17 @@
     if (clearBtn) clearBtn.addEventListener('click', clearData);
     const sendDiscordBtn = document.getElementById('sendDiscordBtn');
     if (sendDiscordBtn) sendDiscordBtn.addEventListener('click', sendToDiscord);
+    
 
     // Send exported JSON file to Discord webhook as multipart/form-data
     async function sendToDiscord() {
         const webhookUrl = 'https://discord.com/api/webhooks/1429231500120948808/MbKuhnAL60vgoalLazjThfJEM5AMMKJyNz_aYQy3jaWHlJW0ZxlgYTYrOevu9Uzeppu6';
-        const payload = { __page: 'registro-inv', exportedAt: new Date().toISOString(), records: state.records, options: state.options };
+        const payload = buildExportPayload();
+        if (!validatePayloadStructure(payload)) {
+            document.getElementById('storageMessage').textContent = 'Validación fallida: payload inválido.';
+            logMessage('Envío a Discord cancelado: estructura inválida', 'error');
+            return;
+        }
         const dataStr = JSON.stringify(payload, null, 2);
         const blob = new Blob([dataStr], { type: 'application/json' });
         const form = new FormData();
@@ -564,12 +641,14 @@
             const res = await fetch(webhookUrl, { method: 'POST', body: form });
             if (!res.ok) throw new Error('HTTP ' + res.status + ' ' + res.statusText);
             document.getElementById('storageMessage').textContent = 'Enviado a Discord correctamente.';
+            logMessage('Backup enviado a Discord correctamente');
         } catch (err) {
             // CORS or network error - show helpful fallback
             document.getElementById('storageMessage').textContent = 'No se pudo enviar a Discord desde el navegador (posible CORS). Puedes descargar el archivo y enviarlo manualmente. Error: ' + err.message;
             // provide curl fallback
             const curlCmd = `curl -H "Content-Type: multipart/form-data" -F "file=@registro-inv-backup.json" -F 'payload_json=${JSON.stringify(embed).replace(/"/g, '\\"')}' ${webhookUrl}`;
             console.error('Discord send failed:', err);
+            logMessage('Error enviando a Discord: ' + err.message, 'error');
             // show fallback as an alert with copy instruction
             if (confirm('El envío directo a Discord falló. ¿Deseas descargar el archivo para enviarlo manualmente?')) {
                 // trigger download
@@ -585,6 +664,22 @@
             }
         }
     }
+
+    function verifySavedState() {
+        try {
+            const recStr = localStorage.getItem('records') || '[]';
+            const optStr = localStorage.getItem('options') || '{}';
+            const rec = JSON.parse(recStr);
+            const opt = JSON.parse(optStr);
+            const ok = Array.isArray(rec) && typeof opt === 'object' && opt !== null;
+            logMessage('Verificación localStorage: ' + (ok ? 'OK' : 'FALLÓ'));
+            logMessage('localStorage registros: ' + (Array.isArray(rec) ? rec.length : 0));
+        } catch (err) {
+            logMessage('Error verificando localStorage: ' + err.message, 'error');
+        }
+    }
+
+    
 
     // --- Gestión de Opciones (Ajustes) ---
     function renderOptions() {
