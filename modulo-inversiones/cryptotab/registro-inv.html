@@ -78,6 +78,10 @@
                         <label for="filterMetodoPago" class="block text-sm font-medium text-slate-700">Filtrar por Método de Pago</label>
                         <select id="filterMetodoPago" class="mt-1 block w-full rounded-xl border-0 ring-1 ring-inset ring-slate-300 bg-white/80 backdrop-blur px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-600"></select>
                     </div>
+                    <div>
+                        <label for="filterOrder" class="block text-sm font-medium text-slate-700">Ordenar</label>
+                        <select id="filterOrder" class="mt-1 block w-full rounded-xl border-0 ring-1 ring-inset ring-slate-300 bg-white/80 backdrop-blur px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-600"></select>
+                    </div>
                 </div>
 
                 <!-- Tabla Principal -->
@@ -241,7 +245,8 @@
         filters: {
             app: 'all',
             plazo: 'all',
-            metodoPago: 'all'
+            metodoPago: 'all',
+            order: 'none'
         }
     };
 
@@ -386,29 +391,33 @@
                    (state.filters.plazo === 'all' || record.plazo === state.filters.plazo) &&
                    (state.filters.metodoPago === 'all' || record.metodoPago === state.filters.metodoPago);
         });
+        let working = filteredRecords.slice();
+        if (state.filters.order === 'renewal_asc') {
+            working.sort((a, b) => {
+                const da = computeNextRenewal(a);
+                const db = computeNextRenewal(b);
+                const ta = da ? da.getTime() : Infinity;
+                const tb = db ? db.getTime() : Infinity;
+                return ta - tb;
+            });
+        } else if (state.filters.order === 'renewal_desc') {
+            working.sort((a, b) => {
+                const da = computeNextRenewal(a);
+                const db = computeNextRenewal(b);
+                const ta = da ? da.getTime() : -Infinity;
+                const tb = db ? db.getTime() : -Infinity;
+                return tb - ta;
+            });
+        }
 
-        if (filteredRecords.length === 0) {
+        if (working.length === 0) {
             dataTableBody.innerHTML = `<tr><td colspan="8" class="text-center p-4">No hay registros que mostrar.</td></tr>`;
         } else {
-            filteredRecords.forEach(record => {
+            working.forEach(record => {
                 const tr = document.createElement('tr');
                 tr.className = 'hover:bg-slate-50/50 transition-colors';
-                const plazoOption = state.options.plazos.find(p => p.name === record.plazo);
-                let fechaRenovacion = 'N/A';
-                if (plazoOption && record.fechaCompra) {
-                    const base = parseDateFromInput(record.fechaCompra);
-                    if (plazoOption.unit === 'months') {
-                        // add months (approximate with setMonth to handle month length)
-                        const d = new Date(base);
-                        d.setMonth(d.getMonth() + (plazoOption.length || 0));
-                        fechaRenovacion = d.toLocaleDateString();
-                    } else {
-                        // default to days
-                        const d = new Date(base);
-                        d.setDate(d.getDate() + (plazoOption.length || 0));
-                        fechaRenovacion = d.toLocaleDateString();
-                    }
-                }
+                const nextDate = computeNextRenewal(record);
+                const fechaRenovacion = nextDate ? nextDate.toLocaleDateString() : 'N/A';
                 
                 const appOption = state.options.apps.find(a => a.name === record.app);
                 const plazoOpt = state.options.plazos.find(p => p.name === record.plazo);
@@ -430,7 +439,7 @@
                 dataTableBody.appendChild(tr);
             });
         }
-        updateTotals(filteredRecords);
+        updateTotals(working);
     }
     
     function getContrastYIQ(hexcolor){
@@ -462,11 +471,41 @@
         return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(valid);
     }
 
+    function formatNumber(value, fractionDigits = 0) {
+        const num = Number(value);
+        const valid = isFinite(num) ? num : 0;
+        return new Intl.NumberFormat('en-US', { minimumFractionDigits: fractionDigits, maximumFractionDigits: fractionDigits }).format(valid);
+    }
+
+    function computeNextRenewal(record) {
+        const plazoOption = state.options.plazos.find(p => p.name === record.plazo);
+        if (!plazoOption || !record.fechaCompra) return null;
+        const base = parseDateFromInput(record.fechaCompra);
+        const today = new Date();
+        const len = plazoOption.length || 0;
+        if (plazoOption.unit === 'months') {
+            const monthsDiff = (today.getFullYear() - base.getFullYear()) * 12 + (today.getMonth() - base.getMonth());
+            const cycles = Math.max(0, Math.floor(monthsDiff / Math.max(1, len)));
+            const d = new Date(base);
+            d.setMonth(d.getMonth() + cycles * len);
+            if (d <= today) d.setMonth(d.getMonth() + len);
+            return d;
+        } else {
+            const msPerDay = 86400000;
+            const diffDays = Math.floor((today - base) / msPerDay);
+            const cycles = Math.max(0, Math.floor(diffDays / Math.max(1, len)));
+            const d = new Date(base);
+            d.setDate(d.getDate() + cycles * len);
+            if (d <= today) d.setDate(d.getDate() + len);
+            return d;
+        }
+    }
+
 
     function updateTotals(records) {
         const totalHashRate = records.reduce((sum, record) => sum + parseFloat(record.hashRate || 0), 0);
         const totalCosto = records.reduce((sum, record) => sum + parseFloat(record.costo || 0), 0);
-        document.getElementById('totalHashRate').textContent = totalHashRate.toFixed(2);
+        document.getElementById('totalHashRate').textContent = formatNumber(totalHashRate, 2);
     document.getElementById('totalCosto').textContent = formatCurrency(totalCosto || 0);
         document.getElementById('totalRegistros').textContent = `Total Registros: ${records.length}`;
         logMessage('Totales actualizados: HashRate ' + totalHashRate.toFixed(2) + ', Costo ' + (totalCosto || 0));
@@ -542,13 +581,15 @@
 
     // Import data (file input change handler)
     function resetFilters() {
-        state.filters = { app: 'all', plazo: 'all', metodoPago: 'all' };
+        state.filters = { app: 'all', plazo: 'all', metodoPago: 'all', order: 'none' };
         const fa = document.getElementById('filterApp');
         const fp = document.getElementById('filterPlazo');
         const fm = document.getElementById('filterMetodoPago');
+        const fo = document.getElementById('filterOrder');
         if (fa) fa.value = 'all';
         if (fp) fp.value = 'all';
         if (fm) fm.value = 'all';
+        if (fo) fo.value = 'none';
     }
 
     function normalizePlazosInOptions() {
@@ -765,6 +806,23 @@
         fillSelectWithOptions(filterSelects.app, state.options.apps, 'name', true);
         fillSelectWithOptions(filterSelects.plazo, state.options.plazos, 'name', true);
         fillSelectWithOptions(filterSelects.metodoPago, state.options.metodosPago, 'name', true);
+
+        const orderSelect = document.getElementById('filterOrder');
+        if (orderSelect) {
+            orderSelect.innerHTML = '';
+            const opts = [
+                { value: 'none', text: 'Sin orden' },
+                { value: 'renewal_asc', text: 'Renovación más próxima' },
+                { value: 'renewal_desc', text: 'Renovación más lejana' }
+            ];
+            opts.forEach(o => {
+                const opt = document.createElement('option');
+                opt.value = o.value;
+                opt.textContent = o.text;
+                orderSelect.appendChild(opt);
+            });
+            orderSelect.value = state.filters.order || 'none';
+        }
     }
     
     function fillSelectWithOptions(selectElement, options, valueKey, includeAll = false) {
@@ -797,6 +855,10 @@
     });
     document.getElementById('filterMetodoPago').addEventListener('change', (e) => {
         state.filters.metodoPago = e.target.value;
+        renderTable();
+    });
+    document.getElementById('filterOrder').addEventListener('change', (e) => {
+        state.filters.order = e.target.value;
         renderTable();
     });
 
