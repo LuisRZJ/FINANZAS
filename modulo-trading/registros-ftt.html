@@ -57,6 +57,95 @@
             border-width: 2px;
             transition: border-color 200ms ease;
         }
+        .reorder-btn {
+            width: 2rem;
+            height: 2rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.375rem;
+            border: 1px solid #e5e7eb;
+            background-color: #fff;
+            color: #6b7280;
+            transition: all 150ms ease;
+        }
+        .reorder-btn:not(:disabled):hover {
+            background-color: #eff6ff;
+            color: #1d4ed8;
+            border-color: #bfdbfe;
+        }
+        .reorder-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        .dark .reorder-btn {
+            border-color: #374151;
+            background-color: #1f2937;
+            color: #9ca3af;
+        }
+        .dark .reorder-btn:not(:disabled):hover {
+            background-color: rgba(59,130,246,0.15);
+            color: #93c5fd;
+            border-color: #2563eb;
+        }
+        .markdown-preview h1,
+        .markdown-preview h2,
+        .markdown-preview h3,
+        .markdown-preview h4,
+        .markdown-preview h5,
+        .markdown-preview h6 {
+            font-weight: 600;
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+            line-height: 1.3;
+        }
+        .markdown-preview h1 { font-size: 1.5rem; }
+        .markdown-preview h2 { font-size: 1.35rem; }
+        .markdown-preview h3 { font-size: 1.2rem; }
+        .markdown-preview ul,
+        .markdown-preview ol {
+            padding-left: 1.25rem;
+            margin: 0.5rem 0 0.75rem;
+        }
+        .markdown-preview ul li,
+        .markdown-preview ol li {
+            margin-bottom: 0.25rem;
+            list-style: initial;
+        }
+        .markdown-preview ol { list-style: decimal; }
+        .markdown-preview blockquote {
+            border-left: 4px solid #cbd5f5;
+            padding-left: 0.75rem;
+            color: #4b5563;
+            margin: 0.75rem 0;
+            font-style: italic;
+        }
+        .markdown-preview pre {
+            background-color: #f3f4f6;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            overflow-x: auto;
+            margin: 0.75rem 0;
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+        .markdown-preview code {
+            font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+            background-color: #eef2ff;
+            padding: 0.1rem 0.35rem;
+            border-radius: 0.35rem;
+        }
+        .dark .markdown-preview blockquote {
+            border-left-color: #3b82f6;
+            color: #cbd5f5;
+        }
+        .dark .markdown-preview pre {
+            background-color: #1f2937;
+        }
+        .dark .markdown-preview code {
+            background-color: #312e81;
+            color: #fef9c3;
+        }
         :root{color-scheme: light}
         .dark{color-scheme: dark}
         .dark body{background-color:#0f172a;color:#e5e7eb}
@@ -318,6 +407,42 @@
                         </div>
                     </div>
                 </div>
+                <div class="bg-white p-6 rounded-lg shadow-lg border border-gray-200 mt-6">
+                    <div class="flex flex-col gap-1">
+                        <h2 class="text-xl font-semibold text-gray-900">Notas de objetivos</h2>
+                        <p class="text-sm text-gray-600">Usa este espacio como bitácora para ideas, reglas o recordatorios. Se guarda por cuenta y acepta Markdown.</p>
+                    </div>
+                    <div class="mt-4 border border-gray-200 rounded-lg overflow-hidden">
+                        <div id="note-toolbar" class="flex flex-wrap gap-2 bg-gray-50 px-3 py-2 border-b border-gray-200">
+                            <button type="button" data-md-action="bold" class="px-3 py-1 text-xs font-semibold text-gray-800 bg-white border border-gray-200 rounded-md shadow-sm hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500" title="Negritas (**texto**)"><span class="font-semibold">B</span></button>
+                            <button type="button" data-md-action="italic" class="px-3 py-1 text-xs font-semibold text-gray-800 bg-white border border-gray-200 rounded-md shadow-sm hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500" title="Cursiva (*texto*)"><span class="italic">I</span></button>
+                            <button type="button" data-md-action="strike" class="px-3 py-1 text-xs font-semibold text-gray-800 bg-white border border-gray-200 rounded-md shadow-sm hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500" title="Tachado (~~texto~~)"><span class="line-through">S</span></button>
+                            <button type="button" data-md-action="heading" class="px-3 py-1 text-xs font-semibold text-gray-800 bg-white border border-gray-200 rounded-md shadow-sm hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500" title="Encabezado (## Título)">H2</button>
+                            <button type="button" data-md-action="bulletList" class="px-3 py-1 text-xs font-semibold text-gray-800 bg-white border border-gray-200 rounded-md shadow-sm hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500" title="Lista con viñetas (- Item)">• Lista</button>
+                            <button type="button" data-md-action="orderedList" class="px-3 py-1 text-xs font-semibold text-gray-800 bg-white border border-gray-200 rounded-md shadow-sm hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500" title="Lista numerada (1. Item)">1. Lista</button>
+                            <button type="button" data-md-action="quote" class="px-3 py-1 text-xs font-semibold text-gray-800 bg-white border border-gray-200 rounded-md shadow-sm hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500" title="Cita (> texto)">“”</button>
+                            <button type="button" data-md-action="inlineCode" class="px-3 py-1 text-xs font-semibold text-gray-800 bg-white border border-gray-200 rounded-md shadow-sm hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500" title="Código en línea (`codigo`)"><span class="font-mono text-xs">`code`</span></button>
+                            <button type="button" data-md-action="codeBlock" class="px-3 py-1 text-xs font-semibold text-gray-800 bg-white border border-gray-200 rounded-md shadow-sm hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500" title="Bloque de código (```)"><span class="font-mono text-xs">{ }</span></button>
+                        </div>
+                        <textarea id="account-objectives-note" class="w-full h-48 bg-white text-gray-900 p-3 focus:ring-blue-500 focus:border-blue-500 resize-y" placeholder="Escribe aquí tus notas de objetivos, reflexiones o planes..."></textarea>
+                    </div>
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mt-4">
+                        <p class="text-xs text-gray-500">Esta nota se incluye en tus exportaciones locales y las enviadas a Discord.</p>
+                        <button id="save-account-note-btn" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg border border-green-600">Guardar nota</button>
+                    </div>
+                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mt-4">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                            <div>
+                                <h3 class="text-sm font-semibold text-gray-900">Vista previa Markdown</h3>
+                                <p class="text-xs text-gray-500">Se actualiza automáticamente y muestra el formato final.</p>
+                            </div>
+                            <p class="text-xs text-gray-500">Compatible con móviles y escritorio.</p>
+                        </div>
+                        <div id="account-objectives-note-preview" class="markdown-preview mt-3 text-sm text-gray-900 leading-relaxed break-words" style="min-height: 5rem;">
+                            <p class="text-sm text-gray-500 m-0">Aún no hay contenido. Escribe algo o usa la barra de formato.</p>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Pestaña 4: Ajustes -->
@@ -438,7 +563,10 @@
                     </div>
                     <!-- Columna para gestionar activos y estrategias -->
                     <div class="bg-white p-6 rounded-lg shadow-lg flex flex-col border border-gray-200">
-                        <h2 class="text-xl font-semibold mb-4 text-gray-900">Gestionar Activos</h2>
+                        <div class="flex items-center justify-between gap-3 mb-2">
+                            <h2 class="text-xl font-semibold text-gray-900">Gestionar Activos</h2>
+                            <span class="text-xs text-gray-500">Usa las flechas para ordenar</span>
+                        </div>
                         <form id="add-asset-form" class="mb-4">
                             <label for="new-asset-input" class="block text-sm font-medium text-gray-600 mb-2">Añadir nuevo activo</label>
                             <div class="flex">
@@ -450,7 +578,10 @@
                         <ul id="asset-list" class="space-y-3 flex-grow overflow-y-auto max-h-80"></ul>
                     </div>
                     <div class="bg-white p-6 rounded-lg shadow-lg flex flex-col border border-gray-200">
-                        <h2 class="text-xl font-semibold mb-4 text-gray-900">Gestionar Estrategias</h2>
+                        <div class="flex items-center justify-between gap-3 mb-2">
+                            <h2 class="text-xl font-semibold text-gray-900">Gestionar Estrategias</h2>
+                            <span class="text-xs text-gray-500">Usa las flechas para ordenar</span>
+                        </div>
                         <form id="add-strategy-form" class="mb-4">
                             <label for="new-strategy-input" class="block text-sm font-medium text-gray-600 mb-2">Añadir nueva estrategia</label>
                             <div class="flex">
@@ -507,6 +638,8 @@
     <div id="edit-account-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden z-50"><div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm mx-4 border border-gray-200"><h3 class="text-lg font-bold text-gray-900 mb-4">Editar Cuenta</h3><form id="edit-account-form"><input type="text" id="edit-account-input" required class="block w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm text-gray-900 p-2 mb-6"><div class="flex justify-end space-x-4"><button type="button" id="cancel-edit-account-btn" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-lg">Cancelar</button><button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg">Guardar</button></div></form></div></div>
     
     <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@11.1.0/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <script>
     document.addEventListener('DOMContentLoaded', () => {
         // --- CONSTANTES Y ESTADO ---
@@ -517,9 +650,14 @@
         const ACCOUNT_STORAGE_KEY = 'btMultiAccountState_v1';
         const DEFAULT_ACCOUNT_NAME = 'Cuenta Predeterminada';
         const THEME_PREF_KEY = 'btThemePreference_v1';
+        const NOTE_PREVIEW_PLACEHOLDER_HTML = '<p class="text-sm text-gray-500 m-0">Aún no hay contenido. Escribe algo o usa la barra de formato.</p>';
+
+        if (window.marked) {
+            window.marked.setOptions({ gfm: true, breaks: true });
+        }
 
         const createId = () => Date.now().toString(36) + Math.random().toString(36).substr(2);
-        const createEmptyCollections = () => ({ trades: [], assets: [], strategies: [], monthlyTargetProfit: 0 });
+        const createEmptyCollections = () => ({ trades: [], assets: [], strategies: [], monthlyTargetProfit: 0, objectivesNote: '' });
 
         const getDefaultAccountMeta = (state) => {
             if (!state || !Array.isArray(state.accounts) || state.accounts.length === 0) return null;
@@ -555,6 +693,7 @@
                                 parsed.data[account.id].assets = parsed.data[account.id].assets || [];
                                 parsed.data[account.id].strategies = parsed.data[account.id].strategies || [];
                                 parsed.data[account.id].monthlyTargetProfit = typeof parsed.data[account.id].monthlyTargetProfit === 'number' ? parsed.data[account.id].monthlyTargetProfit : 0;
+                                parsed.data[account.id].objectivesNote = typeof parsed.data[account.id].objectivesNote === 'string' ? parsed.data[account.id].objectivesNote : '';
                             }
                         });
                         if (!parsed.activeAccountId || !parsed.data[parsed.activeAccountId]) {
@@ -619,7 +758,9 @@
                 ...prev,
                 trades: (trades || []).map(cloneTrade),
                 assets: (assets || []).map(cloneSimpleItem),
-                strategies: (strategies || []).map(cloneSimpleItem)
+                strategies: (strategies || []).map(cloneSimpleItem),
+                monthlyTargetProfit: typeof prev.monthlyTargetProfit === 'number' ? prev.monthlyTargetProfit : 0,
+                objectivesNote: typeof prev.objectivesNote === 'string' ? prev.objectivesNote : ''
             };
             saveAccountState();
             ensureAccountDataStructure(currentAccountId);
@@ -644,6 +785,7 @@
                 accountState.data[accountId].assets = accountState.data[accountId].assets || [];
                 accountState.data[accountId].strategies = accountState.data[accountId].strategies || [];
                 accountState.data[accountId].monthlyTargetProfit = typeof accountState.data[accountId].monthlyTargetProfit === 'number' ? accountState.data[accountId].monthlyTargetProfit : 0;
+                accountState.data[accountId].objectivesNote = typeof accountState.data[accountId].objectivesNote === 'string' ? accountState.data[accountId].objectivesNote : '';
             }
             trades = accountState.data[accountId].trades;
             assets = accountState.data[accountId].assets;
@@ -802,7 +944,8 @@
                     trades: Array.isArray(sourceData.trades) ? sourceData.trades.map(cloneTrade) : [],
                     assets: Array.isArray(sourceData.assets) ? sourceData.assets.map(cloneSimpleItem) : [],
                     strategies: Array.isArray(sourceData.strategies) ? sourceData.strategies.map(cloneSimpleItem) : [],
-                    monthlyTargetProfit: typeof sourceData.monthlyTargetProfit === 'number' ? sourceData.monthlyTargetProfit : 0
+                    monthlyTargetProfit: typeof sourceData.monthlyTargetProfit === 'number' ? sourceData.monthlyTargetProfit : 0,
+                    objectivesNote: typeof sourceData.objectivesNote === 'string' ? sourceData.objectivesNote : ''
                 };
             });
 
@@ -832,7 +975,8 @@
                             trades: (accountData.trades || []).map(cloneTrade),
                             assets: (accountData.assets || []).map(cloneSimpleItem),
                             strategies: (accountData.strategies || []).map(cloneSimpleItem),
-                            monthlyTargetProfit: typeof accountData.monthlyTargetProfit === 'number' ? accountData.monthlyTargetProfit : 0
+                            monthlyTargetProfit: typeof accountData.monthlyTargetProfit === 'number' ? accountData.monthlyTargetProfit : 0,
+                            objectivesNote: typeof accountData.objectivesNote === 'string' ? accountData.objectivesNote : ''
                         }
                     ];
                 }))
@@ -843,7 +987,8 @@
             trades: (payload.trades || []).map(cloneTrade),
             assets: (payload.assets || []).map(cloneSimpleItem),
             strategies: (payload.strategies || []).map(cloneSimpleItem),
-            monthlyTargetProfit: typeof payload.monthlyTargetProfit === 'number' ? payload.monthlyTargetProfit : 0
+            monthlyTargetProfit: typeof payload.monthlyTargetProfit === 'number' ? payload.monthlyTargetProfit : 0,
+            objectivesNote: typeof payload.objectivesNote === 'string' ? payload.objectivesNote : ''
         });
 
         const parseImportPayload = (raw) => {
@@ -877,11 +1022,15 @@
         const tabs = { registro: document.getElementById('tab-registro'), estadisticas: document.getElementById('tab-estadisticas'), ajustes: document.getElementById('tab-ajustes'), objetivos: document.getElementById('tab-objetivos') };
         const contents = { registro: document.getElementById('content-registro'), estadisticas: document.getElementById('content-estadisticas'), ajustes: document.getElementById('content-ajustes'), objetivos: document.getElementById('content-objetivos') };
         const monthlyTargetInput = document.getElementById('monthly-target-input');
+        const accountObjectivesNote = document.getElementById('account-objectives-note');
+        const accountObjectivesNotePreview = document.getElementById('account-objectives-note-preview');
+        const noteToolbar = document.getElementById('note-toolbar');
         const dailyTargetOutput = document.getElementById('daily-target-output');
         const dailyProgressOutput = document.getElementById('daily-progress-output');
         const dailyProgressPercent = document.getElementById('daily-progress-percent');
         const dailyProgressBar = document.getElementById('daily-progress-bar');
         const saveMonthlyTargetBtn = document.getElementById('save-monthly-target-btn');
+        const saveAccountNoteBtn = document.getElementById('save-account-note-btn');
         const tradeForm = document.getElementById('trade-form');
         const fechaInput = document.getElementById('fecha');
         const activoSelect = document.getElementById('activo');
@@ -1010,6 +1159,9 @@
             if (addAccountForm) addAccountForm.addEventListener('submit', handleAddAccount);
             if (monthlyTargetInput) monthlyTargetInput.addEventListener('input', handleMonthlyTargetChange);
             if (saveMonthlyTargetBtn) saveMonthlyTargetBtn.addEventListener('click', handleSaveMonthlyTarget);
+            if (saveAccountNoteBtn) saveAccountNoteBtn.addEventListener('click', handleSaveAccountNote);
+            if (accountObjectivesNote) accountObjectivesNote.addEventListener('input', handleNoteInputChange);
+            if (noteToolbar) noteToolbar.addEventListener('click', handleToolbarClick);
             if (deleteAccountBtn) deleteAccountBtn.addEventListener('click', handleDeleteAccount);
             if (renameAccountBtn) renameAccountBtn.addEventListener('click', openEditAccountModal);
             if (editAccountForm) editAccountForm.addEventListener('submit', handleUpdateAccountName);
@@ -1019,14 +1171,28 @@
             if (volumePeriodSelect) volumePeriodSelect.addEventListener('change', updateVolumeByPeriodStat);
 
             addStrategyForm.addEventListener('submit', handleAddStrategy);
-            strategyList.addEventListener('click', handleStrategyListActions);
+            strategyList.addEventListener('click', (event) => {
+                const moveBtn = event.target.closest('[data-move]');
+                if (moveBtn) {
+                    handleMoveAction(moveBtn.dataset.type, moveBtn.dataset.id, moveBtn.dataset.move);
+                    return;
+                }
+                handleStrategyListActions(event);
+            });
             editStrategyForm.addEventListener('submit', handleUpdateStrategy);
             cancelEditStrategyBtn.addEventListener('click', () => toggleModal('edit-strategy-modal', false));
             confirmDeleteStrategyBtn.addEventListener('click', confirmDeleteStrategy);
             cancelDeleteStrategyBtn.addEventListener('click', () => toggleModal('delete-strategy-modal', false));
 
             addAssetForm.addEventListener('submit', handleAddAsset);
-            assetList.addEventListener('click', handleAssetListActions);
+            assetList.addEventListener('click', (event) => {
+                const moveBtn = event.target.closest('[data-move]');
+                if (moveBtn) {
+                    handleMoveAction(moveBtn.dataset.type, moveBtn.dataset.id, moveBtn.dataset.move);
+                    return;
+                }
+                handleAssetListActions(event);
+            });
             editAssetForm.addEventListener('submit', handleUpdateAsset);
             cancelEditAssetBtn.addEventListener('click', () => toggleModal('edit-asset-modal', false));
             confirmDeleteAssetBtn.addEventListener('click', confirmDeleteAsset);
@@ -1288,9 +1454,9 @@
             const totalStrategies = Object.values(exportState.data || {}).reduce((sum, accountData) => sum + (Array.isArray(accountData.strategies) ? accountData.strategies.length : 0), 0);
 
             const activeAccount = exportState.accounts?.find(account => account.id === exportState.activeAccountId);
-            const monthlyTarget = exportState.data && exportState.activeAccountId && exportState.data[exportState.activeAccountId]
-                ? exportState.data[exportState.activeAccountId].monthlyTargetProfit
-                : undefined;
+            const activeAccountData = exportState.data && exportState.activeAccountId ? exportState.data[exportState.activeAccountId] : undefined;
+            const monthlyTarget = activeAccountData ? activeAccountData.monthlyTargetProfit : undefined;
+            const objectivesNote = activeAccountData && typeof activeAccountData.objectivesNote === 'string' ? activeAccountData.objectivesNote : '';
 
             return {
                 title: 'Bitácora FTT exportada',
@@ -1328,7 +1494,10 @@
                         value: `${totalStrategies}`,
                         inline: true
                     }
-                ]
+                ].concat((objectivesNote && objectivesNote.trim()) ? [{
+                    name: 'Nota de objetivos (cuenta activa)',
+                    value: objectivesNote.length > 1024 ? `${objectivesNote.slice(0, 1021)}...` : objectivesNote
+                }] : [])
             };
         };
 
@@ -1465,6 +1634,7 @@
                 strategies = payload.strategies;
                 ensureAccountDataStructure(currentAccountId);
                 accountState.data[currentAccountId].monthlyTargetProfit = typeof payload.monthlyTargetProfit === 'number' ? payload.monthlyTargetProfit : 0;
+                accountState.data[currentAccountId].objectivesNote = typeof payload.objectivesNote === 'string' ? payload.objectivesNote : '';
                 persistCurrentAccount();
                 setCurrentAccountToDefault();
                 cancelEditMode();
@@ -1534,19 +1704,38 @@
             selectElement.value = currentValue;
         };
         
-        const renderAssetList = () => renderList(assetList, assets, 'Aún no has añadido ningún activo.');
-        const renderStrategyList = () => renderList(strategyList, strategies, 'Aún no has añadido ninguna estrategia.');
+        const renderAssetList = () => renderList(assetList, assets, 'Aún no has añadido ningún activo.', 'asset');
+        const renderStrategyList = () => renderList(strategyList, strategies, 'Aún no has añadido ninguna estrategia.', 'strategy');
 
-        const renderList = (ulElement, collection, emptyMessage) => {
+        const renderList = (ulElement, collection, emptyMessage, type) => {
+            if (!ulElement) return;
             if (collection.length > 0) {
-                ulElement.innerHTML = collection.map(item => `
-                    <li class="flex items-center justify-between bg-white border border-gray-200 p-3 rounded-md shadow-sm">
-                        <span class="text-gray-900 font-medium">${item.name}</span>
+                ulElement.innerHTML = collection.map((item, index) => {
+                    const canMoveUp = index > 0;
+                    const canMoveDown = index < collection.length - 1;
+                    return `
+                    <li class="flex items-center justify-between bg-white border border-gray-200 p-3 rounded-md shadow-sm" data-id="${item.id}" data-type="${type}">
+                        <div class="flex items-center gap-3">
+                            <div class="flex flex-col gap-1">
+                                <button type="button" class="reorder-btn" data-move="up" data-id="${item.id}" data-type="${type}" ${canMoveUp ? '' : 'disabled'} aria-label="Mover hacia arriba">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
+                                    </svg>
+                                </button>
+                                <button type="button" class="reorder-btn" data-move="down" data-id="${item.id}" data-type="${type}" ${canMoveDown ? '' : 'disabled'} aria-label="Mover hacia abajo">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                                    </svg>
+                                </button>
+                            </div>
+                            <span class="text-gray-900 font-medium">${item.name}</span>
+                        </div>
                         <div class="space-x-2">
                             <button data-id="${item.id}" class="edit-btn text-gray-500 hover:text-blue-600 transition-colors">Editar</button>
                             <button data-id="${item.id}" class="delete-btn text-gray-500 hover:text-red-600 transition-colors">Borrar</button>
                         </div>
-                    </li>`).join('');
+                    </li>`;
+                }).join('');
             } else {
                 ulElement.innerHTML = `<p class="text-center text-gray-500">${emptyMessage}</p>`;
             }
@@ -2206,6 +2395,10 @@
             monthlyTargetInput.value = val ? String(val) : '';
             const daily = val / 30;
             dailyTargetOutput.textContent = `$${daily.toFixed(2)}`;
+            if (accountObjectivesNote) {
+                accountObjectivesNote.value = typeof data.objectivesNote === 'string' ? data.objectivesNote : '';
+            }
+            updateNotePreview(accountObjectivesNote ? accountObjectivesNote.value : '');
             const todayPnl = computeTodayPnl();
             if (daily > 0) {
                 const progressText = `$${daily.toFixed(2)} - $${todayPnl.toFixed(2)}/$${daily.toFixed(2)} de avance hoy`;
@@ -2259,6 +2452,127 @@
             handleMonthlyTargetChange();
             persistCurrentAccount();
             showToast('Meta mensual guardada.');
+        };
+        const handleSaveAccountNote = () => {
+            if (!accountObjectivesNote) return;
+            ensureAccountDataStructure(currentAccountId);
+            accountState.data[currentAccountId].objectivesNote = accountObjectivesNote.value;
+            persistCurrentAccount();
+            renderObjectives();
+            showToast('Nota de objetivos guardada.');
+        };
+        const handleNoteInputChange = () => {
+            if (!accountObjectivesNote) return;
+            updateNotePreview(accountObjectivesNote.value);
+        };
+        const handleToolbarClick = (event) => {
+            const button = event.target.closest('button[data-md-action]');
+            if (!button || !accountObjectivesNote) return;
+            const action = button.dataset.mdAction;
+            applyMarkdownFormatting(action, accountObjectivesNote);
+            accountObjectivesNote.focus();
+            handleNoteInputChange();
+        };
+        const applyMarkdownFormatting = (action, textarea) => {
+            const { selectionStart, selectionEnd, value } = textarea;
+            const selectedText = value.slice(selectionStart, selectionEnd) || '';
+            let before = value.slice(0, selectionStart);
+            let after = value.slice(selectionEnd);
+            const wrapSelection = (prefix, suffix = prefix) => {
+                const content = selectedText || 'texto';
+                const updated = `${before}${prefix}${content}${suffix}${after}`;
+                textarea.value = updated;
+                const start = before.length + prefix.length;
+                const end = start + content.length;
+                textarea.setSelectionRange(start, end);
+            };
+            const insertLine = (linePrefix) => {
+                const lines = selectedText || 'Elemento';
+                const formatted = lines.split('\n').map(line => line ? `${linePrefix}${line}` : linePrefix.trim()).join('\n');
+                const updated = `${before}${formatted}${after}`;
+                textarea.value = updated;
+                const start = before.length;
+                const end = start + formatted.length;
+                textarea.setSelectionRange(start, end);
+            };
+            switch(action) {
+                case 'bold':
+                    wrapSelection('**');
+                    break;
+                case 'italic':
+                    wrapSelection('*');
+                    break;
+                case 'strike':
+                    wrapSelection('~~');
+                    break;
+                case 'inlineCode':
+                    wrapSelection('`');
+                    break;
+                case 'codeBlock':
+                    wrapSelection('\n```\n', '\n```\n');
+                    break;
+                case 'heading':
+                    wrapSelection('## ', '');
+                    break;
+                case 'bulletList':
+                    insertLine('- ');
+                    break;
+                case 'orderedList':
+                    const numbered = (selectedText || 'Item 1').split('\n').map((line, idx) => `${idx + 1}. ${line || 'Elemento'}`).join('\n');
+                    textarea.value = `${before}${numbered}${after}`;
+                    textarea.setSelectionRange(before.length, before.length + numbered.length);
+                    break;
+                case 'quote':
+                    insertLine('> ');
+                    break;
+                default:
+                    break;
+            }
+        };
+        const updateNotePreview = (rawValue) => {
+            if (!accountObjectivesNotePreview) return;
+            const trimmed = (rawValue || '').trim();
+            if (!trimmed) {
+                accountObjectivesNotePreview.innerHTML = NOTE_PREVIEW_PLACEHOLDER_HTML;
+                return;
+            }
+            if (window.marked) {
+                const html = window.marked.parse(trimmed);
+                const safe = window.DOMPurify ? DOMPurify.sanitize(html) : html;
+                accountObjectivesNotePreview.innerHTML = safe;
+            } else {
+                accountObjectivesNotePreview.textContent = trimmed;
+            }
+        };
+        const moveCollectionItem = (collection, id, delta) => {
+            const copy = Array.isArray(collection) ? collection.slice() : [];
+            const index = copy.findIndex(item => item.id === id);
+            if (index === -1) return null;
+            const targetIndex = index + delta;
+            if (targetIndex < 0 || targetIndex >= copy.length) return null;
+            const [item] = copy.splice(index, 1);
+            copy.splice(targetIndex, 0, item);
+            return copy;
+        };
+        const handleMoveAction = (type, id, direction) => {
+            const delta = direction === 'up' ? -1 : 1;
+            if (type === 'asset') {
+                const reordered = moveCollectionItem(assets, id, delta);
+                if (reordered) {
+                    assets = reordered;
+                    persistCurrentAccount();
+                    renderAssetList();
+                    showToast('Orden de activos actualizado.');
+                }
+            } else if (type === 'strategy') {
+                const reordered = moveCollectionItem(strategies, id, delta);
+                if (reordered) {
+                    strategies = reordered;
+                    persistCurrentAccount();
+                    renderStrategyList();
+                    showToast('Orden de estrategias actualizado.');
+                }
+            }
         };
         const switchTab = (activeTabKey) => {
             Object.keys(tabs).forEach(key => {
