@@ -230,6 +230,41 @@
         </div>
     </div>
 
+    <div id="optionEditModal" class="fixed inset-0 hidden flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 sm:p-6">
+        <div class="relative mx-auto w-full max-w-xl rounded-2xl bg-white p-6 shadow-xl">
+            <h3 class="text-xl font-semibold text-slate-900" id="optionModalTitle">Editar Plazo de Inversión</h3>
+            <form id="optionEditForm" class="mt-4 space-y-4">
+                <input type="hidden" id="optionEditType" value="plazos">
+                <input type="hidden" id="optionEditId">
+                <div>
+                    <label for="optionEditName" class="block text-sm font-medium text-slate-700 text-left">Nombre</label>
+                    <input type="text" id="optionEditName" class="mt-1 block w-full rounded-xl border-0 ring-1 ring-inset ring-slate-300 bg-white/80 px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-600">
+                </div>
+                <div>
+                    <label for="optionEditColor" class="block text-sm font-medium text-slate-700 text-left">Color</label>
+                    <input type="color" id="optionEditColor" class="mt-1 block w-full h-10 rounded-xl ring-1 ring-inset ring-slate-300 bg-white/80">
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label for="optionEditLength" class="block text-sm font-medium text-slate-700 text-left">Duración</label>
+                        <input type="number" id="optionEditLength" min="1" class="mt-1 block w-full rounded-xl border-0 ring-1 ring-inset ring-slate-300 bg-white/80 px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-600">
+                    </div>
+                    <div>
+                        <label for="optionEditUnit" class="block text-sm font-medium text-slate-700 text-left">Unidad</label>
+                        <select id="optionEditUnit" class="mt-1 block w-full rounded-xl border-0 ring-1 ring-inset ring-slate-300 bg-white/80 px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-600">
+                            <option value="days">Días</option>
+                            <option value="months">Meses</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 pt-2">
+                    <button type="button" id="optionSaveBtn" class="flex-1 rounded-full bg-green-600 px-4 py-2 text-white text-base font-medium shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-400">Guardar</button>
+                    <button type="button" id="optionCancelBtn" class="flex-1 rounded-full bg-slate-600 px-4 py-2 text-white text-base font-medium shadow-sm hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -274,6 +309,9 @@
     const cancelBtn = document.getElementById('cancelBtn');
     const recordForm = document.getElementById('recordForm');
     const dataTableBody = document.getElementById('dataTableBody');
+    const optionModal = document.getElementById('optionEditModal');
+    const optionCancelBtn = document.getElementById('optionCancelBtn');
+    const optionSaveBtn = document.getElementById('optionSaveBtn');
 
     // --- Pestañas ---
     dashboardTab.addEventListener('click', () => switchTab('dashboard'));
@@ -313,6 +351,8 @@
     // --- Modal ---
     addRecordBtn.addEventListener('click', () => openModal());
     cancelBtn.addEventListener('click', () => closeModal());
+    if (optionCancelBtn) optionCancelBtn.addEventListener('click', () => closeOptionModal());
+    if (optionSaveBtn) optionSaveBtn.addEventListener('click', () => saveOptionModal());
 
     function openModal(recordId = null) {
         recordForm.reset();
@@ -341,6 +381,48 @@
 
     function closeModal() {
         modal.classList.add('hidden');
+    }
+
+    function openOptionModalPlazos(optionId) {
+        const opt = state.options.plazos.find(o => o.id === optionId);
+        if (!opt) return;
+        document.getElementById('optionEditId').value = String(optionId);
+        document.getElementById('optionEditName').value = opt.name || '';
+        document.getElementById('optionEditColor').value = opt.color || '#ffffff';
+        document.getElementById('optionEditLength').value = opt.length || '';
+        document.getElementById('optionEditUnit').value = opt.unit || 'days';
+        const t = document.getElementById('optionModalTitle');
+        if (t) t.textContent = 'Editar Plazo de Inversión';
+        optionModal.classList.remove('hidden');
+    }
+
+    function closeOptionModal() {
+        optionModal.classList.add('hidden');
+    }
+
+    function saveOptionModal() {
+        const idStr = document.getElementById('optionEditId').value;
+        const id = parseInt(idStr, 10);
+        const idx = state.options.plazos.findIndex(o => o.id === id);
+        if (idx === -1) return;
+        const prev = state.options.plazos[idx];
+        const newName = String(document.getElementById('optionEditName').value || '').trim();
+        const newColor = String(document.getElementById('optionEditColor').value || '').trim();
+        const newLength = parseInt(String(document.getElementById('optionEditLength').value || ''), 10);
+        const newUnit = String(document.getElementById('optionEditUnit').value || 'days');
+        if (!newName) return;
+        if (!isFinite(newLength) || newLength <= 0) return;
+        const updated = { ...prev, name: newName, color: newColor || prev.color, length: newLength, unit: (newUnit === 'months' || newUnit === 'days') ? newUnit : prev.unit };
+        const oldName = prev.name;
+        state.options.plazos[idx] = updated;
+        if (oldName !== newName) {
+            state.records.forEach(r => { if (r.plazo === oldName) r.plazo = newName; });
+        }
+        saveState();
+        renderOptions();
+        renderTable();
+        populateSelects();
+        closeOptionModal();
     }
 
     // --- Lógica CRUD y de estado ---
@@ -732,14 +814,24 @@
 
         for (const key in optionsContainers) {
             optionsContainers[key].innerHTML = '';
-            state.options[key].forEach(option => {
+            state.options[key].forEach((option, idx) => {
                 const div = document.createElement('div');
                 div.className = 'flex justify-between items-center p-2 rounded';
                 div.style.backgroundColor = option.color;
+                div.id = `option-${key}-${option.id}`;
                 const plazoLabel = option.length ? `(${option.length} ${option.unit === 'months' ? 'meses' : 'días'})` : '';
+                const isFirst = idx === 0;
+                const isLast = idx === state.options[key].length - 1;
                 div.innerHTML = `
-                    <span style="color: ${getContrastYIQ(option.color)}">${option.name} ${plazoLabel}</span>
-                    <button onclick="deleteOption('${key}', ${option.id})" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
+                    <div class="flex items-center gap-2 w-full">
+                        <span class="flex-1" style="color: ${getContrastYIQ(option.color)}">${option.name} ${plazoLabel}</span>
+                        <div class="flex items-center gap-1">
+                            <button ${isFirst ? 'disabled' : ''} onclick="moveOption('${key}', ${option.id}, 'up')" class="text-slate-800/80 hover:text-slate-900 ${isFirst ? 'opacity-40 cursor-not-allowed' : ''}"><i class="fas fa-arrow-up"></i></button>
+                            <button ${isLast ? 'disabled' : ''} onclick="moveOption('${key}', ${option.id}, 'down')" class="text-slate-800/80 hover:text-slate-900 ${isLast ? 'opacity-40 cursor-not-allowed' : ''}"><i class="fas fa-arrow-down"></i></button>
+                            <button onclick="editOption('${key}', ${option.id})" class="text-indigo-700 hover:text-indigo-900"><i class="fas fa-edit"></i></button>
+                            <button onclick="deleteOption('${key}', ${option.id})" class="text-red-600 hover:text-red-800"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
                 `;
                 optionsContainers[key].appendChild(div);
             });
@@ -780,6 +872,87 @@
     window.deleteOption = function(type, id) {
         state.options[type] = state.options[type].filter(option => option.id !== id);
         saveState();
+        renderOptions();
+        populateSelects();
+    }
+
+    window.moveOption = function(type, id, direction) {
+        const list = state.options[type] || [];
+        const idx = list.findIndex(o => o.id === id);
+        if (idx === -1) return;
+        const target = direction === 'up' ? idx - 1 : idx + 1;
+        if (target < 0 || target >= list.length) return;
+        const tmp = list[idx];
+        list[idx] = list[target];
+        list[target] = tmp;
+        state.options[type] = list;
+        saveState();
+        renderOptions();
+        populateSelects();
+        renderTable();
+    }
+
+    window.editOption = function(type, id) {
+        const list = state.options[type] || [];
+        const idx = list.findIndex(o => o.id === id);
+        if (idx === -1) return;
+        const option = list[idx];
+        const container = document.getElementById(`option-${type}-${id}`);
+        if (!container) return;
+        if (type === 'plazos') {
+            openOptionModalPlazos(id);
+        } else {
+            container.innerHTML = `
+                <div class=\"flex items-center gap-2 w-full\">
+                    <input type=\"text\" id=\"editName-${type}-${id}\" value=\"${option.name}\" class=\"flex-1 rounded-xl border-0 ring-1 ring-inset ring-slate-300 bg-white/80 px-2 py-1 text-sm\">
+                    <input type=\"color\" id=\"editColor-${type}-${id}\" value=\"${option.color}\" class=\"h-8 w-16 rounded-xl ring-1 ring-inset ring-slate-300 bg-white/80\">
+                    <button onclick=\"saveOptionEdit('${type}', ${id})\" class=\"text-green-600 hover:text-green-800\"><i class=\"fas fa-check\"></i></button>
+                    <button onclick=\"cancelOptionEdit('${type}', ${id})\" class=\"text-slate-600 hover:text-slate-800\"><i class=\"fas fa-times\"></i></button>
+                </div>
+            `;
+        }
+    }
+
+    window.saveOptionEdit = function(type, id) {
+        const list = state.options[type] || [];
+        const idx = list.findIndex(o => o.id === id);
+        if (idx === -1) return;
+        const prev = list[idx];
+        const nameEl = document.getElementById(`editName-${type}-${id}`);
+        const colorEl = document.getElementById(`editColor-${type}-${id}`);
+        if (!nameEl || !colorEl) return;
+        const newName = String(nameEl.value || '').trim();
+        const newColor = String(colorEl.value || '').trim();
+        if (!newName) return;
+        let updated = { ...prev, name: newName, color: newColor || prev.color };
+        if (type === 'plazos') {
+            const lengthEl = document.getElementById(`editLength-${type}-${id}`);
+            const unitEl = document.getElementById(`editUnit-${type}-${id}`);
+            const newLength = parseInt(lengthEl && lengthEl.value ? lengthEl.value : '', 10);
+            const newUnit = unitEl && unitEl.value ? unitEl.value : prev.unit;
+            if (!isFinite(newLength) || newLength <= 0) return;
+            updated.length = newLength;
+            updated.unit = (newUnit === 'months' || newUnit === 'days') ? newUnit : prev.unit;
+        }
+        const oldName = prev.name;
+        list[idx] = updated;
+        state.options[type] = list;
+        if (oldName !== newName) {
+            if (type === 'apps') {
+                state.records.forEach(r => { if (r.app === oldName) r.app = newName; });
+            } else if (type === 'plazos') {
+                state.records.forEach(r => { if (r.plazo === oldName) r.plazo = newName; });
+            } else if (type === 'metodosPago') {
+                state.records.forEach(r => { if (r.metodoPago === oldName) r.metodoPago = newName; });
+            }
+        }
+        saveState();
+        renderOptions();
+        renderTable();
+        populateSelects();
+    }
+
+    window.cancelOptionEdit = function(type, id) {
         renderOptions();
     }
 
