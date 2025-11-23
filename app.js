@@ -5,8 +5,8 @@ const isSupported = () => {
 
 
 // variables de versión de página
-window.PAGE_VERSION = "4.4.1";
-window.ACT_DATE = "18/11/25";
+window.PAGE_VERSION = "4.5.0";
+window.ACT_DATE = "22/11/25";
 
 console.log("Página versión: " + window.PAGE_VERSION + ", actualizada por ultima vez el: " + window.ACT_DATE);
 
@@ -44,14 +44,14 @@ const showNotification = (message, type = 'info') => {
     ${type === 'info' ? 'background: #3b82f6;' : ''}
     ${type === 'warning' ? 'background: #f59e0b;' : ''}
   `;
-  
+
   document.body.appendChild(notification);
-  
+
   // Animar entrada
   setTimeout(() => {
     notification.style.transform = 'translateX(0)';
   }, 100);
-  
+
   // Remover después de 3 segundos
   setTimeout(() => {
     notification.style.transform = 'translateX(100%)';
@@ -96,7 +96,7 @@ const registerServiceWorker = async () => {
     // Registrar el Service Worker y pedir que controle toda la raíz (o la que corresponda)
     const registration = await navigator.serviceWorker.register(swUrl, { scope: '/' });
     log('Service Worker registrado exitosamente', 'info');
-    
+
     // Escuchar actualizaciones
     registration.addEventListener('updatefound', () => {
       const newWorker = registration.installing;
@@ -117,7 +117,7 @@ const registerServiceWorker = async () => {
       log('Worker en estado waiting detectado; activando actualización', 'info');
       registration.waiting.postMessage({ type: 'SKIP_WAITING' });
     }
-    
+
     // Verificar estado del Service Worker
     if (registration.active) {
       log('Service Worker activo', 'info');
@@ -128,7 +128,7 @@ const registerServiceWorker = async () => {
       log('Controlador del Service Worker cambiado — recargando página', 'info');
       window.location.reload();
     });
-    
+
     // Forzar comprobación de nuevas versiones tras el registro (útil en desarrollo)
     try {
       registration.update();
@@ -139,12 +139,12 @@ const registerServiceWorker = async () => {
 
     return registration;
   } catch (error) {
-  // Mostrar un mensaje menos alarmante: fallos aquí son comunes en entornos
-  // no seguros o cuando el archivo no existe. Logueamos el error para depuración
-  // pero evitamos asustar al usuario con un mensaje crítico.
-  log(`Error al registrar Service Worker: ${error.message}`, 'error');
-  log('No fue posible activar las funciones offline en este entorno (no afecta al uso)', 'warning');
-  return null;
+    // Mostrar un mensaje menos alarmante: fallos aquí son comunes en entornos
+    // no seguros o cuando el archivo no existe. Logueamos el error para depuración
+    // pero evitamos asustar al usuario con un mensaje crítico.
+    log(`Error al registrar Service Worker: ${error.message}`, 'error');
+    log('No fue posible activar las funciones offline en este entorno (no afecta al uso)', 'warning');
+    return null;
   }
 };
 
@@ -154,16 +154,16 @@ const handleInstallPrompt = () => {
   window.addEventListener('beforeinstallprompt', (event) => {
     event.preventDefault();
     deferredPrompt = event;
-    
+
     log('Evento de instalación PWA detectado', 'info');
-    
+
     // Mostrar botón de instalación
     if (installButton && installSection) {
       installButton.style.display = 'block';
       installSection.style.display = 'block'; // Mostrar la sección completa
     }
   });
-  
+
   // Manejar clic en botón de instalación
   if (installButton) {
     installButton.addEventListener('click', async () => {
@@ -171,18 +171,18 @@ const handleInstallPrompt = () => {
         showNotification('La aplicación ya está instalada o no es compatible', 'warning');
         return;
       }
-      
+
       deferredPrompt.prompt();
-      
+
       const { outcome } = await deferredPrompt.userChoice;
-      
+
       if (outcome === 'accepted') {
         log('Usuario aceptó instalar la PWA', 'info');
         showNotification('¡Aplicación instalada exitosamente!', 'success');
       } else {
         log('Usuario rechazó instalar la PWA', 'info');
       }
-      
+
       deferredPrompt = null;
       installButton.style.display = 'none';
       if (installSection) {
@@ -190,7 +190,7 @@ const handleInstallPrompt = () => {
       }
     });
   }
-  
+
   // Verificar si la app ya está instalada
   window.addEventListener('appinstalled', () => {
     log('PWA instalada exitosamente', 'info');
@@ -204,7 +204,7 @@ const handleConnectionStatus = () => {
   const updateConnectionStatus = () => {
     const wasOffline = isOffline;
     isOffline = !navigator.onLine;
-    
+
     if (isOffline) {
       log('Aplicación en modo offline', 'warn');
       showNotification('Modo offline activado', 'info');
@@ -217,11 +217,11 @@ const handleConnectionStatus = () => {
       document.body.classList.remove('offline');
     }
   };
-  
+
   // Escuchar cambios de conexión
   window.addEventListener('online', updateConnectionStatus);
   window.addEventListener('offline', updateConnectionStatus);
-  
+
   // Estado inicial
   updateConnectionStatus();
 };
@@ -231,7 +231,7 @@ const cacheManager = {
   // Limpiar caché
   async clearCache() {
     if (!isSupported()) return;
-    
+
     try {
       const cacheNames = await caches.keys();
       await Promise.all(cacheNames.map(name => caches.delete(name)));
@@ -241,13 +241,13 @@ const cacheManager = {
       log(`Error al limpiar caché: ${error.message}`, 'error');
     }
   },
-  
+
   // Verificar espacio usado
   async checkCacheUsage() {
     if (!('storage' in navigator && 'estimate' in navigator.storage)) {
       return null;
     }
-    
+
     try {
       const estimate = await navigator.storage.estimate();
       return {
@@ -268,20 +268,20 @@ const utils = {
   isFirstVisit() {
     return !localStorage.getItem('pwa-visited');
   },
-  
+
   // Marcar como visitado
   markAsVisited() {
     localStorage.setItem('pwa-visited', 'true');
   },
-  
+
   // Obtener estadísticas del Service Worker
   async getSWStats() {
     if (!isSupported()) return null;
-    
+
     try {
       const registration = await navigator.serviceWorker.getRegistration();
       if (!registration) return null;
-      
+
       return {
         active: !!registration.active,
         installing: !!registration.installing,
@@ -299,28 +299,28 @@ const utils = {
 // Inicializar la aplicación
 const initApp = async () => {
   log('Inicializando aplicación PWA', 'info');
-  
+
   // Verificar primera visita
   if (utils.isFirstVisit()) {
     log('Primera visita detectada', 'info');
     utils.markAsVisited();
     showNotification('¡Bienvenido! Esta aplicación funciona incluso sin conexión', 'success');
   }
-  
+
   // Registrar Service Worker
   const swRegistration = await registerServiceWorker();
-  
+
   // Manejar instalación PWA
   handleInstallPrompt();
-  
+
   // Detectar estado de conexión
   handleConnectionStatus();
-  
+
   // Mostrar estadísticas en consola (desarrollo)
   if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
     const stats = await utils.getSWStats();
     const cacheUsage = await cacheManager.checkCacheUsage();
-    
+
     console.table({
       'Service Worker': stats?.active ? '✅ Activo' : '❌ Inactivo',
       'Modo Offline': isOffline ? '📴 Sí' : '📶 No',
@@ -328,7 +328,7 @@ const initApp = async () => {
       'Soporte PWA': isSupported() ? '✅ Sí' : '❌ No'
     });
   }
-  
+
   log('Aplicación PWA inicializada exitosamente', 'info');
 };
 

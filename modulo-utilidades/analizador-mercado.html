@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -16,86 +17,125 @@
         body {
             font-family: 'Inter', sans-serif;
         }
+
         .dropdown-menu {
             transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
         }
+
         .table-container {
             max-height: 60vh;
         }
+
         .progress-bar {
             height: 4px;
             background-color: #3b82f6;
             transition: width 0.3s ease;
         }
+
         .modal {
             transition: opacity 0.3s ease;
         }
+
         .modal-content {
             transform: scale(0.9);
             transition: transform 0.3s ease;
         }
+
         .modal.active {
             opacity: 1;
             pointer-events: all;
         }
+
         .modal.active .modal-content {
             transform: scale(1);
         }
+
+        .period-option {
+            position: relative;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+        }
+
+        .period-option.active {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .period-option.active::after {
+            content: 'Seleccionado';
+            position: absolute;
+            top: 10px;
+            right: 12px;
+            background-color: #dbeafe;
+            color: #1d4ed8;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            opacity: 1;
+            transform: translateY(-4px);
+            transition: opacity 0.15s ease;
+            pointer-events: none;
+        }
     </style>
 </head>
-<body class="bg-gray-900 text-gray-200 flex items-center justify-center min-h-screen p-4">
+
+<body class="bg-gray-50 text-gray-800 flex items-center justify-center min-h-screen p-4">
 
     <!-- Modal de Confirmación para Múltiples Solicitudes -->
-    <div id="confirmation-modal" class="modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 opacity-0 pointer-events-none">
-        <div class="modal-content bg-gray-800 rounded-2xl p-6 md:p-8 max-w-lg w-full mx-4">
+    <div id="confirmation-modal"
+        class="modal fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50 opacity-0 pointer-events-none">
+        <div class="modal-content bg-white rounded-2xl p-6 md:p-8 max-w-lg w-full mx-4 shadow-xl">
             <div class="text-center mb-6">
                 <i class="fas fa-exclamation-triangle text-yellow-500 text-4xl mb-4"></i>
-                <h2 class="text-2xl font-bold text-white mb-2">Solicitud Compleja Detectada</h2>
-                <p class="text-gray-300">Su solicitud excede el límite de 5,000 registros por petición.</p>
+                <h2 class="text-2xl font-bold text-gray-900 mb-2">Solicitud Compleja Detectada</h2>
+                <p class="text-gray-600">Su solicitud excede el límite de 5,000 registros por petición.</p>
             </div>
-            
-            <div class="bg-gray-700 rounded-lg p-4 mb-6">
-                <h3 class="font-semibold text-white mb-2">Resumen de la solicitud:</h3>
+
+            <div class="bg-gray-100 rounded-lg p-4 mb-6">
+                <h3 class="font-semibold text-gray-900 mb-2">Resumen de la solicitud:</h3>
                 <div class="space-y-2 text-sm">
                     <div class="flex justify-between">
-                        <span class="text-gray-300">Período solicitado:</span>
-                        <span id="modal-period" class="text-white font-medium"></span>
+                        <span class="text-gray-600">Período solicitado:</span>
+                        <span id="modal-period" class="text-gray-900 font-medium"></span>
                     </div>
                     <div class="flex justify-between">
-                        <span class="text-gray-300">Temporalidad:</span>
-                        <span id="modal-interval" class="text-white font-medium"></span>
+                        <span class="text-gray-600">Temporalidad:</span>
+                        <span id="modal-interval" class="text-gray-900 font-medium"></span>
                     </div>
                     <div class="flex justify-between">
-                        <span class="text-gray-300">Registros estimados:</span>
-                        <span id="modal-estimated" class="text-white font-medium"></span>
+                        <span class="text-gray-600">Registros estimados:</span>
+                        <span id="modal-estimated" class="text-gray-900 font-medium"></span>
                     </div>
                     <div class="flex justify-between">
-                        <span class="text-gray-300">Solicitudes necesarias:</span>
-                        <span id="modal-requests" class="text-white font-medium"></span>
+                        <span class="text-gray-600">Solicitudes necesarias:</span>
+                        <span id="modal-requests" class="text-gray-900 font-medium"></span>
                     </div>
                     <div class="flex justify-between">
-                        <span class="text-gray-300">Tiempo estimado:</span>
-                        <span id="modal-time" class="text-white font-medium"></span>
+                        <span class="text-gray-600">Tiempo estimado:</span>
+                        <span id="modal-time" class="text-gray-900 font-medium"></span>
                     </div>
                 </div>
             </div>
-            
+
             <div class="flex space-x-4">
-                <button id="modal-cancel" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg transition">
+                <button id="modal-cancel"
+                    class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-4 rounded-lg transition">
                     Cancelar
                 </button>
-                <button id="modal-accept" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition">
+                <button id="modal-accept"
+                    class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition">
                     Aceptar
                 </button>
             </div>
         </div>
     </div>
 
-    <div class="w-full max-w-6xl mx-auto bg-gray-800 rounded-2xl shadow-2xl p-6 md:p-8">
-        
+    <div class="w-full max-w-6xl mx-auto bg-white rounded-2xl shadow-2xl p-6 md:p-8">
+
         <div class="flex justify-between items-center mb-6">
             <a href="../utilidades.html"
-               class="inline-flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-lg transition">
+                class="inline-flex items-center gap-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg transition">
                 <i class="fas fa-arrow-left"></i>
                 Volver a utilidades
             </a>
@@ -103,66 +143,129 @@
 
         <!-- Encabezado -->
         <div class="text-center mb-8">
-            <h1 class="text-3xl md:text-4xl font-bold text-white">Visor de Datos de Velas</h1>
-            <p class="text-gray-400 mt-2">Obtén datos históricos y gráficos del mercado, usando Twelve Data</p>
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-900">Visor de Datos de Velas</h1>
+            <p class="text-gray-600 mt-2">Obtén datos históricos y gráficos del mercado, usando Twelve Data</p>
         </div>
 
         <!-- Formulario de Entrada -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 items-end">
-            
+
             <!-- Símbolo -->
             <div>
-                <label for="symbol" class="block text-sm font-medium text-gray-300 mb-2">Símbolo (ej. EUR/USD)</label>
-                <input type="text" id="symbol" value="EUR/USD" class="w-full bg-gray-700 border-gray-600 text-white rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                <label for="symbol" class="block text-sm font-medium text-gray-700 mb-2">Símbolo</label>
+                <select id="symbol"
+                    class="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition appearance-none">
+                    <!-- Las opciones se llenarán dinámicamente con JavaScript -->
+                </select>
+            </div>
+
+            <!-- Método para definir el periodo -->
+            <div class="md:col-span-2 lg:col-span-3">
+                <p class="block text-sm font-medium text-gray-700 mb-2">¿Cómo deseas definir el periodo?</p>
+                <p id="method-helper-text" class="text-xs text-gray-500 mb-3">Selecciona una opción para habilitar la
+                    descarga de datos.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <label data-period-option="dates"
+                        class="period-option border border-gray-200 rounded-xl p-4 bg-white cursor-pointer hover:border-blue-400 transition">
+                        <input type="radio" name="period-mode" value="dates" class="sr-only">
+                        <div class="flex items-start gap-3">
+                            <div>
+                                <p class="font-semibold text-gray-900">Por rango de fechas</p>
+                                <p class="text-sm text-gray-600">Indica una fecha de inicio y fin específicas.</p>
+                            </div>
+                            <i class="fas fa-calendar-alt text-blue-500 text-xl"></i>
+                        </div>
+                    </label>
+                    <label data-period-option="last-x"
+                        class="period-option border border-gray-200 rounded-xl p-4 bg-white cursor-pointer hover:border-blue-400 transition">
+                        <input type="radio" name="period-mode" value="last-x" class="sr-only">
+                        <div class="flex items-start gap-3">
+                            <div>
+                                <p class="font-semibold text-gray-900">Últimas velas</p>
+                                <p class="text-sm text-gray-600">Solicita rápidamente las últimas velas disponibles.</p>
+                            </div>
+                            <i class="fas fa-chart-line text-blue-500 text-xl"></i>
+                        </div>
+                    </label>
+                </div>
             </div>
 
             <!-- Fecha de Inicio -->
-            <div>
-                <label for="start-date" class="block text-sm font-medium text-gray-300 mb-2">Fecha de Inicio</label>
-                <input type="date" id="start-date" class="w-full bg-gray-700 border-gray-600 text-white rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition appearance-none">
+            <div id="start-date-wrapper" data-period="dates">
+                <label for="start-date" class="block text-sm font-medium text-gray-700 mb-2">Fecha de Inicio</label>
+                <input type="date" id="start-date"
+                    class="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition appearance-none">
             </div>
 
             <!-- Fecha de Fin -->
-            <div>
-                <label for="end-date" class="block text-sm font-medium text-gray-300 mb-2">Fecha de Fin</label>
-                <input type="date" id="end-date" class="w-full bg-gray-700 border-gray-600 text-white rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition appearance-none">
+            <div id="end-date-wrapper" data-period="dates">
+                <label for="end-date" class="block text-sm font-medium text-gray-700 mb-2">Fecha de Fin</label>
+                <input type="date" id="end-date"
+                    class="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition appearance-none">
             </div>
-            
+
+            <!-- Últimas velas -->
+            <div id="last-candles-wrapper" class="hidden md:col-span-2 lg:col-span-2">
+                <label for="last-candles" class="block text-sm font-medium text-gray-700 mb-2">Cantidad de velas
+                    recientes</label>
+                <input type="number" id="last-candles" min="10" max="20000" step="10" placeholder="Ej: 500"
+                    class="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition appearance-none">
+                <p class="text-xs text-gray-500 mt-2">Se solicitará confirmación cuando el pedido supere los 5,000
+                    datos. Máximo sugerido: 20,000 velas.</p>
+            </div>
+
             <!-- API Key -->
             <div class="lg:col-span-1">
-                <label for="api-key" class="block text-sm font-medium text-gray-300 mb-2">Clave API</label>
-                <input type="password" id="api-key" value="a1191162bb5846a48f173ea3465d98d5" class="w-full bg-gray-700 border-gray-600 text-white rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                <label for="api-key" class="block text-sm font-medium text-gray-700 mb-2">Clave API</label>
+                <input type="password" id="api-key" value="a1191162bb5846a48f173ea3465d98d5"
+                    class="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition appearance-none">
             </div>
 
             <!-- Selector de Temporalidad -->
             <div class="relative lg:col-span-1">
-                 <label for="interval-button" class="block text-sm font-medium text-gray-300 mb-2">Temporalidad</label>
-                <button id="interval-button" class="w-full bg-gray-700 border-gray-600 text-white rounded-lg p-3 text-left flex justify-between items-center focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                <label for="interval-button" class="block text-sm font-medium text-gray-700 mb-2">Temporalidad</label>
+                <button id="interval-button"
+                    class="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-lg p-3 text-left flex justify-between items-center focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
                     <span id="selected-interval-text">1 hora</span>
-                    <i class="fas fa-chevron-down text-gray-400"></i>
+                    <i class="fas fa-chevron-down text-gray-500"></i>
                 </button>
-                <div id="dropdown-menu" class="dropdown-menu absolute mt-2 w-full bg-gray-700 rounded-lg shadow-xl z-10 hidden opacity-0 transform scale-95">
-                    <a href="#" class="block px-4 py-2 text-white hover:bg-gray-600 rounded-t-lg" data-value="1min" data-text="1 minuto">1 minuto</a>
-                    <a href="#" class="block px-4 py-2 text-white hover:bg-gray-600" data-value="5min" data-text="5 minutos">5 minutos</a>
-                    <a href="#" class="block px-4 py-2 text-white hover:bg-gray-600" data-value="15min" data-text="15 minutos">15 minutos</a>
-                    <a href="#" class="block px-4 py-2 text-white hover:bg-gray-600" data-value="30min" data-text="30 minutos">30 minutos</a>
-                    <a href="#" class="block px-4 py-2 text-white hover:bg-gray-600" data-value="45min" data-text="45 minutos">45 minutos</a>
-                    <a href="#" class="block px-4 py-2 text-white hover:bg-gray-600 bg-blue-600" data-value="1h" data-text="1 hora">1 hora</a>
-                    <a href="#" class="block px-4 py-2 text-white hover:bg-gray-600" data-value="2h" data-text="2 horas">2 horas</a>
-                    <a href="#" class="block px-4 py-2 text-white hover:bg-gray-600" data-value="4h" data-text="4 horas">4 horas</a>
-                    <a href="#" class="block px-4 py-2 text-white hover:bg-gray-600" data-value="1day" data-text="1 día">1 día</a>
-                    <a href="#" class="block px-4 py-2 text-white hover:bg-gray-600" data-value="1week" data-text="1 semana">1 semana</a>
-                    <a href="#" class="block px-4 py-2 text-white hover:bg-gray-600 rounded-b-lg" data-value="1month" data-text="1 mes">1 mes</a>
+                <div id="dropdown-menu"
+                    class="dropdown-menu absolute mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-xl z-10 hidden opacity-0 transform scale-95">
+                    <a href="#" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-t-lg" data-value="1min"
+                        data-text="1 minuto">1 minuto</a>
+                    <a href="#" class="block px-4 py-2 text-gray-700 hover:bg-gray-100" data-value="5min"
+                        data-text="5 minutos">5 minutos</a>
+                    <a href="#" class="block px-4 py-2 text-gray-700 hover:bg-gray-100" data-value="15min"
+                        data-text="15 minutos">15 minutos</a>
+                    <a href="#" class="block px-4 py-2 text-gray-700 hover:bg-gray-100" data-value="30min"
+                        data-text="30 minutos">30 minutos</a>
+                    <a href="#" class="block px-4 py-2 text-gray-700 hover:bg-gray-100" data-value="45min"
+                        data-text="45 minutos">45 minutos</a>
+                    <a href="#" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 bg-blue-100 text-blue-700"
+                        data-value="1h" data-text="1 hora">1 hora</a>
+                    <a href="#" class="block px-4 py-2 text-gray-700 hover:bg-gray-100" data-value="2h"
+                        data-text="2 horas">2 horas</a>
+                    <a href="#" class="block px-4 py-2 text-gray-700 hover:bg-gray-100" data-value="4h"
+                        data-text="4 horas">4 horas</a>
+                    <a href="#" class="block px-4 py-2 text-gray-700 hover:bg-gray-100" data-value="1day"
+                        data-text="1 día">1 día</a>
+                    <a href="#" class="block px-4 py-2 text-gray-700 hover:bg-gray-100" data-value="1week"
+                        data-text="1 semana">1 semana</a>
+                    <a href="#" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-b-lg" data-value="1month"
+                        data-text="1 mes">1 mes</a>
                 </div>
             </div>
 
             <!-- Botón de Obtener Datos -->
             <div class="lg:col-span-1">
-                <button id="fetch-button" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 flex items-center justify-center">
+                <button id="fetch-button" disabled
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 flex items-center justify-center disabled:cursor-not-allowed disabled:opacity-60">
                     <span id="button-text">Obtener Datos</span>
                     <i id="loader" class="fas fa-spinner fa-spin ml-2 hidden"></i>
                 </button>
-                <button id="cancel-button" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 flex items-center justify-center mt-2 hidden">
+
+                <button id="cancel-button"
+                    class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 flex items-center justify-center mt-2 hidden">
                     <span id="cancel-button-text">Cancelar</span>
                     <i class="fas fa-times ml-2"></i>
                 </button>
@@ -171,15 +274,15 @@
 
         <!-- Barra de Progreso -->
         <div id="progress-container" class="hidden mb-4">
-            <div class="flex justify-between text-sm text-gray-400 mb-1">
+            <div class="flex justify-between text-sm text-gray-600 mb-1">
                 <span id="progress-text">Cargando datos...</span>
                 <span id="progress-percentage">0%</span>
             </div>
-            <div class="w-full bg-gray-700 rounded-full h-2">
+            <div class="w-full bg-gray-200 rounded-full h-2">
                 <div id="progress-bar" class="progress-bar h-2 rounded-full" style="width: 0%"></div>
             </div>
             <!-- Información de solicitudes múltiples -->
-            <div id="multi-request-info" class="mt-2 text-xs text-gray-400 hidden">
+            <div id="multi-request-info" class="mt-2 text-xs text-gray-500 hidden">
                 <div class="flex justify-between">
                     <span id="request-progress">Solicitud 1 de 1</span>
                     <span id="next-request-timer"></span>
@@ -192,43 +295,47 @@
 
         <!-- Contenedor de Gráfico y Tabla de Resultados -->
         <div id="results-container" class="hidden">
-            <h2 class="text-2xl font-bold text-white mb-4">Resultados para <span id="result-symbol" class="text-blue-400"></span></h2>
-            
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">Resultados para <span id="result-symbol"
+                    class="text-blue-600"></span></h2>
+
             <!-- Información de datos cargados -->
-            <div class="flex justify-between items-center mb-4 text-sm text-gray-400">
+            <div class="flex justify-between items-center mb-4 text-sm text-gray-600">
                 <div>
                     <span id="data-count">0</span> registros cargados
                     <span id="data-range" class="ml-4"></span>
                 </div>
                 <div class="flex items-center space-x-2">
                     <span>Mostrar:</span>
-                    <select id="page-size" class="bg-gray-700 text-white rounded p-1">
+                    <select id="page-size" class="bg-gray-50 border border-gray-300 text-gray-900 rounded p-1">
                         <option value="50">50 filas</option>
                         <option value="100" selected>100 filas</option>
                         <option value="200">200 filas</option>
                         <option value="500">500 filas</option>
                     </select>
+                    <button id="download-button" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-3 rounded hidden">Descargar CSV</button>
                 </div>
             </div>
-            
+
             <!-- Controles de paginación -->
             <div id="pagination-controls" class="flex justify-between items-center mb-4 hidden">
-                <button id="prev-page" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded disabled:opacity-50">
+                <button id="prev-page"
+                    class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded disabled:opacity-50">
                     <i class="fas fa-chevron-left mr-2"></i>Anterior
                 </button>
-                <span id="page-info" class="text-gray-300">Página 1 de 1</span>
-                <button id="next-page" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded disabled:opacity-50">
+                <span id="page-info" class="text-gray-700">Página 1 de 1</span>
+                <button id="next-page"
+                    class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded disabled:opacity-50">
                     Siguiente<i class="fas fa-chevron-right ml-2"></i>
                 </button>
             </div>
-            
+
             <!-- Contenedor del Gráfico -->
-            <div id="chart-container" class="mb-8 bg-gray-900/50 p-4 rounded-lg"></div>
+            <div id="chart-container" class="mb-8 bg-white border border-gray-200 p-4 rounded-lg"></div>
 
             <!-- Tabla de Resultados -->
-            <div class="table-container overflow-y-auto bg-gray-900/50 rounded-lg">
-                <table class="w-full text-sm text-left text-gray-300">
-                    <thead class="text-xs text-gray-300 uppercase bg-gray-700/30 sticky top-0 backdrop-blur-sm">
+            <div class="table-container overflow-y-auto bg-white border border-gray-200 rounded-lg">
+                <table class="w-full text-sm text-left text-gray-600">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-100 sticky top-0 backdrop-blur-sm">
                         <tr>
                             <th scope="col" class="px-6 py-3">Fecha y Hora</th>
                             <th scope="col" class="px-6 py-3 text-right">Apertura</th>
@@ -252,9 +359,17 @@
             const symbolInput = document.getElementById('symbol');
             const startDateInput = document.getElementById('start-date');
             const endDateInput = document.getElementById('end-date');
+            const startDateWrapper = document.getElementById('start-date-wrapper');
+            const endDateWrapper = document.getElementById('end-date-wrapper');
+            const lastCandlesWrapper = document.getElementById('last-candles-wrapper');
+            const lastCandlesInput = document.getElementById('last-candles');
+            const methodHelperText = document.getElementById('method-helper-text');
+            const periodOptions = document.querySelectorAll('.period-option');
+            const periodModeRadios = document.querySelectorAll('input[name="period-mode"]');
             const intervalButton = document.getElementById('interval-button');
             const dropdownMenu = document.getElementById('dropdown-menu');
             const selectedIntervalText = document.getElementById('selected-interval-text');
+
             const fetchButton = document.getElementById('fetch-button');
             const cancelButton = document.getElementById('cancel-button');
             const buttonText = document.getElementById('button-text');
@@ -278,7 +393,8 @@
             const multiRequestInfo = document.getElementById('multi-request-info');
             const requestProgress = document.getElementById('request-progress');
             const nextRequestTimer = document.getElementById('next-request-timer');
-            
+            const downloadButton = document.getElementById('download-button');
+
             // Elementos del modal
             const confirmationModal = document.getElementById('confirmation-modal');
             const modalPeriod = document.getElementById('modal-period');
@@ -301,7 +417,70 @@
             let currentRequestIndex = 0;
             let totalRequests = 1;
             let requestTimer = null; // Temporizador para controlar el rate limiting
-            let currentSymbol = ''; // Para almacenar el símbolo actual
+            let currentSymbol = 'EUR/USD'; // Para almacenar el símbolo actual
+            let periodMode = null;
+            let requestContext = null;
+            let isFetching = false;
+
+            const intervalDurationsInMinutes = {
+                '1min': 1,
+                '5min': 5,
+                '15min': 15,
+                '30min': 30,
+                '45min': 45,
+                '1h': 60,
+                '2h': 120,
+                '4h': 240,
+                '1day': 1440,
+                '1week': 10080,
+                '1month': 43200
+            };
+
+            // --- Lista de Símbolos ---
+            const symbols = {
+                'Forex - Majors': [
+                    'EUR/USD', 'USD/JPY', 'GBP/USD', 'USD/CHF', 'AUD/USD', 'USD/CAD', 'NZD/USD'
+                ],
+                'Forex - Minors': [
+                    'EUR/GBP', 'EUR/AUD', 'EUR/CAD', 'EUR/CHF', 'EUR/JPY', 'EUR/NZD',
+                    'GBP/AUD', 'GBP/CAD', 'GBP/CHF', 'GBP/JPY', 'GBP/NZD',
+                    'AUD/CAD', 'AUD/CHF', 'AUD/JPY', 'AUD/NZD',
+                    'CAD/CHF', 'CAD/JPY', 'CHF/JPY', 'NZD/CAD', 'NZD/CHF', 'NZD/JPY'
+                ],
+                'Criptomonedas': [
+                    'BTC/USD', 'ETH/USD', 'XRP/USD', 'SOL/USD', 'BNB/USD', 'ADA/USD', 'DOGE/USD',
+                    'DOT/USD', 'MATIC/USD', 'LTC/USD', 'TRX/USD', 'SHIB/USD', 'AVAX/USD', 'LINK/USD',
+                    'UNI/USD', 'XLM/USD', 'ATOM/USD', 'XMR/USD', 'ETC/USD', 'BCH/USD'
+                ],
+                'Materias Primas': [
+                    'XAU/USD'
+                ]
+            };
+
+            // Función para poblar el selector de símbolos
+            function populateSymbolSelector() {
+                const symbolSelect = document.getElementById('symbol');
+                symbolSelect.innerHTML = '';
+
+                for (const [groupName, groupSymbols] of Object.entries(symbols)) {
+                    const optgroup = document.createElement('optgroup');
+                    optgroup.label = groupName;
+                    optgroup.className = "font-bold text-gray-900 bg-gray-100"; // Estilo para el grupo
+
+                    groupSymbols.forEach(sym => {
+                        const option = document.createElement('option');
+                        option.value = sym;
+                        option.textContent = sym;
+                        if (sym === 'EUR/USD') option.selected = true;
+                        optgroup.appendChild(option);
+                    });
+
+                    symbolSelect.appendChild(optgroup);
+                }
+            }
+
+            // Inicializar selector
+            populateSymbolSelector();
 
             // --- Lógica del selector de temporalidad pulido ---
             intervalButton.addEventListener('click', () => {
@@ -324,8 +503,12 @@
                 if (e.target.tagName === 'A') {
                     selectedInterval = e.target.dataset.value;
                     selectedIntervalText.textContent = e.target.dataset.text;
-                    dropdownMenu.querySelectorAll('a').forEach(a => a.classList.remove('bg-blue-600'));
-                    e.target.classList.add('bg-blue-600');
+                    dropdownMenu.querySelectorAll('a').forEach(a => {
+                        a.classList.remove('bg-blue-100', 'text-blue-700');
+                        a.classList.add('text-gray-700');
+                    });
+                    e.target.classList.remove('text-gray-700');
+                    e.target.classList.add('bg-blue-100', 'text-blue-700');
                     intervalButton.click();
                 }
             });
@@ -355,6 +538,109 @@
             nextPageButton.addEventListener('click', goToNextPage);
             modalCancel.addEventListener('click', closeModal);
             modalAccept.addEventListener('click', acceptMultipleRequests);
+            downloadButton.addEventListener('click', downloadCSV);
+
+            periodOptions.forEach(option => {
+                option.addEventListener('click', () => {
+                    selectPeriodMode(option.dataset.periodOption);
+                });
+            });
+
+            periodModeRadios.forEach(radio => {
+                radio.addEventListener('change', (event) => {
+                    selectPeriodMode(event.target.value);
+                });
+            });
+
+            updateFetchAvailability();
+            selectPeriodMode('dates');
+
+            function selectPeriodMode(mode) {
+                if (isFetching) {
+                    return;
+                }
+
+                periodMode = mode;
+                requestContext = null;
+
+                periodOptions.forEach(option => {
+                    const isActive = option.dataset.periodOption === mode;
+                    option.classList.toggle('active', isActive);
+                    const radio = option.querySelector('input[name="period-mode"]');
+                    if (radio) {
+                        radio.checked = isActive;
+                    }
+                });
+
+                if (mode === 'dates') {
+                    startDateWrapper.classList.remove('hidden');
+                    endDateWrapper.classList.remove('hidden');
+                    lastCandlesWrapper.classList.add('hidden');
+                    lastCandlesInput.value = '';
+                    if (methodHelperText) {
+                        methodHelperText.textContent = 'Introduce una fecha de inicio y de fin para definir el rango exacto.';
+                    }
+                } else if (mode === 'last-x') {
+                    startDateWrapper.classList.add('hidden');
+                    endDateWrapper.classList.add('hidden');
+                    lastCandlesWrapper.classList.remove('hidden');
+                    if (methodHelperText) {
+                        methodHelperText.textContent = 'Ingresa la cantidad de velas recientes que deseas solicitar.';
+                    }
+                    lastCandlesInput.focus();
+                }
+
+                updateFetchAvailability();
+            }
+
+            function updateFetchAvailability() {
+                const canRequest = Boolean(periodMode) && !isFetching;
+                fetchButton.disabled = !canRequest;
+                fetchButton.classList.toggle('cursor-not-allowed', !canRequest);
+                fetchButton.classList.toggle('opacity-75', !canRequest);
+            }
+
+            function formatDateOnly(date) {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+
+            function formatDateTimeString(date) {
+                const hours = String(date.getHours()).padStart(2, '0');
+                const minutes = String(date.getMinutes()).padStart(2, '0');
+                const seconds = String(date.getSeconds()).padStart(2, '0');
+                return `${formatDateOnly(date)} ${hours}:${minutes}:${seconds}`;
+            }
+
+            function calculateRangeForLastCandles(count, interval) {
+                const safeCount = Math.max(count, 1);
+                const minutesPerInterval = intervalDurationsInMinutes[interval] || 60;
+                const now = new Date();
+                const startMillis = now.getTime() - (safeCount * minutesPerInterval * 60 * 1000);
+                const startDate = new Date(startMillis);
+
+                return {
+                    startDate: formatDateOnly(startDate),
+                    endDate: formatDateOnly(now),
+                    startDateTime: formatDateTimeString(startDate),
+                    endDateTime: formatDateTimeString(now)
+                };
+            }
+
+            function getPeriodSummary() {
+                if (!requestContext) {
+                    return 'Periodo sin definir';
+                }
+
+                if (requestContext.mode === 'last-x') {
+                    const candlesText = requestContext.lastCandles?.toLocaleString?.() || '0';
+                    return `Últimas ${candlesText} velas (${requestContext.startDate} a ${requestContext.endDate})`;
+                }
+
+                return `${requestContext.startDate} a ${requestContext.endDate}`;
+            }
 
             // Función para calcular el número estimado de registros
             function calculateEstimatedRecords(startDate, endDate, interval) {
@@ -362,7 +648,7 @@
                 const end = new Date(endDate);
                 const diffTime = Math.abs(end - start);
                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                
+
                 // Estimaciones por intervalo
                 const recordsPerDay = {
                     '1min': 1440,   // 24 horas * 60 minutos
@@ -377,87 +663,92 @@
                     '1week': 0.142, // Aprox. 1 por semana (1/7)
                     '1month': 0.033 // Aprox. 1 por mes (1/30)
                 };
-                
+
                 const recordsPerDayForInterval = recordsPerDay[interval] || 24;
                 const estimatedRecords = Math.ceil(diffDays * recordsPerDayForInterval);
-                
+
                 return estimatedRecords;
             }
-            
+
             // Función para calcular cuántas solicitudes se necesitan
             function calculateRequiredRequests(estimatedRecords) {
                 const maxRecordsPerRequest = 5000;
                 return Math.ceil(estimatedRecords / maxRecordsPerRequest);
             }
-            
+
             // Función para calcular el tiempo estimado
             function calculateEstimatedTime(requests) {
                 // 8 solicitudes por minuto = 1 solicitud cada 7.5 segundos
                 const requestsPerMinute = 8;
                 const secondsPerRequest = 60 / requestsPerMinute;
-                
+
                 // Tiempo estimado en segundos
                 const estimatedSeconds = requests * secondsPerRequest;
-                
+
                 if (estimatedSeconds < 60) {
                     return `~${Math.ceil(estimatedSeconds)} segundos`;
                 } else {
                     return `~${Math.ceil(estimatedSeconds / 60)} minutos`;
                 }
             }
-            
+
             // Función para dividir el rango de fechas en múltiples solicitudes
-            function splitDateRange(startDate, endDate, numRequests) {
-                const start = new Date(startDate);
-                const end = new Date(endDate);
+            function splitDateRange(startDateTime, endDateTime, numRequests) {
+                const start = new Date(startDateTime);
+                const end = new Date(endDateTime);
                 const totalTime = end - start;
                 const segmentTime = totalTime / numRequests;
-                
+
                 const segments = [];
                 for (let i = 0; i < numRequests; i++) {
                     const segmentStart = new Date(start.getTime() + (i * segmentTime));
                     const segmentEnd = new Date(start.getTime() + ((i + 1) * segmentTime));
-                    
+
                     // Asegurarse de que el último segmento termine en la fecha final exacta
                     if (i === numRequests - 1) {
                         segments.push({
-                            start: segmentStart.toISOString().split('T')[0],
-                            end: end.toISOString().split('T')[0]
+                            start: formatDateOnly(segmentStart),
+                            end: formatDateOnly(end),
+                            startDateTime: formatDateTimeString(segmentStart),
+                            endDateTime: formatDateTimeString(end)
                         });
                     } else {
                         segments.push({
-                            start: segmentStart.toISOString().split('T')[0],
-                            end: segmentEnd.toISOString().split('T')[0]
+                            start: formatDateOnly(segmentStart),
+                            end: formatDateOnly(segmentEnd),
+                            startDateTime: formatDateTimeString(segmentStart),
+                            endDateTime: formatDateTimeString(segmentEnd)
                         });
                     }
                 }
-                
+
                 return segments;
             }
-            
+
             // Función para mostrar el modal de confirmación
             function showConfirmationModal(estimatedRecords, requiredRequests, estimatedTime) {
-                modalPeriod.textContent = `${startDateInput.value} a ${endDateInput.value}`;
+                modalPeriod.textContent = getPeriodSummary();
                 modalInterval.textContent = selectedIntervalText.textContent;
                 modalEstimated.textContent = estimatedRecords.toLocaleString();
                 modalRequests.textContent = requiredRequests;
+
                 modalTime.textContent = estimatedTime;
-                
+
                 confirmationModal.classList.add('active');
             }
-            
+
             // Función para cerrar el modal
             function closeModal() {
                 confirmationModal.classList.remove('active');
                 setLoading(false);
             }
-            
+
             // Función para aceptar múltiples solicitudes
             function acceptMultipleRequests() {
                 closeModal();
                 executeMultipleRequests();
             }
-            
+
             // Función para verificar y obtener datos
             function checkAndFetchData() {
                 setLoading(true);
@@ -467,27 +758,98 @@
                 chartContainer.innerHTML = ''; // Limpiar gráfico anterior
                 progressContainer.classList.remove('hidden');
                 updateProgress(0, 'Calculando requisitos de datos...');
+                downloadButton.classList.add('hidden');
 
                 const apiKey = apiKeyInput.value.trim();
                 const symbol = symbolInput.value.trim().toUpperCase();
                 const startDate = startDateInput.value;
                 const endDate = endDateInput.value;
+                const lastCandlesValue = parseInt(lastCandlesInput.value, 10);
 
-                if (!apiKey || !symbol || !startDate || !endDate || !selectedInterval) {
-                    showMessage('Por favor, completa todos los campos.', 'error');
+                if (!periodMode) {
+                    showMessage('Selecciona cómo deseas definir el periodo antes de continuar.', 'warning');
                     setLoading(false);
                     progressContainer.classList.add('hidden');
                     return;
                 }
-                
+
+                if (!apiKey || !symbol || !selectedInterval) {
+                    showMessage('Por favor, completa todos los campos obligatorios.', 'error');
+                    setLoading(false);
+                    progressContainer.classList.add('hidden');
+                    return;
+                }
+
                 // Guardar el símbolo actual
                 currentSymbol = symbol;
-                
-                // Calcular registros estimados
-                const estimatedRecords = calculateEstimatedRecords(startDate, endDate, selectedInterval);
+
+                let estimatedRecords = 0;
+
+                if (periodMode === 'dates') {
+                    if (!startDate || !endDate) {
+                        showMessage('Indica la fecha de inicio y fin para continuar.', 'warning');
+                        setLoading(false);
+                        progressContainer.classList.add('hidden');
+                        return;
+                    }
+
+                    if (new Date(startDate) > new Date(endDate)) {
+                        showMessage('La fecha de inicio no puede ser posterior a la fecha de fin.', 'warning');
+                        setLoading(false);
+                        progressContainer.classList.add('hidden');
+                        return;
+                    }
+
+                    requestContext = {
+                        mode: 'dates',
+                        startDate,
+                        endDate,
+                        startDateTime: `${startDate} 00:00:00`,
+                        endDateTime: `${endDate} 23:59:59`
+                    };
+
+                    estimatedRecords = calculateEstimatedRecords(startDate, endDate, selectedInterval);
+                } else {
+                    if (Number.isNaN(lastCandlesValue)) {
+                        showMessage('Ingresa cuántas velas recientes deseas solicitar.', 'warning');
+                        setLoading(false);
+                        progressContainer.classList.add('hidden');
+                        return;
+                    }
+
+                    if (lastCandlesValue < 10) {
+                        showMessage('La solicitud mínima es de 10 velas.', 'warning');
+                        setLoading(false);
+                        progressContainer.classList.add('hidden');
+                        return;
+                    }
+
+                    if (lastCandlesValue > 20000) {
+                        showMessage('La solicitud máxima recomendada es de 20,000 velas.', 'warning');
+                        setLoading(false);
+                        progressContainer.classList.add('hidden');
+                        return;
+                    }
+
+                    const derivedRange = calculateRangeForLastCandles(lastCandlesValue, selectedInterval);
+                    requestContext = {
+                        mode: 'last-x',
+                        startDate: derivedRange.startDate,
+                        endDate: derivedRange.endDate,
+                        startDateTime: derivedRange.startDateTime,
+                        endDateTime: derivedRange.endDateTime,
+                        lastCandles: lastCandlesValue
+                    };
+
+                    estimatedRecords = lastCandlesValue;
+                }
+
+                requestContext.symbol = currentSymbol;
+                requestContext.interval = selectedInterval;
+
                 const requiredRequests = calculateRequiredRequests(estimatedRecords);
                 const estimatedTime = calculateEstimatedTime(requiredRequests);
-                
+
                 // Si se necesitan múltiples solicitudes, mostrar modal de confirmación
                 if (requiredRequests > 1) {
                     showConfirmationModal(estimatedRecords, requiredRequests, estimatedTime);
@@ -496,48 +858,53 @@
                     executeSingleRequest();
                 }
             }
-            
+
             // Función para ejecutar una sola solicitud
             async function executeSingleRequest() {
+                if (!requestContext) {
+                    showMessage('Selecciona un periodo válido antes de solicitar datos.', 'warning');
+                    setLoading(false);
+                    progressContainer.classList.add('hidden');
+                    return;
+                }
+
                 updateProgress(10, 'Iniciando solicitud de datos...');
-                
+
                 const apiKey = apiKeyInput.value.trim();
                 const symbol = currentSymbol;
-                const startDate = startDateInput.value;
-                const endDate = endDateInput.value;
-                
-                const startDateWithTime = `${startDate} 00:00:00`;
-                const endDateWithTime = `${endDate} 23:59:59`;
+                const startDateWithTime = requestContext.startDateTime || `${requestContext.startDate} 00:00:00`;
+                const endDateWithTime = requestContext.endDateTime || `${requestContext.endDate} 23:59:59`;
                 const apiUrl = `https://api.twelvedata.com/time_series?symbol=${symbol}&interval=${selectedInterval}&start_date=${startDateWithTime}&end_date=${endDateWithTime}&apikey=${apiKey}`;
 
                 try {
                     // Crear un nuevo AbortController para esta solicitud
                     abortController = new AbortController();
-                    
+
                     updateProgress(30, 'Conectando con el servidor...');
-                    
+
                     const response = await fetch(apiUrl, { signal: abortController.signal });
-                    
+
                     if (!response.ok) {
                         throw new Error(`Error HTTP: ${response.status}`);
                     }
-                    
+
                     updateProgress(50, 'Procesando respuesta...');
-                    
+
                     const data = await response.json();
-                    
+
                     updateProgress(80, 'Organizando datos...');
 
                     if (data.code === 401) {
-                         showMessage('Error de Autenticación: La clave API no es válida.', 'error');
+                        showMessage('Error de Autenticación: La clave API no es válida.', 'error');
                     } else if (data.status === 'error' || !data.values || data.values.length === 0) {
                         const errorMessage = data.message || 'No se encontraron datos para los criterios seleccionados.';
                         showMessage(errorMessage, 'warning');
                     } else {
                         updateProgress(90, 'Preparando visualización...');
+                        const preparedValues = prepareValuesForMode(data.values);
                         // Procesar datos en lotes para no bloquear la UI
                         setTimeout(() => {
-                            processAndDisplayData(data.values, symbol);
+                            processAndDisplayData(preparedValues, symbol);
                             updateProgress(100, 'Completado');
                         }, 100);
                     }
@@ -555,126 +922,135 @@
                     }, 500);
                 }
             }
-            
+
             // Función para ejecutar múltiples solicitudes
             async function executeMultipleRequests() {
+                if (!requestContext) {
+                    return;
+                }
+
                 const apiKey = apiKeyInput.value.trim();
                 const symbol = currentSymbol;
-                const startDate = startDateInput.value;
-                const endDate = endDateInput.value;
-                
+                const baseStartDate = requestContext.startDate;
+                const baseEndDate = requestContext.endDate;
+
                 // Calcular registros estimados y solicitudes necesarias
-                const estimatedRecords = calculateEstimatedRecords(startDate, endDate, selectedInterval);
+                const estimatedRecords = requestContext.mode === 'last-x'
+                    ? requestContext.lastCandles
+                    : calculateEstimatedRecords(baseStartDate, baseEndDate, selectedInterval);
                 const requiredRequests = calculateRequiredRequests(estimatedRecords);
-                
+
                 // Dividir el rango de fechas
-                const dateSegments = splitDateRange(startDate, endDate, requiredRequests);
-                
+                const dateSegments = splitDateRange(requestContext.startDateTime, requestContext.endDateTime, requiredRequests);
+
                 // Crear cola de solicitudes
                 requestQueue = dateSegments.map((segment, index) => ({
                     index: index + 1,
                     startDate: segment.start,
                     endDate: segment.end,
+                    startDateTime: segment.startDateTime,
+                    endDateTime: segment.endDateTime,
                     completed: false,
                     data: null
                 }));
-                
+
                 currentRequestIndex = 0;
                 totalRequests = requiredRequests;
-                
+
                 // Mostrar información de solicitudes múltiples
                 multiRequestInfo.classList.remove('hidden');
                 updateRequestProgress();
-                
+
                 // Iniciar la primera solicitud
                 executeNextRequest();
             }
-            
+
             // Función para ejecutar la siguiente solicitud en la cola
             async function executeNextRequest() {
                 if (currentRequestIndex >= totalRequests) {
                     // Todas las solicitudes completadas
                     multiRequestInfo.classList.add('hidden');
                     updateProgress(100, 'Todas las solicitudes completadas');
-                    
+
                     // Combinar todos los datos
-                    const allData = [];
+                    let allData = [];
                     requestQueue.forEach(request => {
                         if (request.data && request.data.values) {
                             // IMPORTANTE: Invertir los datos para que estén en orden cronológico
                             allData.push(...request.data.values.reverse());
                         }
                     });
-                    
+
                     // Procesar y mostrar datos combinados
                     if (allData.length > 0) {
+                        allData = prepareValuesForMode(allData);
                         processAndDisplayData(allData, currentSymbol);
                     } else {
                         showMessage('No se pudieron recuperar datos de ninguna solicitud.', 'warning');
                     }
-                    
+
                     setLoading(false);
                     progressContainer.classList.add('hidden');
                     return;
                 }
-                
+
                 const currentRequest = requestQueue[currentRequestIndex];
                 updateRequestProgress();
-                
+
                 const apiKey = apiKeyInput.value.trim();
                 const symbol = currentSymbol;
-                
-                const startDateWithTime = `${currentRequest.startDate} 00:00:00`;
-                const endDateWithTime = `${currentRequest.endDate} 23:59:59`;
+
+                const startDateWithTime = currentRequest.startDateTime || `${currentRequest.startDate} 00:00:00`;
+                const endDateWithTime = currentRequest.endDateTime || `${currentRequest.endDate} 23:59:59`;
                 const apiUrl = `https://api.twelvedata.com/time_series?symbol=${symbol}&interval=${selectedInterval}&start_date=${startDateWithTime}&end_date=${endDateWithTime}&apikey=${apiKey}`;
 
                 try {
                     // Crear un nuevo AbortController para esta solicitud
                     abortController = new AbortController();
-                    
+
                     updateProgress(
                         Math.floor((currentRequestIndex / totalRequests) * 100),
                         `Solicitud ${currentRequestIndex + 1} de ${totalRequests}: Conectando con el servidor...`
                     );
-                    
+
                     const response = await fetch(apiUrl, { signal: abortController.signal });
-                    
+
                     if (!response.ok) {
                         throw new Error(`Error HTTP: ${response.status}`);
                     }
-                    
+
                     updateProgress(
                         Math.floor(((currentRequestIndex + 0.5) / totalRequests) * 100),
                         `Solicitud ${currentRequestIndex + 1} de ${totalRequests}: Procesando respuesta...`
                     );
-                    
+
                     const data = await response.json();
-                    
+
                     // Marcar solicitud como completada
                     currentRequest.completed = true;
                     currentRequest.data = data;
-                    
+
                     updateProgress(
                         Math.floor(((currentRequestIndex + 1) / totalRequests) * 100),
                         `Solicitud ${currentRequestIndex + 1} de ${totalRequests}: Completada`
                     );
-                    
+
                     // Esperar antes de la siguiente solicitud (rate limiting)
                     if (currentRequestIndex < totalRequests - 1) {
                         const waitTime = 7500; // 7.5 segundos entre solicitudes (8 por minuto)
                         startTimer(waitTime);
-                        
+
                         await new Promise(resolve => {
                             setTimeout(resolve, waitTime);
                         });
-                        
+
                         clearTimer();
                     }
-                    
+
                     // Pasar a la siguiente solicitud
                     currentRequestIndex++;
                     executeNextRequest();
-                    
+
                 } catch (error) {
                     if (error.name === 'AbortError') {
                         showMessage('Solicitud cancelada por el usuario.', 'warning');
@@ -683,11 +1059,11 @@
                         progressContainer.classList.add('hidden');
                     } else {
                         console.error(`Error en solicitud ${currentRequestIndex + 1}:`, error);
-                        
+
                         // Intentar continuar con la siguiente solicitud
                         currentRequest.completed = false;
                         currentRequestIndex++;
-                        
+
                         if (currentRequestIndex < totalRequests) {
                             showMessage(`Error en solicitud ${currentRequestIndex}. Continuando con la siguiente...`, 'warning');
                             executeNextRequest();
@@ -698,27 +1074,27 @@
                     }
                 }
             }
-            
+
             // Función para actualizar el progreso de solicitudes múltiples
             function updateRequestProgress() {
                 requestProgress.textContent = `Solicitud ${currentRequestIndex + 1} de ${totalRequests}`;
             }
-            
+
             // Función para iniciar el temporizador de espera
             function startTimer(duration) {
                 let timeLeft = duration / 1000; // Convertir a segundos
                 nextRequestTimer.textContent = `Siguiente solicitud en ${timeLeft}s`;
-                
+
                 requestTimer = setInterval(() => {
                     timeLeft--;
                     nextRequestTimer.textContent = `Siguiente solicitud en ${timeLeft}s`;
-                    
+
                     if (timeLeft <= 0) {
                         clearTimer();
                     }
                 }, 1000);
             }
-            
+
             // Función para limpiar el temporizador
             function clearTimer() {
                 if (requestTimer) {
@@ -727,7 +1103,7 @@
                     nextRequestTimer.textContent = '';
                 }
             }
-            
+
             function cancelFetch() {
                 if (abortController) {
                     abortController.abort();
@@ -737,55 +1113,76 @@
                 progressContainer.classList.add('hidden');
                 multiRequestInfo.classList.add('hidden');
             }
-            
+
             function updateProgress(percent, text) {
                 progressBar.style.width = `${percent}%`;
                 progressPercentage.textContent = `${percent}%`;
                 progressText.textContent = text;
             }
-            
+
+            function prepareValuesForMode(values) {
+                if (!requestContext || requestContext.mode !== 'last-x' || !Array.isArray(values)) {
+                    return values;
+                }
+
+                if (values.length <= requestContext.lastCandles) {
+                    return values;
+                }
+
+                const firstDate = new Date(values[0].datetime);
+                const lastDate = new Date(values[values.length - 1].datetime);
+                const isAscending = firstDate <= lastDate;
+
+                if (isAscending) {
+                    return values.slice(-requestContext.lastCandles);
+                }
+
+                return values.slice(0, requestContext.lastCandles);
+            }
+
             function processAndDisplayData(values, symbol) {
                 // Almacenar todos los datos
                 currentData = values;
-                
+
                 // Actualizar información de datos
                 dataCount.textContent = currentData.length.toLocaleString();
                 resultSymbol.textContent = symbol; // Asegurar que el símbolo se muestre
-                
+
                 if (currentData.length > 0) {
                     const firstDate = new Date(currentData[0].datetime);
                     const lastDate = new Date(currentData[currentData.length - 1].datetime);
                     dataRange.textContent = `${firstDate.toLocaleDateString()} - ${lastDate.toLocaleDateString()}`;
                 }
-                
+
                 // Calcular paginación
                 pageSize = parseInt(pageSizeSelect.value);
                 totalPages = Math.ceil(currentData.length / pageSize);
                 currentPage = 1;
-                
+
                 // Mostrar controles de paginación si hay más de una página
                 if (totalPages > 1) {
                     paginationControls.classList.remove('hidden');
                 } else {
                     paginationControls.classList.add('hidden');
                 }
-                
+
                 updatePaginationInfo();
-                
+
                 // Renderizar página actual
                 renderCurrentPage();
-                
+
                 // Renderizar gráfico con datos muestreados para mejor rendimiento
                 renderOptimizedChart(currentData, symbol);
-                
+
                 resultsContainer.classList.remove('hidden');
+                downloadButton.classList.remove('hidden');
             }
-            
+
             function renderOptimizedChart(data, symbol) {
                 // Muestrear datos para el gráfico si hay demasiados puntos
                 const maxDataPoints = 500; // Límite de puntos para buen rendimiento
                 let chartData = [];
-                
+
                 if (data.length <= maxDataPoints) {
                     // Usar todos los datos si son pocos
                     chartData = data.map(candle => ({
@@ -813,10 +1210,10 @@
                         });
                     }
                 }
-                
+
                 renderCandlestickChart(chartData, symbol, data.length > maxDataPoints);
             }
-            
+
             function renderCandlestickChart(seriesData, symbol, isSampled = false) {
                 const options = {
                     series: [{
@@ -848,7 +1245,7 @@
                         text: `Gráfico de Velas para ${symbol}${isSampled ? ' (datos muestreados)' : ''}`,
                         align: 'left',
                         style: {
-                            color: '#e5e7eb',
+                            color: '#374151',
                             fontSize: '18px'
                         }
                     },
@@ -856,7 +1253,7 @@
                         type: 'datetime',
                         labels: {
                             style: {
-                                colors: '#9ca3af'
+                                colors: '#6b7280'
                             }
                         }
                     },
@@ -866,15 +1263,15 @@
                         },
                         labels: {
                             style: {
-                                colors: '#9ca3af'
+                                colors: '#6b7280'
                             }
                         }
                     },
                     grid: {
-                        borderColor: '#4b5563'
+                        borderColor: '#e5e7eb'
                     },
                     tooltip: {
-                        theme: 'dark'
+                        theme: 'light'
                     },
                     plotOptions: {
                         candlestick: {
@@ -894,6 +1291,7 @@
             }
 
             function setLoading(isLoading) {
+                isFetching = isLoading;
                 if (isLoading) {
                     buttonText.classList.add('hidden');
                     loader.classList.remove('hidden');
@@ -903,19 +1301,18 @@
                 } else {
                     loader.classList.add('hidden');
                     buttonText.classList.remove('hidden');
-                    fetchButton.disabled = false;
-                    fetchButton.classList.remove('cursor-not-allowed', 'opacity-75');
+                    updateFetchAvailability();
                     cancelButton.classList.add('hidden');
                 }
             }
 
             function showMessage(message, type = 'info') {
                 messageArea.textContent = message;
-                messageArea.classList.remove('hidden', 'bg-red-900', 'bg-yellow-900', 'text-red-200', 'text-yellow-200');
+                messageArea.classList.remove('hidden', 'bg-red-100', 'bg-yellow-100', 'text-red-800', 'text-yellow-800');
                 if (type === 'error') {
-                    messageArea.classList.add('bg-red-900', 'text-red-200');
+                    messageArea.classList.add('bg-red-100', 'text-red-800');
                 } else if (type === 'warning') {
-                     messageArea.classList.add('bg-yellow-900', 'text-yellow-200');
+                    messageArea.classList.add('bg-yellow-100', 'text-yellow-800');
                 }
                 resultsContainer.classList.add('hidden');
             }
@@ -926,7 +1323,7 @@
                 currentPage = 1;
                 updatePaginationInfo();
                 renderCurrentPage();
-                
+
                 // Mostrar/ocultar controles de paginación
                 if (totalPages > 1) {
                     paginationControls.classList.remove('hidden');
@@ -934,13 +1331,13 @@
                     paginationControls.classList.add('hidden');
                 }
             }
-            
+
             function updatePaginationInfo() {
                 pageInfo.textContent = `Página ${currentPage} de ${totalPages}`;
                 prevPageButton.disabled = currentPage === 1;
                 nextPageButton.disabled = currentPage === totalPages;
             }
-            
+
             function goToPrevPage() {
                 if (currentPage > 1) {
                     currentPage--;
@@ -948,7 +1345,7 @@
                     renderCurrentPage();
                 }
             }
-            
+
             function goToNextPage() {
                 if (currentPage < totalPages) {
                     currentPage++;
@@ -956,36 +1353,103 @@
                     renderCurrentPage();
                 }
             }
-            
+
             function renderCurrentPage() {
                 resultsBody.innerHTML = '';
-                
+
                 const startIndex = (currentPage - 1) * pageSize;
                 const endIndex = Math.min(startIndex + pageSize, currentData.length);
                 const pageData = currentData.slice(startIndex, endIndex);
-                
-                pageData.forEach(candle => {
+
+                pageData.forEach((candle, idx) => {
                     const row = document.createElement('tr');
-                    row.className = 'bg-gray-800 border-b border-gray-700 hover:bg-gray-700/50';
+                    row.className = 'bg-white border-b border-gray-200 hover:bg-gray-50';
                     const utcDate = new Date(candle.datetime);
                     const localDateTime = utcDate.toLocaleString();
-                    
-                    const open = parseFloat(candle.open).toFixed(5);
-                    const high = parseFloat(candle.high).toFixed(5);
-                    const low = parseFloat(candle.low).toFixed(5);
-                    const close = parseFloat(candle.close).toFixed(5);
-                    
+
+                    const openNum = parseFloat(candle.open);
+                    const highNum = parseFloat(candle.high);
+                    const lowNum = parseFloat(candle.low);
+                    const closeNum = parseFloat(candle.close);
+
+                    const open = openNum.toFixed(5);
+                    const high = highNum.toFixed(5);
+                    const low = lowNum.toFixed(5);
+                    const close = closeNum.toFixed(5);
+
+                    const globalIndex = startIndex + idx;
+                    let closeClass = '';
+                    if (globalIndex > 0) {
+                        const prevCloseNum = parseFloat(currentData[globalIndex - 1].close);
+                        if (!Number.isNaN(prevCloseNum)) {
+                            if (closeNum > prevCloseNum) {
+                                closeClass = 'text-green-600';
+                            } else if (closeNum < prevCloseNum) {
+                                closeClass = 'text-red-600';
+                            } else {
+                                closeClass = 'text-gray-600';
+                            }
+                        }
+                    }
+
                     row.innerHTML = `
-                        <td class="px-6 py-4 font-medium text-white whitespace-nowrap">${localDateTime}</td>
+                        <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">${localDateTime}</td>
                         <td class="px-6 py-4 text-right">${open}</td>
-                        <td class="px-6 py-4 text-right text-green-400">${high}</td>
-                        <td class="px-6 py-4 text-right text-red-400">${low}</td>
-                        <td class="px-6 py-4 text-right">${close}</td>
+                        <td class="px-6 py-4 text-right text-green-600">${high}</td>
+                        <td class="px-6 py-4 text-right text-red-600">${low}</td>
+                        <td class="px-6 py-4 text-right ${closeClass}">${close}</td>
                     `;
                     resultsBody.appendChild(row);
                 });
             }
+            function sanitizeFilePart(text) {
+                return String(text)
+                    .replace(/[\\/:*?"<>|]/g, '')
+                    .replace(/\s+/g, '')
+                    .replace(/\//g, '')
+                    .replace(/,/g, '');
+            }
+            function downloadCSV() {
+                if (!currentData || currentData.length === 0) {
+                    return;
+                }
+                const header = ['Fecha', 'Hora', 'Apertura', 'Máximo', 'Mínimo', 'Cierre'];
+                const rows = [header.join(',')];
+                for (let i = 0; i < currentData.length; i++) {
+                    const candle = currentData[i];
+                    const dt = new Date(candle.datetime);
+                    const dateStr = dt.toLocaleDateString();
+                    const timeStr = dt.toLocaleTimeString();
+                    const open = parseFloat(candle.open).toFixed(5);
+                    const high = parseFloat(candle.high).toFixed(5);
+                    const low = parseFloat(candle.low).toFixed(5);
+                    const close = parseFloat(candle.close).toFixed(5);
+                    rows.push([dateStr, timeStr, open, high, low, close].join(','));
+                }
+                const csvContent = rows.join('\n');
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                let symbolPart = sanitizeFilePart(currentSymbol || symbolInput.value.trim());
+                const intervalPart = sanitizeFilePart(selectedIntervalText.textContent);
+                let periodPart = '';
+                if (requestContext && requestContext.mode === 'last-x') {
+                    periodPart = sanitizeFilePart(`${requestContext.lastCandles}_velas`);
+                } else if (requestContext) {
+                    periodPart = sanitizeFilePart(`${requestContext.startDate}_a_${requestContext.endDate}`);
+                } else {
+                    periodPart = 'periodo';
+                }
+                const filename = `${symbolPart}_${intervalPart}_${periodPart}.csv`;
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+            }
         });
     </script>
 </body>
+
 </html>
