@@ -1,49 +1,259 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
-    <link rel="stylesheet" href="estilos.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calculadora de Diferencia</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script>
+        (function () {
+            const match = document.cookie.match(/(?:^|;\s*)theme=([^;]+)/);
+            if (match && decodeURIComponent(match[1]) === 'dark') document.documentElement.classList.add('dark');
+        })();
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { darkMode: 'class' };
+        if (typeof tailwind !== 'undefined' && typeof tailwind.refresh === 'function') tailwind.refresh();
+    </script>
+
+    <!-- Google Fonts (Inter) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Manifest and Icons -->
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/png" sizes="192x192" href="Logo_app_trading-removebg-preview.png">
     <link rel="icon" type="image/png" sizes="512x512" href="Logo_app_trading-removebg-preview.png">
+
     <style>
+        /* Estilos base y para el menú */
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .nav-menu.visible {
+            transform: translateX(0);
+        }
+
+        .menu-overlay.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        body.menu-open {
+            position: fixed;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .menu-toggle.opened {
+            transform: translateX(-150%);
+            opacity: 0;
+            pointer-events: none;
+            visibility: hidden;
+        }
+
+        /* Estilos específicos de la calculadora */
         .resultado-positivo {
             color: #2e7d32;
             font-weight: bold;
         }
+
         .resultado-negativo {
             color: #c62828;
             font-weight: bold;
         }
     </style>
 </head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>Calculadora de Diferencia</h1>
-            <div id="datetime" class="datetime"></div>
-        </div>
 
-        <div class="form-group">
-            <label for="initialCapital">Cantidad A:</label>
-            <input type="number" id="initialCapital" step="0.01" required>
-        </div>
+<body class="bg-orange-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
 
-        <div class="form-group">
-            <label for="finalCapital">Cantidad B:</label>
-            <input type="number" id="finalCapital" step="0.01" required>
-        </div>
+    <!-- Botón del Menú Hamburguesa -->
+    <button
+        class="menu-toggle fixed z-50 top-4 left-4 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-lg flex items-center justify-center text-2xl text-gray-700 dark:text-gray-300 transition-all duration-300 ease-in-out"
+        onclick="toggleMenu()">
+        ☰
+    </button>
 
-        <div class="form-group">
-            <button class="nav-btn" onclick="calculateDifference()">Calcular Diferencia</button>
-            <button class="nav-btn" onclick="window.location.href='estadisticas.html'">Volver a Estadísticas</button>
-        </div>
+    <!-- Overlay del Menú -->
+    <div
+        class="menu-overlay fixed inset-0 bg-black bg-opacity-50 z-30 opacity-0 pointer-events-none transition-opacity duration-300">
+    </div>
 
-        <div id="roiResult" class="card" style="display: none;">
-            <h3>Resultados</h3>
-            <div id="roiContent"></div>
+    <!-- Menú de Navegación Lateral -->
+    <nav
+        class="nav-menu fixed top-0 left-0 h-full w-72 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md shadow-xl z-40 transform -translate-x-full transition-transform duration-300 ease-in-out">
+        <div class="p-4">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Menú</h2>
+                <button
+                    class="w-10 h-10 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors"
+                    onclick="toggleMenu()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="menu-items space-y-2">
+                <a href="index.html"
+                    class="flex items-center gap-3 py-2.5 px-4 rounded-lg font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                        <polyline points="9 22 9 12 15 12 15 22" />
+                    </svg>
+                    <span>Inicio</span>
+                </a>
+                <a href="/index.html"
+                    class="flex items-center gap-3 py-2.5 px-4 rounded-lg font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect width="7" height="9" x="3" y="3" rx="1" />
+                        <rect width="7" height="5" x="14" y="3" rx="1" />
+                        <rect width="7" height="9" x="14" y="12" rx="1" />
+                        <rect width="7" height="5" x="3" y="16" rx="1" />
+                    </svg>
+                    <span>Volver al panel de control</span>
+                </a>
+                <a href="registrar-trade.html"
+                    class="flex items-center gap-3 py-2.5 px-4 rounded-lg font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M8 12h8" />
+                        <path d="M12 8v8" />
+                    </svg>
+                    <span>Registrar Trade</span>
+                </a>
+                <a href="diario.html"
+                    class="flex items-center gap-3 py-2.5 px-4 rounded-lg font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+                    </svg>
+                    <span>Diario</span>
+                </a>
+                <a href="estadisticas.html"
+                    class="flex items-center gap-3 py-2.5 px-4 rounded-lg font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 3v18h18" />
+                        <path d="M18 17V9" />
+                        <path d="M13 17V5" />
+                        <path d="M8 17v-3" />
+                    </svg>
+                    <span>Estadísticas</span>
+                </a>
+                <a href="plan-trading.html"
+                    class="flex items-center gap-3 py-2.5 px-4 rounded-lg font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
+                        <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+                        <path d="M10 9H8" />
+                        <path d="M16 13H8" />
+                        <path d="M16 17H8" />
+                    </svg>
+                    <span>Plan de Trading</span>
+                </a>
+                <a href="almacenamiento.html"
+                    class="flex items-center gap-3 py-2.5 px-4 rounded-lg font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <ellipse cx="12" cy="5" rx="9" ry="3" />
+                        <path d="M3 5V19A9 3 0 0 0 21 19V5" />
+                        <path d="M3 12A9 3 0 0 0 21 12" />
+                    </svg>
+                    <span>Almacenamiento</span>
+                </a>
+                <a href="ajustes.html"
+                    class="flex items-center gap-3 py-2.5 px-4 rounded-lg font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path
+                            d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1 0-2l.15.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+                        <circle cx="12" cy="12" r="3" />
+                    </svg>
+                    <span>Ajustes</span>
+                </a>
+                <a href="deposito-retiro.html"
+                    class="flex items-center gap-3 py-2.5 px-4 rounded-lg font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M8 3 4 7l4 4" />
+                        <path d="M4 7h16" />
+                        <path d="m16 21 4-4-4-4" />
+                        <path d="M20 17H4" />
+                    </svg>
+                    <span>Deposito/Retiro</span>
+                </a>
+                <a href="gestor-cuentas.html"
+                    class="flex items-center gap-3 py-2.5 px-4 rounded-lg font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                    </svg>
+                    <span>Gestor de Cuentas</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenido Principal -->
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8 pt-24">
+        <!-- Encabezado -->
+        <header class="mb-8">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <h1 class="text-4xl font-bold text-gray-900 dark:text-white">Calculadora de Diferencia</h1>
+                <div id="datetime" class="text-sm text-gray-500 dark:text-gray-400"></div>
+            </div>
+        </header>
+
+        <!-- Tarjeta de Calculadora -->
+        <div class="max-w-md mx-auto bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md">
+            <div class="space-y-4">
+                <div class="form-group">
+                    <label for="initialCapital"
+                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cantidad A:</label>
+                    <input type="number" id="initialCapital" step="0.01" required
+                        class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition">
+                </div>
+
+                <div class="form-group">
+                    <label for="finalCapital"
+                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cantidad B:</label>
+                    <input type="number" id="finalCapital" step="0.01" required
+                        class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition">
+                </div>
+
+                <div class="flex flex-col gap-3 pt-2">
+                    <button
+                        class="w-full py-2.5 px-4 bg-orange-600 text-white rounded-lg font-semibold hover:bg-orange-700 transition shadow-md"
+                        onclick="calculateDifference()">Calcular Diferencia</button>
+                    <button
+                        class="w-full py-2.5 px-4 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+                        onclick="window.location.href='estadisticas.html'">Volver a Estadísticas</button>
+                </div>
+            </div>
+
+            <div id="roiResult"
+                class="mt-6 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600"
+                style="display: none;">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Resultados</h3>
+                <div id="roiContent" class="space-y-2 text-gray-700 dark:text-gray-300"></div>
+            </div>
         </div>
     </div>
 
@@ -53,7 +263,7 @@
         function getCookie(name) {
             const nameEQ = name + "=";
             const ca = document.cookie.split(';');
-            for(let i = 0; i < ca.length; i++) {
+            for (let i = 0; i < ca.length; i++) {
                 let c = ca[i];
                 while (c.charAt(0) === ' ') c = c.substring(1, c.length);
                 if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
@@ -64,16 +274,20 @@
         // Cargar tema guardado
         function loadTheme() {
             const theme = getCookie('theme') || 'light';
-            document.body.className = theme;
+            if (theme === 'dark') {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
         }
 
         // Actualizar fecha y hora
         function updateDateTime() {
             const now = new Date();
-            const options = { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
+            const options = {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
                 day: 'numeric',
                 hour: '2-digit',
                 minute: '2-digit',
@@ -94,26 +308,53 @@
         function calculateDifference() {
             const cantidadA = parseFloat(document.getElementById('initialCapital').value);
             const cantidadB = parseFloat(document.getElementById('finalCapital').value);
-            
+
             if (isNaN(cantidadA) || isNaN(cantidadB)) {
                 alert('Por favor, ingresa valores numéricos válidos');
                 return;
             }
 
             const diferencia = cantidadB - cantidadA;
-            const porcentaje = (diferencia / cantidadA) * 100;
+            const porcentaje = cantidadA !== 0 ? (diferencia / cantidadA) * 100 : 0;
 
-            const claseEstilo = diferencia >= 0 ? 'resultado-positivo' : 'resultado-negativo';
+            const claseEstilo = diferencia >= 0 ? 'text-green-600 dark:text-green-400 font-bold' : 'text-red-600 dark:text-red-400 font-bold';
             const simbolo = diferencia >= 0 ? '+' : '';
 
             const resultado = document.getElementById('roiContent');
             resultado.innerHTML = `
-                <p>Diferencia absoluta: <span class="${claseEstilo}">${simbolo}${formatearNumero(diferencia)}</span></p>
-                <p>Diferencia porcentual: <span class="${claseEstilo}">${simbolo}${formatearNumero(porcentaje)}%</span></p>
+                <p class="flex justify-between"><span>Diferencia absoluta:</span> <span class="${claseEstilo}">${simbolo}${formatearNumero(diferencia)}</span></p>
+                <p class="flex justify-between"><span>Diferencia porcentual:</span> <span class="${claseEstilo}">${simbolo}${formatearNumero(porcentaje)}%</span></p>
             `;
 
             document.getElementById('roiResult').style.display = 'block';
         }
+
+        // Funciones para el menú de navegación
+        const navMenu = document.querySelector('.nav-menu');
+        const menuToggle = document.querySelector('.menu-toggle');
+        const menuOverlay = document.querySelector('.menu-overlay');
+        let scrollPosition = 0;
+
+        function toggleMenu() {
+            const isVisible = navMenu.classList.contains('visible');
+
+            if (!isVisible) {
+                scrollPosition = window.pageYOffset;
+                document.body.classList.add('menu-open');
+                document.body.style.top = `-${scrollPosition}px`;
+                menuOverlay.classList.add('visible');
+            } else {
+                document.body.classList.remove('menu-open');
+                document.body.style.top = '';
+                window.scrollTo(0, scrollPosition);
+                menuOverlay.classList.remove('visible');
+            }
+
+            navMenu.classList.toggle('visible');
+            menuToggle.classList.toggle('opened');
+        }
+
+        menuOverlay.addEventListener('click', toggleMenu);
 
         // Cargar tema y actualizar fecha/hora al iniciar
         loadTheme();
@@ -121,4 +362,5 @@
         updateDateTime();
     </script>
 </body>
+
 </html>

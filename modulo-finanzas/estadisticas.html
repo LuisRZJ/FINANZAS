@@ -29,12 +29,12 @@
         }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800 flex justify-center">
+<body class="text-gray-800 flex justify-center">
 
     <!-- Contenedor principal de la app -->
     <div class="w-full max-w-2xl bg-white shadow-lg relative min-h-screen">
         <!-- Contenido de la página con padding inferior para la barra de navegación -->
-        <div class="p-4 sm:p-6 pb-24">
+        <div class="p-4 sm:p-6 pb-44">
 
             <!-- Encabezado y Saludo -->
             <header class="mb-4 flex justify-between items-start">
@@ -62,18 +62,25 @@
             <!-- Navegación por Mes -->
             <div class="flex items-center justify-between mb-6">
                 <div class="flex items-center gap-2">
-                    <button class="p-2 rounded-full hover:bg-gray-100">
+                    <button id="statsPrevMonthBtn" class="p-2 rounded-full hover:bg-gray-100">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-600"><polyline points="15 18 9 12 15 6"></polyline></svg>
                     </button>
-                    <span class="font-semibold text-lg text-gray-800">Septiembre 2025</span>
-                    <button class="p-2 rounded-full hover:bg-gray-100">
+                    <span id="statsCurrentMonthDisplay" class="font-semibold text-lg text-gray-800">Cargando...</span>
+                    <button id="statsNextMonthBtn" class="p-2 rounded-full hover:bg-gray-100">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-600"><polyline points="9 18 15 12 9 6"></polyline></svg>
                     </button>
                 </div>
-                <button class="flex items-center gap-1 text-sm font-medium bg-gray-100 px-3 py-2 rounded-lg hover:bg-gray-200">
-                    Mensual
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-500"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                </button>
+                <div class="relative" id="statsPeriodSelector">
+                    <button type="button" id="statsPeriodToggle" class="flex items-center gap-1 text-sm font-medium bg-gray-100 px-3 py-2 rounded-lg hover:bg-gray-200">
+                        <span id="statsPeriodLabel">Mensual</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-500"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                    <div id="statsPeriodMenu" class="absolute right-0 mt-2 w-36 bg-white border border-gray-200 rounded-lg shadow-lg py-1 hidden z-20">
+                        <button type="button" class="w-full text-left px-3 py-2 text-sm hover:bg-gray-100" data-stats-period-mode="monthly">Mensual</button>
+                        <button type="button" class="w-full text-left px-3 py-2 text-sm hover:bg-gray-100" data-stats-period-mode="quarterly">Trimestral</button>
+                        <button type="button" class="w-full text-left px-3 py-2 text-sm hover:bg-gray-100" data-stats-period-mode="annual">Anual</button>
+                    </div>
+                </div>
             </div>
             
             <div class="space-y-6">
@@ -83,7 +90,7 @@
                         <span class="text-sm font-medium text-gray-500">Balance del Mes</span>
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
                     </div>
-                    <p class="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">$1,764.50</p>
+                    <p id="statsMonthBalance" class="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">---</p>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div class="flex items-center space-x-3">
                             <div class="p-2 bg-green-100 rounded-full">
@@ -91,7 +98,7 @@
                             </div>
                             <div>
                                 <p class="text-sm text-gray-500">Ingresos Totales</p>
-                                <p class="text-lg font-semibold text-green-600">$2,375.00</p>
+                                <p id="statsMonthIncome" class="text-lg font-semibold text-green-600">---</p>
                             </div>
                         </div>
                         <div class="flex items-center space-x-3">
@@ -100,7 +107,7 @@
                             </div>
                             <div>
                                 <p class="text-sm text-gray-500">Gastos Totales</p>
-                                <p class="text-lg font-semibold text-red-600">$610.50</p>
+                                <p id="statsMonthExpense" class="text-lg font-semibold text-red-600">---</p>
                             </div>
                         </div>
                     </div>
@@ -115,13 +122,13 @@
                 </section>
 
                 <!-- Panel de Operaciones Programadas -->
-                <section class="bg-gray-50 rounded-xl p-4 sm:p-6">
+                <section id="scheduledOperationsSection" class="bg-gray-50 rounded-xl p-4 sm:p-6">
                     <h2 class="text-lg font-bold text-gray-800 mb-4">Operaciones Programadas</h2>
                     <div class="space-y-3">
                         <div class="flex justify-between items-center p-4 bg-white rounded-lg shadow-sm">
                             <div>
                                 <span class="font-medium text-sm text-gray-700">Ingresos Programados</span>
-                                <p class="font-bold text-green-600 text-xl">$0.00</p>
+                                <p id="statsScheduledIncome" class="font-bold text-green-600 text-xl">$0.00</p>
                             </div>
                             <a href="#" title="Ver detalles" class="p-2 rounded-full hover:bg-gray-100 transition-colors">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-gray-500"><polyline points="9 18 15 12 9 6"></polyline></svg>
@@ -130,7 +137,7 @@
                         <div class="flex justify-between items-center p-4 bg-white rounded-lg shadow-sm">
                              <div>
                                 <span class="font-medium text-sm text-gray-700">Gastos Programados</span>
-                                <p class="font-bold text-red-600 text-xl">-$150.00</p>
+                                <p id="statsScheduledExpense" class="font-bold text-red-600 text-xl">$0.00</p>
                             </div>
                             <a href="#" title="Ver detalles" class="p-2 rounded-full hover:bg-gray-100 transition-colors">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-gray-500"><polyline points="9 18 15 12 9 6"></polyline></svg>
@@ -139,7 +146,7 @@
                         <div class="flex justify-between items-center p-4 bg-white rounded-lg shadow-sm">
                             <div>
                                 <span class="font-medium text-sm text-gray-700">Transferencias Programadas</span>
-                                <p class="font-bold text-indigo-600 text-xl">-$500.00</p>
+                                <p id="statsScheduledTransfer" class="font-bold text-indigo-600 text-xl">$0.00</p>
                             </div>
                              <a href="#" title="Ver detalles" class="p-2 rounded-full hover:bg-gray-100 transition-colors">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-gray-500"><polyline points="9 18 15 12 9 6"></polyline></svg>
@@ -163,39 +170,19 @@
                         <div class="chart-container h-48 w-48 mx-auto">
                             <canvas id="incomeChart"></canvas>
                         </div>
-                        <div class="text-sm space-y-3">
-                            <div class="flex justify-between items-center">
-                                <div class="flex items-center gap-2">
-                                    <span class="w-3 h-3 rounded-full bg-green-500"></span>
-                                    <span>Salario</span>
-                                </div>
-                                <span class="font-semibold">94.7%</span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <div class="flex items-center gap-2">
-                                    <span class="w-3 h-3 rounded-full bg-blue-500"></span>
-                                    <span>Ventas</span>
-                                </div>
-                                <span class="font-semibold">4.2%</span>
-                            </div>
-                             <div class="flex justify-between items-center">
-                                <div class="flex items-center gap-2">
-                                    <span class="w-3 h-3 rounded-full bg-indigo-500"></span>
-                                    <span>Otros</span>
-                                </div>
-                                <span class="font-semibold">1.1%</span>
-                            </div>
+                        <div id="statsIncomeDistributionList" class="text-sm space-y-3">
+                            <!-- Lista dinámica de ingresos -->
                         </div>
                     </div>
                     <!-- Promedios de Ingresos -->
                     <div class="grid grid-cols-2 gap-4 mt-6 pt-6 border-t">
                         <div class="text-center">
                             <p class="text-sm text-gray-500">Ganancia Diaria Promedio</p>
-                            <p class="font-bold text-green-600 text-lg">$58.82</p>
+                            <p id="statsAvgDailyIncome" class="font-bold text-green-600 text-lg">---</p>
                         </div>
                         <div class="text-center">
                             <p class="text-sm text-gray-500">Ganancia Semanal Promedio</p>
-                            <p class="font-bold text-green-600 text-lg">$411.74</p>
+                            <p id="statsAvgWeeklyIncome" class="font-bold text-green-600 text-lg">---</p>
                         </div>
                     </div>
                 </section>
@@ -207,39 +194,19 @@
                         <div class="chart-container h-48 w-48 mx-auto">
                             <canvas id="expenseChart"></canvas>
                         </div>
-                        <div class="text-sm space-y-3">
-                            <div class="flex justify-between items-center">
-                                <div class="flex items-center gap-2">
-                                    <span class="w-3 h-3 rounded-full bg-red-500"></span>
-                                    <span>Supermercado</span>
-                                </div>
-                                <span class="font-semibold">14.0%</span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <div class="flex items-center gap-2">
-                                    <span class="w-3 h-3 rounded-full bg-amber-500"></span>
-                                    <span>Comida</span>
-                                </div>
-                                <span class="font-semibold">4.1%</span>
-                            </div>
-                             <div class="flex justify-between items-center">
-                                <div class="flex items-center gap-2">
-                                    <span class="w-3 h-3 rounded-full bg-purple-500"></span>
-                                    <span>Transferencias</span>
-                                </div>
-                                <span class="font-semibold">81.9%</span>
-                            </div>
+                        <div id="statsExpenseDistributionList" class="text-sm space-y-3">
+                            <!-- Lista dinámica de gastos -->
                         </div>
                     </div>
                     <!-- Promedios de Gastos -->
                      <div class="grid grid-cols-2 gap-4 mt-6 pt-6 border-t">
                         <div class="text-center">
                             <p class="text-sm text-gray-500">Gasto Diario Promedio</p>
-                            <p class="font-bold text-red-600 text-lg">-$20.35</p>
+                            <p id="statsAvgDailyExpense" class="font-bold text-red-600 text-lg">---</p>
                         </div>
                         <div class="text-center">
                             <p class="text-sm text-gray-500">Gasto Semanal Promedio</p>
-                            <p class="font-bold text-red-600 text-lg">-$142.45</p>
+                            <p id="statsAvgWeeklyExpense" class="font-bold text-red-600 text-lg">---</p>
                         </div>
                     </div>
                 </section>
@@ -247,6 +214,8 @@
             </div>
 
         </div>
+
+        <br><br>
 
         <!-- Barra de Navegación Inferior -->
         <footer class="fixed bottom-0 left-0 right-0 max-w-2xl mx-auto bg-white border-t border-gray-200">
@@ -276,217 +245,7 @@
 
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // Helper para formatear a moneda
-            const formatCurrency = (value) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(value);
 
-            // Gráficos de Dona (Ingresos y Gastos)
-            const ctxIncome = document.getElementById('incomeChart').getContext('2d');
-            const ctxExpense = document.getElementById('expenseChart').getContext('2d');
-            const ctxMonthlyFlow = document.getElementById('monthlyFlowChart').getContext('2d');
-            const ctxBalanceEvolution = document.getElementById('balanceEvolutionChart').getContext('2d');
-
-            const incomeData = {
-                labels: ['Salario', 'Ventas', 'Otros'],
-                datasets: [{
-                    label: 'Ingresos',
-                    data: [2250, 100, 25],
-                    backgroundColor: ['#22C55E', '#3B82F6', '#6366F1'],
-                    hoverOffset: 8,
-                    borderWidth: 0,
-                }]
-            };
-
-            const expenseData = {
-                labels: ['Supermercado', 'Comida', 'Transferencias'],
-                datasets: [{
-                    label: 'Gastos',
-                    data: [85.50, 25, 500],
-                    backgroundColor: ['#EF4444', '#F59E0B', '#8B5CF6'],
-                    hoverOffset: 8,
-                    borderWidth: 0,
-                }]
-            };
-            
-            // Datos para el gráfico de Flujo Mensual
-            const monthlyFlowData = {
-                labels: ['Semana 1', 'Semana 2', 'Semana 3', 'Semana 4'],
-                datasets: [{
-                    label: 'Ingresos',
-                    data: [500, 1200, 300, 375],
-                    backgroundColor: 'rgba(34, 197, 94, 0.8)',
-                    borderColor: '#16A34A',
-                    borderWidth: 2,
-                    borderRadius: 6,
-                }, {
-                    label: 'Gastos',
-                    data: [250, 400, 150, 110.50],
-                    backgroundColor: 'rgba(239, 68, 68, 0.8)',
-                    borderColor: '#DC2626',
-                    borderWidth: 2,
-                    borderRadius: 6,
-                }]
-            };
-            
-            // Datos para el gráfico de Evolución del Balance
-            const balanceEvolutionData = {
-                // Simula los primeros 15 días del mes
-                labels: Array.from({length: 15}, (_, i) => `${i + 1} Sep`),
-                datasets: [{
-                    label: 'Balance Total',
-                    // Simula un balance inicial de $5000 y el progreso durante el mes
-                    data: [5000, 5025, 4980, 5100, 5050, 5300, 5250, 5800, 5750, 6100, 6200, 6100, 6214.5, 6129, 6764.5],
-                    fill: true,
-                    backgroundColor: (context) => {
-                         const chart = context.chart;
-                         const {ctx, chartArea} = chart;
-                         if (!chartArea) return null;
-                         const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
-                         gradient.addColorStop(0, 'rgba(79, 70, 229, 0)');
-                         gradient.addColorStop(1, 'rgba(79, 70, 229, 0.3)');
-                         return gradient;
-                    },
-                    borderColor: '#4F46E5',
-                    borderWidth: 2.5,
-                    tension: 0.4, // Suaviza la línea
-                    pointBackgroundColor: '#4F46E5',
-                    pointRadius: 0, // Oculta los puntos por defecto
-                    pointHoverRadius: 6, // Muestra puntos más grandes al pasar el mouse
-                    pointHoverBorderWidth: 3,
-                    pointHoverBorderColor: '#FFFFFF',
-                }]
-            };
-
-            // Configuración genérica para los gráficos de Dona
-            const doughnutConfig = {
-                type: 'doughnut',
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    cutout: '70%',
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        tooltip: {
-                            enabled: true,
-                            backgroundColor: '#111827',
-                            titleFont: { size: 14, weight: 'bold' },
-                            bodyFont: { size: 12 },
-                            padding: 10,
-                            cornerRadius: 6,
-                            displayColors: false,
-                             callbacks: {
-                                label: function(context) {
-                                    const value = context.parsed;
-                                    if (value === null) return '';
-                                    const total = context.dataset.data.reduce((acc, data) => acc + data, 0);
-                                    const percentage = ((value / total) * 100).toFixed(1);
-                                    return `${formatCurrency(value)} (${percentage}%)`;
-                                }
-                            }
-                        }
-                    }
-                }
-            };
-            
-            // Configuración para el gráfico de barras
-            const barConfig = {
-                type: 'bar',
-                data: monthlyFlowData,
-                options: {
-                     responsive: true,
-                     maintainAspectRatio: false,
-                     scales: {
-                        y: {
-                           beginAtZero: true,
-                           grid: { display: false },
-                           ticks: {
-                               callback: (value) => `$${value/1000}k`
-                           }
-                        },
-                        x: {
-                            grid: { display: false }
-                        }
-                     },
-                     plugins: {
-                         legend: {
-                             position: 'bottom',
-                             labels: {
-                                 usePointStyle: true,
-                                 boxWidth: 8,
-                                 padding: 20
-                             }
-                         },
-                         tooltip: {
-                             callbacks: {
-                                label: (context) => `${context.dataset.label}: ${formatCurrency(context.parsed.y)}`
-                             }
-                         }
-                     }
-                }
-            };
-
-            // Configuración para el gráfico de línea
-            const lineConfig = {
-                type: 'line',
-                data: balanceEvolutionData,
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            display: false, // Oculta el eje Y para un look más limpio
-                            beginAtZero: false,
-                        },
-                        x: {
-                            grid: { display: false },
-                            ticks: {
-                                // Muestra etiquetas solo para ciertos días para evitar aglomeración
-                                callback: function(value, index, values) {
-                                   const label = this.getLabelForValue(value);
-                                   const day = parseInt(label.split(' ')[0]);
-                                   // Muestra el primer día, el último y cada 5 días intermedios
-                                   if (index === 0 || index === values.length - 1 || day % 5 === 0) {
-                                       return label;
-                                   }
-                                   return '';
-                                }
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            mode: 'index',
-                            intersect: false,
-                            backgroundColor: '#111827',
-                            titleFont: { size: 14, weight: 'bold' },
-                            bodyFont: { size: 12 },
-                            padding: 12,
-                            cornerRadius: 8,
-                            displayColors: false,
-                            callbacks: {
-                                title: (tooltipItems) => tooltipItems[0].label,
-                                label: (context) => formatCurrency(context.parsed.y)
-                            }
-                        }
-                    },
-                    interaction: {
-                        mode: 'index',
-                        intersect: false
-                    }
-                }
-            };
-
-            // Crear las instancias de los gráficos
-            new Chart(ctxIncome, { ...doughnutConfig, data: incomeData });
-            new Chart(ctxExpense, { ...doughnutConfig, data: expenseData });
-            new Chart(ctxMonthlyFlow, barConfig);
-            new Chart(ctxBalanceEvolution, lineConfig);
-        });
-    </script>
 </body>
 </html>
 

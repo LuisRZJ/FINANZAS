@@ -10,6 +10,19 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    (function(){
+      try {
+        var pref = localStorage.getItem('fti_theme_preference');
+        var sysDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (pref === 'dark' || ((!pref || pref === 'system') && sysDark)) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      } catch(e){}
+    })();
+  </script>
   <style>
     :root {
       --bg: #f5f7fa;
@@ -23,6 +36,21 @@
       --negative: #c62828;
       --radius: 12px;
       --card-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      --transition: all 0.3s ease;
+    }
+
+    .dark {
+      --bg: #0b1220;
+      --surface: #0f172a;
+      --muted: #94a3b8;
+      --text: #e5e7eb;
+      --accent: #334155;
+      --row-a: #0b1220;
+      --row-b: #0f172a;
+      --positive: #22c55e;
+      --negative: #ef4444;
+      --radius: 12px;
+      --card-shadow: 0 10px 30px rgba(0,0,0,0.35);
       --transition: all 0.3s ease;
     }
 
@@ -327,6 +355,10 @@
       border-radius: 4px;
     }
 
+    .dark .table-scroll-container::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+
     .table-scroll-container::-webkit-scrollbar-thumb {
       background: var(--accent);
       border-radius: 4px;
@@ -353,6 +385,11 @@
       z-index: 10;
     }
 
+    .dark thead th {
+      background: #0b1220;
+      border-bottom: 1px solid #1f2937;
+    }
+
     tbody td {
       padding: 16px;
       font-size: 0.95rem;
@@ -372,6 +409,10 @@
 
     tbody tr:hover {
       background: rgba(255,255,255,0.03);
+    }
+
+    .dark tbody tr:hover {
+      background: rgba(255,255,255,0.06);
     }
 
     .crypto-table th.col-asset {
@@ -1090,17 +1131,10 @@
 
     // Auto-carga al abrir la página
     document.addEventListener('DOMContentLoaded', () => {
-      // Asegurar que el sitio siempre esté en modo claro al cargar
-      document.body.classList.remove('light-mode');
-      localStorage.removeItem('theme'); // Eliminar cualquier preferencia de tema guardada
-
       cargarTabla();
       cargarTarjetasActivos();
       initResponsiveTable();
-      
-      // Agregar event listener al selector de temporalidad
       document.getElementById('timeframe').addEventListener('change', actualizarPerido);
-
     });
   </script>
 </body>

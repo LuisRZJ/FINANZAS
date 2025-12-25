@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Riesgo | FTI</title>
+    <meta name="theme-color" content="#2563eb">
+    <link rel="icon" href="../pwa/logo-app.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <!-- Iconos Lucide -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;600&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Custom Range Slider */
+        input[type=range] {
+            -webkit-appearance: none;
+            background: transparent;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            background: #10b981;
+            margin-top: -6px;
+            cursor: pointer;
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
+            transition: background 0.2s, box-shadow 0.2s;
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #cbd5e1;
+            border-radius: 2px;
+        }
+
+        .dark input[type=range]::-webkit-slider-runnable-track {
+            background: #334155;
+        }
+
+        /* Estilos condicionales para Modo Extremo */
+        input[type=range].extreme-mode::-webkit-slider-thumb {
+            background: #f43f5e;
+            /* Rose-500 */
+            box-shadow: 0 0 0 4px rgba(244, 63, 94, 0.2);
+        }
+
+        /* Estilo específico para slider de RR */
+        input[type=range].rr-slider::-webkit-slider-thumb {
+            background: #6366f1;
+            /* Indigo-500 */
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2);
+        }
+
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .animate-pulse-fast {
+            animation: pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        .modal {
+            transition: opacity 0.2s ease-in-out, visibility 0.2s;
+        }
+
+        .modal-content {
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .modal.hidden-modal {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .modal.hidden-modal .modal-content {
+            transform: scale(0.95);
+        }
+
+        .trade-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .trade-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .trade-list::-webkit-scrollbar-thumb {
+            background-color: #475569;
+            border-radius: 20px;
+        }
+    </style>
+</head>
+
+<body
+    class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-200 min-h-screen flex flex-col items-center justify-center p-4 transition-colors duration-300 gap-6">
+
+    <!-- Main Card -->
+    <div
+        class="w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl dark:shadow-2xl overflow-hidden relative transition-colors duration-300 z-10">
+
+        <div id="headerBar"
+            class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 transition-all duration-500">
+        </div>
+
+        <!-- Header -->
+        <div class="p-6 pb-2 flex justify-between items-center">
+            <div>
+                <h1 class="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <i data-lucide="calculator" class="w-5 h-5 text-emerald-600 dark:text-emerald-500"
+                        id="mainIcon"></i>
+                    Calculadora de Riesgo
+                </h1>
+                <p class="text-xs text-slate-500 mt-1">Gestión de avanzada de capital para Traders</p>
+                <a href="../utilidades.html"
+                    class="inline-flex items-center gap-1 text-[11px] text-indigo-500 hover:text-indigo-600 dark:text-indigo-300 dark:hover:text-indigo-200 font-semibold mt-2 transition-colors">
+                    <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+                    Volver a utilidades
+                </a>
+            </div>
+            <div class="flex items-center gap-2">
+                <div
+                    class="bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-700">
+                    <span id="currencyBadge" class="text-xs font-mono text-emerald-600 dark:text-emerald-400">USD</span>
+                </div>
+                <button onclick="toggleModal()"
+                    class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors relative">
+                    <i data-lucide="settings" class="w-5 h-5"></i>
+                    <span id="batterySaverIndicator"
+                        class="absolute top-2 right-2 w-2 h-2 bg-amber-500 rounded-full border border-slate-900 hidden"></span>
+                </button>
+            </div>
+        </div>
+
+        <div class="p-6 space-y-5">
+
+            <!-- 1. Dinero (Balance e Inversión) -->
+            <div class="grid grid-cols-2 gap-4">
+                <div class="space-y-2 col-span-2 sm:col-span-1">
+                    <label class="text-xs font-medium text-slate-500 dark:text-slate-400 flex justify-between">
+                        <span>Balance Total</span>
+                        <span id="demoLabel" class="text-[10px] text-emerald-500 cursor-pointer hover:underline"
+                            onclick="setBalance(10000)">Demo</span>
+                    </label>
+                    <div class="relative group">
+                        <div
+                            class="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-600 dark:text-emerald-500 font-bold text-sm symbol-ref">
+                            $</div>
+                        <input type="number" id="balance" value="5000"
+                            class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl py-3 pl-7 pr-3 text-lg font-mono text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all">
+                    </div>
+                </div>
+
+                <!-- NUEVO CAMPO: INVERSIÓN -->
+                <div class="space-y-2 col-span-2 sm:col-span-1">
+                    <label class="text-xs font-medium text-slate-500 dark:text-slate-400 flex justify-between">
+                        <span>Inversión (Margen)</span>
+                        <span class="text-[10px] text-slate-400" title="Capital asignado a esta operación">?</span>
+                    </label>
+                    <div class="relative group">
+                        <div
+                            class="absolute left-3 top-1/2 -translate-y-1/2 text-indigo-500 font-bold text-sm symbol-ref">
+                            $</div>
+                        <input type="number" id="investment" placeholder="Ej.: 30"
+                            class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl py-3 pl-7 pr-3 text-lg font-mono text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all">
+                    </div>
+                    <p id="investmentError" class="text-[10px] text-rose-500 hidden">Ingresa una inversión válida para usar la cartera.</p>
+                </div>
+            </div>
+
+            <!-- 2. Risk Input Section -->
+            <div class="space-y-3">
+                <div class="flex justify-between items-end">
+                    <label class="text-sm font-medium text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                        Riesgo (sobre Balance)
+                        <span id="riskDynamicBadge"
+                            class="text-[10px] px-2 py-0.5 rounded-full uppercase font-bold tracking-wider transition-colors duration-300 bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400">
+                            Conservador
+                        </span>
+                    </label>
+                    <div class="text-right">
+                        <span id="riskPercentDisplay"
+                            class="text-2xl font-bold text-slate-900 dark:text-white font-mono">1.0</span>
+                        <span class="text-emerald-600 dark:text-emerald-500 font-bold">%</span>
+                    </div>
+                </div>
+                <input type="range" id="riskSlider" min="0.1" max="5" step="0.1" value="1.0"
+                    class="w-full transition-all">
+
+                <div class="grid grid-cols-4 gap-2">
+                    <button onclick="setRisk(0.25)"
+                        class="risk-btn py-2 text-xs font-mono bg-slate-100 dark:bg-slate-800 hover:bg-emerald-500/10 hover:border-emerald-500/50 border border-slate-200 dark:border-slate-700 rounded-lg transition-all text-slate-600 dark:text-slate-300">0.25%</button>
+                    <button onclick="setRisk(0.50)"
+                        class="risk-btn py-2 text-xs font-mono bg-slate-100 dark:bg-slate-800 hover:bg-emerald-500/10 hover:border-emerald-500/50 border border-slate-200 dark:border-slate-700 rounded-lg transition-all text-slate-600 dark:text-slate-300">0.50%</button>
+                    <button onclick="setRisk(1.00)"
+                        class="risk-btn py-2 text-xs font-mono bg-emerald-500/20 border-emerald-500/50 border rounded-lg transition-all text-emerald-600 dark:text-emerald-400 ring-1 ring-emerald-500/20 active-preset">1.00%</button>
+                    <button onclick="setRisk(2.00)"
+                        class="risk-btn py-2 text-xs font-mono bg-slate-100 dark:bg-slate-800 hover:bg-emerald-500/10 hover:border-emerald-500/50 border border-slate-200 dark:border-slate-700 rounded-lg transition-all text-slate-600 dark:text-slate-300">2.00%</button>
+                </div>
+            </div>
+
+            <!-- 3. Risk:Reward Ratio -->
+            <div class="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                <div class="flex justify-between items-end">
+                    <label class="text-xs font-medium text-slate-500 uppercase tracking-wider">Ratio
+                        Riesgo:Beneficio</label>
+                    <div class="text-right flex items-center gap-1">
+                        <span class="text-sm text-slate-400">1:</span>
+                        <span id="rrDisplay" class="text-lg font-bold text-indigo-500 font-mono">3.0</span>
+                    </div>
+                </div>
+                <input type="range" id="rrSlider" min="0.1" max="10" step="0.05" value="3.0" class="w-full rr-slider">
+            </div>
+
+            <!-- 4. Results Display -->
+            <div
+                class="bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 p-5 relative overflow-hidden transition-colors duration-300">
+                <div class="absolute inset-0 opacity-[0.03] dark:opacity-5"
+                    style="background-image: radial-gradient(#10b981 1px, transparent 1px); background-size: 16px 16px;">
+                </div>
+
+                <div class="relative z-10 grid grid-cols-2 gap-6">
+                    <!-- Riesgo -->
+                    <div class="space-y-1">
+                        <p class="text-xs text-slate-500 uppercase tracking-wider font-semibold">Riesgo (Pérdida)</p>
+                        <div class="flex items-baseline gap-1">
+                            <span class="text-3xl font-bold text-rose-600 dark:text-rose-500 font-mono"
+                                id="riskAmount">$50.00</span>
+                        </div>
+                        <p class="text-[10px] text-slate-500 mt-1">Saldo si pierde: <span id="newBalanceLoss"
+                                class="font-mono text-slate-700 dark:text-slate-300">$4,950.00</span></p>
+                    </div>
+
+                    <!-- Beneficio -->
+                    <div class="space-y-1 text-right border-l border-slate-200 dark:border-slate-800 pl-6">
+                        <p class="text-xs text-slate-500 uppercase tracking-wider font-semibold">TP (<span
+                                id="tpLabel">1:3</span>)</p>
+                        <div class="text-2xl font-mono font-bold text-emerald-600 dark:text-emerald-500"
+                            id="potentialProfit">+$150.00</div>
+                        <p class="text-[10px] text-slate-500 mt-1">Nuevo Balance: <span id="newBalanceProfit"
+                                class="font-mono text-slate-700 dark:text-slate-300">$5,150.00</span></p>
+                    </div>
+                </div>
+
+                <!-- NEW: Investment Impact -->
+                <div id="investmentImpactBox"
+                    class="mt-4 pt-3 border-t border-slate-200 dark:border-slate-800/50 hidden">
+                    <div class="flex justify-between items-center">
+                        <span class="text-[10px] text-slate-500">Impacto en Inversión:</span>
+                        <span id="investmentImpact" class="text-sm font-mono font-bold text-indigo-500">20%</span>
+                    </div>
+                    <div class="w-full bg-slate-200 dark:bg-slate-800 h-1.5 rounded-full mt-1 overflow-hidden">
+                        <div id="investmentImpactBar" class="h-full bg-indigo-500" style="width: 20%"></div>
+                    </div>
+                </div>
+
+                <!-- Survival Metric -->
+                <div class="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800/50">
+                    <div
+                        class="flex justify-between items-center bg-slate-100 dark:bg-slate-900/50 p-2 rounded-lg border border-slate-200 dark:border-slate-800">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="shield-alert" class="w-4 h-4 text-slate-400"></i>
+                            <span class="text-[10px] text-slate-500 font-medium uppercase">Durabilidad</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] text-slate-400">Trades para quebrar:</span>
+                            <span id="survivalStreak"
+                                class="text-sm font-mono font-bold text-emerald-600 dark:text-emerald-500">100</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Button -->
+            <button onclick="addToPortfolio()"
+                class="w-full py-3 bg-slate-900 dark:bg-slate-800 hover:bg-emerald-600 dark:hover:bg-emerald-600 text-white rounded-xl flex items-center justify-center gap-2 transition-all font-medium text-sm border border-slate-700 shadow-lg group">
+                <i data-lucide="plus-circle"
+                    class="w-4 h-4 text-emerald-500 group-hover:text-white transition-colors"></i>
+                Agregar a Cartera
+            </button>
+
+            <!-- Visual Bar -->
+            <div class="space-y-2 pt-1">
+                <div class="h-2 w-full bg-slate-200 dark:bg-emerald-900/30 rounded-full overflow-hidden flex">
+                    <div class="h-full bg-emerald-500 dark:bg-emerald-600 transition-all duration-500 ease-out"
+                        id="barSafe" style="width: 99%"></div>
+                    <div class="h-full bg-rose-500 transition-all duration-500 ease-out relative" id="barRisk"
+                        style="width: 1%"></div>
+                </div>
+            </div>
+
+            <!-- Warning -->
+            <div id="highRiskWarning"
+                class="hidden items-center gap-2 text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 p-3 rounded-lg text-xs animate-pulse-fast">
+                <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+                <span id="warningText">Precaución: Riesgo alto.</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- PORTFOLIO SECTION -->
+    <div id="portfolioSection"
+        class="w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl dark:shadow-2xl overflow-hidden relative transition-colors duration-300 hidden">
+        <div
+            class="p-4 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
+            <h3 class="text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                <i data-lucide="layers" class="w-4 h-4 text-indigo-500"></i>
+                Cartera (Capital Comprometido)
+            </h3>
+            <div class="text-right">
+                <button onclick="clearPortfolio()"
+                    class="text-[10px] text-rose-500 hover:text-rose-400 flex items-center gap-1 uppercase font-bold tracking-wider">
+                    <i data-lucide="trash-2" class="w-3 h-3"></i> Limpiar
+                </button>
+            </div>
+        </div>
+
+        <div class="p-5 space-y-4">
+            <!-- Portfolio Summary -->
+            <div class="grid grid-cols-2 gap-4 pb-4 border-b border-slate-100 dark:border-slate-800">
+                <div>
+                    <p class="text-[10px] text-slate-500 uppercase tracking-wider">Riesgo Total</p>
+                    <div class="flex items-baseline gap-1">
+                        <span id="totalRiskPercent"
+                            class="text-xl font-bold text-rose-600 dark:text-rose-500 font-mono">0.0</span>
+                        <span class="text-xs text-rose-600 dark:text-rose-500 font-bold">%</span>
+                    </div>
+                    <div id="totalRiskAmount" class="text-xs font-mono text-slate-500">$0.00</div>
+                </div>
+                <div class="text-right">
+                    <p class="text-[10px] text-slate-500 uppercase tracking-wider">Capital Utilizado</p>
+                    <div id="totalInvestedAmount" class="text-xl font-bold text-indigo-500 font-mono">$0.00</div>
+                    <div class="text-[10px] text-slate-400">Margen Libre: <span id="freeMargin"
+                            class="text-emerald-500">$0.00</span></div>
+                </div>
+            </div>
+
+            <!-- Capital Usage Bar (Nuevo) -->
+            <div class="space-y-1">
+                <div class="flex justify-between text-[10px] text-slate-400">
+                    <span>Capital Libre</span>
+                    <span>Capital en Uso</span>
+                </div>
+                <div class="relative">
+                    <div class="h-2 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden flex relative">
+                        <div class="h-full bg-slate-300 dark:bg-slate-700 w-full absolute"></div> <!-- Fondo Libre -->
+                        <div class="h-full relative transition-all duration-500" id="portBarInvested"
+                            style="width: 0%"></div>
+                    </div>
+                    <div id="portUsageIndicator"
+                        class="absolute -top-4 left-0 text-[10px] font-mono text-slate-600 dark:text-slate-200 bg-white/80 dark:bg-slate-900/80 px-1 py-[1px] rounded border border-slate-200 dark:border-slate-700 shadow-sm pointer-events-none transition-all duration-300 -translate-x-1/2">
+                        0%
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trade List -->
+            <div class="mt-2">
+                <p class="text-[10px] text-slate-500 mb-2">Trades Activos:</p>
+                <div id="tradeList" class="trade-list space-y-2 max-h-40 overflow-y-auto pr-1">
+                    <!-- Dynamic Items -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL AJUSTES -->
+    <div id="settingsModal"
+        class="modal hidden-modal fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/20 dark:bg-slate-950/80 backdrop-blur-sm">
+        <div
+            class="modal-content w-full max-w-sm bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 relative transition-colors duration-300 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <i data-lucide="settings" class="w-5 h-5 text-emerald-600 dark:text-emerald-500"></i> Configuración
+                </h2>
+                <button onclick="toggleModal()"
+                    class="text-slate-400 hover:text-slate-700 dark:text-slate-500 dark:hover:text-white transition-colors"><i
+                        data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="space-y-6">
+                <div class="space-y-2">
+                    <label class="text-sm font-medium text-slate-500 dark:text-slate-400 block">Moneda</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button onclick="changeCurrency('USD')" id="btn-USD"
+                            class="currency-btn py-3 px-2 text-sm font-mono bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-emerald-500 transition-all text-slate-600 dark:text-slate-300">USD
+                            ($)</button>
+                        <button onclick="changeCurrency('EUR')" id="btn-EUR"
+                            class="currency-btn py-3 px-2 text-sm font-mono bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-emerald-500 transition-all text-slate-600 dark:text-slate-300">EUR
+                            (€)</button>
+                        <button onclick="changeCurrency('MXN')" id="btn-MXN"
+                            class="currency-btn py-3 px-2 text-sm font-mono bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-emerald-500 transition-all text-slate-600 dark:text-slate-300">MXN
+                            ($)</button>
+                    </div>
+                </div>
+                <hr class="border-slate-100 dark:border-slate-800">
+                <div class="space-y-2">
+                    <label class="text-sm font-medium text-slate-500 dark:text-slate-400 block">Tema</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button onclick="changeTheme('light')" id="theme-light"
+                            class="theme-btn py-2 px-2 text-xs flex flex-col items-center gap-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg transition-all text-slate-600 dark:text-slate-300"><i
+                                data-lucide="sun" class="w-4 h-4"></i> Claro</button>
+                        <button onclick="changeTheme('dark')" id="theme-dark"
+                            class="theme-btn py-2 px-2 text-xs flex flex-col items-center gap-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg transition-all text-slate-600 dark:text-slate-300"><i
+                                data-lucide="moon" class="w-4 h-4"></i> Oscuro</button>
+                        <button onclick="changeTheme('auto')" id="theme-auto"
+                            class="theme-btn py-2 px-2 text-xs flex flex-col items-center gap-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg transition-all text-slate-600 dark:text-slate-300"><i
+                                data-lucide="battery-charging" class="w-4 h-4"></i> Auto</button>
+                    </div>
+                </div>
+                <hr class="border-slate-100 dark:border-slate-800">
+                <div class="space-y-2">
+                    <label class="text-sm font-medium text-slate-500 dark:text-slate-400 block">Zona de Peligro</label>
+                    <div
+                        class="flex items-center justify-between bg-rose-50 dark:bg-rose-900/10 border border-rose-200 dark:border-rose-900/30 rounded-lg p-3">
+                        <div class="flex items-center gap-2"><i data-lucide="skull"
+                                class="w-4 h-4 text-rose-500"></i><span
+                                class="text-sm text-rose-700 dark:text-rose-400 font-medium">Modo Extremo</span></div>
+                        <button id="extremeModeToggle" onclick="toggleExtremeMode()"
+                            class="relative inline-flex h-6 w-11 items-center rounded-full bg-slate-200 dark:bg-slate-700 transition-colors focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2">
+                            <span class="sr-only">Activar modo extremo</span>
+                            <span id="extremeModeKnob"
+                                class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform translate-x-1 duration-200"></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONFIRM MODAL -->
+    <div id="confirmModal"
+        class="modal hidden-modal fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+        <div
+            class="modal-content w-full max-w-sm bg-white dark:bg-slate-900 rounded-xl border border-rose-500 shadow-2xl p-6 relative">
+            <div class="text-center space-y-4">
+                <div
+                    class="mx-auto w-12 h-12 bg-rose-100 dark:bg-rose-900/30 rounded-full flex items-center justify-center">
+                    <i data-lucide="alert-triangle" class="w-6 h-6 text-rose-600 dark:text-rose-500"></i>
+                </div>
+                <h3 class="text-lg font-bold text-slate-900 dark:text-white">¿Activar Modo Extremo?</h3>
+                <p
+                    class="text-sm text-slate-500 dark:text-slate-400 text-left bg-slate-50 dark:bg-slate-800 p-3 rounded-lg border border-slate-200 dark:border-slate-700">
+                    ⚠️ <strong>ADVERTENCIA:</strong> Desbloquea riesgo 100%.</p>
+                <div class="grid grid-cols-2 gap-3 pt-2">
+                    <button onclick="cancelExtremeMode()"
+                        class="py-2 px-4 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-200 font-medium text-sm">Cancelar</button>
+                    <button onclick="confirmExtremeMode()"
+                        class="py-2 px-4 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-medium text-sm shadow-lg shadow-rose-500/30">Sí,
+                        Activar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+
+            const investmentField = document.getElementById('investment');
+            const investmentError = document.getElementById('investmentError');
+
+            function toggleInvestmentError(show) {
+                if (!investmentError) return;
+                investmentError.classList.toggle('hidden', !show);
+            }
+
+            function getInvestmentValue() {
+                if (!investmentField) return { value: 0, isValid: false };
+                const value = parseFloat(investmentField.value);
+                const isValid = !isNaN(value) && value > 0;
+                return { value, isValid };
+            }
+
+            if (investmentField) {
+                investmentField.addEventListener('input', () => {
+                    const { isValid } = getInvestmentValue();
+                    toggleInvestmentError(!isValid);
+                });
+            }
+
+            /* --- THEME & BATTERY --- */
+            let currentTheme = localStorage.getItem('riskCalc_theme') || 'auto';
+            let isLowBattery = false;
+
+            if (navigator.getBattery) {
+                navigator.getBattery().then(function (battery) {
+                    const checkBattery = () => {
+                        const wasLow = isLowBattery;
+                        isLowBattery = (battery.level < 0.20 && !battery.charging);
+                        if (wasLow !== isLowBattery && currentTheme === 'auto') applyTheme('auto');
+                        updateBatteryUI();
+                    };
+                    battery.addEventListener('levelchange', checkBattery);
+                    battery.addEventListener('chargingchange', checkBattery);
+                    checkBattery();
+                });
+            }
+
+            function updateBatteryUI() {
+                const ind = document.getElementById('batterySaverIndicator');
+                if (!ind) return;
+                if (currentTheme === 'auto' && isLowBattery) ind.classList.remove('hidden'); else ind.classList.add('hidden');
+            }
+
+            function applyTheme(theme) {
+                const html = document.documentElement;
+                const themeBtns = document.querySelectorAll('.theme-btn');
+                let applyDark = false;
+                if (theme === 'dark') applyDark = true;
+                else if (theme === 'light') applyDark = false;
+                else if (theme === 'auto') applyDark = window.matchMedia('(prefers-color-scheme: dark)').matches || isLowBattery;
+
+                if (applyDark) html.classList.add('dark'); else html.classList.remove('dark');
+
+                themeBtns.forEach(btn => {
+                    const btnTheme = btn.id.split('-')[1];
+                    btn.className = "theme-btn py-2 px-2 text-xs flex flex-col items-center gap-1 border rounded-lg transition-all";
+                    if (btnTheme === theme) btn.classList.add('bg-emerald-100', 'dark:bg-emerald-500/20', 'border-emerald-500', 'text-emerald-700', 'dark:text-emerald-400', 'ring-1', 'ring-emerald-500/20');
+                    else btn.classList.add('bg-slate-50', 'dark:bg-slate-800', 'border-slate-200', 'dark:border-slate-700', 'text-slate-600', 'dark:text-slate-300', 'hover:bg-slate-100', 'dark:hover:bg-slate-700');
+                });
+                updateBatteryUI();
+            }
+
+            window.changeTheme = (theme) => {
+                currentTheme = theme;
+                localStorage.setItem('riskCalc_theme', theme);
+                applyTheme(theme);
+                lucide.createIcons();
+            };
+
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+                if (currentTheme === 'auto') applyTheme('auto');
+            });
+
+            /* --- EXTREME MODE --- */
+            let extremeMode = false;
+            window.toggleExtremeMode = () => {
+                const modal = document.getElementById('confirmModal');
+                const slider = document.getElementById('riskSlider');
+                if (!extremeMode && modal) modal.classList.remove('hidden-modal');
+                else {
+                    extremeMode = false;
+                    updateExtremeModeUI();
+                    if (slider && parseFloat(slider.value) > 5) { slider.value = 5; }
+                    calculate();
+                }
+            };
+            window.confirmExtremeMode = () => {
+                extremeMode = true;
+                updateExtremeModeUI();
+                calculate();
+                const modal = document.getElementById('confirmModal');
+                if (modal) modal.classList.add('hidden-modal');
+            };
+            window.cancelExtremeMode = () => {
+                const modal = document.getElementById('confirmModal');
+                if (modal) modal.classList.add('hidden-modal');
+            };
+
+            function updateExtremeModeUI() {
+                const toggle = document.getElementById('extremeModeToggle');
+                const knob = document.getElementById('extremeModeKnob');
+                const slider = document.getElementById('riskSlider');
+                if (!toggle || !knob || !slider) return;
+
+                if (extremeMode) {
+                    toggle.classList.remove('bg-slate-200', 'dark:bg-slate-700'); toggle.classList.add('bg-rose-500');
+                    knob.classList.remove('translate-x-1'); knob.classList.add('translate-x-6');
+                    slider.max = 100; slider.classList.add('extreme-mode');
+                } else {
+                    toggle.classList.add('bg-slate-200', 'dark:bg-slate-700'); toggle.classList.remove('bg-rose-500');
+                    knob.classList.add('translate-x-1'); knob.classList.remove('translate-x-6');
+                    slider.max = 5; slider.classList.remove('extreme-mode');
+                }
+            }
+
+            /* --- CALCULATION LOGIC --- */
+            const currencies = {
+                'USD': { locale: 'en-US', symbol: '$' },
+                'EUR': { locale: 'de-DE', symbol: '€' },
+                'MXN': { locale: 'es-MX', symbol: '$' }
+            };
+            let currentCurrency = localStorage.getItem('riskCalc_currency') || 'USD';
+            let portfolio = [];
+
+            // Helper
+            const formatMoney = (amount) => {
+                const config = currencies[currentCurrency];
+                return new Intl.NumberFormat(config.locale, { style: 'currency', currency: currentCurrency }).format(amount);
+            };
+
+            function calculate() {
+                const balanceInput = document.getElementById('balance');
+                const investmentInput = document.getElementById('investment');
+                const riskSlider = document.getElementById('riskSlider');
+                const rrSlider = document.getElementById('rrSlider');
+
+                if (!balanceInput || !riskSlider || !rrSlider) return;
+
+                let balance = parseFloat(balanceInput.value) || 0;
+                const investmentInfo = getInvestmentValue();
+                let investment = investmentInfo.isValid ? investmentInfo.value : 0;
+                let riskPercent = parseFloat(riskSlider.value);
+                let rrRatio = parseFloat(rrSlider.value);
+
+                const riskAmount = balance * (riskPercent / 100);
+                const profitAmount = riskAmount * rrRatio;
+
+                // Safe Elements Fetch
+                const riskPercentDisplay = document.getElementById('riskPercentDisplay');
+                const rrDisplay = document.getElementById('rrDisplay');
+                const tpLabel = document.getElementById('tpLabel');
+                const riskAmountDisplay = document.getElementById('riskAmount');
+                const potentialProfitDisplay = document.getElementById('potentialProfit');
+                const newBalanceProfitDisplay = document.getElementById('newBalanceProfit');
+                const newBalanceLossDisplay = document.getElementById('newBalanceLoss');
+                const survivalStreakDisplay = document.getElementById('survivalStreak');
+                const barRisk = document.getElementById('barRisk');
+                const barSafe = document.getElementById('barSafe');
+
+                // Updates
+                if (riskPercentDisplay) riskPercentDisplay.textContent = riskPercent.toFixed(1);
+                if (rrDisplay) rrDisplay.textContent = rrRatio.toFixed(2);
+                if (tpLabel) tpLabel.textContent = `1:${rrRatio.toFixed(2)}`;
+                if (riskAmountDisplay) riskAmountDisplay.textContent = formatMoney(riskAmount);
+                if (potentialProfitDisplay) potentialProfitDisplay.textContent = "+" + formatMoney(profitAmount);
+                if (newBalanceProfitDisplay) newBalanceProfitDisplay.textContent = formatMoney(balance + profitAmount);
+                if (newBalanceLossDisplay) newBalanceLossDisplay.textContent = formatMoney(balance - riskAmount);
+
+                // Bar UI
+                let riskWidth = riskPercent > 100 ? 100 : riskPercent;
+                if (barRisk) barRisk.style.width = `${riskWidth}%`;
+                if (barSafe) barSafe.style.width = `${100 - riskWidth}%`;
+
+                // Investment Impact
+                const investmentImpactBox = document.getElementById('investmentImpactBox');
+                const investmentImpactDisplay = document.getElementById('investmentImpact');
+                const investmentImpactBar = document.getElementById('investmentImpactBar');
+
+                if (investment > 0 && investmentImpactBox && investmentImpactDisplay && investmentImpactBar) {
+                    investmentImpactBox.classList.remove('hidden');
+                    let impactPct = (riskAmount / investment) * 100;
+                    investmentImpactDisplay.textContent = impactPct.toFixed(1) + "%";
+                    let barW = impactPct > 100 ? 100 : impactPct;
+                    investmentImpactBar.style.width = `${barW}%`;
+
+                    if (impactPct > 100) {
+                        investmentImpactDisplay.classList.add('text-rose-500');
+                        investmentImpactDisplay.classList.remove('text-indigo-500');
+                        investmentImpactBar.classList.add('bg-rose-500');
+                        investmentImpactBar.classList.remove('bg-indigo-500');
+                    } else {
+                        investmentImpactDisplay.classList.remove('text-rose-500');
+                        investmentImpactDisplay.classList.add('text-indigo-500');
+                        investmentImpactBar.classList.remove('bg-rose-500');
+                        investmentImpactBar.classList.add('bg-indigo-500');
+                    }
+                } else if (investmentImpactBox) {
+                    investmentImpactBox.classList.add('hidden');
+                }
+
+                // Survival
+                if (survivalStreakDisplay) {
+                    let streak = riskPercent > 0 ? Math.floor(100 / riskPercent) : 0;
+                    survivalStreakDisplay.textContent = streak;
+                    survivalStreakDisplay.className = "text-sm font-mono font-bold " + (streak >= 40 ? "text-emerald-600 dark:text-emerald-500" : streak >= 10 ? "text-amber-500" : "text-rose-600 dark:text-rose-500");
+                }
+
+                updateDynamicBadge(riskPercent);
+                if (portfolio.length > 0) recalculatePortfolio();
+            }
+
+            function updateDynamicBadge(riskPercent) {
+                const riskDynamicBadge = document.getElementById('riskDynamicBadge');
+                const barRisk = document.getElementById('barRisk');
+                const warningBox = document.getElementById('highRiskWarning');
+                const warningText = document.getElementById('warningText');
+
+                if (!riskDynamicBadge) return;
+
+                riskDynamicBadge.className = "text-[10px] px-2 py-0.5 rounded-full uppercase font-bold tracking-wider transition-colors duration-300";
+
+                if (riskPercent <= 1.0) {
+                    riskDynamicBadge.textContent = "Conservador";
+                    riskDynamicBadge.classList.add("bg-emerald-100", "text-emerald-700", "dark:bg-emerald-500/20", "dark:text-emerald-400");
+                    if (barRisk) barRisk.className = "h-full bg-emerald-500 dark:bg-emerald-600 transition-all duration-500 ease-out relative";
+                } else if (riskPercent <= 3.0) {
+                    riskDynamicBadge.textContent = "Moderado";
+                    riskDynamicBadge.classList.add("bg-blue-100", "text-blue-700", "dark:bg-blue-500/20", "dark:text-blue-400");
+                    if (barRisk) barRisk.className = "h-full bg-blue-500 transition-all duration-500 ease-out relative";
+                } else if (riskPercent <= 5.0) {
+                    riskDynamicBadge.textContent = "Alto";
+                    riskDynamicBadge.classList.add("bg-amber-100", "text-amber-700", "dark:bg-amber-500/20", "dark:text-amber-400");
+                    if (barRisk) barRisk.className = "h-full bg-amber-500 transition-all duration-500 ease-out relative";
+                } else {
+                    riskDynamicBadge.textContent = "Extremo";
+                    riskDynamicBadge.classList.add("bg-rose-100", "text-rose-700", "dark:bg-rose-500/20", "dark:text-rose-400");
+                    if (barRisk) barRisk.className = "h-full bg-rose-600 transition-all duration-500 ease-out relative";
+                }
+
+                if (warningBox && warningText) {
+                    if (riskPercent > 5) {
+                        warningBox.classList.remove('hidden', 'flex'); warningBox.classList.add('flex');
+                        if (riskPercent > 20) {
+                            warningText.textContent = "ALERTA CRÍTICA: Riesgo extremo.";
+                            warningBox.className = "flex items-center gap-2 text-rose-700 dark:text-rose-400 bg-rose-100 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-200 p-3 rounded-lg text-xs animate-pulse-fast";
+                        } else {
+                            warningText.textContent = "Precaución: Riesgo alto.";
+                            warningBox.className = "flex items-center gap-2 text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 p-3 rounded-lg text-xs animate-pulse-fast";
+                        }
+                    } else {
+                        warningBox.classList.add('hidden');
+                    }
+                }
+            }
+
+            /* --- PORTFOLIO --- */
+            window.addToPortfolio = () => {
+                const balanceInput = document.getElementById('balance');
+                const riskSlider = document.getElementById('riskSlider');
+                const portfolioSection = document.getElementById('portfolioSection');
+
+                if (!balanceInput || !riskSlider) return;
+
+                let balance = parseFloat(balanceInput.value);
+                let riskPercent = parseFloat(riskSlider.value);
+                const investmentData = getInvestmentValue();
+                if (!investmentData.isValid) {
+                    toggleInvestmentError(true);
+                    if (investmentField) investmentField.focus();
+                    return;
+                }
+                toggleInvestmentError(false);
+                let investment = investmentData.value;
+                let riskAmount = balance * (riskPercent / 100);
+
+                portfolio.push({ id: Date.now(), riskPercent, riskAmount, investment });
+                if (portfolioSection) portfolioSection.classList.remove('hidden');
+                renderPortfolio();
+            };
+
+            window.clearPortfolio = () => {
+                portfolio = [];
+                const section = document.getElementById('portfolioSection');
+                if (section) section.classList.add('hidden');
+                renderPortfolio();
+            };
+
+            window.removeTrade = (id) => {
+                portfolio = portfolio.filter(t => t.id !== id);
+                if (portfolio.length === 0) {
+                    const section = document.getElementById('portfolioSection');
+                    if (section) section.classList.add('hidden');
+                }
+                renderPortfolio();
+            };
+
+            function recalculatePortfolio() {
+                const balanceInput = document.getElementById('balance');
+                if (!balanceInput) return;
+                let balance = parseFloat(balanceInput.value);
+                portfolio = portfolio.map(t => ({ ...t, riskAmount: balance * (t.riskPercent / 100) }));
+                renderPortfolio();
+            }
+
+            function renderPortfolio() {
+                const tradeList = document.getElementById('tradeList');
+                const totalRiskPercentDisplay = document.getElementById('totalRiskPercent');
+                const totalRiskAmountDisplay = document.getElementById('totalRiskAmount');
+                const totalInvestedAmountDisplay = document.getElementById('totalInvestedAmount');
+                const freeMarginDisplay = document.getElementById('freeMargin');
+                const portBarInvested = document.getElementById('portBarInvested');
+                const portUsageIndicator = document.getElementById('portUsageIndicator');
+                const balanceInput = document.getElementById('balance');
+
+                if (!tradeList) return;
+
+                tradeList.innerHTML = '';
+                let totalPercent = 0;
+                let totalRisk = 0;
+                let totalInvested = 0;
+
+                portfolio.forEach((trade, index) => {
+                    totalPercent += trade.riskPercent;
+                    totalRisk += trade.riskAmount;
+                    totalInvested += trade.investment;
+
+                    const div = document.createElement('div');
+                    div.className = "flex justify-between items-center bg-slate-100 dark:bg-slate-800 p-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm";
+                    div.innerHTML = `
+                        <div class="flex items-center gap-2">
+                            <span class="bg-slate-200 dark:bg-slate-700 text-slate-500 text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-mono">${index + 1}</span>
+                            <div class="flex flex-col">
+                                <span class="font-bold text-slate-700 dark:text-slate-200">${trade.riskPercent.toFixed(2)}%</span>
+                                ${trade.investment > 0 ? `<span class="text-[10px] text-indigo-400">Inv: ${formatMoney(trade.investment)}</span>` : ''}
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="font-mono text-slate-600 dark:text-slate-300 font-medium">${formatMoney(trade.riskAmount)}</span>
+                            <button onclick="removeTrade(${trade.id})" class="text-slate-400 hover:text-rose-500 transition-colors"><i data-lucide="x-circle" class="w-4 h-4"></i></button>
+                        </div>
+                    `;
+                    tradeList.appendChild(div);
+                });
+
+                if (totalRiskPercentDisplay) totalRiskPercentDisplay.textContent = totalPercent.toFixed(2);
+                if (totalRiskAmountDisplay) totalRiskAmountDisplay.textContent = formatMoney(totalRisk);
+                if (totalInvestedAmountDisplay) totalInvestedAmountDisplay.textContent = formatMoney(totalInvested);
+
+                if (freeMarginDisplay && balanceInput) {
+                    let balance = parseFloat(balanceInput.value) || 0;
+                    freeMarginDisplay.textContent = formatMoney(balance - totalInvested);
+                    // Portfolio Usage Bar
+                    let usagePct = balance > 0 ? (totalInvested / balance) * 100 : 0;
+                    if (usagePct > 100) usagePct = 100;
+                    if (portBarInvested) {
+                        portBarInvested.style.width = `${usagePct}%`;
+                        updatePortBarColor(portBarInvested, usagePct);
+                    }
+                    if (portUsageIndicator) {
+                        const displayPct = isNaN(usagePct) ? 0 : usagePct;
+                        let indicatorPosition = displayPct;
+
+                        if (indicatorPosition < 5) indicatorPosition = 5;
+                        if (indicatorPosition > 95) indicatorPosition = 95;
+                        portUsageIndicator.textContent = `${displayPct.toFixed(0)}%`;
+                        portUsageIndicator.style.left = `${indicatorPosition}%`;
+                    }
+                }
+
+                lucide.createIcons();
+            }
+
+            function updatePortBarColor(element, usagePct) {
+                if (!element) return;
+                let colorClass = 'bg-emerald-500';
+                if (usagePct >= 80) colorClass = 'bg-rose-500';
+                else if (usagePct >= 60) colorClass = 'bg-amber-500';
+                else if (usagePct >= 40) colorClass = 'bg-yellow-400';
+                else if (usagePct >= 20) colorClass = 'bg-indigo-500';
+
+                element.className = `h-full relative transition-all duration-500 ${colorClass}`;
+            }
+
+            /* --- SETTINGS & GLOBAL HELPERS --- */
+            window.toggleModal = () => {
+                const m = document.getElementById('settingsModal');
+                if (m) {
+                    m.classList.toggle('hidden-modal');
+                    if (!m.classList.contains('hidden-modal')) {
+                        updateCurrencyButtonsUI();
+                        applyTheme(currentTheme);
+                        updateExtremeModeUI();
+                        lucide.createIcons();
+                    }
+                }
+            };
+
+            // Attach event listener to modal backdrop
+            const settingsModal = document.getElementById('settingsModal');
+            if (settingsModal) {
+                settingsModal.addEventListener('click', (e) => {
+                    if (e.target === settingsModal) toggleModal();
+                });
+            }
+
+            window.changeCurrency = (c) => {
+                currentCurrency = c;
+                localStorage.setItem('riskCalc_currency', c);
+                updateUIForCurrency();
+                calculate();
+                updateCurrencyButtonsUI();
+            };
+
+            function updateUIForCurrency() {
+                const conf = currencies[currentCurrency];
+                const badge = document.getElementById('currencyBadge');
+                const demoLabel = document.getElementById('demoLabel');
+                const symbols = document.querySelectorAll('.symbol-ref');
+
+                if (badge) badge.textContent = currentCurrency;
+                symbols.forEach(s => s.textContent = conf.symbol);
+                if (demoLabel) demoLabel.textContent = `Demo`;
+            }
+
+            function updateCurrencyButtonsUI() {
+                const currencyBtns = document.querySelectorAll('.currency-btn');
+                currencyBtns.forEach(btn => {
+                    const c = btn.id.split('-')[1];
+                    btn.className = "currency-btn py-3 px-2 text-sm font-mono border rounded-lg transition-all";
+                    if (c === currentCurrency) btn.classList.add('bg-emerald-100', 'dark:bg-emerald-500/20', 'border-emerald-500', 'text-emerald-700', 'dark:text-emerald-400', 'ring-1', 'ring-emerald-500/20');
+                    else btn.classList.add('bg-slate-50', 'dark:bg-slate-800', 'border-slate-200', 'dark:border-slate-700', 'text-slate-600', 'dark:text-slate-300', 'hover:bg-slate-100', 'dark:hover:bg-emerald-500/10');
+                });
+            }
+
+            window.setBalance = (v) => {
+                const b = document.getElementById('balance');
+                if (b) { b.value = v; calculate(); }
+            };
+
+            window.setRisk = (v) => {
+                const r = document.getElementById('riskSlider');
+                if (r) { r.value = v; calculate(); updateRiskBtnsUI(v); }
+            };
+
+            function updateRiskBtnsUI(val) {
+                const riskBtns = document.querySelectorAll('.risk-btn');
+                riskBtns.forEach(btn => {
+                    btn.className = "risk-btn py-2 text-xs font-mono border rounded-lg transition-all";
+                    if (parseFloat(btn.textContent) === val) btn.classList.add('bg-emerald-100', 'dark:bg-emerald-500/20', 'border-emerald-500', 'dark:border-emerald-500/50', 'text-emerald-700', 'dark:text-emerald-400', 'ring-1', 'ring-emerald-500/20');
+                    else btn.classList.add('bg-slate-100', 'dark:bg-slate-800', 'border-slate-200', 'dark:border-slate-700', 'text-slate-600', 'dark:text-slate-300', 'hover:bg-emerald-50', 'dark:hover:bg-emerald-500/10');
+                });
+            }
+
+            // LISTENERS
+            const balanceInput = document.getElementById('balance');
+            const investmentInput = document.getElementById('investment');
+            const riskSlider = document.getElementById('riskSlider');
+            const rrSlider = document.getElementById('rrSlider');
+
+            if (balanceInput) balanceInput.addEventListener('input', calculate);
+            if (investmentInput) investmentInput.addEventListener('input', calculate);
+            if (riskSlider) {
+                riskSlider.addEventListener('input', () => {
+                    updateRiskBtnsUI(parseFloat(riskSlider.value));
+                    calculate();
+                });
+            }
+            if (rrSlider) rrSlider.addEventListener('input', calculate);
+
+            // INITIALIZE
+            applyTheme(currentTheme);
+            updateUIForCurrency();
+            updateExtremeModeUI();
+            calculate();
+            updateRiskBtnsUI(1.0);
+        });
+    </script>
+</body>
+
+</html>

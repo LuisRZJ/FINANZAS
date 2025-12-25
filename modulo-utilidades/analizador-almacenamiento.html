@@ -9,28 +9,78 @@
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        slate: {
+                            850: '#1e293b',
+                            900: '#0f172a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <script>
+        // Script inline para prevenir flash de tema incorrecto
+        (function() {
+            try {
+                const storedTheme = localStorage.getItem('fti_theme_preference');
+                const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                
+                if (storedTheme === 'dark' || ((!storedTheme || storedTheme === 'system') && systemDark)) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            } catch (e) {
+                console.warn('Error accediendo a localStorage para tema:', e);
+            }
+        })();
+    </script>
 
     <!-- Font Awesome para iconos -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <!-- Fuente Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        .dark .bg-clip-text.text-transparent {
+            background-image: linear-gradient(to right, #60a5fa, #818cf8) !important;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+    </style>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 text-gray-800">
-    <div class="container mx-auto px-4 py-8 max-w-5xl">
+<body class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 text-gray-800 dark:from-gray-900 dark:to-slate-900 dark:text-gray-100 font-sans flex flex-col">
+    <div class="container mx-auto px-4 py-8 max-w-5xl flex-grow">
         <!-- Header -->
         <header class="text-center mb-10">
             <h1 class="text-4xl md:text-5xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-800 mb-3">
                 Analizador de Almacenamiento y Memoria
             </h1>
-            <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+            <p class="text-lg text-gray-600 max-w-2xl mx-auto dark:text-gray-400">
                 Consulta la cuota total, uso actual y espacio restante estimado. Incluye memoria de la página cuando el navegador lo soporta.
             </p>
         </header>
 
         <!-- Acciones -->
         <div class="flex flex-wrap items-center justify-center gap-3 mb-8">
-            <a href="../ajustes.html" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors duration-300 flex items-center">
+            <a href="../ajustes.html" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors duration-300 flex items-center dark:bg-indigo-700 dark:hover:bg-indigo-600">
                 <i class="fas fa-arrow-left mr-2"></i> Volver a Ajustes
             </a>
-            <button id="refreshBtn" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors duration-300 flex items-center">
+            <button id="refreshBtn" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors duration-300 flex items-center dark:bg-blue-700 dark:hover:bg-blue-600">
                 <i class="fas fa-rotate-right mr-2"></i> Actualizar datos
             </button>
         </div>
@@ -38,86 +88,105 @@
         <!-- Grid principal -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <!-- Tarjeta Almacenamiento -->
-            <section class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+            <section class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 dark:bg-slate-800 dark:border-slate-700">
                 <div class="flex items-center mb-4">
-                    <div class="bg-indigo-100 p-3 rounded-xl mr-4">
-                        <i class="fas fa-hard-drive text-indigo-600 text-xl"></i>
+                    <div class="bg-indigo-100 p-3 rounded-xl mr-4 dark:bg-indigo-900/30">
+                        <i class="fas fa-hard-drive text-indigo-600 text-xl dark:text-indigo-400"></i>
                     </div>
                     <div>
-                        <h2 class="text-xl font-semibold text-gray-900">Almacenamiento (Storage API)</h2>
-                        <p class="text-sm text-gray-600">Estimación provista por <code class="font-mono">navigator.storage.estimate()</code></p>
+                        <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Almacenamiento (Storage API)</h2>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Estimación provista por <code class="font-mono bg-gray-100 px-1 py-0.5 rounded dark:bg-slate-700">navigator.storage.estimate()</code></p>
                     </div>
                 </div>
 
                 <div class="space-y-2 text-sm">
-                    <p class="text-gray-700">Cuota Total: <span id="quotaText" class="font-semibold text-gray-900">—</span></p>
-                    <p class="text-gray-700">Uso Actual: <span id="usageText" class="font-semibold text-gray-900">—</span></p>
-                    <p class="text-gray-700">Espacio Restante: <span id="remainingText" class="font-semibold text-gray-900">—</span></p>
-                    <p class="text-gray-700">Porcentaje de Uso: <span id="usagePctText" class="font-semibold text-gray-900">—</span></p>
+                    <p class="text-gray-700 dark:text-gray-300">Cuota Total: <span id="quotaText" class="font-semibold text-gray-900 dark:text-white">—</span></p>
+                    <p class="text-gray-700 dark:text-gray-300">Uso Actual: <span id="usageText" class="font-semibold text-gray-900 dark:text-white">—</span></p>
+                    <p class="text-gray-700 dark:text-gray-300">Espacio Restante: <span id="remainingText" class="font-semibold text-gray-900 dark:text-white">—</span></p>
+                    <p class="text-gray-700 dark:text-gray-300">Porcentaje de Uso: <span id="usagePctText" class="font-semibold text-gray-900 dark:text-white">—</span></p>
                 </div>
 
                 <!-- Barra de progreso -->
                 <div class="mt-4">
-                    <div class="flex justify-between items-center mb-2 text-xs text-gray-600">
+                    <div class="flex justify-between items-center mb-2 text-xs text-gray-600 dark:text-gray-400">
                         <span>0%</span>
                         <span id="usagePctBarLabel">—</span>
                         <span>100%</span>
                     </div>
-                    <div class="w-full bg-gray-100 rounded-lg h-3">
-                        <div id="usageBar" class="bg-indigo-600 h-3 rounded-lg" style="width: 0%"></div>
+                    <div class="w-full bg-gray-100 rounded-lg h-3 dark:bg-slate-700">
+                        <div id="usageBar" class="bg-indigo-600 h-3 rounded-lg dark:bg-indigo-500" style="width: 0%"></div>
                     </div>
                 </div>
 
-                <p id="storageNote" class="mt-4 text-xs text-gray-500">
+                <p id="storageNote" class="mt-4 text-xs text-gray-500 dark:text-gray-400">
                     Nota: Las cuotas y estimaciones pueden variar según el navegador, el dispositivo y las políticas de almacenamiento del sistema.
                 </p>
             </section>
 
             <!-- Tarjeta Memoria JS -->
-            <section class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+            <section class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 dark:bg-slate-800 dark:border-slate-700">
                 <div class="flex items-center mb-4">
-                    <div class="bg-blue-100 p-3 rounded-xl mr-4">
-                        <i class="fas fa-microchip text-blue-600 text-xl"></i>
+                    <div class="bg-blue-100 p-3 rounded-xl mr-4 dark:bg-blue-900/30">
+                        <i class="fas fa-microchip text-blue-600 text-xl dark:text-blue-400"></i>
                     </div>
                     <div>
-                        <h2 class="text-xl font-semibold text-gray-900">Memoria de la Página (JS)</h2>
-                        <p class="text-sm text-gray-600">Datos de <code class="font-mono">performance.memory</code> (principalmente Chrome)</p>
+                        <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Memoria de la Página (JS)</h2>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Datos de <code class="font-mono bg-gray-100 px-1 py-0.5 rounded dark:bg-slate-700">performance.memory</code> (principalmente Chrome)</p>
                     </div>
                 </div>
 
                 <div id="memorySupported" class="space-y-2 text-sm">
-                    <p class="text-gray-700">Límite Heap: <span id="heapLimitText" class="font-semibold text-gray-900">—</span></p>
-                    <p class="text-gray-700">Tamaño Total Heap: <span id="totalHeapText" class="font-semibold text-gray-900">—</span></p>
-                    <p class="text-gray-700">Uso Heap Actual: <span id="usedHeapText" class="font-semibold text-gray-900">—</span></p>
-                    <p class="text-gray-700">Porcentaje de Uso: <span id="heapPctText" class="font-semibold text-gray-900">—</span></p>
+                    <p class="text-gray-700 dark:text-gray-300">Límite Heap: <span id="heapLimitText" class="font-semibold text-gray-900 dark:text-white">—</span></p>
+                    <p class="text-gray-700 dark:text-gray-300">Tamaño Total Heap: <span id="totalHeapText" class="font-semibold text-gray-900 dark:text-white">—</span></p>
+                    <p class="text-gray-700 dark:text-gray-300">Uso Heap Actual: <span id="usedHeapText" class="font-semibold text-gray-900 dark:text-white">—</span></p>
+                    <p class="text-gray-700 dark:text-gray-300">Porcentaje de Uso: <span id="heapPctText" class="font-semibold text-gray-900 dark:text-white">—</span></p>
                 </div>
 
                 <!-- Barra de progreso memoria -->
                 <div class="mt-4">
-                    <div class="flex justify-between items-center mb-2 text-xs text-gray-600">
+                    <div class="flex justify-between items-center mb-2 text-xs text-gray-600 dark:text-gray-400">
                         <span>0%</span>
                         <span id="heapPctBarLabel">—</span>
                         <span>100%</span>
                     </div>
-                    <div class="w-full bg-gray-100 rounded-lg h-3">
-                        <div id="heapBar" class="bg-blue-600 h-3 rounded-lg" style="width: 0%"></div>
+                    <div class="w-full bg-gray-100 rounded-lg h-3 dark:bg-slate-700">
+                        <div id="heapBar" class="bg-blue-600 h-3 rounded-lg dark:bg-blue-500" style="width: 0%"></div>
                     </div>
                 </div>
 
-                <p id="memoryNote" class="mt-4 text-xs text-gray-500">
+                <p id="memoryNote" class="mt-4 text-xs text-gray-500 dark:text-gray-400">
                     Nota: La API de memoria no es estándar y no está disponible en todos los navegadores. Si no aparece información, tu navegador podría no soportarla.
                 </p>
             </section>
         </div>
 
         <!-- Actualización -->
-        <div class="mt-8 text-center text-sm text-gray-600">
+        <div class="mt-8 text-center text-sm text-gray-600 dark:text-gray-400">
             <p>Última actualización: <span id="lastUpdate">—</span></p>
         </div>
     </div>
+    
+    <footer class="bg-white mt-auto w-full border-t border-slate-200 dark:bg-slate-900 dark:border-slate-800 transition-colors duration-300">
+        <div class="container mx-auto px-6 py-4 text-center text-slate-400 text-sm">
+            <p>Versión: <span id="appVersion">1.0.0</span> | Última Actualización: <span id="appDate">N/A</span></p>
+        </div>
+    </footer>
 
     <!-- Scripts página -->
+    <script src="/theme.js"></script>
+    <script src="/app.js"></script>
     <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const appVersionElement = document.getElementById('appVersion');
+            const appDateElement = document.getElementById('appDate');
+            if (typeof PAGE_VERSION !== 'undefined') {
+                appVersionElement.textContent = PAGE_VERSION;
+            }
+            if (typeof ACT_DATE !== 'undefined') {
+                appDateElement.textContent = ACT_DATE;
+            }
+        });
+
         const formatBytes = (bytes) => {
             if (!Number.isFinite(bytes) || bytes < 0) return '—';
             const units = ['B', 'KB', 'MB', 'GB', 'TB'];

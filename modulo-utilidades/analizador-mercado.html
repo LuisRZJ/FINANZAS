@@ -1,1455 +1,797 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visor de Datos mercado - Twelve Data</title>
+    <title>Analizador mercado | FTI</title>
     <meta name="theme-color" content="#2563eb">
     <link rel="icon" href="/pwa/logo-app.png">
-
-
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <!-- Babel para JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+            }
+          }
+        }
+      }
+    </script>
+
+    <script>
+        // Script inline para prevenir flash de tema incorrecto
+        (function() {
+            try {
+                const storedTheme = localStorage.getItem('fti_theme_preference');
+                const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                
+                if (storedTheme === 'dark' || ((!storedTheme || storedTheme === 'system') && systemDark)) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            } catch (e) {
+                console.warn('Error accediendo a localStorage para tema:', e);
+            }
+        })();
+    </script>
+    
+    <!-- Fuentes para Trading (Inter) -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
+        body { font-family: 'Inter', sans-serif; }
+        
+        /* Scrollbar styles - Light Mode default */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-        .dropdown-menu {
-            transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
-        }
-
-        .table-container {
-            max-height: 60vh;
-        }
-
-        .progress-bar {
-            height: 4px;
-            background-color: #3b82f6;
-            transition: width 0.3s ease;
-        }
-
-        .modal {
-            transition: opacity 0.3s ease;
-        }
-
-        .modal-content {
-            transform: scale(0.9);
-            transition: transform 0.3s ease;
-        }
-
-        .modal.active {
-            opacity: 1;
-            pointer-events: all;
-        }
-
-        .modal.active .modal-content {
-            transform: scale(1);
-        }
-
-        .period-option {
-            position: relative;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
-        }
-
-        .period-option.active {
-            border-color: #2563eb;
-            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
-            transform: translateY(-2px);
-        }
-
-        .period-option.active::after {
-            content: 'Seleccionado';
+        /* Scrollbar styles - Dark Mode */
+        .dark ::-webkit-scrollbar-track { background: #1e293b; }
+        .dark ::-webkit-scrollbar-thumb { background: #475569; }
+        .dark ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+        
+        .tooltip:hover::after {
+            content: attr(data-tip);
             position: absolute;
-            top: 10px;
-            right: 12px;
-            background-color: #dbeafe;
-            color: #1d4ed8;
-            font-size: 0.7rem;
-            font-weight: 600;
-            padding: 2px 8px;
-            border-radius: 9999px;
-            opacity: 1;
-            transform: translateY(-4px);
-            transition: opacity 0.15s ease;
-            pointer-events: none;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #ffffff;
+            color: #1e293b;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            white-space: nowrap;
+            border: 1px solid #e2e8f0;
+            z-index: 50;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            font-weight: 500;
+        }
+
+        .dark .tooltip:hover::after {
+            background: #1e293b;
+            color: #94a3b8;
+            border: 1px solid #334155;
+        }
+
+        input::-webkit-calendar-picker-indicator {
+            opacity: 0.5;
+            cursor: pointer;
+        }
+        
+        .dark input::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+        }
+
+        /* Ocultar flechas del input number para un look más limpio */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+          -webkit-appearance: none; 
+          margin: 0; 
+        }
+        input[type=number] {
+          -moz-appearance: textfield;
+        }
+
+        /* Animación para el indicador de vela viva */
+        @keyframes pulse-dot {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            50% { transform: scale(1.1); opacity: 0.4; }
+            100% { transform: scale(0.95); opacity: 0.8; }
+        }
+        .live-dot {
+            animation: pulse-dot 1.5s infinite ease-in-out;
         }
     </style>
 </head>
+<body class="bg-gray-100 text-slate-800 transition-colors duration-300 dark:bg-gray-900 dark:text-gray-100">
+    <div id="root"></div>
 
-<body class="bg-gray-50 text-gray-800 flex items-center justify-center min-h-screen p-4">
+    <!-- Scripts del tema -->
+    <script src="../theme.js"></script>
 
-    <!-- Modal de Confirmación para Múltiples Solicitudes -->
-    <div id="confirmation-modal"
-        class="modal fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50 opacity-0 pointer-events-none">
-        <div class="modal-content bg-white rounded-2xl p-6 md:p-8 max-w-lg w-full mx-4 shadow-xl">
-            <div class="text-center mb-6">
-                <i class="fas fa-exclamation-triangle text-yellow-500 text-4xl mb-4"></i>
-                <h2 class="text-2xl font-bold text-gray-900 mb-2">Solicitud Compleja Detectada</h2>
-                <p class="text-gray-600">Su solicitud excede el límite de 5,000 registros por petición.</p>
-            </div>
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
 
-            <div class="bg-gray-100 rounded-lg p-4 mb-6">
-                <h3 class="font-semibold text-gray-900 mb-2">Resumen de la solicitud:</h3>
-                <div class="space-y-2 text-sm">
-                    <div class="flex justify-between">
-                        <span class="text-gray-600">Período solicitado:</span>
-                        <span id="modal-period" class="text-gray-900 font-medium"></span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-600">Temporalidad:</span>
-                        <span id="modal-interval" class="text-gray-900 font-medium"></span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-600">Registros estimados:</span>
-                        <span id="modal-estimated" class="text-gray-900 font-medium"></span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-600">Solicitudes necesarias:</span>
-                        <span id="modal-requests" class="text-gray-900 font-medium"></span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-600">Tiempo estimado:</span>
-                        <span id="modal-time" class="text-gray-900 font-medium"></span>
-                    </div>
-                </div>
-            </div>
+        // --- ICONOS SVG ---
+        const Search = (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>;
+        const Calendar = (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>;
+        const Clock = (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>;
+        const ChevronLeft = (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="m15 18-6-6 6-6"/></svg>;
+        const ChevronRight = (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="m9 18 6-6-6-6"/></svg>;
+        const AlertTriangle = (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>;
+        const Database = (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>;
+        const CheckCircle2 = (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>;
+        const BarChart3 = (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>;
+        const Scale = (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg>;
+        const Timer = (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><line x1="10" x2="14" y1="2" y2="2"/><line x1="12" x2="15" y1="14" y2="11"/><circle cx="12" cy="14" r="8"/></svg>;
+        const Download = (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>;
 
-            <div class="flex space-x-4">
-                <button id="modal-cancel"
-                    class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-4 rounded-lg transition">
-                    Cancelar
-                </button>
-                <button id="modal-accept"
-                    class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition">
-                    Aceptar
-                </button>
-            </div>
-        </div>
-    </div>
+        const POPULAR_PAIRS = [
+            "BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT", 
+            "ADAUSDT", "DOGEUSDT", "AVAXUSDT", "TRXUSDT", "DOTUSDT", 
+            "MATICUSDT", "LTCUSDT", "LINKUSDT", "BCHUSDT", "XLMUSDT",
+            "NEARUSDT", "ATOMUSDT", "UNIUSDT", "FILUSDT", "HBARUSDT",
+            "PEPEUSDT", "SHIBUSDT", "SUIUSDT", "APTUSDT", "ARBUSDT"
+        ];
 
-    <div class="w-full max-w-6xl mx-auto bg-white rounded-2xl shadow-2xl p-6 md:p-8">
+        const FOREX_PAIRS = [
+            "XAU/USD","EUR/USD","USD/JPY","GBP/USD","AUD/USD","USD/CAD","USD/CHF","NZD/USD",
+            "EUR/JPY","EUR/GBP","GBP/JPY","AUD/JPY","CAD/JPY","CHF/JPY"
+        ];
 
-        <div class="flex justify-between items-center mb-6">
-            <a href="../utilidades.html"
-                class="inline-flex items-center gap-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg transition">
-                <i class="fas fa-arrow-left"></i>
-                Volver a utilidades
-            </a>
-        </div>
+        const BINANCE_WEIGHT_LIMIT_PER_MINUTE = 1200;
+        const WEIGHT_PER_REQUEST = 1;
+        const SAFE_REQUEST_DELAY_MS = 150; 
+        const AVG_LATENCY_PER_REQ_MS = 300; 
 
-        <!-- Encabezado -->
-        <div class="text-center mb-8">
-            <h1 class="text-3xl md:text-4xl font-bold text-gray-900">Visor de Datos de Velas</h1>
-            <p class="text-gray-600 mt-2">Obtén datos históricos y gráficos del mercado, usando Twelve Data</p>
-        </div>
+        const ALLOWED_INTERVALS = ["1m", "5m", "15m", "1h", "4h", "1d", "1w"];
 
-        <!-- Formulario de Entrada -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 items-end">
+        const MarketInspector = () => {
+            const [symbol, setSymbol] = useState("BTCUSDT");
+            const [interval, setInterval] = useState("1h");
+            const [startDate, setStartDate] = useState("");
+            const [endDate, setEndDate] = useState("");
+            const [mode, setMode] = useState("crypto");
+            const [twelveApiKeyInput, setTwelveApiKeyInput] = useState("");
+            const [hasSavedApiKey, setHasSavedApiKey] = useState(false);
+            
+            const [data, setData] = useState([]);
+            const [loading, setLoading] = useState(false);
+            const [progress, setProgress] = useState("");
+            const [error, setError] = useState(null);
+            
+            const [currentPage, setCurrentPage] = useState(1);
+            const [inputPage, setInputPage] = useState(1);
+            const itemsPerPage = 15;
+            const TWELVE_LIMIT_PER_MIN = 8;
+            const twelveRate = React.useRef({ windowStart: 0, count: 0, queue: [] });
+            const [twelveCallsThisMinute, setTwelveCallsThisMinute] = useState(0);
 
-            <!-- Símbolo -->
-            <div>
-                <label for="symbol" class="block text-sm font-medium text-gray-700 mb-2">Símbolo</label>
-                <select id="symbol"
-                    class="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition appearance-none">
-                    <!-- Las opciones se llenarán dinámicamente con JavaScript -->
-                </select>
-            </div>
-
-            <!-- Método para definir el periodo -->
-            <div class="md:col-span-2 lg:col-span-3">
-                <p class="block text-sm font-medium text-gray-700 mb-2">¿Cómo deseas definir el periodo?</p>
-                <p id="method-helper-text" class="text-xs text-gray-500 mb-3">Selecciona una opción para habilitar la
-                    descarga de datos.</p>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <label data-period-option="dates"
-                        class="period-option border border-gray-200 rounded-xl p-4 bg-white cursor-pointer hover:border-blue-400 transition">
-                        <input type="radio" name="period-mode" value="dates" class="sr-only">
-                        <div class="flex items-start gap-3">
-                            <div>
-                                <p class="font-semibold text-gray-900">Por rango de fechas</p>
-                                <p class="text-sm text-gray-600">Indica una fecha de inicio y fin específicas.</p>
-                            </div>
-                            <i class="fas fa-calendar-alt text-blue-500 text-xl"></i>
-                        </div>
-                    </label>
-                    <label data-period-option="last-x"
-                        class="period-option border border-gray-200 rounded-xl p-4 bg-white cursor-pointer hover:border-blue-400 transition">
-                        <input type="radio" name="period-mode" value="last-x" class="sr-only">
-                        <div class="flex items-start gap-3">
-                            <div>
-                                <p class="font-semibold text-gray-900">Últimas velas</p>
-                                <p class="text-sm text-gray-600">Solicita rápidamente las últimas velas disponibles.</p>
-                            </div>
-                            <i class="fas fa-chart-line text-blue-500 text-xl"></i>
-                        </div>
-                    </label>
-                </div>
-            </div>
-
-            <!-- Fecha de Inicio -->
-            <div id="start-date-wrapper" data-period="dates">
-                <label for="start-date" class="block text-sm font-medium text-gray-700 mb-2">Fecha de Inicio</label>
-                <input type="date" id="start-date"
-                    class="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition appearance-none">
-            </div>
-
-            <!-- Fecha de Fin -->
-            <div id="end-date-wrapper" data-period="dates">
-                <label for="end-date" class="block text-sm font-medium text-gray-700 mb-2">Fecha de Fin</label>
-                <input type="date" id="end-date"
-                    class="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition appearance-none">
-            </div>
-
-            <!-- Últimas velas -->
-            <div id="last-candles-wrapper" class="hidden md:col-span-2 lg:col-span-2">
-                <label for="last-candles" class="block text-sm font-medium text-gray-700 mb-2">Cantidad de velas
-                    recientes</label>
-                <input type="number" id="last-candles" min="10" max="20000" step="10" placeholder="Ej: 500"
-                    class="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition appearance-none">
-                <p class="text-xs text-gray-500 mt-2">Se solicitará confirmación cuando el pedido supere los 5,000
-                    datos. Máximo sugerido: 20,000 velas.</p>
-            </div>
-
-            <!-- API Key -->
-            <div class="lg:col-span-1">
-                <label for="api-key" class="block text-sm font-medium text-gray-700 mb-2">Clave API</label>
-                <input type="password" id="api-key" value="a1191162bb5846a48f173ea3465d98d5"
-                    class="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition appearance-none">
-            </div>
-
-            <!-- Selector de Temporalidad -->
-            <div class="relative lg:col-span-1">
-                <label for="interval-button" class="block text-sm font-medium text-gray-700 mb-2">Temporalidad</label>
-                <button id="interval-button"
-                    class="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-lg p-3 text-left flex justify-between items-center focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
-                    <span id="selected-interval-text">1 hora</span>
-                    <i class="fas fa-chevron-down text-gray-500"></i>
-                </button>
-                <div id="dropdown-menu"
-                    class="dropdown-menu absolute mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-xl z-10 hidden opacity-0 transform scale-95">
-                    <a href="#" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-t-lg" data-value="1min"
-                        data-text="1 minuto">1 minuto</a>
-                    <a href="#" class="block px-4 py-2 text-gray-700 hover:bg-gray-100" data-value="5min"
-                        data-text="5 minutos">5 minutos</a>
-                    <a href="#" class="block px-4 py-2 text-gray-700 hover:bg-gray-100" data-value="15min"
-                        data-text="15 minutos">15 minutos</a>
-                    <a href="#" class="block px-4 py-2 text-gray-700 hover:bg-gray-100" data-value="30min"
-                        data-text="30 minutos">30 minutos</a>
-                    <a href="#" class="block px-4 py-2 text-gray-700 hover:bg-gray-100" data-value="45min"
-                        data-text="45 minutos">45 minutos</a>
-                    <a href="#" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 bg-blue-100 text-blue-700"
-                        data-value="1h" data-text="1 hora">1 hora</a>
-                    <a href="#" class="block px-4 py-2 text-gray-700 hover:bg-gray-100" data-value="2h"
-                        data-text="2 horas">2 horas</a>
-                    <a href="#" class="block px-4 py-2 text-gray-700 hover:bg-gray-100" data-value="4h"
-                        data-text="4 horas">4 horas</a>
-                    <a href="#" class="block px-4 py-2 text-gray-700 hover:bg-gray-100" data-value="1day"
-                        data-text="1 día">1 día</a>
-                    <a href="#" class="block px-4 py-2 text-gray-700 hover:bg-gray-100" data-value="1week"
-                        data-text="1 semana">1 semana</a>
-                    <a href="#" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-b-lg" data-value="1month"
-                        data-text="1 mes">1 mes</a>
-                </div>
-            </div>
-
-            <!-- Botón de Obtener Datos -->
-            <div class="lg:col-span-1">
-                <button id="fetch-button" disabled
-                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 flex items-center justify-center disabled:cursor-not-allowed disabled:opacity-60">
-                    <span id="button-text">Obtener Datos</span>
-                    <i id="loader" class="fas fa-spinner fa-spin ml-2 hidden"></i>
-                </button>
-
-                <button id="cancel-button"
-                    class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 flex items-center justify-center mt-2 hidden">
-                    <span id="cancel-button-text">Cancelar</span>
-                    <i class="fas fa-times ml-2"></i>
-                </button>
-            </div>
-        </div>
-
-        <!-- Barra de Progreso -->
-        <div id="progress-container" class="hidden mb-4">
-            <div class="flex justify-between text-sm text-gray-600 mb-1">
-                <span id="progress-text">Cargando datos...</span>
-                <span id="progress-percentage">0%</span>
-            </div>
-            <div class="w-full bg-gray-200 rounded-full h-2">
-                <div id="progress-bar" class="progress-bar h-2 rounded-full" style="width: 0%"></div>
-            </div>
-            <!-- Información de solicitudes múltiples -->
-            <div id="multi-request-info" class="mt-2 text-xs text-gray-500 hidden">
-                <div class="flex justify-between">
-                    <span id="request-progress">Solicitud 1 de 1</span>
-                    <span id="next-request-timer"></span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Área de Mensajes -->
-        <div id="message-area" class="text-center p-4 mb-4 rounded-lg hidden"></div>
-
-        <!-- Contenedor de Gráfico y Tabla de Resultados -->
-        <div id="results-container" class="hidden">
-            <h2 class="text-2xl font-bold text-gray-900 mb-4">Resultados para <span id="result-symbol"
-                    class="text-blue-600"></span></h2>
-
-            <!-- Información de datos cargados -->
-            <div class="flex justify-between items-center mb-4 text-sm text-gray-600">
-                <div>
-                    <span id="data-count">0</span> registros cargados
-                    <span id="data-range" class="ml-4"></span>
-                </div>
-                <div class="flex items-center space-x-2">
-                    <span>Mostrar:</span>
-                    <select id="page-size" class="bg-gray-50 border border-gray-300 text-gray-900 rounded p-1">
-                        <option value="50">50 filas</option>
-                        <option value="100" selected>100 filas</option>
-                        <option value="200">200 filas</option>
-                        <option value="500">500 filas</option>
-                    </select>
-                    <button id="download-button" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-3 rounded hidden">Descargar CSV</button>
-                </div>
-            </div>
-
-            <!-- Controles de paginación -->
-            <div id="pagination-controls" class="flex justify-between items-center mb-4 hidden">
-                <button id="prev-page"
-                    class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded disabled:opacity-50">
-                    <i class="fas fa-chevron-left mr-2"></i>Anterior
-                </button>
-                <span id="page-info" class="text-gray-700">Página 1 de 1</span>
-                <button id="next-page"
-                    class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded disabled:opacity-50">
-                    Siguiente<i class="fas fa-chevron-right ml-2"></i>
-                </button>
-            </div>
-
-            <!-- Contenedor del Gráfico -->
-            <div id="chart-container" class="mb-8 bg-white border border-gray-200 p-4 rounded-lg"></div>
-
-            <!-- Tabla de Resultados -->
-            <div class="table-container overflow-y-auto bg-white border border-gray-200 rounded-lg">
-                <table class="w-full text-sm text-left text-gray-600">
-                    <thead class="text-xs text-gray-700 uppercase bg-gray-100 sticky top-0 backdrop-blur-sm">
-                        <tr>
-                            <th scope="col" class="px-6 py-3">Fecha y Hora</th>
-                            <th scope="col" class="px-6 py-3 text-right">Apertura</th>
-                            <th scope="col" class="px-6 py-3 text-right">Máximo</th>
-                            <th scope="col" class="px-6 py-3 text-right">Mínimo</th>
-                            <th scope="col" class="px-6 py-3 text-right">Cierre</th>
-                        </tr>
-                    </thead>
-                    <tbody id="results-body">
-                        <!-- Las filas de datos se insertarán aquí -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // Elementos del DOM
-            const apiKeyInput = document.getElementById('api-key');
-            const symbolInput = document.getElementById('symbol');
-            const startDateInput = document.getElementById('start-date');
-            const endDateInput = document.getElementById('end-date');
-            const startDateWrapper = document.getElementById('start-date-wrapper');
-            const endDateWrapper = document.getElementById('end-date-wrapper');
-            const lastCandlesWrapper = document.getElementById('last-candles-wrapper');
-            const lastCandlesInput = document.getElementById('last-candles');
-            const methodHelperText = document.getElementById('method-helper-text');
-            const periodOptions = document.querySelectorAll('.period-option');
-            const periodModeRadios = document.querySelectorAll('input[name="period-mode"]');
-            const intervalButton = document.getElementById('interval-button');
-            const dropdownMenu = document.getElementById('dropdown-menu');
-            const selectedIntervalText = document.getElementById('selected-interval-text');
-
-            const fetchButton = document.getElementById('fetch-button');
-            const cancelButton = document.getElementById('cancel-button');
-            const buttonText = document.getElementById('button-text');
-            const loader = document.getElementById('loader');
-            const messageArea = document.getElementById('message-area');
-            const resultsContainer = document.getElementById('results-container');
-            const chartContainer = document.getElementById('chart-container');
-            const resultsBody = document.getElementById('results-body');
-            const resultSymbol = document.getElementById('result-symbol');
-            const progressContainer = document.getElementById('progress-container');
-            const progressBar = document.getElementById('progress-bar');
-            const progressText = document.getElementById('progress-text');
-            const progressPercentage = document.getElementById('progress-percentage');
-            const dataCount = document.getElementById('data-count');
-            const dataRange = document.getElementById('data-range');
-            const pageSizeSelect = document.getElementById('page-size');
-            const paginationControls = document.getElementById('pagination-controls');
-            const prevPageButton = document.getElementById('prev-page');
-            const nextPageButton = document.getElementById('next-page');
-            const pageInfo = document.getElementById('page-info');
-            const multiRequestInfo = document.getElementById('multi-request-info');
-            const requestProgress = document.getElementById('request-progress');
-            const nextRequestTimer = document.getElementById('next-request-timer');
-            const downloadButton = document.getElementById('download-button');
-
-            // Elementos del modal
-            const confirmationModal = document.getElementById('confirmation-modal');
-            const modalPeriod = document.getElementById('modal-period');
-            const modalInterval = document.getElementById('modal-interval');
-            const modalEstimated = document.getElementById('modal-estimated');
-            const modalRequests = document.getElementById('modal-requests');
-            const modalTime = document.getElementById('modal-time');
-            const modalCancel = document.getElementById('modal-cancel');
-            const modalAccept = document.getElementById('modal-accept');
-
-            // Estado de la aplicación
-            let selectedInterval = '1h';
-            let chart = null; // Variable para mantener la instancia del gráfico
-            let currentData = []; // Almacena todos los datos obtenidos
-            let currentPage = 1;
-            let pageSize = 100;
-            let totalPages = 1;
-            let abortController = null; // Para cancelar solicitudes fetch
-            let requestQueue = []; // Cola de solicitudes para múltiples peticiones
-            let currentRequestIndex = 0;
-            let totalRequests = 1;
-            let requestTimer = null; // Temporizador para controlar el rate limiting
-            let currentSymbol = 'EUR/USD'; // Para almacenar el símbolo actual
-            let periodMode = null;
-            let requestContext = null;
-            let isFetching = false;
-
-            const intervalDurationsInMinutes = {
-                '1min': 1,
-                '5min': 5,
-                '15min': 15,
-                '30min': 30,
-                '45min': 45,
-                '1h': 60,
-                '2h': 120,
-                '4h': 240,
-                '1day': 1440,
-                '1week': 10080,
-                '1month': 43200
-            };
-
-            // --- Lista de Símbolos ---
-            const symbols = {
-                'Forex - Majors': [
-                    'EUR/USD', 'USD/JPY', 'GBP/USD', 'USD/CHF', 'AUD/USD', 'USD/CAD', 'NZD/USD'
-                ],
-                'Forex - Minors': [
-                    'EUR/GBP', 'EUR/AUD', 'EUR/CAD', 'EUR/CHF', 'EUR/JPY', 'EUR/NZD',
-                    'GBP/AUD', 'GBP/CAD', 'GBP/CHF', 'GBP/JPY', 'GBP/NZD',
-                    'AUD/CAD', 'AUD/CHF', 'AUD/JPY', 'AUD/NZD',
-                    'CAD/CHF', 'CAD/JPY', 'CHF/JPY', 'NZD/CAD', 'NZD/CHF', 'NZD/JPY'
-                ],
-                'Criptomonedas': [
-                    'BTC/USD', 'ETH/USD', 'XRP/USD', 'SOL/USD', 'BNB/USD', 'ADA/USD', 'DOGE/USD',
-                    'DOT/USD', 'MATIC/USD', 'LTC/USD', 'TRX/USD', 'SHIB/USD', 'AVAX/USD', 'LINK/USD',
-                    'UNI/USD', 'XLM/USD', 'ATOM/USD', 'XMR/USD', 'ETC/USD', 'BCH/USD'
-                ],
-                'Materias Primas': [
-                    'XAU/USD'
-                ]
-            };
-
-            // Función para poblar el selector de símbolos
-            function populateSymbolSelector() {
-                const symbolSelect = document.getElementById('symbol');
-                symbolSelect.innerHTML = '';
-
-                for (const [groupName, groupSymbols] of Object.entries(symbols)) {
-                    const optgroup = document.createElement('optgroup');
-                    optgroup.label = groupName;
-                    optgroup.className = "font-bold text-gray-900 bg-gray-100"; // Estilo para el grupo
-
-                    groupSymbols.forEach(sym => {
-                        const option = document.createElement('option');
-                        option.value = sym;
-                        option.textContent = sym;
-                        if (sym === 'EUR/USD') option.selected = true;
-                        optgroup.appendChild(option);
-                    });
-
-                    symbolSelect.appendChild(optgroup);
-                }
-            }
-
-            // Inicializar selector
-            populateSymbolSelector();
-
-            // --- Lógica del selector de temporalidad pulido ---
-            intervalButton.addEventListener('click', () => {
-                const isHidden = dropdownMenu.classList.contains('hidden');
-                if (isHidden) {
-                    dropdownMenu.classList.remove('hidden');
-                    setTimeout(() => {
-                        dropdownMenu.classList.remove('opacity-0', 'scale-95');
-                    }, 10);
-                } else {
-                    dropdownMenu.classList.add('opacity-0', 'scale-95');
-                    setTimeout(() => {
-                        dropdownMenu.classList.add('hidden');
-                    }, 200);
-                }
-            });
-
-            dropdownMenu.addEventListener('click', (e) => {
-                e.preventDefault();
-                if (e.target.tagName === 'A') {
-                    selectedInterval = e.target.dataset.value;
-                    selectedIntervalText.textContent = e.target.dataset.text;
-                    dropdownMenu.querySelectorAll('a').forEach(a => {
-                        a.classList.remove('bg-blue-100', 'text-blue-700');
-                        a.classList.add('text-gray-700');
-                    });
-                    e.target.classList.remove('text-gray-700');
-                    e.target.classList.add('bg-blue-100', 'text-blue-700');
-                    intervalButton.click();
-                }
-            });
-
-            document.addEventListener('click', (e) => {
-                if (!intervalButton.contains(e.target) && !dropdownMenu.contains(e.target)) {
-                    if (!dropdownMenu.classList.contains('hidden')) {
-                        dropdownMenu.classList.add('opacity-0', 'scale-95');
-                        setTimeout(() => {
-                            dropdownMenu.classList.add('hidden');
-                        }, 200);
-                    }
-                }
-            });
-
-            // --- Lógica para obtener datos ---
-            const today = new Date();
-            const sevenDaysAgo = new Date();
-            sevenDaysAgo.setDate(today.getDate() - 7);
-            endDateInput.value = today.toISOString().split('T')[0];
-            startDateInput.value = sevenDaysAgo.toISOString().split('T')[0];
-
-            fetchButton.addEventListener('click', checkAndFetchData);
-            cancelButton.addEventListener('click', cancelFetch);
-            pageSizeSelect.addEventListener('change', handlePageSizeChange);
-            prevPageButton.addEventListener('click', goToPrevPage);
-            nextPageButton.addEventListener('click', goToNextPage);
-            modalCancel.addEventListener('click', closeModal);
-            modalAccept.addEventListener('click', acceptMultipleRequests);
-            downloadButton.addEventListener('click', downloadCSV);
-
-            periodOptions.forEach(option => {
-                option.addEventListener('click', () => {
-                    selectPeriodMode(option.dataset.periodOption);
-                });
-            });
-
-            periodModeRadios.forEach(radio => {
-                radio.addEventListener('change', (event) => {
-                    selectPeriodMode(event.target.value);
-                });
-            });
-
-            updateFetchAvailability();
-            selectPeriodMode('dates');
-
-            function selectPeriodMode(mode) {
-                if (isFetching) {
-                    return;
-                }
-
-                periodMode = mode;
-                requestContext = null;
-
-                periodOptions.forEach(option => {
-                    const isActive = option.dataset.periodOption === mode;
-                    option.classList.toggle('active', isActive);
-                    const radio = option.querySelector('input[name="period-mode"]');
-                    if (radio) {
-                        radio.checked = isActive;
-                    }
-                });
-
-                if (mode === 'dates') {
-                    startDateWrapper.classList.remove('hidden');
-                    endDateWrapper.classList.remove('hidden');
-                    lastCandlesWrapper.classList.add('hidden');
-                    lastCandlesInput.value = '';
-                    if (methodHelperText) {
-                        methodHelperText.textContent = 'Introduce una fecha de inicio y de fin para definir el rango exacto.';
-                    }
-                } else if (mode === 'last-x') {
-                    startDateWrapper.classList.add('hidden');
-                    endDateWrapper.classList.add('hidden');
-                    lastCandlesWrapper.classList.remove('hidden');
-                    if (methodHelperText) {
-                        methodHelperText.textContent = 'Ingresa la cantidad de velas recientes que deseas solicitar.';
-                    }
-                    lastCandlesInput.focus();
-                }
-
-                updateFetchAvailability();
-            }
-
-            function updateFetchAvailability() {
-                const canRequest = Boolean(periodMode) && !isFetching;
-                fetchButton.disabled = !canRequest;
-                fetchButton.classList.toggle('cursor-not-allowed', !canRequest);
-                fetchButton.classList.toggle('opacity-75', !canRequest);
-            }
-
-            function formatDateOnly(date) {
-                const year = date.getFullYear();
-                const month = String(date.getMonth() + 1).padStart(2, '0');
-                const day = String(date.getDate()).padStart(2, '0');
-                return `${year}-${month}-${day}`;
-            }
-
-            function formatDateTimeString(date) {
-                const hours = String(date.getHours()).padStart(2, '0');
-                const minutes = String(date.getMinutes()).padStart(2, '0');
-                const seconds = String(date.getSeconds()).padStart(2, '0');
-                return `${formatDateOnly(date)} ${hours}:${minutes}:${seconds}`;
-            }
-
-            function calculateRangeForLastCandles(count, interval) {
-                const safeCount = Math.max(count, 1);
-                const minutesPerInterval = intervalDurationsInMinutes[interval] || 60;
-                const now = new Date();
-                const startMillis = now.getTime() - (safeCount * minutesPerInterval * 60 * 1000);
-                const startDate = new Date(startMillis);
-
-                return {
-                    startDate: formatDateOnly(startDate),
-                    endDate: formatDateOnly(now),
-                    startDateTime: formatDateTimeString(startDate),
-                    endDateTime: formatDateTimeString(now)
-                };
-            }
-
-            function getPeriodSummary() {
-                if (!requestContext) {
-                    return 'Periodo sin definir';
-                }
-
-                if (requestContext.mode === 'last-x') {
-                    const candlesText = requestContext.lastCandles?.toLocaleString?.() || '0';
-                    return `Últimas ${candlesText} velas (${requestContext.startDate} a ${requestContext.endDate})`;
-                }
-
-                return `${requestContext.startDate} a ${requestContext.endDate}`;
-            }
-
-            // Función para calcular el número estimado de registros
-            function calculateEstimatedRecords(startDate, endDate, interval) {
-                const start = new Date(startDate);
-                const end = new Date(endDate);
-                const diffTime = Math.abs(end - start);
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-                // Estimaciones por intervalo
-                const recordsPerDay = {
-                    '1min': 1440,   // 24 horas * 60 minutos
-                    '5min': 288,    // 24 horas * 12 (5-min intervals)
-                    '15min': 96,    // 24 horas * 4 (15-min intervals)
-                    '30min': 48,    // 24 horas * 2 (30-min intervals)
-                    '45min': 32,    // 24 horas * 1.33 (45-min intervals)
-                    '1h': 24,       // 24 horas
-                    '2h': 12,       // 24 horas / 2
-                    '4h': 6,        // 24 horas / 4
-                    '1day': 1,      // 1 por día
-                    '1week': 0.142, // Aprox. 1 por semana (1/7)
-                    '1month': 0.033 // Aprox. 1 por mes (1/30)
+            useEffect(() => {
+                const end = new Date();
+                const start = new Date();
+                start.setDate(end.getDate() - 3); 
+                
+                const toLocalISOString = (date) => {
+                    const pad = (num) => (num < 10 ? '0' + num : num);
+                    return date.getFullYear() +
+                        '-' + pad(date.getMonth() + 1) +
+                        '-' + pad(date.getDate()) +
+                        'T' + pad(date.getHours()) +
+                        ':' + pad(date.getMinutes());
                 };
 
-                const recordsPerDayForInterval = recordsPerDay[interval] || 24;
-                const estimatedRecords = Math.ceil(diffDays * recordsPerDayForInterval);
+                setEndDate(toLocalISOString(end));
+                setStartDate(toLocalISOString(start));
+            }, []);
 
-                return estimatedRecords;
-            }
+            useEffect(() => {
+                setInputPage(currentPage);
+            }, [currentPage]);
 
-            // Función para calcular cuántas solicitudes se necesitan
-            function calculateRequiredRequests(estimatedRecords) {
-                const maxRecordsPerRequest = 5000;
-                return Math.ceil(estimatedRecords / maxRecordsPerRequest);
-            }
+            useEffect(() => {
+                const stored = localStorage.getItem('fti_twelve_api_key');
+                setHasSavedApiKey(!!stored);
+            }, []);
 
-            // Función para calcular el tiempo estimado
-            function calculateEstimatedTime(requests) {
-                // 8 solicitudes por minuto = 1 solicitud cada 7.5 segundos
-                const requestsPerMinute = 8;
-                const secondsPerRequest = 60 / requestsPerMinute;
-
-                // Tiempo estimado en segundos
-                const estimatedSeconds = requests * secondsPerRequest;
-
-                if (estimatedSeconds < 60) {
-                    return `~${Math.ceil(estimatedSeconds)} segundos`;
+            const estimates = useMemo(() => {
+                if (!startDate || !endDate) return { candles: 0, weight: 0, timeMs: 0, timeStr: "0s" };
+                const start = new Date(startDate).getTime();
+                const end = new Date(endDate).getTime();
+                if (start >= end) return { candles: 0, weight: 0, timeMs: 0, timeStr: "0s" };
+                const unit = interval.slice(-1);
+                const value = parseInt(interval.slice(0, -1));
+                let multiplier = 60 * 1000;
+                if (unit === 'm') multiplier = 60 * 1000;
+                else if (unit === 'h') multiplier = 60 * 60 * 1000;
+                else if (unit === 'd') multiplier = 24 * 60 * 60 * 1000;
+                else if (unit === 'w') multiplier = 7 * 24 * 60 * 60 * 1000;
+                else if (unit === 'M') multiplier = 30 * 24 * 60 * 60 * 1000;
+                const msPerCandle = value * multiplier;
+                const diffMs = end - start;
+                const totalCandles = Math.ceil(diffMs / msPerCandle);
+                if (mode === 'crypto') {
+                    const totalRequests = Math.ceil(totalCandles / 1000);
+                    const totalWeight = totalRequests * WEIGHT_PER_REQUEST;
+                    const msPerRequestTotal = SAFE_REQUEST_DELAY_MS + AVG_LATENCY_PER_REQ_MS;
+                    const totalTimeMs = totalRequests * msPerRequestTotal;
+                    let timeStr = "";
+                    if (totalTimeMs < 1000) timeStr = "< 1s"; else if (totalTimeMs < 60000) timeStr = `~${Math.ceil(totalTimeMs / 1000)}s`; else { const minutes = Math.floor(totalTimeMs / 60000); const seconds = Math.ceil((totalTimeMs % 60000) / 1000); timeStr = `~${minutes}m ${seconds}s`; }
+                    return { candles: totalCandles, weight: totalWeight, timeMs: totalTimeMs, timeStr };
                 } else {
-                    return `~${Math.ceil(estimatedSeconds / 60)} minutos`;
+                    const estimatedRequests = 1;
+                    const totalTimeMs = AVG_LATENCY_PER_REQ_MS * estimatedRequests;
+                    let timeStr = "";
+                    if (totalTimeMs < 1000) timeStr = "< 1s"; else if (totalTimeMs < 60000) timeStr = `~${Math.ceil(totalTimeMs / 1000)}s`; else { const minutes = Math.floor(totalTimeMs / 60000); const seconds = Math.ceil((totalTimeMs % 60000) / 1000); timeStr = `~${minutes}m ${seconds}s`; }
+                    return { candles: totalCandles, weight: 0, timeMs: totalTimeMs, timeStr };
                 }
-            }
-
-            // Función para dividir el rango de fechas en múltiples solicitudes
-            function splitDateRange(startDateTime, endDateTime, numRequests) {
-                const start = new Date(startDateTime);
-                const end = new Date(endDateTime);
-                const totalTime = end - start;
-                const segmentTime = totalTime / numRequests;
-
-                const segments = [];
-                for (let i = 0; i < numRequests; i++) {
-                    const segmentStart = new Date(start.getTime() + (i * segmentTime));
-                    const segmentEnd = new Date(start.getTime() + ((i + 1) * segmentTime));
-
-                    // Asegurarse de que el último segmento termine en la fecha final exacta
-                    if (i === numRequests - 1) {
-                        segments.push({
-                            start: formatDateOnly(segmentStart),
-                            end: formatDateOnly(end),
-                            startDateTime: formatDateTimeString(segmentStart),
-                            endDateTime: formatDateTimeString(end)
-                        });
-                    } else {
-                        segments.push({
-                            start: formatDateOnly(segmentStart),
-                            end: formatDateOnly(segmentEnd),
-                            startDateTime: formatDateTimeString(segmentStart),
-                            endDateTime: formatDateTimeString(segmentEnd)
-                        });
-                    }
-                }
-
-                return segments;
-            }
-
-            // Función para mostrar el modal de confirmación
-            function showConfirmationModal(estimatedRecords, requiredRequests, estimatedTime) {
-                modalPeriod.textContent = getPeriodSummary();
-                modalInterval.textContent = selectedIntervalText.textContent;
-                modalEstimated.textContent = estimatedRecords.toLocaleString();
-                modalRequests.textContent = requiredRequests;
-
-                modalTime.textContent = estimatedTime;
-
-                confirmationModal.classList.add('active');
-            }
-
-            // Función para cerrar el modal
-            function closeModal() {
-                confirmationModal.classList.remove('active');
-                setLoading(false);
-            }
-
-            // Función para aceptar múltiples solicitudes
-            function acceptMultipleRequests() {
-                closeModal();
-                executeMultipleRequests();
-            }
-
-            // Función para verificar y obtener datos
-            function checkAndFetchData() {
-                setLoading(true);
-                messageArea.classList.add('hidden');
-                resultsContainer.classList.add('hidden');
-                resultsBody.innerHTML = '';
-                chartContainer.innerHTML = ''; // Limpiar gráfico anterior
-                progressContainer.classList.remove('hidden');
-                updateProgress(0, 'Calculando requisitos de datos...');
-                downloadButton.classList.add('hidden');
-
-                const apiKey = apiKeyInput.value.trim();
-                const symbol = symbolInput.value.trim().toUpperCase();
-                const startDate = startDateInput.value;
-                const endDate = endDateInput.value;
-                const lastCandlesValue = parseInt(lastCandlesInput.value, 10);
-
-                if (!periodMode) {
-                    showMessage('Selecciona cómo deseas definir el periodo antes de continuar.', 'warning');
-                    setLoading(false);
-                    progressContainer.classList.add('hidden');
-                    return;
-                }
-
-                if (!apiKey || !symbol || !selectedInterval) {
-                    showMessage('Por favor, completa todos los campos obligatorios.', 'error');
-                    setLoading(false);
-                    progressContainer.classList.add('hidden');
-                    return;
-                }
-
-                // Guardar el símbolo actual
-                currentSymbol = symbol;
-
-                let estimatedRecords = 0;
-
-                if (periodMode === 'dates') {
-                    if (!startDate || !endDate) {
-                        showMessage('Indica la fecha de inicio y fin para continuar.', 'warning');
-                        setLoading(false);
-                        progressContainer.classList.add('hidden');
-                        return;
-                    }
-
-                    if (new Date(startDate) > new Date(endDate)) {
-                        showMessage('La fecha de inicio no puede ser posterior a la fecha de fin.', 'warning');
-                        setLoading(false);
-                        progressContainer.classList.add('hidden');
-                        return;
-                    }
-
-                    requestContext = {
-                        mode: 'dates',
-                        startDate,
-                        endDate,
-                        startDateTime: `${startDate} 00:00:00`,
-                        endDateTime: `${endDate} 23:59:59`
-                    };
-
-                    estimatedRecords = calculateEstimatedRecords(startDate, endDate, selectedInterval);
-                } else {
-                    if (Number.isNaN(lastCandlesValue)) {
-                        showMessage('Ingresa cuántas velas recientes deseas solicitar.', 'warning');
-                        setLoading(false);
-                        progressContainer.classList.add('hidden');
-                        return;
-                    }
-
-                    if (lastCandlesValue < 10) {
-                        showMessage('La solicitud mínima es de 10 velas.', 'warning');
-                        setLoading(false);
-                        progressContainer.classList.add('hidden');
-                        return;
-                    }
-
-                    if (lastCandlesValue > 20000) {
-                        showMessage('La solicitud máxima recomendada es de 20,000 velas.', 'warning');
-                        setLoading(false);
-                        progressContainer.classList.add('hidden');
-                        return;
-                    }
-
-                    const derivedRange = calculateRangeForLastCandles(lastCandlesValue, selectedInterval);
-                    requestContext = {
-                        mode: 'last-x',
-                        startDate: derivedRange.startDate,
-                        endDate: derivedRange.endDate,
-                        startDateTime: derivedRange.startDateTime,
-                        endDateTime: derivedRange.endDateTime,
-                        lastCandles: lastCandlesValue
-                    };
-
-                    estimatedRecords = lastCandlesValue;
-                }
-
-                requestContext.symbol = currentSymbol;
-                requestContext.interval = selectedInterval;
-
-                const requiredRequests = calculateRequiredRequests(estimatedRecords);
-                const estimatedTime = calculateEstimatedTime(requiredRequests);
-
-                // Si se necesitan múltiples solicitudes, mostrar modal de confirmación
-                if (requiredRequests > 1) {
-                    showConfirmationModal(estimatedRecords, requiredRequests, estimatedTime);
-                } else {
-                    // Solo una solicitud necesaria, proceder directamente
-                    executeSingleRequest();
-                }
-            }
-
-            // Función para ejecutar una sola solicitud
-            async function executeSingleRequest() {
-                if (!requestContext) {
-                    showMessage('Selecciona un periodo válido antes de solicitar datos.', 'warning');
-                    setLoading(false);
-                    progressContainer.classList.add('hidden');
-                    return;
-                }
-
-                updateProgress(10, 'Iniciando solicitud de datos...');
-
-                const apiKey = apiKeyInput.value.trim();
-                const symbol = currentSymbol;
-                const startDateWithTime = requestContext.startDateTime || `${requestContext.startDate} 00:00:00`;
-                const endDateWithTime = requestContext.endDateTime || `${requestContext.endDate} 23:59:59`;
-                const apiUrl = `https://api.twelvedata.com/time_series?symbol=${symbol}&interval=${selectedInterval}&start_date=${startDateWithTime}&end_date=${endDateWithTime}&apikey=${apiKey}`;
-
-                try {
-                    // Crear un nuevo AbortController para esta solicitud
-                    abortController = new AbortController();
-
-                    updateProgress(30, 'Conectando con el servidor...');
-
-                    const response = await fetch(apiUrl, { signal: abortController.signal });
-
-                    if (!response.ok) {
-                        throw new Error(`Error HTTP: ${response.status}`);
-                    }
-
-                    updateProgress(50, 'Procesando respuesta...');
-
-                    const data = await response.json();
-
-                    updateProgress(80, 'Organizando datos...');
-
-                    if (data.code === 401) {
-                        showMessage('Error de Autenticación: La clave API no es válida.', 'error');
-                    } else if (data.status === 'error' || !data.values || data.values.length === 0) {
-                        const errorMessage = data.message || 'No se encontraron datos para los criterios seleccionados.';
-                        showMessage(errorMessage, 'warning');
-                    } else {
-                        updateProgress(90, 'Preparando visualización...');
-                        const preparedValues = prepareValuesForMode(data.values);
-                        // Procesar datos en lotes para no bloquear la UI
-                        setTimeout(() => {
-                            processAndDisplayData(preparedValues, symbol);
-                            updateProgress(100, 'Completado');
-                        }, 100);
-                    }
-                } catch (error) {
-                    if (error.name === 'AbortError') {
-                        showMessage('Solicitud cancelada por el usuario.', 'warning');
-                    } else {
-                        console.error('Error al obtener los datos:', error);
-                        showMessage('Ocurrió un error de red. Inténtalo de nuevo.', 'error');
-                    }
-                } finally {
-                    setTimeout(() => {
-                        setLoading(false);
-                        progressContainer.classList.add('hidden');
-                    }, 500);
-                }
-            }
-
-            // Función para ejecutar múltiples solicitudes
-            async function executeMultipleRequests() {
-                if (!requestContext) {
-                    return;
-                }
-
-                const apiKey = apiKeyInput.value.trim();
-                const symbol = currentSymbol;
-                const baseStartDate = requestContext.startDate;
-                const baseEndDate = requestContext.endDate;
-
-                // Calcular registros estimados y solicitudes necesarias
-                const estimatedRecords = requestContext.mode === 'last-x'
-                    ? requestContext.lastCandles
-                    : calculateEstimatedRecords(baseStartDate, baseEndDate, selectedInterval);
-                const requiredRequests = calculateRequiredRequests(estimatedRecords);
-
-                // Dividir el rango de fechas
-                const dateSegments = splitDateRange(requestContext.startDateTime, requestContext.endDateTime, requiredRequests);
-
-                // Crear cola de solicitudes
-                requestQueue = dateSegments.map((segment, index) => ({
-                    index: index + 1,
-                    startDate: segment.start,
-                    endDate: segment.end,
-                    startDateTime: segment.startDateTime,
-                    endDateTime: segment.endDateTime,
-                    completed: false,
-                    data: null
-                }));
-
-                currentRequestIndex = 0;
-                totalRequests = requiredRequests;
-
-                // Mostrar información de solicitudes múltiples
-                multiRequestInfo.classList.remove('hidden');
-                updateRequestProgress();
-
-                // Iniciar la primera solicitud
-                executeNextRequest();
-            }
-
-            // Función para ejecutar la siguiente solicitud en la cola
-            async function executeNextRequest() {
-                if (currentRequestIndex >= totalRequests) {
-                    // Todas las solicitudes completadas
-                    multiRequestInfo.classList.add('hidden');
-                    updateProgress(100, 'Todas las solicitudes completadas');
-
-                    // Combinar todos los datos
-                    let allData = [];
-                    requestQueue.forEach(request => {
-                        if (request.data && request.data.values) {
-                            // IMPORTANTE: Invertir los datos para que estén en orden cronológico
-                            allData.push(...request.data.values.reverse());
-                        }
-                    });
-
-                    // Procesar y mostrar datos combinados
-                    if (allData.length > 0) {
-                        allData = prepareValuesForMode(allData);
-                        processAndDisplayData(allData, currentSymbol);
-                    } else {
-                        showMessage('No se pudieron recuperar datos de ninguna solicitud.', 'warning');
-                    }
-
-                    setLoading(false);
-                    progressContainer.classList.add('hidden');
-                    return;
-                }
-
-                const currentRequest = requestQueue[currentRequestIndex];
-                updateRequestProgress();
-
-                const apiKey = apiKeyInput.value.trim();
-                const symbol = currentSymbol;
-
-                const startDateWithTime = currentRequest.startDateTime || `${currentRequest.startDate} 00:00:00`;
-                const endDateWithTime = currentRequest.endDateTime || `${currentRequest.endDate} 23:59:59`;
-                const apiUrl = `https://api.twelvedata.com/time_series?symbol=${symbol}&interval=${selectedInterval}&start_date=${startDateWithTime}&end_date=${endDateWithTime}&apikey=${apiKey}`;
-
-                try {
-                    // Crear un nuevo AbortController para esta solicitud
-                    abortController = new AbortController();
-
-                    updateProgress(
-                        Math.floor((currentRequestIndex / totalRequests) * 100),
-                        `Solicitud ${currentRequestIndex + 1} de ${totalRequests}: Conectando con el servidor...`
-                    );
-
-                    const response = await fetch(apiUrl, { signal: abortController.signal });
-
-                    if (!response.ok) {
-                        throw new Error(`Error HTTP: ${response.status}`);
-                    }
-
-                    updateProgress(
-                        Math.floor(((currentRequestIndex + 0.5) / totalRequests) * 100),
-                        `Solicitud ${currentRequestIndex + 1} de ${totalRequests}: Procesando respuesta...`
-                    );
-
-                    const data = await response.json();
-
-                    // Marcar solicitud como completada
-                    currentRequest.completed = true;
-                    currentRequest.data = data;
-
-                    updateProgress(
-                        Math.floor(((currentRequestIndex + 1) / totalRequests) * 100),
-                        `Solicitud ${currentRequestIndex + 1} de ${totalRequests}: Completada`
-                    );
-
-                    // Esperar antes de la siguiente solicitud (rate limiting)
-                    if (currentRequestIndex < totalRequests - 1) {
-                        const waitTime = 7500; // 7.5 segundos entre solicitudes (8 por minuto)
-                        startTimer(waitTime);
-
-                        await new Promise(resolve => {
-                            setTimeout(resolve, waitTime);
-                        });
-
-                        clearTimer();
-                    }
-
-                    // Pasar a la siguiente solicitud
-                    currentRequestIndex++;
-                    executeNextRequest();
-
-                } catch (error) {
-                    if (error.name === 'AbortError') {
-                        showMessage('Solicitud cancelada por el usuario.', 'warning');
-                        multiRequestInfo.classList.add('hidden');
-                        setLoading(false);
-                        progressContainer.classList.add('hidden');
-                    } else {
-                        console.error(`Error en solicitud ${currentRequestIndex + 1}:`, error);
-
-                        // Intentar continuar con la siguiente solicitud
-                        currentRequest.completed = false;
-                        currentRequestIndex++;
-
-                        if (currentRequestIndex < totalRequests) {
-                            showMessage(`Error en solicitud ${currentRequestIndex}. Continuando con la siguiente...`, 'warning');
-                            executeNextRequest();
-                        } else {
-                            showMessage('Error en la última solicitud. Procesando datos recuperados...', 'warning');
-                            executeNextRequest(); // Para procesar los datos que sí se recuperaron
-                        }
-                    }
-                }
-            }
-
-            // Función para actualizar el progreso de solicitudes múltiples
-            function updateRequestProgress() {
-                requestProgress.textContent = `Solicitud ${currentRequestIndex + 1} de ${totalRequests}`;
-            }
-
-            // Función para iniciar el temporizador de espera
-            function startTimer(duration) {
-                let timeLeft = duration / 1000; // Convertir a segundos
-                nextRequestTimer.textContent = `Siguiente solicitud en ${timeLeft}s`;
-
-                requestTimer = setInterval(() => {
-                    timeLeft--;
-                    nextRequestTimer.textContent = `Siguiente solicitud en ${timeLeft}s`;
-
-                    if (timeLeft <= 0) {
-                        clearTimer();
-                    }
-                }, 1000);
-            }
-
-            // Función para limpiar el temporizador
-            function clearTimer() {
-                if (requestTimer) {
-                    clearInterval(requestTimer);
-                    requestTimer = null;
-                    nextRequestTimer.textContent = '';
-                }
-            }
-
-            function cancelFetch() {
-                if (abortController) {
-                    abortController.abort();
-                }
-                clearTimer();
-                setLoading(false);
-                progressContainer.classList.add('hidden');
-                multiRequestInfo.classList.add('hidden');
-            }
-
-            function updateProgress(percent, text) {
-                progressBar.style.width = `${percent}%`;
-                progressPercentage.textContent = `${percent}%`;
-                progressText.textContent = text;
-            }
-
-            function prepareValuesForMode(values) {
-                if (!requestContext || requestContext.mode !== 'last-x' || !Array.isArray(values)) {
-                    return values;
-                }
-
-                if (values.length <= requestContext.lastCandles) {
-                    return values;
-                }
-
-                const firstDate = new Date(values[0].datetime);
-                const lastDate = new Date(values[values.length - 1].datetime);
-                const isAscending = firstDate <= lastDate;
-
-                if (isAscending) {
-                    return values.slice(-requestContext.lastCandles);
-                }
-
-                return values.slice(0, requestContext.lastCandles);
-            }
-
-            function processAndDisplayData(values, symbol) {
-                // Almacenar todos los datos
-                currentData = values;
-
-                // Actualizar información de datos
-                dataCount.textContent = currentData.length.toLocaleString();
-                resultSymbol.textContent = symbol; // Asegurar que el símbolo se muestre
-
-                if (currentData.length > 0) {
-                    const firstDate = new Date(currentData[0].datetime);
-                    const lastDate = new Date(currentData[currentData.length - 1].datetime);
-                    dataRange.textContent = `${firstDate.toLocaleDateString()} - ${lastDate.toLocaleDateString()}`;
-                }
-
-                // Calcular paginación
-                pageSize = parseInt(pageSizeSelect.value);
-                totalPages = Math.ceil(currentData.length / pageSize);
-                currentPage = 1;
-
-                // Mostrar controles de paginación si hay más de una página
-                if (totalPages > 1) {
-                    paginationControls.classList.remove('hidden');
-                } else {
-                    paginationControls.classList.add('hidden');
-                }
-
-                updatePaginationInfo();
-
-                // Renderizar página actual
-                renderCurrentPage();
-
-                // Renderizar gráfico con datos muestreados para mejor rendimiento
-                renderOptimizedChart(currentData, symbol);
-
-                resultsContainer.classList.remove('hidden');
-                downloadButton.classList.remove('hidden');
-            }
-
-            function renderOptimizedChart(data, symbol) {
-                // Muestrear datos para el gráfico si hay demasiados puntos
-                const maxDataPoints = 500; // Límite de puntos para buen rendimiento
-                let chartData = [];
-
-                if (data.length <= maxDataPoints) {
-                    // Usar todos los datos si son pocos
-                    chartData = data.map(candle => ({
-                        x: new Date(candle.datetime),
-                        y: [
-                            parseFloat(candle.open),
-                            parseFloat(candle.high),
-                            parseFloat(candle.low),
-                            parseFloat(candle.close)
-                        ]
-                    }));
-                } else {
-                    // Muestrear datos para mantener el rendimiento
-                    const sampleRate = Math.ceil(data.length / maxDataPoints);
-                    for (let i = 0; i < data.length; i += sampleRate) {
-                        const candle = data[i];
-                        chartData.push({
-                            x: new Date(candle.datetime),
-                            y: [
-                                parseFloat(candle.open),
-                                parseFloat(candle.high),
-                                parseFloat(candle.low),
-                                parseFloat(candle.close)
-                            ]
-                        });
-                    }
-                }
-
-                renderCandlestickChart(chartData, symbol, data.length > maxDataPoints);
-            }
-
-            function renderCandlestickChart(seriesData, symbol, isSampled = false) {
-                const options = {
-                    series: [{
-                        data: seriesData
-                    }],
-                    chart: {
-                        type: 'candlestick',
-                        height: 450,
-                        background: 'transparent',
-                        toolbar: {
-                            show: true,
-                            tools: {
-                                download: true,
-                                selection: true,
-                                zoom: true,
-                                zoomin: true,
-                                zoomout: true,
-                                pan: true,
-                                reset: true
-                            },
-                        },
-                        zoom: {
-                            enabled: true,
-                            type: 'x',
-                            autoScaleYaxis: true
-                        }
-                    },
-                    title: {
-                        text: `Gráfico de Velas para ${symbol}${isSampled ? ' (datos muestreados)' : ''}`,
-                        align: 'left',
-                        style: {
-                            color: '#374151',
-                            fontSize: '18px'
-                        }
-                    },
-                    xaxis: {
-                        type: 'datetime',
-                        labels: {
-                            style: {
-                                colors: '#6b7280'
-                            }
-                        }
-                    },
-                    yaxis: {
-                        tooltip: {
-                            enabled: true
-                        },
-                        labels: {
-                            style: {
-                                colors: '#6b7280'
-                            }
-                        }
-                    },
-                    grid: {
-                        borderColor: '#e5e7eb'
-                    },
-                    tooltip: {
-                        theme: 'light'
-                    },
-                    plotOptions: {
-                        candlestick: {
-                            colors: {
-                                upward: '#16A34A', // Verde
-                                downward: '#DC2626' // Rojo
-                            }
-                        }
-                    }
-                };
-
-                if (chart) {
-                    chart.destroy();
-                }
-                chart = new ApexCharts(chartContainer, options);
-                chart.render();
-            }
-
-            function setLoading(isLoading) {
-                isFetching = isLoading;
-                if (isLoading) {
-                    buttonText.classList.add('hidden');
-                    loader.classList.remove('hidden');
-                    fetchButton.disabled = true;
-                    fetchButton.classList.add('cursor-not-allowed', 'opacity-75');
-                    cancelButton.classList.remove('hidden');
-                } else {
-                    loader.classList.add('hidden');
-                    buttonText.classList.remove('hidden');
-                    updateFetchAvailability();
-                    cancelButton.classList.add('hidden');
-                }
-            }
-
-            function showMessage(message, type = 'info') {
-                messageArea.textContent = message;
-                messageArea.classList.remove('hidden', 'bg-red-100', 'bg-yellow-100', 'text-red-800', 'text-yellow-800');
-                if (type === 'error') {
-                    messageArea.classList.add('bg-red-100', 'text-red-800');
-                } else if (type === 'warning') {
-                    messageArea.classList.add('bg-yellow-100', 'text-yellow-800');
-                }
-                resultsContainer.classList.add('hidden');
-            }
-
-            function handlePageSizeChange() {
-                pageSize = parseInt(pageSizeSelect.value);
-                totalPages = Math.ceil(currentData.length / pageSize);
-                currentPage = 1;
-                updatePaginationInfo();
-                renderCurrentPage();
-
-                // Mostrar/ocultar controles de paginación
-                if (totalPages > 1) {
-                    paginationControls.classList.remove('hidden');
-                } else {
-                    paginationControls.classList.add('hidden');
-                }
-            }
-
-            function updatePaginationInfo() {
-                pageInfo.textContent = `Página ${currentPage} de ${totalPages}`;
-                prevPageButton.disabled = currentPage === 1;
-                nextPageButton.disabled = currentPage === totalPages;
-            }
-
-            function goToPrevPage() {
-                if (currentPage > 1) {
-                    currentPage--;
-                    updatePaginationInfo();
-                    renderCurrentPage();
-                }
-            }
-
-            function goToNextPage() {
-                if (currentPage < totalPages) {
-                    currentPage++;
-                    updatePaginationInfo();
-                    renderCurrentPage();
-                }
-            }
-
-            function renderCurrentPage() {
-                resultsBody.innerHTML = '';
-
-                const startIndex = (currentPage - 1) * pageSize;
-                const endIndex = Math.min(startIndex + pageSize, currentData.length);
-                const pageData = currentData.slice(startIndex, endIndex);
-
-                pageData.forEach((candle, idx) => {
-                    const row = document.createElement('tr');
-                    row.className = 'bg-white border-b border-gray-200 hover:bg-gray-50';
-                    const utcDate = new Date(candle.datetime);
-                    const localDateTime = utcDate.toLocaleString();
-
-                    const openNum = parseFloat(candle.open);
-                    const highNum = parseFloat(candle.high);
-                    const lowNum = parseFloat(candle.low);
-                    const closeNum = parseFloat(candle.close);
-
-                    const open = openNum.toFixed(5);
-                    const high = highNum.toFixed(5);
-                    const low = lowNum.toFixed(5);
-                    const close = closeNum.toFixed(5);
-
-                    const globalIndex = startIndex + idx;
-                    let closeClass = '';
-                    if (globalIndex > 0) {
-                        const prevCloseNum = parseFloat(currentData[globalIndex - 1].close);
-                        if (!Number.isNaN(prevCloseNum)) {
-                            if (closeNum > prevCloseNum) {
-                                closeClass = 'text-green-600';
-                            } else if (closeNum < prevCloseNum) {
-                                closeClass = 'text-red-600';
-                            } else {
-                                closeClass = 'text-gray-600';
-                            }
-                        }
-                    }
-
-                    row.innerHTML = `
-                        <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">${localDateTime}</td>
-                        <td class="px-6 py-4 text-right">${open}</td>
-                        <td class="px-6 py-4 text-right text-green-600">${high}</td>
-                        <td class="px-6 py-4 text-right text-red-600">${low}</td>
-                        <td class="px-6 py-4 text-right ${closeClass}">${close}</td>
-                    `;
-                    resultsBody.appendChild(row);
+            }, [startDate, endDate, interval, mode]);
+
+            const downloadCSV = () => {
+                if (!data || data.length === 0) return;
+
+                const headers = [
+                    "Date", "Open", "High", "Low", "Close", 
+                    "Volume", "Trades", "Taker Buy Vol", "Taker Sell Vol", 
+                    "Delta", "Buy Pressure %", "Status"
+                ];
+
+                const csvRows = [headers.join(',')];
+                const now = Date.now();
+
+                data.forEach(row => {
+                    const date = new Date(row.time);
+                    const dateStr = date.getFullYear() + "-" + 
+                                   ("0" + (date.getMonth() + 1)).slice(-2) + "-" + 
+                                   ("0" + date.getDate()).slice(-2) + " " + 
+                                   ("0" + date.getHours()).slice(-2) + 
+                                   ("0" + date.getMinutes()).slice(-2) + 
+                                   ("0" + date.getSeconds()).slice(-2);
+                    
+                    const v = (x) => (x === null || x === undefined ? 'N/A' : x);
+                    const bp = row.buyPressure === null || row.buyPressure === undefined ? 'N/A' : Number(row.buyPressure).toFixed(2);
+                    const values = [
+                        dateStr, v(row.open), v(row.high), v(row.low), v(row.close),
+                        v(row.volume), v(row.trades), v(row.takerBuyVol), v(row.takerSellVol),
+                        v(row.delta), bp,
+                        row.isLive ? "Live" : "Closed"
+                    ];
+                    csvRows.push(values.join(','));
                 });
-            }
-            function sanitizeFilePart(text) {
-                return String(text)
-                    .replace(/[\\/:*?"<>|]/g, '')
-                    .replace(/\s+/g, '')
-                    .replace(/\//g, '')
-                    .replace(/,/g, '');
-            }
-            function downloadCSV() {
-                if (!currentData || currentData.length === 0) {
-                    return;
-                }
-                const header = ['Fecha', 'Hora', 'Apertura', 'Máximo', 'Mínimo', 'Cierre'];
-                const rows = [header.join(',')];
-                for (let i = 0; i < currentData.length; i++) {
-                    const candle = currentData[i];
-                    const dt = new Date(candle.datetime);
-                    const dateStr = dt.toLocaleDateString();
-                    const timeStr = dt.toLocaleTimeString();
-                    const open = parseFloat(candle.open).toFixed(5);
-                    const high = parseFloat(candle.high).toFixed(5);
-                    const low = parseFloat(candle.low).toFixed(5);
-                    const close = parseFloat(candle.close).toFixed(5);
-                    rows.push([dateStr, timeStr, open, high, low, close].join(','));
-                }
-                const csvContent = rows.join('\n');
+
+                const csvContent = csvRows.join('\n');
                 const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
                 const url = URL.createObjectURL(blob);
-                let symbolPart = sanitizeFilePart(currentSymbol || symbolInput.value.trim());
-                const intervalPart = sanitizeFilePart(selectedIntervalText.textContent);
-                let periodPart = '';
-                if (requestContext && requestContext.mode === 'last-x') {
-                    periodPart = sanitizeFilePart(`${requestContext.lastCandles}_velas`);
-                } else if (requestContext) {
-                    periodPart = sanitizeFilePart(`${requestContext.startDate}_a_${requestContext.endDate}`);
-                } else {
-                    periodPart = 'periodo';
+                const link = document.createElement('a');
+                const filename = `${symbol}_${interval}_${new Date().toISOString().slice(0,10)}.csv`;
+                
+                link.setAttribute('href', url);
+                link.setAttribute('download', filename);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            };
+
+            const forexIntervalMap = {
+                '1m': '1min',
+                '5m': '5min',
+                '15m': '15min',
+                '1h': '1h',
+                '4h': '4h',
+                '1d': '1day',
+                '1w': '1week'
+            };
+
+            const scheduleTwelveTask = (fn) => {
+                const now = Date.now();
+                const bucket = twelveRate.current;
+                if (bucket.windowStart === 0 || now - bucket.windowStart >= 60000) {
+                    bucket.windowStart = now;
+                    bucket.count = 0;
+                    setTwelveCallsThisMinute(0);
                 }
-                const filename = `${symbolPart}_${intervalPart}_${periodPart}.csv`;
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                setTimeout(() => URL.revokeObjectURL(url), 1000);
-            }
-        });
+                bucket.queue.push(fn);
+                const tryRun = () => {
+                    const n = Date.now();
+                    if (bucket.windowStart === 0 || n - bucket.windowStart >= 60000) {
+                        bucket.windowStart = n;
+                        bucket.count = 0;
+                        setTwelveCallsThisMinute(0);
+                    }
+                    if (bucket.count < TWELVE_LIMIT_PER_MIN && bucket.queue.length > 0) {
+                        const task = bucket.queue.shift();
+                        bucket.count += 1;
+                        setTwelveCallsThisMinute(bucket.count);
+                        task();
+                    } else if (bucket.queue.length > 0) {
+                        const waitMs = 60000 - (n - bucket.windowStart);
+                        setProgress(`Límite TwelveData alcanzado. Esperando ~${Math.ceil(waitMs/1000)}s...`);
+                        setTimeout(tryRun, Math.max(waitMs, 0));
+                    }
+                };
+                tryRun();
+            };
+
+            const fetchForexData = async () => {
+                setLoading(true);
+                setError(null);
+                setData([]);
+                setCurrentPage(1);
+                try {
+                    const startTs = new Date(startDate).getTime();
+                    const endTs = new Date(endDate).getTime();
+                    if (startTs >= endTs) throw new Error("La fecha de inicio debe ser anterior a la final.");
+                    if (!symbol) throw new Error("Escribe un par (ej. EUR/USD).");
+                    const apiKey = localStorage.getItem('fti_twelve_api_key');
+                    if (!apiKey) throw new Error("Ingresa y guarda tu API Key de TwelveData.");
+                    const fmt = (d) => {
+                        const dd = new Date(d);
+                        const pad = (num) => (num < 10 ? '0' + num : num);
+                        const Y = dd.getFullYear();
+                        const M = pad(dd.getMonth() + 1);
+                        const D = pad(dd.getDate());
+                        const h = pad(dd.getHours());
+                        const m = pad(dd.getMinutes());
+                        const s = pad(dd.getSeconds());
+                        return `${Y}-${M}-${D} ${h}:${m}:${s}`;
+                    };
+
+                    if (!ALLOWED_INTERVALS.includes(interval)) {
+                        throw new Error("Temporalidad no permitida. Máximo: 1W.");
+                    }
+
+                    const mapped = forexIntervalMap[interval] || '1h';
+                    const url = `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(symbol)}&interval=${mapped}&start_date=${encodeURIComponent(fmt(startDate))}&end_date=${encodeURIComponent(fmt(endDate))}&order=asc&timezone=UTC&format=JSON&apikey=${apiKey}`;
+                    await new Promise((resolve) => scheduleTwelveTask(async () => {
+                        setProgress(`Solicitando datos TwelveData (${symbol}, ${mapped})...`);
+                        const response = await fetch(url);
+                        if (!response.ok) {
+                            const errData = await response.json().catch(() => ({}));
+                            throw new Error(errData.message || `Error ${response.status}: Verifica el par y tu API Key.`);
+                        }
+                        const json = await response.json();
+                        if (json.status && json.status !== 'ok') {
+                            throw new Error(json.message || 'Respuesta inválida de TwelveData.');
+                        }
+                        const vals = json.values || [];
+                        if (!vals.length) {
+                            setError("No se encontraron datos en este rango de fechas.");
+                            setLoading(false);
+                            setProgress("");
+                            resolve();
+                            return;
+                        }
+                        const formatted = vals.map(v => {
+                            const ts = Date.parse(v.datetime.replace(' ', 'T'));
+                            const vol = v.volume !== undefined ? parseFloat(v.volume) : null;
+                            return {
+                                time: ts,
+                                open: parseFloat(v.open),
+                                high: parseFloat(v.high),
+                                low: parseFloat(v.low),
+                                close: parseFloat(v.close),
+                                volume: isNaN(vol) ? null : vol,
+                                trades: null,
+                                takerBuyVol: null,
+                                takerSellVol: null,
+                                delta: null,
+                                buyPressure: null,
+                                isLive: false
+                            };
+                        });
+                        setData(formatted);
+                        setProgress("Completado ✅");
+                        setLoading(false);
+                        setTimeout(() => { setProgress(""); }, 3000);
+                        resolve();
+                    }));
+                } catch (err) {
+                    setError(err.message);
+                    setLoading(false);
+                    setTimeout(() => { if(!error) setProgress(""); }, 3000);
+                } finally {
+                    setTwelveApiKeyInput("");
+                }
+            };
+
+            const fetchData = async () => {
+                setLoading(true);
+                setError(null);
+                setData([]);
+                setCurrentPage(1);
+                
+                try {
+                    if (mode === 'forex') {
+                        await fetchForexData();
+                        return;
+                    }
+
+                    if (!ALLOWED_INTERVALS.includes(interval)) {
+                        throw new Error("Temporalidad no permitida. Máximo: 1W.");
+                    }
+
+                    const startTs = new Date(startDate).getTime();
+                    let endTs = new Date(endDate).getTime() + 59999;
+                    
+                    if (startTs >= endTs) throw new Error("La fecha de inicio debe ser anterior a la final.");
+                    if (!symbol) throw new Error("Escribe un símbolo (ej. BTCUSDT).");
+
+                    let allCandles = [];
+                    let currentStart = startTs;
+                    let keepFetching = true;
+                    let requestCount = 0;
+                    
+                    const totalExpectedRequests = Math.ceil(estimates.candles / 1000);
+
+                    while (keepFetching) {
+                        requestCount++;
+                        const progressPct = Math.min(Math.round((requestCount / totalExpectedRequests) * 100), 99);
+                        
+                        setProgress(`Petición ${requestCount}/${totalExpectedRequests} (${progressPct}%) | Fecha: ${new Date(currentStart).toLocaleDateString()}`);
+                        
+                        const url = `https://api.binance.com/api/v3/klines?symbol=${symbol.toUpperCase()}&interval=${interval}&startTime=${currentStart}&endTime=${endTs}&limit=1000`;
+                        
+                        const response = await fetch(url);
+                        
+                        if (!response.ok) {
+                             const errData = await response.json().catch(() => ({}));
+                             if(response.status === 429) throw new Error("⛔ Binance API Rate Limit Exceeded. Esperando cooldown.");
+                             throw new Error(errData.msg || `Error ${response.status}: Verifica el símbolo y tu conexión.`);
+                        }
+                        
+                        const klines = await response.json();
+                        
+                        if (!klines || klines.length === 0) {
+                            keepFetching = false;
+                            break;
+                        }
+
+                        const now = Date.now();
+
+                        const formattedChunk = klines.map(k => {
+                            const totalVol = parseFloat(k[5]);
+                            const takerBuyVol = parseFloat(k[9]);
+                            const takerSellVol = totalVol - takerBuyVol;
+                            const delta = takerBuyVol - takerSellVol;
+                            const buyPressure = totalVol > 0 ? (takerBuyVol / totalVol) * 100 : 0;
+                            const closeTime = k[6]; 
+
+                            return {
+                                time: k[0],
+                                open: parseFloat(k[1]),
+                                high: parseFloat(k[2]),
+                                low: parseFloat(k[3]),
+                                close: parseFloat(k[4]),
+                                volume: totalVol,
+                                trades: parseInt(k[8]),
+                                takerBuyVol: takerBuyVol,
+                                takerSellVol: takerSellVol,
+                                delta: delta,
+                                buyPressure: buyPressure,
+                                isLive: closeTime > now 
+                            };
+                        });
+
+                        allCandles = [...allCandles, ...formattedChunk];
+                        
+                        const lastTime = klines[klines.length - 1][0];
+                        currentStart = lastTime + 1;
+
+                        if (currentStart >= endTs) {
+                            keepFetching = false;
+                        } else {
+                            await new Promise(resolve => setTimeout(resolve, SAFE_REQUEST_DELAY_MS));
+                        }
+                    }
+
+                    if (allCandles.length === 0) {
+                        setError("No se encontraron datos en este rango de fechas.");
+                    } else {
+                        setData(allCandles);
+                        setProgress("Completado ✅");
+                    }
+
+                } catch (err) {
+                    setError(err.message);
+                } finally {
+                    setLoading(false);
+                    setTimeout(() => { if(!error) setProgress(""); }, 3000);
+                }
+            };
+
+            const totalPages = Math.ceil(data.length / itemsPerPage);
+            const indexOfLastItem = currentPage * itemsPerPage;
+            const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+            const currentItems = data.slice(indexOfFirstItem, indexOfLastItem);
+
+            const formatMoney = (val) => val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 8 });
+            const formatVol = (val) => val.toLocaleString('en-US', { maximumFractionDigits: 2 });
+            const formatDateTime = (ts) => {
+                const date = new Date(ts);
+                return date.toLocaleDateString('es-ES') + ' ' + date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+            };
+
+            const weightPercent = (estimates.weight / BINANCE_WEIGHT_LIMIT_PER_MINUTE) * 100;
+            let weightColor = "text-emerald-500";
+            if(weightPercent > 50) weightColor = "text-yellow-500";
+            if(weightPercent > 100) weightColor = "text-rose-500";
+            const twelveLimitColor = twelveCallsThisMinute >= 8 ? "text-rose-600 dark:text-rose-400" : (twelveCallsThisMinute >= 6 ? "text-yellow-600 dark:text-yellow-400" : "text-emerald-600 dark:text-emerald-400");
+
+            return (
+                <div className="min-h-screen p-4 md:p-8 max-w-[95%] mx-auto">
+                    
+                    <div className="mb-6">
+                        <a href="../utilidades.html" className="inline-flex items-center gap-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors group">
+                            <div className="p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 group-hover:border-slate-300 dark:group-hover:border-slate-600 transition-all shadow-sm">
+                                <ChevronLeft className="w-5 h-5" />
+                            </div>
+                            <span className="font-medium text-sm">Volver a Utilidades</span>
+                        </a>
+                    </div>
+
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 border-b border-slate-200 dark:border-slate-700 pb-6">
+                        <div className="flex items-center gap-3">
+                            <div className="bg-yellow-500/10 p-3 rounded-xl border border-yellow-500/20">
+                                <Database className="text-yellow-600 dark:text-yellow-500 w-8 h-8" />
+                            </div>
+                            <div>
+                                <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Analizador de mercado <span className="text-yellow-600 dark:text-yellow-500 text-sm align-top">PRO</span></h1>
+                                <p className="text-slate-500 dark:text-slate-400 text-sm">Cripto (Binance) y Forex/Metales (TwelveData)</p>
+                            </div>
+                        </div>
+                        {data.length > 0 && (
+                            <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-2 bg-emerald-500/10 px-4 py-2 rounded-full border border-emerald-500/20">
+                                    <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                                    <span className="text-emerald-600 dark:text-emerald-400 font-medium text-sm">{data.length.toLocaleString()} Velas Analizadas</span>
+                                </div>
+                                <button 
+                                    onClick={downloadCSV}
+                                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium shadow-lg transition-all active:scale-95 text-sm"
+                                >
+                                    <Download className="w-4 h-4" /> Exportar CSV
+                                </button>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-lg border border-slate-200 dark:border-slate-700 mb-8 transition-colors duration-300">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 items-end">
+                            <div className="space-y-2">
+                                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Modo</label>
+                                <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-900 p-1 rounded-lg border border-slate-200 dark:border-slate-700">
+                                    <button onClick={() => { setMode('crypto'); setSymbol('BTCUSDT'); }} className={`px-3 py-1.5 rounded-md text-sm font-medium ${mode==='crypto' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow border border-slate-200 dark:border-slate-700' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800'}`}>Cripto</button>
+                                    <button onClick={() => { setMode('forex'); setSymbol('EUR/USD'); }} className={`px-3 py-1.5 rounded-md text-sm font-medium ${mode==='forex' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow border border-slate-200 dark:border-slate-700' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800'}`}>Forex</button>
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1"><Search className="w-3 h-3" /> {mode==='crypto' ? 'Criptomoneda' : 'Par Forex/Metal'}</label>
+                                {mode==='crypto' ? (
+                                    <>
+                                        <input type="text" value={symbol} onChange={(e) => setSymbol(e.target.value.toUpperCase())} list="crypto-options" className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg px-4 py-2.5 text-slate-900 dark:text-white focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 outline-none transition" placeholder="Ej: BTCUSDT" />
+                                        <datalist id="crypto-options">{POPULAR_PAIRS.map(pair => <option key={pair} value={pair} />)}</datalist>
+                                    </>
+                                ) : (
+                                    <>
+                                        <input type="text" value={symbol} onChange={(e) => setSymbol(e.target.value)} list="forex-options" className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg px-4 py-2.5 text-slate-900 dark:text-white focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 outline-none transition" placeholder="Ej: EUR/USD o XAU/USD" />
+                                        <datalist id="forex-options">{FOREX_PAIRS.map(pair => <option key={pair} value={pair} />)}</datalist>
+                                    </>
+                                )}
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1"><Clock className="w-3 h-3" /> Temporalidad</label>
+                                <select value={interval} onChange={(e) => setInterval(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg px-4 py-2.5 text-slate-900 dark:text-white focus:border-yellow-500 outline-none">
+                                    <option value="1m">1 Minuto</option>
+                                    <option value="5m">5 Minutos</option>
+                                    <option value="15m">15 Minutos</option>
+                                    <option value="1h">1 Hora</option>
+                                    <option value="4h">4 Horas</option>
+                                    <option value="1d">1 Día</option>
+                                    <option value="1w">1 Semana</option>
+                                </select>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1"><Calendar className="w-3 h-3" /> Desde</label>
+                                <input type="datetime-local" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2.5 text-slate-900 dark:text-white text-sm focus:border-yellow-500 outline-none" />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1"><Calendar className="w-3 h-3" /> Hasta</label>
+                                <input type="datetime-local" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2.5 text-slate-900 dark:text-white text-sm focus:border-yellow-500 outline-none" />
+                            </div>
+                            
+                            <div className="space-y-2">
+                                <div className="flex flex-col text-[10px] px-1 gap-1">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-slate-500 dark:text-slate-400">Velas:</span>
+                                        <span className="font-mono font-bold text-slate-700 dark:text-slate-200">~{estimates.candles.toLocaleString()}</span>
+                                    </div>
+                                    {mode==='crypto' ? (
+                                        <div className="flex justify-between items-center group relative cursor-help">
+                                            <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1">Peso API: <Scale className="w-3 h-3 text-slate-400 dark:text-slate-500"/></span>
+                                            <span className={`font-mono font-bold ${weightColor}`}>{estimates.weight} <span className="text-slate-500 dark:text-slate-600">/ 1200</span></span>
+                                            <div className="absolute bottom-full right-0 mb-1 hidden group-hover:block bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 p-2 rounded border border-slate-200 dark:border-slate-700 w-48 z-50 shadow-xl">Límite: 1200/min. El sistema gestiona el ritmo automáticamente.</div>
+                                        </div>
+                                    ) : (
+                                        <div className="flex justify-between items-center group relative cursor-help">
+                                            <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1">Llamadas/min: <Scale className="w-3 h-3 text-slate-400 dark:text-slate-500"/></span>
+                                            <span className={`font-mono font-bold ${twelveLimitColor}`}>{twelveCallsThisMinute} <span className="text-slate-500 dark:text-slate-600">/ 8</span></span>
+                                            <div className="absolute bottom-full right-0 mb-1 hidden group-hover:block bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 p-2 rounded border border-slate-200 dark:border-slate-700 w-56 z-50 shadow-xl">Límite TwelveData: 8/min. Se usa cola automática para evitar exceder el límite.</div>
+                                        </div>
+                                    )}
+                                    <div className="flex justify-between items-center group relative cursor-help border-t border-slate-200 dark:border-slate-700 pt-1 mt-0.5">
+                                        <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1">Tiempo: <Timer className="w-3 h-3 text-slate-400 dark:text-slate-500"/></span>
+                                        <span className="font-mono font-bold text-blue-600 dark:text-blue-300">{estimates.timeStr}</span>
+                                        <div className="absolute bottom-full right-0 mb-1 hidden group-hover:block bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 p-2 rounded border border-slate-200 dark:border-slate-700 w-48 z-50 shadow-xl">Tiempo total estimado incluyendo pausas de seguridad.</div>
+                                    </div>
+                                </div>
+                                <button onClick={fetchData} disabled={loading} className={`w-full py-2.5 rounded-lg font-bold text-slate-900 transition-all shadow-lg flex items-center justify-center gap-2 ${loading ? 'bg-slate-300 dark:bg-slate-600 cursor-not-allowed' : 'bg-yellow-500 hover:bg-yellow-400 active:scale-95'}`}>{loading ? 'Analizando...' : (<><BarChart3 className="w-4 h-4" /> Procesar</>)}</button>
+                            </div>
+                        </div>
+                        {mode==='forex' && (
+                            <div className="mt-6 grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
+                                <div className="lg:col-span-2 space-y-2">
+                                    <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">API Key TwelveData</label>
+                                    <div className="flex items-center gap-2">
+                                        <input type="password" value={twelveApiKeyInput} onChange={(e)=>setTwelveApiKeyInput(e.target.value)} placeholder={hasSavedApiKey ? 'Clave guardada' : 'Ingresa tu API Key'} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg px-4 py-2.5 text-slate-900 dark:text-white focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 outline-none transition" />
+                                        <button onClick={()=>{ if(twelveApiKeyInput.trim()){ localStorage.setItem('fti_twelve_api_key', twelveApiKeyInput.trim()); setHasSavedApiKey(true); setTwelveApiKeyInput(''); } }} className="px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium shadow">Guardar</button>
+                                        <button onClick={()=>{ localStorage.removeItem('fti_twelve_api_key'); setHasSavedApiKey(false); setTwelveApiKeyInput(''); }} className="px-3 py-2 rounded-lg bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-900 dark:text-white text-sm font-medium">Borrar</button>
+                                    </div>
+                                    <div className="text-xs text-slate-500 dark:text-slate-400">La clave se guarda localmente en tu navegador. No se comparte ni se envía a terceros salvo al proveedor TwelveData para las consultas solicitadas.</div>
+                                </div>
+                                <div className="lg:col-span-3 space-y-3">
+                                    <div className="p-4 rounded-lg border border-amber-300 dark:border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300">
+                                        <div className="font-semibold">Costes y responsabilidad</div>
+                                        <div className="text-sm">El uso de TwelveData puede generar costes según tu plan. Eres responsable de gestionar tu consumo y respetar los límites de uso (8 llamadas/min en plan gratuito).</div>
+                                    </div>
+                                    <div className="p-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/30 text-slate-700 dark:text-slate-300">
+                                        <div className="font-semibold">Cómo obtener tu API Key</div>
+                                        <div className="text-sm">Crea una cuenta en TwelveData, accede al panel y genera una clave personal. Copia y pégala en el campo de arriba y presiona Guardar.</div>
+                                    </div>
+                                    <div className="p-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/30 text-slate-700 dark:text-slate-300">
+                                        <div className="font-semibold">Diferencias de formato</div>
+                                        <div className="text-sm">Los datos de TwelveData incluyen OHLC y pueden no incluir volumen/trades para ciertos pares Forex y metales (p. ej., XAU/USD). Las columnas de flujo agresivo (Buy/Sell Vol), Delta y Presión% no aplican en estos instrumentos y se muestran como N/A.</div>
+                                    </div>
+                                    <div className="p-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/30 text-slate-700 dark:text-slate-300">
+                                        <div className="font-semibold">Límites y políticas</div>
+                                        <div className="text-sm">El plan gratuito de TwelveData permite 8 llamadas por minuto. Esta herramienta implementa cola y control visible para cumplir los límites. Revisa las políticas de uso de TwelveData antes de operar en producción.</div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                        {progress && <div className="mt-4 text-xs font-medium text-yellow-600 dark:text-yellow-500 animate-pulse">{progress}</div>}
+                        {error && <div className="mt-4 p-3 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 rounded-lg flex items-center gap-2 text-red-600 dark:text-red-400 text-sm"><AlertTriangle className="w-4 h-4" />{error}</div>}
+                    </div>
+
+                    {data.length > 0 && (
+                        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col transition-colors duration-300">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left border-collapse tabular-nums">
+                                    <thead>
+                                        <tr className="bg-slate-50 dark:bg-slate-900 text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-slate-700">
+                                            <th className="p-4 font-medium sticky left-0 bg-slate-50 dark:bg-slate-900 z-20 border-r border-slate-200 dark:border-slate-800 shadow-xl min-w-[160px]">Fecha / Hora</th>
+                                            <th className="p-4 font-medium text-right">Open</th>
+                                            <th className="p-4 font-medium text-right">High</th>
+                                            <th className="p-4 font-medium text-right">Low</th>
+                                            <th className="p-4 font-medium text-right">Close</th>
+                                            <th className="p-4 font-medium text-right">Trades</th>
+                                            <th className="p-4 font-medium text-right border-l border-slate-200 dark:border-slate-700">Vol Total</th>
+                                            <th className="p-4 font-medium text-right text-emerald-600 dark:text-emerald-400 relative group cursor-help"><span className="tooltip" data-tip="Volumen de compradores golpeando el ASK (Agresivos)">Buy Vol</span></th>
+                                            <th className="p-4 font-medium text-right text-rose-600 dark:text-rose-400 relative group cursor-help"><span className="tooltip" data-tip="Volumen de vendedores golpeando el BID (Agresivos)">Sell Vol</span></th>
+                                            <th className="p-4 font-medium text-center border-l border-slate-200 dark:border-slate-700 relative group cursor-help"><span className="tooltip" data-tip="Diferencia: Compras Agresivas - Ventas Agresivas">Delta</span></th>
+                                            <th className="p-4 font-medium text-center relative group cursor-help"><span className="tooltip" data-tip="% del volumen total que fue compra agresiva">Presión %</span></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-200 dark:divide-slate-700 text-sm font-medium">
+                                        {currentItems.map((candle) => {
+                                            const isBullish = candle.close >= candle.open;
+                                            const deltaColor = candle.delta > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400";
+                                            const pressureColor = candle.buyPressure >= 50 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400";
+                                            
+                                            return (
+                                                <tr key={candle.time} className={`hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors ${candle.isLive ? 'bg-slate-50 dark:bg-slate-700/20' : ''}`}>
+                                                    <td className="p-4 text-slate-700 dark:text-slate-300 whitespace-nowrap sticky left-0 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 z-10 font-bold flex items-center gap-2">
+                                                        {formatDateTime(candle.time)}
+                                                        {candle.isLive && (
+                                                            <span className="relative flex h-2 w-2">
+                                                              <span className="live-dot absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                                              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                                                            </span>
+                                                        )}
+                                                    </td>
+                                                    <td className="p-4 text-right text-slate-600 dark:text-slate-400">{candle.open==null? 'N/A' : formatMoney(candle.open)}</td>
+                                                    <td className="p-4 text-right text-slate-600 dark:text-slate-400">{candle.high==null? 'N/A' : formatMoney(candle.high)}</td>
+                                                    <td className="p-4 text-right text-slate-600 dark:text-slate-400">{candle.low==null? 'N/A' : formatMoney(candle.low)}</td>
+                                                    <td className={`p-4 text-right font-bold ${isBullish ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>{candle.close==null? 'N/A' : formatMoney(candle.close)}</td>
+                                                    <td className="p-4 text-right text-purple-600 dark:text-purple-300">{candle.trades==null? 'N/A' : candle.trades}</td>
+                                                    <td className="p-4 text-right text-slate-700 dark:text-slate-300 border-l border-slate-200 dark:border-slate-700">{candle.volume==null? 'N/A' : formatVol(candle.volume)}</td>
+                                                    <td className="p-4 text-right text-emerald-600/80 dark:text-emerald-500/80">{candle.takerBuyVol==null? 'N/A' : formatVol(candle.takerBuyVol)}</td>
+                                                    <td className="p-4 text-right text-rose-600/80 dark:text-rose-500/80">{candle.takerSellVol==null? 'N/A' : formatVol(candle.takerSellVol)}</td>
+                                                    <td className={`p-4 text-right font-bold border-l border-slate-200 dark:border-slate-700 ${deltaColor}`}>{candle.delta==null? 'N/A' : `${candle.delta>0?'+':''}${formatVol(candle.delta)}`}</td>
+                                                    <td className="p-4 text-center">
+                                                        <div className="flex items-center justify-center gap-2">
+                                                            <span className={`font-bold ${pressureColor}`}>{candle.buyPressure==null? 'N/A' : `${candle.buyPressure.toFixed(1)}%`}</span>
+                                                            <div className="w-16 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                                                                <div className={`h-full ${candle.buyPressure >= 50 ? 'bg-emerald-500' : 'bg-rose-500'}`} style={{width: `${candle.buyPressure==null? 0 : candle.buyPressure}%`}}></div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div className="p-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/30 flex flex-col sm:flex-row items-center justify-between gap-4">
+                                <div className="text-sm text-slate-500 dark:text-slate-400">Mostrando {indexOfFirstItem + 1} - {Math.min(indexOfLastItem, data.length)} de <span className="text-slate-900 dark:text-white font-bold">{data.length}</span></div>
+                                <div className="flex items-center gap-2">
+                                    <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1} className="p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition text-xs font-medium text-slate-600 dark:text-slate-300">Inicio</button>
+                                    <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} className="p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition"><ChevronLeft className="w-4 h-4 text-slate-600 dark:text-slate-300" /></button>
+                                    
+                                    {/* Selector de Página Interactivo */}
+                                    <form 
+                                        onSubmit={(e) => {
+                                            e.preventDefault();
+                                            // Validar rango
+                                            const val = Math.min(Math.max(parseInt(inputPage), 1), totalPages);
+                                            setCurrentPage(val);
+                                        }}
+                                        className="flex items-center gap-2 bg-slate-100 dark:bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700"
+                                    >
+                                        <span className="text-xs text-slate-500 font-medium">Página</span>
+                                        <input 
+                                            type="number"
+                                            min="1"
+                                            max={totalPages}
+                                            value={inputPage}
+                                            onChange={(e) => setInputPage(e.target.value)}
+                                            onBlur={() => {
+                                                if(inputPage === "") setInputPage(currentPage);
+                                                else {
+                                                     const val = Math.min(Math.max(parseInt(inputPage), 1), totalPages);
+                                                     setCurrentPage(val);
+                                                     setInputPage(val);
+                                                }
+                                            }}
+                                            className="w-12 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded text-center text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 py-0.5"
+                                        />
+                                        <span className="text-xs text-slate-500 font-medium">de {totalPages}</span>
+                                    </form>
+
+                                    <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages} className="p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition"><ChevronRight className="w-4 h-4 text-slate-600 dark:text-slate-300" /></button>
+                                    <button onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages} className="p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition text-xs font-medium text-slate-600 dark:text-slate-300">Final</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                     {!data.length && !loading && (
+                        <div className="text-center py-20 opacity-50">
+                            <Database className="w-16 h-16 mx-auto mb-4 text-slate-400 dark:text-slate-600" />
+                            <p className="text-slate-500">Configura los parámetros arriba para cargar los datos.</p>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<MarketInspector />);
     </script>
 </body>
-
 </html>

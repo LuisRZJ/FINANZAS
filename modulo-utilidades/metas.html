@@ -12,6 +12,19 @@
 
     <!-- Fuente Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script>
+        (function(){
+            try {
+                const pref = localStorage.getItem('fti_theme_preference');
+                const sysDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                if (pref === 'dark' || ((!pref || pref === 'system') && sysDark)) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            } catch(e) {}
+        })();
+    </script>
     <style>
         :root {
             --primary: #3498db;
@@ -202,6 +215,25 @@
             }
             .header-inner { grid-column: auto; }
         }
+    </style>
+    <style>
+        .dark body { background: #111827; color: #e5e7eb; }
+        .dark header { background: #0f172a; border: 1px solid #1f2937; box-shadow: 0 2px 16px rgba(0,0,0,0.35); }
+        .dark h1 { color: #60a5fa; }
+        .dark .description { color: #94a3b8; }
+        .dark .card { background: #0f172a; border: 1px solid #1f2937; }
+        .dark label { color: #e5e7eb; }
+        .dark input { background: #0b1220; color: #e5e7eb; border-color: #334155; }
+        .dark select { background: #ffffff; color: #000000; border-color: #334155; }
+        .dark button { background: #2563eb; color: #ffffff; }
+        .dark button:hover { background: #1d4ed8; }
+        .dark .results { background: #0b1220; border-left-color: #2563eb; }
+        .dark .results h3 { color: #60a5fa; }
+        .dark .result-value { color: #34d399; }
+        .dark .back-btn { background: #475569; color: #ffffff; }
+        .dark .back-btn:hover { background: #334155; }
+        .dark footer { background: #0f172a; color: #94a3b8; border-top: 1px solid #1f2937; }
+        .dark footer span { color: #e5e7eb; }
     </style>
 </head>
 <body>

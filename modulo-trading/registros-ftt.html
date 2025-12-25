@@ -198,16 +198,16 @@
         <!-- Pestañas de Navegación -->
         <div class="mb-6 border-b border-gray-200">
             <nav class="flex space-x-4" aria-label="Tabs">
-                <button id="tab-registro" class="py-4 px-1 border-b-2 font-medium text-sm sm:text-base transition-colors duration-200 tab-active">
+                <button type="button" id="tab-registro" class="py-4 px-1 border-b-2 font-medium text-sm sm:text-base transition-colors duration-200 tab-active">
                     Registro de Operaciones
                 </button>
-                <button id="tab-estadisticas" class="py-4 px-1 border-b-2 font-medium text-sm sm:text-base transition-colors duration-200 tab-inactive">
+                <button type="button" id="tab-estadisticas" class="py-4 px-1 border-b-2 font-medium text-sm sm:text-base transition-colors duration-200 tab-inactive">
                     Panel de Estadísticas
                 </button>
-                 <button id="tab-objetivos" class="py-4 px-1 border-b-2 font-medium text-sm sm:text-base transition-colors duration-200 tab-inactive">
+                 <button type="button" id="tab-objetivos" class="py-4 px-1 border-b-2 font-medium text-sm sm:text-base transition-colors duration-200 tab-inactive">
                     Objetivos
                 </button>
-                <button id="tab-ajustes" class="py-4 px-1 border-b-2 font-medium text-sm sm:text-base transition-colors duration-200 tab-inactive">
+                <button type="button" id="tab-ajustes" class="py-4 px-1 border-b-2 font-medium text-sm sm:text-base transition-colors duration-200 tab-inactive">
                     Ajustes
                 </button>
             </nav>
@@ -605,6 +605,23 @@
                                 <p id="data-usage-size" class="text-2xl font-bold text-blue-900">0 KB</p>
                             </div>
                         </div>
+                        <div class="border border-gray-200 rounded-lg p-4 mb-6">
+                            <div class="flex flex-col gap-1">
+                                <h3 class="text-base font-semibold text-gray-900">Webhook de Discord</h3>
+                                <p class="text-sm text-gray-600">Guarda tu URL de webhook en este navegador. Se incluye en exportaciones e importaciones.</p>
+                            </div>
+                            <div class="mt-4 grid grid-cols-1 lg:grid-cols-12 gap-3 items-start">
+                                <div class="lg:col-span-9">
+                                    <label for="discord-webhook-input" class="block text-sm font-medium text-gray-700">URL de webhook</label>
+                                    <input id="discord-webhook-input" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://discord.com/api/webhooks/..." class="mt-1 block w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-gray-900 p-2">
+                                    <p id="discord-webhook-hint" class="text-xs text-gray-500 mt-2">Estado: no configurado.</p>
+                                </div>
+                                <div class="lg:col-span-3 flex flex-col gap-2">
+                                    <button id="save-discord-webhook-btn" type="button" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Guardar webhook</button>
+                                    <button id="clear-discord-webhook-btn" type="button" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-lg border border-gray-200 transition-colors">Eliminar webhook</button>
+                                </div>
+                            </div>
+                        </div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                             <button id="import-data-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">Importar Datos</button>
                             <button id="export-data-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">Exportar Datos</button>
@@ -645,12 +662,92 @@
         // --- CONSTANTES Y ESTADO ---
         const PROFIT_RATE = 0.85;
         const LOSS_RATE = -1.00;
-        const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1422270357695627378/aVoXvmBfL-OD92_R7ZEDJ9hFusdyaMLpZvBA3UiBb6IbTlAo7zzStlKhRh62OpUJ0sir';
 
         const ACCOUNT_STORAGE_KEY = 'btMultiAccountState_v1';
         const DEFAULT_ACCOUNT_NAME = 'Cuenta Predeterminada';
         const THEME_PREF_KEY = 'btThemePreference_v1';
+        const DISCORD_WEBHOOK_STORAGE_KEY = 'btDiscordWebhookUrl_v1';
         const NOTE_PREVIEW_PLACEHOLDER_HTML = '<p class="text-sm text-gray-500 m-0">Aún no hay contenido. Escribe algo o usa la barra de formato.</p>';
+
+        const isDomException = (error) => error instanceof DOMException;
+
+        const isLocalStorageUsable = () => {
+            try {
+                const testKey = '__bt_test__';
+                window.localStorage.setItem(testKey, '1');
+                window.localStorage.removeItem(testKey);
+                return true;
+            } catch (error) {
+                if (isDomException(error)) return false;
+                throw error;
+            }
+        };
+
+        const storage = isLocalStorageUsable() ? window.localStorage : null;
+
+        const storageGetItem = (key) => {
+            if (!storage) return null;
+            try {
+                return storage.getItem(key);
+            } catch (error) {
+                if (isDomException(error)) return null;
+                throw error;
+            }
+        };
+
+        const storageSetItem = (key, value) => {
+            if (!storage) return false;
+            try {
+                storage.setItem(key, value);
+                return true;
+            } catch (error) {
+                if (isDomException(error)) return false;
+                throw error;
+            }
+        };
+
+        const storageRemoveItem = (key) => {
+            if (!storage) return false;
+            try {
+                storage.removeItem(key);
+                return true;
+            } catch (error) {
+                if (isDomException(error)) return false;
+                throw error;
+            }
+        };
+
+        const safeJsonParse = (raw, fallback) => {
+            if (typeof raw !== 'string' || !raw) return fallback;
+            try {
+                return JSON.parse(raw);
+            } catch (error) {
+                if (error instanceof SyntaxError) return fallback;
+                throw error;
+            }
+        };
+
+        const normalizeDiscordWebhookUrl = (raw) => {
+            const trimmed = (raw || '').trim();
+            if (!trimmed) return '';
+            try {
+                const url = new URL(trimmed);
+                if (url.protocol !== 'https:') return null;
+                return url.toString();
+            } catch (error) {
+                if (error instanceof TypeError) return null;
+                throw error;
+            }
+        };
+
+        let discordWebhookUrl = '';
+        const storedDiscordWebhook = storageGetItem(DISCORD_WEBHOOK_STORAGE_KEY);
+        const normalizedStoredWebhook = normalizeDiscordWebhookUrl(storedDiscordWebhook);
+        if (normalizedStoredWebhook) {
+            discordWebhookUrl = normalizedStoredWebhook;
+        } else if (storedDiscordWebhook) {
+            storageRemoveItem(DISCORD_WEBHOOK_STORAGE_KEY);
+        }
 
         if (window.marked) {
             window.marked.setOptions({ gfm: true, breaks: true });
@@ -680,7 +777,7 @@
         };
 
         const loadAccountState = () => {
-            const stored = localStorage.getItem(ACCOUNT_STORAGE_KEY);
+            const stored = storageGetItem(ACCOUNT_STORAGE_KEY);
             if (stored) {
                 try {
                     const parsed = JSON.parse(stored);
@@ -707,16 +804,16 @@
             }
 
             const legacyData = {
-                trades: JSON.parse(localStorage.getItem('trades') || '[]'),
-                assets: JSON.parse(localStorage.getItem('assets') || '[]'),
-                strategies: JSON.parse(localStorage.getItem('strategies') || '[]')
+                trades: safeJsonParse(storageGetItem('trades'), []),
+                assets: safeJsonParse(storageGetItem('assets'), []),
+                strategies: safeJsonParse(storageGetItem('strategies'), [])
             };
             const hasLegacy = legacyData.trades.length > 0 || legacyData.assets.length > 0 || legacyData.strategies.length > 0;
             const defaultState = createDefaultAccountState(hasLegacy ? legacyData : null);
             if (hasLegacy) {
-                ['trades', 'assets', 'strategies'].forEach(key => localStorage.removeItem(key));
+                ['trades', 'assets', 'strategies'].forEach(key => storageRemoveItem(key));
             }
-            localStorage.setItem(ACCOUNT_STORAGE_KEY, JSON.stringify(defaultState));
+            storageSetItem(ACCOUNT_STORAGE_KEY, JSON.stringify(defaultState));
             return defaultState;
         };
 
@@ -734,7 +831,7 @@
         let strategies = currentAccountId ? accountState.data[currentAccountId].strategies || [] : [];
         let assets = currentAccountId ? accountState.data[currentAccountId].assets || [] : [];
 
-        const saveAccountState = () => localStorage.setItem(ACCOUNT_STORAGE_KEY, JSON.stringify(accountState));
+        const saveAccountState = () => storageSetItem(ACCOUNT_STORAGE_KEY, JSON.stringify(accountState));
 
         if (currentAccountId) {
             saveAccountState();
@@ -929,6 +1026,10 @@
             const normalized = {
                 accounts: [],
                 activeAccountId: rawState.activeAccountId,
+                discordWebhookUrl: (() => {
+                    const imported = normalizeDiscordWebhookUrl(rawState.discordWebhookUrl);
+                    return imported || '';
+                })(),
                 data: {}
             };
 
@@ -965,6 +1066,7 @@
             return {
                 version: 'bt-multi-account-v1',
                 exportedAt: new Date().toISOString(),
+                discordWebhookUrl: discordWebhookUrl || '',
                 accounts: accountState.accounts.map(account => ({ ...account })),
                 activeAccountId: accountState.activeAccountId,
                 data: Object.fromEntries(accountState.accounts.map(account => {
@@ -988,7 +1090,11 @@
             assets: (payload.assets || []).map(cloneSimpleItem),
             strategies: (payload.strategies || []).map(cloneSimpleItem),
             monthlyTargetProfit: typeof payload.monthlyTargetProfit === 'number' ? payload.monthlyTargetProfit : 0,
-            objectivesNote: typeof payload.objectivesNote === 'string' ? payload.objectivesNote : ''
+            objectivesNote: typeof payload.objectivesNote === 'string' ? payload.objectivesNote : '',
+            discordWebhookUrl: (() => {
+                const imported = normalizeDiscordWebhookUrl(payload.discordWebhookUrl);
+                return imported || '';
+            })()
         });
 
         const parseImportPayload = (raw) => {
@@ -1088,6 +1194,10 @@
         const exportDataBtn = document.getElementById('export-data-btn');
         const deleteAllDataBtn = document.getElementById('delete-all-data-btn');
         const exportDiscordBtn = document.getElementById('export-discord-btn');
+        const discordWebhookInput = document.getElementById('discord-webhook-input');
+        const discordWebhookHint = document.getElementById('discord-webhook-hint');
+        const saveDiscordWebhookBtn = document.getElementById('save-discord-webhook-btn');
+        const clearDiscordWebhookBtn = document.getElementById('clear-discord-webhook-btn');
         const importFileInput = document.getElementById('import-file-input');
         const importDataModal = document.getElementById('import-data-modal');
         const confirmImportBtn = document.getElementById('confirm-import-btn');
@@ -1115,11 +1225,11 @@
 
         // --- INICIALIZACIÓN ---
         const init = () => {
-            migrateData();
-            fechaInput.value = getCurrentDateTimeLocalString();
-            fullRefreshUI();
-            initTheme();
             setupEventListeners();
+            initTheme();
+            migrateData();
+            if (fechaInput) fechaInput.value = getCurrentDateTimeLocalString();
+            fullRefreshUI();
         };
         
         const migrateData = () => {
@@ -1133,8 +1243,21 @@
                 dataWasMigrated = true;
             }
             trades.forEach(trade => {
+                if (trade && typeof trade.fecha !== 'string') {
+                    if (trade.fecha instanceof Date) {
+                        trade.fecha = trade.fecha.toISOString();
+                        dataWasMigrated = true;
+                    } else if (typeof trade.fecha === 'number') {
+                        trade.fecha = new Date(trade.fecha).toISOString();
+                        dataWasMigrated = true;
+                    } else if (typeof trade.createdAt === 'number') {
+                        trade.fecha = new Date(trade.createdAt).toISOString();
+                        dataWasMigrated = true;
+                    }
+                }
                 if (!trade.createdAt) {
-                    trade.createdAt = new Date(trade.fecha).getTime();
+                    const parsed = new Date(trade.fecha);
+                    trade.createdAt = isNaN(parsed.getTime()) ? Date.now() : parsed.getTime();
                     dataWasMigrated = true;
                 }
             });
@@ -1146,14 +1269,19 @@
 
         // --- MANEJO DE EVENTOS ---
         const setupEventListeners = () => {
-            Object.keys(tabs).forEach(key => tabs[key].addEventListener('click', () => switchTab(key)));
-            goToSettingsLink.addEventListener('click', (e) => { e.preventDefault(); switchTab('ajustes'); });
+            Object.entries(tabs).forEach(([key, tabEl]) => {
+                if (!tabEl) return;
+                tabEl.addEventListener('click', () => switchTab(key));
+            });
+            if (goToSettingsLink) {
+                goToSettingsLink.addEventListener('click', (e) => { e.preventDefault(); switchTab('ajustes'); });
+            }
             
-            tradeForm.addEventListener('submit', handleFormSubmit);
-            cancelEditBtn.addEventListener('click', cancelEditMode);
-            tradesCardContainer.addEventListener('click', handleTradesTableActions);
-            confirmDeleteBtn.addEventListener('click', confirmDeleteTrade);
-            cancelDeleteBtn.addEventListener('click', () => toggleModal('delete-modal', false));
+            if (tradeForm) tradeForm.addEventListener('submit', handleFormSubmit);
+            if (cancelEditBtn) cancelEditBtn.addEventListener('click', cancelEditMode);
+            if (tradesCardContainer) tradesCardContainer.addEventListener('click', handleTradesTableActions);
+            if (confirmDeleteBtn) confirmDeleteBtn.addEventListener('click', confirmDeleteTrade);
+            if (cancelDeleteBtn) cancelDeleteBtn.addEventListener('click', () => toggleModal('delete-modal', false));
 
             if (accountSelect) accountSelect.addEventListener('change', handleAccountChange);
             if (addAccountForm) addAccountForm.addEventListener('submit', handleAddAccount);
@@ -1167,11 +1295,11 @@
             if (editAccountForm) editAccountForm.addEventListener('submit', handleUpdateAccountName);
             if (cancelEditAccountBtn) cancelEditAccountBtn.addEventListener('click', () => toggleModal('edit-account-modal', false));
 
-            avgTradesPeriodSelect.addEventListener('change', updateAverageTradesStat);
+            if (avgTradesPeriodSelect) avgTradesPeriodSelect.addEventListener('change', updateAverageTradesStat);
             if (volumePeriodSelect) volumePeriodSelect.addEventListener('change', updateVolumeByPeriodStat);
 
-            addStrategyForm.addEventListener('submit', handleAddStrategy);
-            strategyList.addEventListener('click', (event) => {
+            if (addStrategyForm) addStrategyForm.addEventListener('submit', handleAddStrategy);
+            if (strategyList) strategyList.addEventListener('click', (event) => {
                 const moveBtn = event.target.closest('[data-move]');
                 if (moveBtn) {
                     handleMoveAction(moveBtn.dataset.type, moveBtn.dataset.id, moveBtn.dataset.move);
@@ -1179,13 +1307,13 @@
                 }
                 handleStrategyListActions(event);
             });
-            editStrategyForm.addEventListener('submit', handleUpdateStrategy);
-            cancelEditStrategyBtn.addEventListener('click', () => toggleModal('edit-strategy-modal', false));
-            confirmDeleteStrategyBtn.addEventListener('click', confirmDeleteStrategy);
-            cancelDeleteStrategyBtn.addEventListener('click', () => toggleModal('delete-strategy-modal', false));
+            if (editStrategyForm) editStrategyForm.addEventListener('submit', handleUpdateStrategy);
+            if (cancelEditStrategyBtn) cancelEditStrategyBtn.addEventListener('click', () => toggleModal('edit-strategy-modal', false));
+            if (confirmDeleteStrategyBtn) confirmDeleteStrategyBtn.addEventListener('click', confirmDeleteStrategy);
+            if (cancelDeleteStrategyBtn) cancelDeleteStrategyBtn.addEventListener('click', () => toggleModal('delete-strategy-modal', false));
 
-            addAssetForm.addEventListener('submit', handleAddAsset);
-            assetList.addEventListener('click', (event) => {
+            if (addAssetForm) addAssetForm.addEventListener('submit', handleAddAsset);
+            if (assetList) assetList.addEventListener('click', (event) => {
                 const moveBtn = event.target.closest('[data-move]');
                 if (moveBtn) {
                     handleMoveAction(moveBtn.dataset.type, moveBtn.dataset.id, moveBtn.dataset.move);
@@ -1193,29 +1321,31 @@
                 }
                 handleAssetListActions(event);
             });
-            editAssetForm.addEventListener('submit', handleUpdateAsset);
-            cancelEditAssetBtn.addEventListener('click', () => toggleModal('edit-asset-modal', false));
-            confirmDeleteAssetBtn.addEventListener('click', confirmDeleteAsset);
-            cancelDeleteAssetBtn.addEventListener('click', () => toggleModal('delete-asset-modal', false));
+            if (editAssetForm) editAssetForm.addEventListener('submit', handleUpdateAsset);
+            if (cancelEditAssetBtn) cancelEditAssetBtn.addEventListener('click', () => toggleModal('edit-asset-modal', false));
+            if (confirmDeleteAssetBtn) confirmDeleteAssetBtn.addEventListener('click', confirmDeleteAsset);
+            if (cancelDeleteAssetBtn) cancelDeleteAssetBtn.addEventListener('click', () => toggleModal('delete-asset-modal', false));
             
-            exportDataBtn.addEventListener('click', handleExportData);
-            downloadJsonBtn.addEventListener('click', handleDownloadJson);
-            copyJsonBtn.addEventListener('click', handleCopyJson);
-            closeExportModalBtn.addEventListener('click', () => toggleModal('export-data-modal', false));
+            if (exportDataBtn) exportDataBtn.addEventListener('click', handleExportData);
+            if (downloadJsonBtn) downloadJsonBtn.addEventListener('click', handleDownloadJson);
+            if (copyJsonBtn) copyJsonBtn.addEventListener('click', handleCopyJson);
+            if (closeExportModalBtn) closeExportModalBtn.addEventListener('click', () => toggleModal('export-data-modal', false));
             
-            importDataBtn.addEventListener('click', () => toggleModal('import-options-modal', true));
-            triggerFileImportBtn.addEventListener('click', () => importFileInput.click());
-            importFileInput.addEventListener('change', handleFileImport);
-            importFromTextBtn.addEventListener('click', handleTextImport);
-            closeImportOptionsModalBtn.addEventListener('click', () => toggleModal('import-options-modal', false));
+            if (importDataBtn) importDataBtn.addEventListener('click', () => toggleModal('import-options-modal', true));
+            if (triggerFileImportBtn && importFileInput) triggerFileImportBtn.addEventListener('click', () => importFileInput.click());
+            if (importFileInput) importFileInput.addEventListener('change', handleFileImport);
+            if (importFromTextBtn) importFromTextBtn.addEventListener('click', handleTextImport);
+            if (closeImportOptionsModalBtn) closeImportOptionsModalBtn.addEventListener('click', () => toggleModal('import-options-modal', false));
 
-            confirmImportBtn.addEventListener('click', confirmImportData);
-            cancelImportBtn.addEventListener('click', () => toggleModal('import-data-modal', false));
+            if (confirmImportBtn) confirmImportBtn.addEventListener('click', confirmImportData);
+            if (cancelImportBtn) cancelImportBtn.addEventListener('click', () => toggleModal('import-data-modal', false));
             
-            deleteAllDataBtn.addEventListener('click', () => toggleModal('delete-all-data-modal', true));
+            if (deleteAllDataBtn) deleteAllDataBtn.addEventListener('click', () => toggleModal('delete-all-data-modal', true));
             if (exportDiscordBtn) exportDiscordBtn.addEventListener('click', handleExportToDiscord);
-            confirmDeleteAllBtn.addEventListener('click', confirmDeleteAllData);
-            cancelDeleteAllBtn.addEventListener('click', () => toggleModal('delete-all-data-modal', false));
+            if (saveDiscordWebhookBtn) saveDiscordWebhookBtn.addEventListener('click', handleSaveDiscordWebhook);
+            if (clearDiscordWebhookBtn) clearDiscordWebhookBtn.addEventListener('click', handleClearDiscordWebhook);
+            if (confirmDeleteAllBtn) confirmDeleteAllBtn.addEventListener('click', confirmDeleteAllData);
+            if (cancelDeleteAllBtn) cancelDeleteAllBtn.addEventListener('click', () => toggleModal('delete-all-data-modal', false));
             document.querySelectorAll('input[name="theme-preference"]').forEach(r => r.addEventListener('change', handleThemeChange));
             if (monthPrevBtn) monthPrevBtn.addEventListener('click', () => { monthlyIndex = Math.max(0, monthlyIndex - 1); renderMonthlyPerformance(); });
             if (monthNextBtn) monthNextBtn.addEventListener('click', () => { if (monthlyKeysCache.length > 0) monthlyIndex = Math.min(monthlyKeysCache.length - 1, monthlyIndex + 1); renderMonthlyPerformance(); });
@@ -1277,7 +1407,7 @@
             if (!tradeToEdit) return;
             editingTradeId = id;
 
-            tradeForm.fecha.value = tradeToEdit.fecha;
+            tradeForm.fecha.value = getDateTimeLocalStringFromValue(tradeToEdit.fecha) || getDateTimeLocalStringFromValue(tradeToEdit.createdAt) || '';
             tradeForm.activo.value = tradeToEdit.activo;
             tradeForm.monto.value = tradeToEdit.monto;
             tradeForm.tipo.value = tradeToEdit.tipo;
@@ -1502,7 +1632,7 @@
         };
 
         const handleExportToDiscord = async () => {
-            if (!DISCORD_WEBHOOK_URL) {
+            if (!discordWebhookUrl) {
                 showToast('No se ha configurado el webhook de Discord.', true);
                 return;
             }
@@ -1528,7 +1658,7 @@
             }
 
             try {
-                const response = await fetch(DISCORD_WEBHOOK_URL, {
+                const response = await fetch(discordWebhookUrl, {
                     method: 'POST',
                     body: formData
                 });
@@ -1623,6 +1753,11 @@
 
             if (dataToImport.type === 'multi') {
                 accountState = dataToImport.state;
+                const importedWebhook = normalizeDiscordWebhookUrl(accountState.discordWebhookUrl);
+                if (importedWebhook) {
+                    discordWebhookUrl = importedWebhook;
+                    storageSetItem(DISCORD_WEBHOOK_STORAGE_KEY, importedWebhook);
+                }
                 setCurrentAccountToDefault();
                 cancelEditMode();
                 fullRefreshUI();
@@ -1635,6 +1770,11 @@
                 ensureAccountDataStructure(currentAccountId);
                 accountState.data[currentAccountId].monthlyTargetProfit = typeof payload.monthlyTargetProfit === 'number' ? payload.monthlyTargetProfit : 0;
                 accountState.data[currentAccountId].objectivesNote = typeof payload.objectivesNote === 'string' ? payload.objectivesNote : '';
+                const importedWebhook = normalizeDiscordWebhookUrl(payload.discordWebhookUrl);
+                if (importedWebhook) {
+                    discordWebhookUrl = importedWebhook;
+                    storageSetItem(DISCORD_WEBHOOK_STORAGE_KEY, importedWebhook);
+                }
                 persistCurrentAccount();
                 setCurrentAccountToDefault();
                 cancelEditMode();
@@ -1647,9 +1787,10 @@
         };
         
         const confirmDeleteAllData = () => {
-            localStorage.removeItem(ACCOUNT_STORAGE_KEY);
-            localStorage.removeItem(THEME_PREF_KEY);
-            ['trades', 'assets', 'strategies'].forEach(key => localStorage.removeItem(key));
+            storageRemoveItem(ACCOUNT_STORAGE_KEY);
+            storageRemoveItem(THEME_PREF_KEY);
+            storageRemoveItem(DISCORD_WEBHOOK_STORAGE_KEY);
+            ['trades', 'assets', 'strategies'].forEach(key => storageRemoveItem(key));
 
             accountState = createDefaultAccountState();
             currentAccountId = accountState.activeAccountId;
@@ -1657,6 +1798,7 @@
             trades = accountState.data[currentAccountId].trades;
             assets = accountState.data[currentAccountId].assets;
             strategies = accountState.data[currentAccountId].strategies;
+            discordWebhookUrl = '';
             saveAccountState();
 
             cancelEditMode();
@@ -1679,6 +1821,44 @@
             updateDataUsageStats();
             renderStorageSummary();
             renderObjectives();
+            renderDiscordWebhookSettings();
+        };
+
+        const renderDiscordWebhookSettings = () => {
+            if (!discordWebhookInput || !discordWebhookHint) return;
+            discordWebhookInput.value = discordWebhookUrl || '';
+            const isConfigured = !!discordWebhookUrl;
+            discordWebhookHint.textContent = isConfigured ? 'Estado: configurado.' : 'Estado: no configurado.';
+            if (clearDiscordWebhookBtn) clearDiscordWebhookBtn.disabled = !isConfigured;
+            if (exportDiscordBtn) exportDiscordBtn.disabled = !isConfigured;
+        };
+
+        const handleSaveDiscordWebhook = () => {
+            if (!discordWebhookInput) return;
+            const normalized = normalizeDiscordWebhookUrl(discordWebhookInput.value);
+            if (normalized === null) {
+                showToast('La URL de webhook no es válida.', true);
+                return;
+            }
+            if (!normalized) {
+                handleClearDiscordWebhook();
+                return;
+            }
+            discordWebhookUrl = normalized;
+            const stored = storageSetItem(DISCORD_WEBHOOK_STORAGE_KEY, normalized);
+            if (!stored) {
+                showToast('No se pudo guardar el webhook en este navegador.', true);
+                return;
+            }
+            renderDiscordWebhookSettings();
+            showToast('Webhook guardado.');
+        };
+
+        const handleClearDiscordWebhook = () => {
+            discordWebhookUrl = '';
+            storageRemoveItem(DISCORD_WEBHOOK_STORAGE_KEY);
+            renderDiscordWebhookSettings();
+            showToast('Webhook eliminado.');
         };
 
         const checkAssetsAndToggleForm = () => {
@@ -1741,8 +1921,61 @@
             }
         };
         
+        const toNumber = (value) => {
+            const num = typeof value === 'number' ? value : Number(value);
+            return Number.isFinite(num) ? num : 0;
+        };
+
+        const getLocalDateKey = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+
+        const getTradeDate = (trade) => {
+            if (!trade) return null;
+            if (trade.fecha instanceof Date) return new Date(trade.fecha.getTime());
+            if (typeof trade.fecha === 'number') return new Date(trade.fecha);
+            if (typeof trade.fecha === 'string' && trade.fecha.trim()) {
+                const parsed = new Date(trade.fecha);
+                if (!isNaN(parsed.getTime())) return parsed;
+            }
+            if (typeof trade.createdAt === 'number') {
+                const parsed = new Date(trade.createdAt);
+                if (!isNaN(parsed.getTime())) return parsed;
+            }
+            return null;
+        };
+
+        const getDateTimeLocalStringFromValue = (value) => {
+            if (value == null) return '';
+            if (typeof value === 'string') {
+                const trimmed = value.trim();
+                if (!trimmed) return '';
+                if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(trimmed)) return trimmed;
+            }
+            const date = value instanceof Date
+                ? new Date(value.getTime())
+                : typeof value === 'number'
+                    ? new Date(value)
+                    : typeof value === 'string'
+                        ? new Date(value)
+                        : null;
+            if (!date || isNaN(date.getTime())) return '';
+            date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+            return date.toISOString().slice(0, 16);
+        };
+
+        const getTradeDateKey = (trade) => {
+            if (trade && typeof trade.fecha === 'string') {
+                const raw = trade.fecha.trim();
+                if (raw && /^\d{4}-\d{2}-\d{2}/.test(raw) && !/([zZ]|[+-]\d{2}:?\d{2})$/.test(raw)) {
+                    return raw.slice(0, 10);
+                }
+            }
+            const date = getTradeDate(trade);
+            if (!date) return null;
+            return getLocalDateKey(date);
+        };
+
         const formatDateForHeader = (dateString) => {
-            const getLocalDateKey = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+            if (typeof dateString !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return 'Sin fecha';
             const today = getLocalDateKey(new Date());
             const yesterdayDate = new Date();
             yesterdayDate.setDate(yesterdayDate.getDate() - 1);
@@ -1756,19 +1989,20 @@
         };
         
         const renderTradesHistory = () => {
+            if (!tradesCardContainer) return;
             if (trades.length === 0) {
                 tradesCardContainer.innerHTML = `<p class="text-center py-8 text-gray-500">No hay operaciones registradas.</p>`;
                 return;
             }
 
             const sortedTrades = [...trades].sort((a, b) => {
-                const dateComparison = new Date(b.fecha) - new Date(a.fecha);
+                const dateComparison = (getTradeDate(b)?.getTime() || 0) - (getTradeDate(a)?.getTime() || 0);
                 if (dateComparison !== 0) return dateComparison;
-                return b.createdAt - a.createdAt;
+                return (b.createdAt || 0) - (a.createdAt || 0);
             });
             
             const groupedTrades = sortedTrades.reduce((acc, trade) => {
-                const dateKey = trade.fecha.slice(0, 10);
+                const dateKey = getTradeDateKey(trade) || 'Sin fecha';
                 if (!acc[dateKey]) acc[dateKey] = [];
                 acc[dateKey].push(trade);
                 return acc;
@@ -1780,8 +2014,8 @@
                 const winsDay = dayTrades.filter(t => t.resultado === 'Éxito').length;
                 const tiesDay = dayTrades.filter(t => t.resultado === 'Empate').length;
                 const lossesDay = dayTrades.length - winsDay - tiesDay;
-                const totalMontoDay = dayTrades.reduce((sum, t) => sum + (t.monto || 0), 0);
-                const totalPnlDay = dayTrades.reduce((sum, t) => sum + (t.pnl || 0), 0);
+                const totalMontoDay = dayTrades.reduce((sum, t) => sum + toNumber(t?.monto), 0);
+                const totalPnlDay = dayTrades.reduce((sum, t) => sum + toNumber(t?.pnl), 0);
                 const pnlClassDay = totalPnlDay > 0 ? 'text-green-600' : totalPnlDay < 0 ? 'text-red-600' : 'text-gray-600';
                 const pnlSignDay = totalPnlDay > 0 ? '+' : '';
 
@@ -1813,9 +2047,11 @@
                         'Fracaso': '#F44336',
                         'Empate': '#FF9800'
                     };
-                    const pnlClass = trade.pnl > 0 ? 'text-green-600' : trade.pnl < 0 ? 'text-red-600' : 'text-gray-600';
-                    const pnlSign = trade.pnl > 0 ? '+' : '';
-                    const time = new Date(trade.fecha).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+                    const pnlValue = toNumber(trade?.pnl);
+                    const pnlClass = pnlValue > 0 ? 'text-green-600' : pnlValue < 0 ? 'text-red-600' : 'text-gray-600';
+                    const pnlSign = pnlValue > 0 ? '+' : '';
+                    const dateObj = getTradeDate(trade);
+                    const time = dateObj ? dateObj.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : '--:--';
                     const tipoClass = tipoClasses[trade.tipo] || 'bg-gray-100 text-gray-700';
                     const tipoLabel = trade.tipo || 'N/A';
                     const borderColor = borderColors[trade.resultado] || '#e5e7eb';
@@ -1830,8 +2066,8 @@
                                 <span class="text-xs font-semibold px-2 py-1 rounded-full ${resultadoClasses[trade.resultado] || ''}">${trade.resultado}</span>
                             </div>
                             <div class="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-2 text-sm">
-                                <div><span class="text-gray-500">Inversión:</span> <span class="font-medium text-gray-900">$${(trade.monto || 0).toFixed(2)}</span></div>
-                                <div><span class="text-gray-500">P/L:</span> <span class="font-semibold ${pnlClass}">${pnlSign}${(trade.pnl || 0).toFixed(2)}</span></div>
+                                <div><span class="text-gray-500">Inversión:</span> <span class="font-medium text-gray-900">$${toNumber(trade?.monto).toFixed(2)}</span></div>
+                                <div><span class="text-gray-500">P/L:</span> <span class="font-semibold ${pnlClass}">${pnlSign}${pnlValue.toFixed(2)}</span></div>
                                 <div><span class="text-gray-500">Expiración:</span> <span class="font-medium text-gray-900">${formatExpiration(trade.expiracion)}</span></div>
                                 <div><span class="text-gray-500">Dirección:</span> <span class="inline-flex items-center text-xs font-semibold px-2 py-1 rounded-full ${tipoClass}">${tipoLabel}</span></div>
                                 <div class="col-span-2 sm:col-span-4"><span class="text-gray-500">Estrategia:</span> <span class="font-medium text-gray-900">${trade.estrategia || 'N/A'}</span></div>
@@ -1934,10 +2170,11 @@
             const uniquePeriods = new Set();
 
             trades.forEach(trade => {
-                const date = new Date(trade.fecha);
+                const date = getTradeDate(trade);
+                if (!date) return;
                 if (period === 'Día') {
-                    const dayKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-                    uniquePeriods.add(dayKey);
+                    const dayKey = getTradeDateKey(trade);
+                    if (dayKey) uniquePeriods.add(dayKey);
                 }
                 else if (period === 'Semana') uniquePeriods.add(getWeekNumber(date));
                 else if (period === 'Mes') {
@@ -1953,11 +2190,12 @@
 
         const updateAverageVolumeStat = () => {
             const avgVolumeEl = document.getElementById('stat-avg-volume');
+            if (!avgVolumeEl) return;
             if (trades.length === 0) {
                 avgVolumeEl.textContent = "$0.00";
                 return;
             }
-            const totalMonto = trades.reduce((sum, t) => sum + (t.monto || 0), 0);
+            const totalMonto = trades.reduce((sum, t) => sum + toNumber(t?.monto), 0);
             const avg = totalMonto / trades.length;
             avgVolumeEl.textContent = `$${avg.toFixed(2)}`;
         };
@@ -1970,8 +2208,8 @@
                 avgRoiEl.className = "text-3xl font-bold mt-2 text-gray-900";
                 return;
             }
-            const totalMonto = trades.reduce((sum, t) => sum + (t.monto || 0), 0);
-            const totalPnl = trades.reduce((sum, t) => sum + (t.pnl || 0), 0);
+            const totalMonto = trades.reduce((sum, t) => sum + toNumber(t?.monto), 0);
+            const totalPnl = trades.reduce((sum, t) => sum + toNumber(t?.pnl), 0);
             const roi = totalMonto > 0 ? (totalPnl / totalMonto) * 100 : 0;
             avgRoiEl.textContent = `${roi.toFixed(1)}%`;
             avgRoiEl.className = `text-3xl font-bold mt-2 ${roi >= 0 ? 'text-green-600' : 'text-red-600'}`;
@@ -1987,7 +2225,7 @@
                 return;
             }
             const sortedTrades = [...trades].sort((a, b) => {
-                const dateComparison = new Date(a.fecha) - new Date(b.fecha);
+                const dateComparison = (getTradeDate(a)?.getTime() || 0) - (getTradeDate(b)?.getTime() || 0);
                 if (dateComparison !== 0) return dateComparison;
                 return (a.createdAt || 0) - (b.createdAt || 0);
             });
@@ -2012,6 +2250,7 @@
 
         const updateVolumeByPeriodStat = () => {
             const volumeEl = document.getElementById('stat-volume-period');
+            if (!volumeEl) return;
             if (!volumePeriodSelect || trades.length === 0) {
                 volumeEl.textContent = "$0.00";
                 return;
@@ -2028,13 +2267,15 @@
             startLast3Months.setHours(0,0,0,0);
             const selected = volumePeriodSelect.value;
             const sum = trades.reduce((acc, t) => {
-                const d = new Date(t.fecha);
-                if (selected === 'Todo el tiempo') return acc + (t.monto || 0);
-                if (selected === 'Este año') return d.getFullYear() === now.getFullYear() ? acc + (t.monto || 0) : acc;
-                if (selected === 'Últimos 3 meses') return d >= startLast3Months ? acc + (t.monto || 0) : acc;
-                if (selected === 'Este mes') return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() ? acc + (t.monto || 0) : acc;
-                if (selected === 'Esta semana') return d >= startOfWeek ? acc + (t.monto || 0) : acc;
-                if (selected === 'Este día') return d >= startOfDay ? acc + (t.monto || 0) : acc;
+                const d = getTradeDate(t);
+                if (!d) return acc;
+                const monto = toNumber(t?.monto);
+                if (selected === 'Todo el tiempo') return acc + monto;
+                if (selected === 'Este año') return d.getFullYear() === now.getFullYear() ? acc + monto : acc;
+                if (selected === 'Últimos 3 meses') return d >= startLast3Months ? acc + monto : acc;
+                if (selected === 'Este mes') return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() ? acc + monto : acc;
+                if (selected === 'Esta semana') return d >= startOfWeek ? acc + monto : acc;
+                if (selected === 'Este día') return d >= startOfDay ? acc + monto : acc;
                 return acc;
             }, 0);
             volumeEl.textContent = `$${sum.toFixed(2)}`;
@@ -2042,13 +2283,18 @@
 
         const updatePeakHourStat = () => {
             const peakHourStat = document.getElementById('stat-peak-hour');
+            if (!peakHourStat) return;
             if (trades.length < 1) {
                 peakHourStat.innerHTML = "N/A";
                 return;
             }
             
             const hourCounts = Array(24).fill(0);
-            trades.forEach(trade => hourCounts[new Date(trade.fecha).getHours()]++);
+            trades.forEach(trade => {
+                const d = getTradeDate(trade);
+                if (!d) return;
+                hourCounts[d.getHours()]++;
+            });
 
             let maxTradesInWindow = -1;
             let bestStartHour = -1;
@@ -2120,7 +2366,7 @@
             const wins = trades.filter(t => t.resultado === 'Éxito').length;
             const ties = trades.filter(t => t.resultado === 'Empate').length;
             const losses = totalTrades - wins - ties;
-            const totalPnl = trades.reduce((acc, t) => acc + (t.pnl || 0), 0);
+            const totalPnl = trades.reduce((acc, t) => acc + toNumber(t?.pnl), 0);
             const winRate = (wins + losses) > 0 ? (wins / (wins + losses) * 100) : 0;
             
             statsElements.rentabilidad.textContent = `$${totalPnl.toFixed(2)}`;
@@ -2137,7 +2383,8 @@
             updateStreakStats();
 
             const dayCounts = trades.reduce((acc, trade) => {
-                const day = trade.fecha.slice(0, 10);
+                const day = getTradeDateKey(trade);
+                if (!day) return acc;
                 acc[day] = (acc[day] || 0) + 1;
                 return acc;
             }, {});
@@ -2171,7 +2418,7 @@
                 else acc[key].ties++;
 
                 acc[key].total++;
-                acc[key].pnl += (trade.pnl || 0);
+                acc[key].pnl += toNumber(trade?.pnl);
                 return acc;
             }, {});
 
@@ -2199,8 +2446,8 @@
                 const wins = arr.filter(t => t.resultado === 'Éxito').length;
                 const losses = arr.filter(t => t.resultado === 'Fracaso').length;
                 const ties = arr.filter(t => t.resultado === 'Empate').length;
-                const totalMonto = arr.reduce((s,t) => s + (t.monto||0), 0);
-                const totalPnl = arr.reduce((s,t) => s + (t.pnl||0), 0);
+                const totalMonto = arr.reduce((s,t) => s + toNumber(t?.monto), 0);
+                const totalPnl = arr.reduce((s,t) => s + toNumber(t?.pnl), 0);
                 const roi = totalMonto > 0 ? (totalPnl / totalMonto) * 100 : 0;
                 return { wins, losses, ties, totalMonto, totalPnl, roi, count: arr.length };
             };
@@ -2247,7 +2494,8 @@
             }
             const keysSet = new Set();
             trades.forEach(t => {
-                const d = new Date(t.fecha);
+                const d = getTradeDate(t);
+                if (!d) return;
                 const k = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
                 keysSet.add(k);
             });
@@ -2269,7 +2517,8 @@
             const label = new Date(y, m, 1).toLocaleDateString('es-ES', { year: 'numeric', month: 'long' });
             monthLabelEl.textContent = label.charAt(0).toUpperCase()+label.slice(1);
             const monthTrades = trades.filter(t => {
-                const d = new Date(t.fecha);
+                const d = getTradeDate(t);
+                if (!d) return false;
                 return d.getFullYear() === y && d.getMonth() === m;
             });
             if (monthTrades.length === 0) {
@@ -2278,8 +2527,8 @@
                 const wins = monthTrades.filter(t => t.resultado === 'Éxito').length;
                 const ties = monthTrades.filter(t => t.resultado === 'Empate').length;
                 const losses = monthTrades.length - wins - ties;
-                const totalMonto = monthTrades.reduce((s,t)=>s+(t.monto||0),0);
-                const totalPnl = monthTrades.reduce((s,t)=>s+(t.pnl||0),0);
+                const totalMonto = monthTrades.reduce((s,t)=>s+toNumber(t?.monto),0);
+                const totalPnl = monthTrades.reduce((s,t)=>s+toNumber(t?.pnl),0);
                 const winRate = (wins+losses)>0 ? (wins/(wins+losses))*100 : 0;
                 const roi = totalMonto>0 ? (totalPnl/totalMonto)*100 : 0;
                 const avgVol = monthTrades.length>0 ? totalMonto/monthTrades.length : 0;
@@ -2299,6 +2548,7 @@
         };
         
         const renderTrendChart = () => {
+            if (!chartPlaceholder || !chartLabelMax || !chartLabelZero || !chartLabelMin) return;
             chartPlaceholder.style.display = 'block';
             [chartLabelMax, chartLabelZero, chartLabelMin].forEach(el => el.style.display = 'none');
             if (trendChartInstance) { trendChartInstance.clear(); }
@@ -2309,14 +2559,14 @@
             }
 
             const sortedTrades = [...trades].sort((a, b) => {
-                const dateComparison = new Date(a.fecha) - new Date(b.fecha);
+                const dateComparison = (getTradeDate(a)?.getTime() || 0) - (getTradeDate(b)?.getTime() || 0);
                 if (dateComparison !== 0) return dateComparison;
                 return a.createdAt - b.createdAt;
             });
 
             let cumulativePnl = 0;
             const values = sortedTrades.map(trade => {
-                cumulativePnl += (trade.pnl || 0);
+                cumulativePnl += toNumber(trade?.pnl);
                 return cumulativePnl;
             });
             const maxVal = Math.max(0, ...values);
@@ -2340,7 +2590,10 @@
             const pad = Math.max(1, (yMax - yMin) * 0.05);
             const isPositive = values[values.length - 1] >= 0;
             const lineColor = isPositive ? '#34D399' : '#F87171';
-            const xData = sortedTrades.map(t => new Date(t.fecha).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }));
+            const xData = sortedTrades.map(t => {
+                const d = getTradeDate(t);
+                return d ? d.toLocaleString('es-ES', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : 'Sin fecha';
+            });
 
             const option = {
                 grid: { left: '8%', right: '4%', top: '6%', bottom: '12%', containLabel: true },
@@ -2383,8 +2636,8 @@
             const now = new Date();
             const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
             return trades.reduce((sum, t) => {
-                const key = (t && typeof t.fecha === 'string') ? t.fecha.slice(0, 10) : '';
-                if (key === todayKey) return sum + (typeof t.pnl === 'number' ? t.pnl : Number(t.pnl) || 0);
+                const key = getTradeDateKey(t);
+                if (key === todayKey) return sum + toNumber(t?.pnl);
                 return sum;
             }, 0);
         };
@@ -2583,7 +2836,11 @@
             tabs[activeTabKey].classList.add('tab-active');
             contents[activeTabKey].classList.remove('hidden');
             if (activeTabKey === 'estadisticas') updateAllStatistics();
-            if (activeTabKey === 'ajustes') updateDataUsageStats();
+            if (activeTabKey === 'ajustes') {
+                updateDataUsageStats();
+                renderStorageSummary();
+                renderDiscordWebhookSettings();
+            }
             if (activeTabKey === 'objetivos') renderObjectives();
         };
         window.addEventListener('resize', () => { if (trendChartInstance) trendChartInstance.resize(); });
@@ -2618,14 +2875,14 @@
         let themePreference = 'auto';
         const applyTheme = (pref, notify=false) => {
             themePreference = pref;
-            localStorage.setItem(THEME_PREF_KEY, pref);
+            storageSetItem(THEME_PREF_KEY, pref);
             const isDark = pref === 'dark' ? true : pref === 'light' ? false : prefersDarkMql.matches;
             document.documentElement.classList.toggle('dark', isDark);
             setMetaThemeColor(isDark);
             if (notify) showToast('Preferencia de tema actualizada.');
         };
         const initTheme = () => {
-            const stored = localStorage.getItem(THEME_PREF_KEY);
+            const stored = storageGetItem(THEME_PREF_KEY);
             themePreference = stored || 'auto';
             applyTheme(themePreference);
             const radios = document.querySelectorAll('input[name="theme-preference"]');

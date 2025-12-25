@@ -512,6 +512,7 @@
       <button class="tab-btn" data-tab="tab-historial" role="tab" aria-selected="false">2) Historial</button>
       <button class="tab-btn" data-tab="tab-estadisticas" role="tab" aria-selected="false">3) Estadísticas</button>
       <button class="tab-btn" data-tab="tab-almacenamiento" role="tab" aria-selected="false">4) Almacenamiento</button>
+      <button class="tab-btn" data-tab="tab-ajustes" role="tab" aria-selected="false">5) Ajustes</button>
     </nav>
 
     <!-- Panels -->
@@ -666,6 +667,31 @@
       </div>
     </section>
 
+    <section id="tab-ajustes" class="panel" aria-labelledby="Ajustes" style="margin-top:14px;">
+      <div class="card">
+        <h2 style="margin-top:0">Ajustes</h2>
+        <div class="help">Configura parámetros locales guardados en tu navegador (IndexedDB).</div>
+        <div style="height:12px"></div>
+
+        <div class="grid" style="grid-template-columns: 1fr; gap:12px">
+          <div>
+            <label for="discordWebhookUrl">Webhook de Discord (secreto)</label>
+            <input id="discordWebhookUrl" type="text" placeholder="https://discord.com/api/webhooks/..." autocomplete="off" spellcheck="false" />
+            <div class="help" style="margin-top:8px">
+              Se guarda localmente en IndexedDB. Al exportar/importar JSON también se incluirá para que puedas migrarlo entre navegadores.
+            </div>
+          </div>
+
+          <div class="row right" style="gap:10px">
+            <button type="button" class="btn ghost" id="btnClearWebhook">Quitar webhook</button>
+            <button type="button" class="btn primary" id="btnSaveWebhook">Guardar webhook</button>
+          </div>
+
+          <div class="help" id="webhookStatus" aria-live="polite"></div>
+        </div>
+      </div>
+    </section>
+
     <div class="footer">Hecho con ❤️
     </div>
   </div>
@@ -713,8 +739,9 @@
 (async function(){
   // IndexedDB wrapper for records
   const DB_NAME = 'ctPool_registroDiario_db_v1';
-const DB_VERSION = 2; // Incrementar versión para forzar onupgradeneeded
+const DB_VERSION = 3; // Incrementar versión para forzar onupgradeneeded
 const STORE_RECORDS = 'records';
+const STORE_SETTINGS = 'settings';
   const SATS_PER_BTC = 100_000_000;
 
   // Date helpers
@@ -761,9 +788,84 @@ const STORE_RECORDS = 'records';
         } else {
           console.log(`[DB] Object store ${STORE_RECORDS} ya existe`);
         }
+
+        if (!db.objectStoreNames.contains(STORE_SETTINGS)){
+          db.createObjectStore(STORE_SETTINGS, { keyPath: 'key' });
+        }
       };
       req.onsuccess = () => resolve(req.result);
       req.onerror = () => reject(req.error);
+    });
+  }
+
+  function normalizeDiscordWebhookUrl(input){
+    const value = String(input || '').trim();
+    if (!value) return { ok: true, value: '' };
+    try{
+      const url = new URL(value);
+      const host = (url.hostname || '').toLowerCase();
+      const allowedHosts = new Set(['discord.com', 'canary.discord.com', 'ptb.discord.com']);
+      if (!allowedHosts.has(host)) return { ok: false, error: 'Host inválido. Usa discord.com.' };
+      if (!url.pathname.startsWith('/api/webhooks/')) return { ok: false, error: 'Ruta inválida. Debe iniciar con /api/webhooks/.' };
+      if (url.search || url.hash) return { ok: false, error: 'El webhook no debe incluir query ni hash.' };
+      return { ok: true, value: url.toString() };
+    }catch{
+      return { ok: false, error: 'URL inválida.' };
+    }
+  }
+
+  async function getSetting(key){
+    const db = await openDB();
+    return new Promise((resolve, reject)=>{
+      try{
+        if (!db.objectStoreNames.contains(STORE_SETTINGS)) return resolve(null);
+        const tx = db.transaction(STORE_SETTINGS, 'readonly');
+        const store = tx.objectStore(STORE_SETTINGS);
+        const req = store.get(key);
+        req.onsuccess = ()=> resolve(req.result ? req.result.value : null);
+        req.onerror = ()=> reject(req.error);
+      }catch(error){
+        reject(error);
+      }
+    });
+  }
+
+  async function setSetting(key, value){
+    const db = await openDB();
+    return new Promise((resolve, reject)=>{
+      try{
+        if (!db.objectStoreNames.contains(STORE_SETTINGS)) throw new Error('Object store settings no encontrado');
+        const tx = db.transaction(STORE_SETTINGS, 'readwrite');
+        const store = tx.objectStore(STORE_SETTINGS);
+        const req = store.put({ key, value });
+        req.onsuccess = ()=> resolve();
+        req.onerror = ()=> reject(req.error);
+      }catch(error){
+        reject(error);
+      }
+    });
+  }
+
+  async function getAllSettings(){
+    const db = await openDB();
+    return new Promise((resolve, reject)=>{
+      try{
+        if (!db.objectStoreNames.contains(STORE_SETTINGS)) return resolve({});
+        const tx = db.transaction(STORE_SETTINGS, 'readonly');
+        const store = tx.objectStore(STORE_SETTINGS);
+        const req = store.getAll();
+        req.onsuccess = ()=>{
+          const entries = Array.isArray(req.result) ? req.result : [];
+          const out = {};
+          for (const item of entries){
+            if (item && typeof item.key === 'string') out[item.key] = item.value;
+          }
+          resolve(out);
+        };
+        req.onerror = ()=> reject(req.error);
+      }catch(error){
+        reject(error);
+      }
     });
   }
 
@@ -860,6 +962,8 @@ const STORE_RECORDS = 'records';
     }
     // If opening almacenamiento tab, refresh storage stats
     if (btn.dataset.tab === 'tab-almacenamiento') refreshStorageStats();
+
+    if (btn.dataset.tab === 'tab-ajustes') refreshSettingsUI();
   }));
 
   // Add handling for the new storage tab activation when present
@@ -1181,7 +1285,7 @@ const STORE_RECORDS = 'records';
 
   // Export / Import
   byId('btnExportar').onclick = async ()=>{
-    const data = { records: await loadRecords() };
+    const data = { records: await loadRecords(), settings: await getAllSettings() };
     const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `btc_registros_${todayYMD()}.json`; a.click(); URL.revokeObjectURL(a.href);
   };
@@ -1191,6 +1295,16 @@ const STORE_RECORDS = 'records';
     try{
       const data = JSON.parse(text);
       if (!data || !Array.isArray(data.records)) throw new Error('Estructura inválida');
+
+      if (data.settings && typeof data.settings === 'object'){
+        const incomingWebhook = data.settings.discord_webhook_url;
+        if (incomingWebhook !== undefined){
+          const normalized = normalizeDiscordWebhookUrl(incomingWebhook);
+          if (!normalized.ok) throw new Error('Webhook en importación inválido: ' + normalized.error);
+          await setSetting('discord_webhook_url', normalized.value || '');
+        }
+      }
+
       const current = await loadRecords();
       const existingDates = new Set(current.map(r=> r.dateISO));
       const merged = [...current];
@@ -1293,11 +1407,18 @@ const STORE_RECORDS = 'records';
   }
 
   // Send to Discord webhook button
-  const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1415552156559216670/3e8yvwJiDPQ1RF-8ZIviFBSrofvxutNndu4KAdS7Tyzn9c5DFRoSr9wl446zqzswlMbf';
   const btnSendDiscord = document.getElementById('btnSendDiscord');
   if (btnSendDiscord){
     btnSendDiscord.addEventListener('click', async ()=>{
-      if (!confirm('Enviar respaldo JSON con todos los registros al canal de Discord mediante webhook?')) return;
+      const savedWebhook = await getSetting('discord_webhook_url');
+      const normalizedWebhook = normalizeDiscordWebhookUrl(savedWebhook);
+      if (!normalizedWebhook.ok || !normalizedWebhook.value){
+        alert('No hay webhook configurado. Ve a Ajustes y registra el webhook de Discord.');
+        return;
+      }
+
+      const confirmed = confirm('Enviar respaldo JSON con todos los registros al canal de Discord mediante webhook?\n\nAviso: el archivo enviado incluirá el webhook configurado; cualquiera con acceso a ese mensaje podrá usarlo.');
+      if (!confirmed) return;
       try{
         btnSendDiscord.disabled = true; btnSendDiscord.textContent = '⌛ Enviando...';
 
@@ -1316,7 +1437,7 @@ const STORE_RECORDS = 'records';
         };
 
         // Build file payload
-        const payloadFile = { summary, records };
+        const payloadFile = { summary, records, settings: { discord_webhook_url: normalizedWebhook.value } };
         const blob = new Blob([JSON.stringify(payloadFile, null, 2)], { type: 'application/json' });
 
         // Build a human-readable message with embed-like fields
@@ -1336,7 +1457,7 @@ const STORE_RECORDS = 'records';
         form.append('file', blob, `ctpool_backup_${todayYMD()}.json`);
         form.append('payload_json', JSON.stringify({ content: `Respaldo de registros - ${todayYMD()}`, embeds: [embed] }));
 
-        const resp = await fetch(DISCORD_WEBHOOK_URL, { method: 'POST', body: form });
+        const resp = await fetch(normalizedWebhook.value, { method: 'POST', body: form });
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         alert('Respaldo enviado a Discord correctamente.');
       }catch(err){
@@ -1345,6 +1466,48 @@ const STORE_RECORDS = 'records';
       }finally{
         btnSendDiscord.disabled = false; btnSendDiscord.textContent = '📤 Enviar respaldo a Discord';
       }
+    });
+  }
+
+  async function refreshSettingsUI(){
+    const input = byId('discordWebhookUrl');
+    const status = byId('webhookStatus');
+    const saved = await getSetting('discord_webhook_url');
+    input.value = saved || '';
+    const normalized = normalizeDiscordWebhookUrl(saved);
+    if (!saved){
+      status.textContent = 'Estado: webhook no configurado.';
+      return;
+    }
+    if (!normalized.ok){
+      status.textContent = 'Estado: webhook guardado pero inválido. Reemplázalo por una URL válida.';
+      return;
+    }
+    status.textContent = 'Estado: webhook configurado y validado.';
+  }
+
+  const btnSaveWebhook = byId('btnSaveWebhook');
+  const btnClearWebhook = byId('btnClearWebhook');
+  if (btnSaveWebhook){
+    btnSaveWebhook.addEventListener('click', async ()=>{
+      const input = byId('discordWebhookUrl');
+      const status = byId('webhookStatus');
+      const normalized = normalizeDiscordWebhookUrl(input.value);
+      if (!normalized.ok){
+        alert(normalized.error);
+        return;
+      }
+      await setSetting('discord_webhook_url', normalized.value || '');
+      status.textContent = normalized.value ? 'Estado: webhook configurado y validado.' : 'Estado: webhook no configurado.';
+      alert('Webhook guardado localmente.');
+    });
+  }
+  if (btnClearWebhook){
+    btnClearWebhook.addEventListener('click', async ()=>{
+      if (!confirm('Quitar el webhook guardado en este navegador?')) return;
+      await setSetting('discord_webhook_url', '');
+      await refreshSettingsUI();
+      alert('Webhook eliminado.');
     });
   }
 
@@ -1359,6 +1522,7 @@ const STORE_RECORDS = 'records';
   await refreshAll();
   // Refresh storage stats initially
   await refreshStorageStats();
+  await refreshSettingsUI();
 
   // --- Calculadora (sin cambios funcionales) ---
   let calcDisplay = document.getElementById('calculatorDisplay');

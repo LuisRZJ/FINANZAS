@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel de Inversiones BTC Mining</title>
+    <title>Panel de Inversiones Cloud Power Miner</title>
     <meta name="theme-color" content="#2563eb">
     <link rel="icon" href="/pwa/logo-app.png">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -189,7 +189,7 @@
 
     <div class="container mx-auto p-4 md:p-8">
         <header class="text-center mb-8">
-            <h1 class="text-4xl font-bold text-gray-800">Panel de Control - BTC Mining</h1>
+            <h1 class="text-4xl font-bold text-gray-800">Panel de Control - Cloud Power Miner</h1>
             <p class="text-gray-600 mt-2">Registra y monitorea el rendimiento de los activos.</p>
         </header>
 
@@ -215,7 +215,7 @@
                 <form id="investment-form" class="space-y-4">
                     <div>
                         <label for="investment-name" class="block text-sm font-medium text-gray-600 mb-1">Nombre Inversión</label>
-                        <input type="text" id="investment-name" class="form-input" placeholder="Ej: Minero ASIC S19" required>
+                        <input type="text" id="investment-name" class="form-input" placeholder="Ej: Contrato CPM 1" required>
                     </div>
                     <div>
                         <label for="registration-date" class="block text-sm font-medium text-gray-600 mb-1">Fecha de Registro</label>
@@ -456,8 +456,8 @@
             const saveWebhookBtn = document.getElementById('save-webhook');
 
             // --- Estado ---
-            let investments = JSON.parse(localStorage.getItem('btcMiningInvestments')) || [];
-            let discordWebhookUrl = localStorage.getItem('btcMiningWebhook') || '';
+            let investments = JSON.parse(localStorage.getItem('cloudPowerMinerInvestments')) || [];
+            let discordWebhookUrl = localStorage.getItem('cloudPowerMinerWebhook') || '';
 
             if (discordWebhookUrl) {
                 discordWebhookInput.value = discordWebhookUrl;
@@ -937,7 +937,7 @@
                 }
 
                 investments.push(newInv);
-                localStorage.setItem('btcMiningInvestments', JSON.stringify(investments));
+                localStorage.setItem('cloudPowerMinerInvestments', JSON.stringify(investments));
                 
                 investmentForm.reset();
                 durationContainer.classList.add('hidden');
@@ -953,7 +953,7 @@
                     const id = parseInt(deleteBtn.dataset.id);
                     if (await showConfirmationModal('Eliminar Inversión', '¿Estás seguro?')) {
                         investments = investments.filter(i => i.id !== id);
-                        localStorage.setItem('btcMiningInvestments', JSON.stringify(investments));
+                        localStorage.setItem('cloudPowerMinerInvestments', JSON.stringify(investments));
                         renderApp();
                     }
                 } else if (editBtn) {
@@ -963,7 +963,7 @@
                         const updates = await showEditModal(inv);
                         if (updates) {
                             Object.assign(inv, updates);
-                            localStorage.setItem('btcMiningInvestments', JSON.stringify(investments));
+                            localStorage.setItem('cloudPowerMinerInvestments', JSON.stringify(investments));
                             renderApp();
                         }
                     }
@@ -991,7 +991,7 @@
             // Storage & Data
             clearStorageBtn.addEventListener('click', async () => {
                 if (await showConfirmationModal('Limpiar Todo', '¿Borrar todos los datos permanentemente?')) {
-                    localStorage.removeItem('btcMiningInvestments');
+                    localStorage.removeItem('cloudPowerMinerInvestments');
                     investments = [];
                     renderApp();
                     showToast({ type: 'success', title: 'Almacenamiento limpiado', message: 'Se eliminaron todos los registros.' });
@@ -1008,17 +1008,17 @@
                 } else {
                     discordWebhookInput.classList.remove('ring-2', 'ring-red-500');
                     if (urlFromInput && urlFromInput !== discordWebhookUrl) {
-                        localStorage.setItem('btcMiningWebhook', urlFromInput);
+                        localStorage.setItem('cloudPowerMinerWebhook', urlFromInput);
                         discordWebhookUrl = urlFromInput;
                     }
                 }
 
-                const dataStr = JSON.stringify({ type: 'btc-mining', data: investments, discordWebhookUrl: discordWebhookUrl, date: new Date() }, null, 2);
+                const dataStr = JSON.stringify({ type: 'cloud-power-miner-investments', version: '1.0', data: investments, discordWebhookUrl: discordWebhookUrl, exportDate: new Date().toISOString() }, null, 2);
                 const blob = new Blob([dataStr], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `btc-mining-backup-${new Date().toISOString().slice(0,10)}.json`;
+                a.download = `cloud-power-miner-backup-${new Date().toISOString().slice(0,10)}.json`;
                 a.click();
             });
 
@@ -1030,22 +1030,22 @@
                 try {
                     const text = await file.text();
                     const json = JSON.parse(text);
-                    if (json.type === 'btc-mining' || Array.isArray(json) || json.type === 'btc-mining-investments') {
-                        const data = Array.isArray(json) ? json : json.data;
+                    if (json.type === 'cloud-power-miner-investments' || json.type === 'cloud-power-miner') {
+                        const data = json.data;
                         if (await showConfirmationModal('Importar', 'Esto reemplazará tus datos actuales. ¿Continuar?')) {
                             investments = data;
-                            localStorage.setItem('btcMiningInvestments', JSON.stringify(investments));
+                            localStorage.setItem('cloudPowerMinerInvestments', JSON.stringify(investments));
 
                             const importedWebhookUrl = (json && typeof json === 'object') ? (json.discordWebhookUrl || (json.config && json.config.discordWebhookUrl)) : '';
                             if (typeof importedWebhookUrl === 'string') {
                                 const trimmed = importedWebhookUrl.trim();
                                 if (trimmed) {
                                     discordWebhookUrl = trimmed;
-                                    localStorage.setItem('btcMiningWebhook', discordWebhookUrl);
+                                    localStorage.setItem('cloudPowerMinerWebhook', discordWebhookUrl);
                                     discordWebhookInput.value = discordWebhookUrl;
                                 } else {
                                     discordWebhookUrl = '';
-                                    localStorage.removeItem('btcMiningWebhook');
+                                    localStorage.removeItem('cloudPowerMinerWebhook');
                                     discordWebhookInput.value = '';
                                 }
                             }
@@ -1075,11 +1075,11 @@
                     }
                     discordWebhookInput.classList.remove('ring-2', 'ring-red-500');
                     if (url) {
-                        localStorage.setItem('btcMiningWebhook', url);
+                        localStorage.setItem('cloudPowerMinerWebhook', url);
                         discordWebhookUrl = url;
                         showToast({ type: 'success', title: 'Webhook guardado', message: 'Se usará para futuros respaldos y exportaciones.' });
                     } else {
-                        localStorage.removeItem('btcMiningWebhook');
+                        localStorage.removeItem('cloudPowerMinerWebhook');
                         discordWebhookUrl = '';
                         showToast({ type: 'info', title: 'Webhook eliminado', message: 'No se enviarán respaldos a Discord hasta configurar uno.' });
                     }
@@ -1105,7 +1105,7 @@
                     return;
                 }
                 if (url !== discordWebhookUrl) {
-                    localStorage.setItem('btcMiningWebhook', url);
+                    localStorage.setItem('cloudPowerMinerWebhook', url);
                     discordWebhookUrl = url;
                 }
                 if (await showConfirmationModal('Discord', '¿Enviar respaldo al Webhook configurado?')) {
@@ -1135,16 +1135,16 @@
                             }
                         });
 
-                        const backupPayload = { type: 'btc-mining', data: investments, discordWebhookUrl: discordWebhookUrl, date: new Date() };
+                        const backupPayload = { type: 'cloud-power-miner-investments', version: '1.0', data: investments, discordWebhookUrl: discordWebhookUrl, exportDate: new Date().toISOString() };
                         const fileBlob = new Blob([JSON.stringify(backupPayload, null, 2)], { type: 'application/json' });
-                        formData.append('file', fileBlob, 'backup.json');
+                        formData.append('file', fileBlob, `cloud-power-miner-backup-${new Date().toISOString().slice(0,10)}.json`);
 
                         const payload = {
-                            content: 'Respaldo automático BTC Mining',
+                            content: 'Respaldo automático Cloud Power Miner',
                             username: 'Mining Bot',
                             embeds: [
                                 {
-                                    title: 'Respaldo de Datos de Minería BTC',
+                                    title: 'Respaldo de Datos de Cloud Power Miner',
                                     description: 'Resumen',
                                     color: 2454510,
                                     fields: [

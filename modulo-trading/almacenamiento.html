@@ -1,60 +1,329 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
-    <link rel="stylesheet" href="estilos.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Backtesting - Almacenamiento</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script>
+        (function () {
+            const match = document.cookie.match(/(?:^|;\s*)theme=([^;]+)/);
+            if (match && decodeURIComponent(match[1]) === 'dark') document.documentElement.classList.add('dark');
+        })();
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { darkMode: 'class' };
+        if (typeof tailwind !== 'undefined' && typeof tailwind.refresh === 'function') tailwind.refresh();
+    </script>
+
+    <!-- Google Fonts (Inter) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Manifest and Icons -->
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/png" sizes="192x192" href="Logo_app_trading-removebg-preview.png">
     <link rel="icon" type="image/png" sizes="512x512" href="Logo_app_trading-removebg-preview.png">
+
+    <!-- Cache Control -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
+    <style>
+        /* Estilos base y para el menú, integrados con la lógica JS existente */
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Clases para controlar la visibilidad del menú lateral sin modificar el JS */
+        .nav-menu.visible {
+            transform: translateX(0);
+        }
+
+        .menu-overlay.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        body.menu-open {
+            position: fixed;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        /* Estilo para ocultar el botón del menú cuando el menú está abierto */
+        .menu-toggle.opened {
+            transform: translateX(-150%);
+            opacity: 0;
+            pointer-events: none;
+            visibility: hidden;
+        }
+    </style>
 </head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>Almacenamiento</h1>
-            <div class="account-switcher">
-                <label for="account-select">Cuenta:</label>
-                <select id="account-select"></select>
-                <button type="button" id="add-account-btn" class="nav-btn">Nueva cuenta</button>
-                <span id="active-account-name" class="account-name"></span>
+
+<body class="bg-orange-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+
+    <!-- Botón del Menú Hamburguesa -->
+    <button
+        class="menu-toggle fixed z-50 top-4 left-4 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-lg flex items-center justify-center text-2xl text-gray-700 dark:text-gray-300 transition-all duration-300 ease-in-out"
+        onclick="toggleMenu()">
+        ☰
+    </button>
+
+    <!-- Overlay del Menú -->
+    <div
+        class="menu-overlay fixed inset-0 bg-black bg-opacity-50 z-30 opacity-0 pointer-events-none transition-opacity duration-300">
+    </div>
+
+    <!-- Menú de Navegación Lateral -->
+    <nav
+        class="nav-menu fixed top-0 left-0 h-full w-72 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md shadow-xl z-40 transform -translate-x-full transition-transform duration-300 ease-in-out">
+        <div class="p-4">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Menú</h2>
+                <!-- Botón de Cierre (dentro del menú) -->
+                <button
+                    class="w-10 h-10 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors"
+                    onclick="toggleMenu()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
             </div>
-            <div id="datetime" class="datetime"></div>
+            <div class="menu-items space-y-2">
+                <a href="index.html"
+                    class="flex items-center gap-3 py-2.5 px-4 rounded-lg font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                        <polyline points="9 22 9 12 15 12 15 22" />
+                    </svg>
+                    <span>Inicio</span>
+                </a>
+                <a href="/index.html"
+                    class="flex items-center gap-3 py-2.5 px-4 rounded-lg font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect width="7" height="9" x="3" y="3" rx="1" />
+                        <rect width="7" height="5" x="14" y="3" rx="1" />
+                        <rect width="7" height="9" x="14" y="12" rx="1" />
+                        <rect width="7" height="5" x="3" y="16" rx="1" />
+                    </svg>
+                    <span>Volver al panel de control</span>
+                </a>
+                <a href="registrar-trade.html"
+                    class="flex items-center gap-3 py-2.5 px-4 rounded-lg font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M8 12h8" />
+                        <path d="M12 8v8" />
+                    </svg>
+                    <span>Registrar Trade</span>
+                </a>
+                <a href="diario.html"
+                    class="flex items-center gap-3 py-2.5 px-4 rounded-lg font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+                    </svg>
+                    <span>Diario</span>
+                </a>
+                <a href="estadisticas.html"
+                    class="flex items-center gap-3 py-2.5 px-4 rounded-lg font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 3v18h18" />
+                        <path d="M18 17V9" />
+                        <path d="M13 17V5" />
+                        <path d="M8 17v-3" />
+                    </svg>
+                    <span>Estadísticas</span>
+                </a>
+                <a href="plan-trading.html"
+                    class="flex items-center gap-3 py-2.5 px-4 rounded-lg font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
+                        <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+                        <path d="M10 9H8" />
+                        <path d="M16 13H8" />
+                        <path d="M16 17H8" />
+                    </svg>
+                    <span>Plan de Trading</span>
+                </a>
+                <a href="almacenamiento.html"
+                    class="flex items-center gap-3 py-2.5 px-4 rounded-lg font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <ellipse cx="12" cy="5" rx="9" ry="3" />
+                        <path d="M3 5V19A9 3 0 0 0 21 19V5" />
+                        <path d="M3 12A9 3 0 0 0 21 12" />
+                    </svg>
+                    <span>Almacenamiento</span>
+                </a>
+                <a href="ajustes.html"
+                    class="flex items-center gap-3 py-2.5 px-4 rounded-lg font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path
+                            d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1 0-2l.15.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+                        <circle cx="12" cy="12" r="3" />
+                    </svg>
+                    <span>Ajustes</span>
+                </a>
+                <a href="deposito-retiro.html"
+                    class="flex items-center gap-3 py-2.5 px-4 rounded-lg font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M8 3 4 7l4 4" />
+                        <path d="M4 7h16" />
+                        <path d="m16 21 4-4-4-4" />
+                        <path d="M20 17H4" />
+                    </svg>
+                    <span>Deposito/Retiro</span>
+                </a>
+                <a href="gestor-cuentas.html"
+                    class="flex items-center gap-3 py-2.5 px-4 rounded-lg font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                    </svg>
+                    <span>Gestor de Cuentas</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenido Principal -->
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8 pt-24">
+        <!-- Encabezado -->
+        <header class="mb-8">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <h1 class="text-4xl font-bold text-gray-900 dark:text-white">Almacenamiento</h1>
+                <div id="datetime" class="text-sm text-gray-500 dark:text-gray-400"></div>
+            </div>
+            <div class="account-switcher mt-4 flex flex-wrap items-center gap-2">
+                <label for="account-select" class="text-sm font-medium">Cuenta:</label>
+                <select id="account-select"
+                    class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"></select>
+                <button type="button" id="add-account-btn"
+                    class="nav-btn px-4 py-2 bg-orange-600 text-white rounded-lg text-sm font-semibold hover:bg-orange-700 transition">Nueva
+                    cuenta</button>
+                <button type="button"
+                    class="nav-btn secondary px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg text-sm font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+                    onclick="window.location.href='gestor-cuentas.html'">Gestionar</button>
+                <span id="active-account-name" class="account-name ml-2 font-semibold"></span>
+            </div>
+        </header>
+
+        <!-- Contenedor de Almacenamiento -->
+        <div class="grid grid-cols-1 gap-6">
+            <div id="storageContainer" class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md">
+                <!-- El contenido se cargará dinámicamente -->
+            </div>
+
+            <div class="actions-container bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md space-y-4">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Acciones de Datos</h3>
+
+                <div class="flex flex-wrap gap-4">
+                    <button
+                        class="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition shadow-sm"
+                        onclick="saveData()">
+                        Guardar Datos en Local
+                    </button>
+
+                    <button
+                        class="px-6 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition shadow-sm"
+                        onclick="clearData()">
+                        Eliminar Datos Locales
+                    </button>
+
+                    <button
+                        class="px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition shadow-sm"
+                        onclick="openExportModal('download')">
+                        Exportar Trades
+                    </button>
+
+                    <button id="export-discord-btn"
+                        class="px-6 py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition shadow-sm"
+                        onclick="openExportModal('discord')">
+                        Exportar a Discord
+                    </button>
+
+                    <div class="relative">
+                        <input type="file" id="importFile" accept=".json" style="display: none;"
+                            onchange="importTrades(event)">
+                        <button
+                            class="px-6 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition shadow-sm"
+                            onclick="document.getElementById('importFile').click()">
+                            Importar Trades
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div id="storageContainer" class="stats">
-            <!-- El contenido se cargará dinámicamente -->
+        <div class="mt-8 text-center">
+            <button
+                class="px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+                onclick="window.location.href='index.html'">
+                Volver al Inicio
+            </button>
         </div>
+    </div>
 
-        <div class="form-group">
-            <button class="nav-btn" onclick="saveData()">Guardar Datos en Almacenamiento Local</button>
+    <div id="export-scope-modal" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true" aria-labelledby="export-scope-title">
+        <div class="absolute inset-0 bg-black/50" onclick="closeExportModal()"></div>
+        <div class="relative mx-auto mt-24 w-[min(92vw,520px)] rounded-2xl bg-white dark:bg-gray-800 shadow-xl p-6">
+            <h3 id="export-scope-title" class="text-xl font-bold text-gray-900 dark:text-white">Exportación</h3>
+            <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">Elige si quieres exportar solo la cuenta activa o todas las cuentas en un único archivo.</p>
+            <div class="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button type="button" class="px-5 py-3 rounded-lg font-semibold bg-green-600 hover:bg-green-700 text-white transition" onclick="confirmExportScope('active')">Cuenta activa</button>
+                <button type="button" class="px-5 py-3 rounded-lg font-semibold bg-gray-900 hover:bg-gray-950 text-white transition" onclick="confirmExportScope('all')">Todas las cuentas</button>
+            </div>
+            <div class="mt-5 flex justify-end">
+                <button type="button" class="px-4 py-2 rounded-lg font-semibold bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 transition" onclick="closeExportModal()">Cancelar</button>
+            </div>
         </div>
+    </div>
 
-        <div class="form-group">
-            <button class="nav-btn clear" onclick="clearData()">Eliminar Datos del Almacenamiento Local</button>
-        </div>
-
-        <div class="form-group">
-            <button class="nav-btn export" onclick="exportTrades()">Exportar Trades</button>
-        </div>
-
-        <div class="form-group">
-            <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importTrades(event)">
-            <button class="nav-btn import" onclick="document.getElementById('importFile').click()">Importar Trades</button>
-        </div>
-
-        <div class="navigation-buttons">
-            <button class="nav-btn" onclick="window.location.href='index.html'">Volver al Inicio</button>
+    <div id="import-mode-modal" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true" aria-labelledby="import-mode-title">
+        <div class="absolute inset-0 bg-black/50" onclick="closeImportModal()"></div>
+        <div class="relative mx-auto mt-24 w-[min(92vw,560px)] rounded-2xl bg-white dark:bg-gray-800 shadow-xl p-6">
+            <h3 id="import-mode-title" class="text-xl font-bold text-gray-900 dark:text-white">Importación</h3>
+            <p id="import-mode-desc" class="mt-2 text-sm text-gray-600 dark:text-gray-300"></p>
+            <div class="mt-5 grid grid-cols-1 gap-3">
+                <button id="import-add-btn" type="button" class="px-5 py-3 rounded-lg font-semibold bg-orange-600 hover:bg-orange-700 text-white transition" onclick="confirmImportAction('add')">Agregar como nueva cuenta</button>
+                <button id="import-replace-current-btn" type="button" class="px-5 py-3 rounded-lg font-semibold bg-purple-600 hover:bg-purple-700 text-white transition" onclick="confirmImportAction('replace-current')">Reemplazar datos de cuenta actual</button>
+                <button id="import-replace-global-btn" type="button" class="px-5 py-3 rounded-lg font-semibold bg-red-600 hover:bg-red-700 text-white transition" onclick="confirmImportAction('replace-global')">Reemplazar datos a nivel general</button>
+            </div>
+            <div class="mt-5 flex justify-end">
+                <button type="button" class="px-4 py-2 rounded-lg font-semibold bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 transition" onclick="closeImportModal()">Cancelar</button>
+            </div>
         </div>
     </div>
 
     <script src="javascript.js"></script>
     <script>
-        // Función para obtener una cookie (restaurada)
+        // Función para obtener una cookie
         function getCookie(name) {
             const nameEQ = name + "=";
             const ca = document.cookie.split(';');
-            for(let i = 0; i < ca.length; i++) {
+            for (let i = 0; i < ca.length; i++) {
                 let c = ca[i];
                 while (c.charAt(0) === ' ') c = c.substring(1, c.length);
                 if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
@@ -62,19 +331,23 @@
             return null;
         }
 
-        // Cargar tema guardado (restaurada)
+        // Cargar tema guardado
         function loadTheme() {
             const theme = getCookie('theme') || 'light';
-            document.body.className = theme;
+            if (theme === 'dark') {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
         }
 
-        // Actualizar fecha y hora (restaurada)
+        // Actualizar fecha y hora
         function updateDateTime() {
             const now = new Date();
-            const options = { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
+            const options = {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
                 day: 'numeric',
                 hour: '2-digit',
                 minute: '2-digit',
@@ -83,20 +356,20 @@
             document.getElementById('datetime').textContent = now.toLocaleDateString('es-ES', options);
         }
 
-        // Funciones de Importar y Exportar Trades (restauradas)
+        // Funciones de Importar y Exportar Trades
         function importTrades(event) {
             const file = event.target.files[0];
             if (!file) return;
 
-            const maxSize = 4.5 * 1024 * 1024; // 4.5MB para dejar margen
+            const maxSize = 9 * 1024 * 1024;
             if (file.size > maxSize) {
-                alert('El archivo es demasiado grande. El tamaño máximo permitido es 4.5MB para asegurar compatibilidad con LocalStorage.');
+                alert('El archivo es demasiado grande. El tamaño máximo permitido es 9MB para asegurar compatibilidad con LocalStorage.');
                 event.target.value = '';
                 return;
             }
 
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = function (e) {
                 try {
                     const data = JSON.parse(e.target.result);
                     if (!data || typeof data !== 'object') {
@@ -105,56 +378,14 @@
                         return;
                     }
 
-                    const payload = {};
-
-                    if (Array.isArray(data.trades)) {
-                        const jsonString = JSON.stringify(data.trades);
-                        const storageSize = jsonString.length * 2;
-                        const storageSizeMB = storageSize / (1024 * 1024);
-                        if (storageSizeMB > 4.5) {
-                            alert(`Advertencia: El archivo contiene demasiados trades (${data.trades.length}). El tamaño estimado de los trades (${storageSizeMB.toFixed(2)}MB) excede el límite seguro de LocalStorage (4.5MB). Se intentará importar el resto de los datos.`);
-                        }
-                        payload.trades = data.trades;
-                    } else {
-                        alert('El archivo no contiene un formato válido de trades o están ausentes. Se limpiarán los trades actuales.');
-                        payload.trades = [];
+                    const parsed = parseImportFile(data);
+                    if (!parsed) {
+                        alert('El archivo no coincide con un formato de exportación soportado.');
+                        event.target.value = '';
+                        return;
                     }
 
-                    if (data.hasOwnProperty('initialCapital')) {
-                        payload.initialCapital = data.initialCapital;
-                    } else {
-                        payload.initialCapital = null;
-                    }
-
-                    if (data.hasOwnProperty('username')) {
-                        payload.username = data.username;
-                    } else {
-                        payload.username = null;
-                    }
-
-                    if (Array.isArray(data.capitalMovements)) {
-                        payload.capitalMovements = data.capitalMovements;
-                    } else {
-                        payload.capitalMovements = [];
-                    }
-
-                    if (data.hasOwnProperty('capitalStartDate')) {
-                        payload.capitalStartDate = data.capitalStartDate;
-                    } else {
-                        payload.capitalStartDate = null;
-                    }
-
-                    if (Array.isArray(data.strategies)) {
-                        payload.strategies = data.strategies;
-                    }
-
-                    if (confirm('¿Estás seguro de que deseas importar estos datos? Esto reemplazará los datos de la cuenta activa.')) {
-                        importDataToActiveAccount(payload);
-                        alert('Datos importados exitosamente');
-                        renderStorageInfo();
-                    } else {
-                        alert('Importación cancelada.');
-                    }
+                    openImportModal(parsed);
 
                 } catch (error) {
                     if (error instanceof SyntaxError) {
@@ -162,12 +393,12 @@
                     } else {
                         alert('Error al importar los datos: ' + error.message);
                     }
-                     // Limpiar el input de archivo en caso de error
+                    // Limpiar el input de archivo en caso de error
                     event.target.value = '';
                 }
             };
 
-            reader.onerror = function() {
+            reader.onerror = function () {
                 alert('Error al leer el archivo. Por favor, intenta nuevamente.');
                 event.target.value = '';
             };
@@ -175,30 +406,331 @@
             reader.readAsText(file);
         }
 
-        function exportTrades() {
-            const exportData = exportActiveAccountData();
-            const dataStr = JSON.stringify(exportData, null, 2);
-            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+        let pendingExportAction = null;
+        let pendingImportPayload = null;
 
-            const accountName = exportData.account?.nombre ? exportData.account.nombre.replace(/\s+/g, '_').toLowerCase() : 'cuenta';
-            const exportFileDefaultName = `backtest_data_${accountName}_${new Date().toISOString().split('T')[0]}.json`;
-            
+        function openExportModal(action) {
+            pendingExportAction = action;
+            const modal = document.getElementById('export-scope-modal');
+            if (modal) modal.classList.remove('hidden');
+        }
+
+        function closeExportModal() {
+            pendingExportAction = null;
+            const modal = document.getElementById('export-scope-modal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function confirmExportScope(scope) {
+            const action = pendingExportAction;
+            closeExportModal();
+            if (!action) return;
+            if (action === 'download') {
+                performDownloadExport(scope);
+                return;
+            }
+            if (action === 'discord') {
+                performDiscordExport(scope);
+            }
+        }
+
+        function buildAllAccountsExportData() {
+            const accountsMeta = readAccountsMeta();
+            const activeAccountId = getActiveAccountId();
+            const accounts = {};
+            accountsMeta.forEach(account => {
+                accounts[account.id] = readAccountData(account.id);
+            });
+            return {
+                format: 'tradingAccountsExport',
+                scope: 'all',
+                version: 1,
+                exportedAt: new Date().toISOString(),
+                activeAccountId,
+                accountsMeta,
+                accounts
+            };
+        }
+
+        function downloadJsonFile(filename, data) {
+            const dataStr = JSON.stringify(data, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
             const linkElement = document.createElement('a');
             linkElement.setAttribute('href', dataUri);
-            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.setAttribute('download', filename);
             linkElement.click();
         }
 
-        // Función para eliminar todos los datos (restaurada)
+        function performDownloadExport(scope) {
+            if (scope === 'all') {
+                const exportData = buildAllAccountsExportData();
+                const exportFileDefaultName = `backtest_data_todas_las_cuentas_${new Date().toISOString().split('T')[0]}.json`;
+                downloadJsonFile(exportFileDefaultName, exportData);
+                return;
+            }
+
+            const exportData = exportActiveAccountData();
+            const accountName = exportData.account?.nombre ? exportData.account.nombre.replace(/\s+/g, '_').toLowerCase() : 'cuenta';
+            const exportFileDefaultName = `backtest_data_${accountName}_${new Date().toISOString().split('T')[0]}.json`;
+            downloadJsonFile(exportFileDefaultName, exportData);
+        }
+
+        function isValidDiscordWebhookUrl(raw) {
+            const value = (raw || '').trim();
+            if (!value) return false;
+            let url;
+            try {
+                url = new URL(value);
+            } catch (error) {
+                return false;
+            }
+            if (url.protocol !== 'https:') return false;
+            const host = url.hostname.toLowerCase();
+            if (!(/(^|\.)discord\.com$/.test(host) || /(^|\.)discordapp\.com$/.test(host))) return false;
+            return url.pathname.includes('/api/webhooks/');
+        }
+
+        async function performDiscordExport(scope) {
+            const webhookUrl = localStorage.getItem('discordWebhookUrl') || '';
+            if (!webhookUrl || !webhookUrl.trim()) {
+                alert('No hay un webhook configurado. Ve a Ajustes y guarda la URL del Webhook de Discord.');
+                return;
+            }
+
+            if (!isValidDiscordWebhookUrl(webhookUrl)) {
+                alert('La URL del webhook guardada no es válida. Revísala en Ajustes.');
+                return;
+            }
+
+            const exportData = scope === 'all' ? buildAllAccountsExportData() : exportActiveAccountData();
+            const filename = scope === 'all'
+                ? `backtest_data_todas_las_cuentas_${new Date().toISOString().split('T')[0]}.json`
+                : (() => {
+                    const accountName = exportData.account?.nombre ? exportData.account.nombre.replace(/\s+/g, '_').toLowerCase() : 'cuenta';
+                    return `backtest_data_${accountName}_${new Date().toISOString().split('T')[0]}.json`;
+                })();
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const maxBytes = 8 * 1024 * 1024;
+            if (blob.size > maxBytes) {
+                alert('El archivo es demasiado grande para enviarlo a Discord desde el navegador.');
+                return;
+            }
+
+            const button = document.getElementById('export-discord-btn');
+            const previousText = button ? button.textContent : '';
+            if (button) {
+                button.disabled = true;
+                button.textContent = 'Enviando...';
+                button.classList.add('opacity-70', 'cursor-not-allowed');
+            }
+
+            try {
+                const formData = new FormData();
+                formData.append('payload_json', JSON.stringify({
+                    content: `Exportación de datos (${scope === 'all' ? 'Todas las cuentas' : (exportData.account?.nombre || 'Cuenta')}) - ${new Date().toLocaleString('es-ES')}`
+                }));
+                formData.append('files[0]', blob, filename);
+
+                const response = await fetch(webhookUrl.trim(), {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const detail = await response.text().catch(() => '');
+                    throw new Error(`Discord respondió ${response.status}${detail ? `: ${detail}` : ''}`);
+                }
+
+                alert('Archivo enviado a Discord correctamente.');
+            } catch (error) {
+                alert('Error al enviar a Discord. Si ves "Failed to fetch", normalmente es por CORS o red. Detalle: ' + (error && error.message ? error.message : String(error)));
+            } finally {
+                if (button) {
+                    button.disabled = false;
+                    button.textContent = previousText;
+                    button.classList.remove('opacity-70', 'cursor-not-allowed');
+                }
+            }
+        }
+
+        function parseImportFile(data) {
+            const isAllAccounts = data && typeof data === 'object' && data.scope === 'all' && data.accounts && typeof data.accounts === 'object';
+            if (isAllAccounts) {
+                const meta = Array.isArray(data.accountsMeta) ? data.accountsMeta : [];
+                const accountsMeta = meta.length ? meta : Object.keys(data.accounts).map((id, index) => ({
+                    id,
+                    nombre: `Cuenta ${index + 1}`,
+                    creadoEn: new Date().toISOString(),
+                    esPrincipal: index === 0
+                }));
+                const accountsById = {};
+                accountsMeta.forEach(account => {
+                    const raw = data.accounts[account.id] || {};
+                    accountsById[account.id] = {
+                        trades: Array.isArray(raw.trades) ? raw.trades : [],
+                        capitalMovements: Array.isArray(raw.capitalMovements) ? raw.capitalMovements : [],
+                        initialCapital: raw.hasOwnProperty('initialCapital') ? raw.initialCapital : null,
+                        username: raw.hasOwnProperty('username') ? raw.username : null,
+                        capitalStartDate: raw.hasOwnProperty('capitalStartDate') ? raw.capitalStartDate : null,
+                        discordWebhookUrl: raw.hasOwnProperty('discordWebhookUrl') ? raw.discordWebhookUrl : null,
+                        strategies: Array.isArray(raw.strategies) ? raw.strategies : []
+                    };
+                });
+                const activeAccountId = typeof data.activeAccountId === 'string' ? data.activeAccountId : (accountsMeta[0] ? accountsMeta[0].id : null);
+                return { kind: 'all', accountsMeta, activeAccountId, accountsById };
+            }
+
+            const isSingle = Array.isArray(data.trades) || data.hasOwnProperty('initialCapital') || data.hasOwnProperty('username') || Array.isArray(data.capitalMovements);
+            if (!isSingle) return null;
+
+            const payload = {};
+            payload.trades = Array.isArray(data.trades) ? data.trades : [];
+            payload.initialCapital = data.hasOwnProperty('initialCapital') ? data.initialCapital : null;
+            payload.username = data.hasOwnProperty('username') ? data.username : null;
+            payload.discordWebhookUrl = data.hasOwnProperty('discordWebhookUrl') ? data.discordWebhookUrl : null;
+            payload.capitalMovements = Array.isArray(data.capitalMovements) ? data.capitalMovements : [];
+            payload.capitalStartDate = data.hasOwnProperty('capitalStartDate') ? data.capitalStartDate : null;
+            if (Array.isArray(data.strategies)) payload.strategies = data.strategies;
+            const accountName = data.account && typeof data.account.nombre === 'string' && data.account.nombre.trim() ? data.account.nombre.trim() : 'Cuenta importada';
+            return { kind: 'single', accountName, payload };
+        }
+
+        function openImportModal(parsed) {
+            pendingImportPayload = parsed;
+            const modal = document.getElementById('import-mode-modal');
+            const desc = document.getElementById('import-mode-desc');
+            const replaceGlobalBtn = document.getElementById('import-replace-global-btn');
+            if (desc) {
+                desc.textContent = parsed.kind === 'all'
+                    ? 'Este archivo contiene datos de todas las cuentas. Elige cómo quieres restaurarlos.'
+                    : 'Este archivo contiene datos de una cuenta. Elige cómo quieres importarlos.';
+            }
+            if (replaceGlobalBtn) {
+                if (parsed.kind === 'all') {
+                    replaceGlobalBtn.classList.remove('hidden');
+                    replaceGlobalBtn.disabled = false;
+                    replaceGlobalBtn.classList.remove('opacity-70', 'cursor-not-allowed');
+                } else {
+                    replaceGlobalBtn.classList.add('hidden');
+                    replaceGlobalBtn.disabled = true;
+                }
+            }
+            if (modal) modal.classList.remove('hidden');
+        }
+
+        function closeImportModal() {
+            pendingImportPayload = null;
+            const modal = document.getElementById('import-mode-modal');
+            if (modal) modal.classList.add('hidden');
+            const input = document.getElementById('importFile');
+            if (input) input.value = '';
+        }
+
+        function confirmImportAction(action) {
+            const payload = pendingImportPayload;
+            closeImportModal();
+            if (!payload) return;
+            if (action === 'add') {
+                importAsNewAccount(payload);
+                return;
+            }
+            if (action === 'replace-current') {
+                replaceCurrentAccount(payload);
+                return;
+            }
+            if (action === 'replace-global') {
+                replaceAllAccounts(payload);
+            }
+        }
+
+        function importAsNewAccount(parsed) {
+            if (parsed.kind === 'single') {
+                const createdId = createTradingAccount(parsed.accountName);
+                if (!createdId) {
+                    alert('No se pudo crear la cuenta.');
+                    return;
+                }
+                writeAccountData(createdId, parsed.payload);
+                setActiveAccountId(createdId);
+                alert('Cuenta importada correctamente.');
+                location.reload();
+                return;
+            }
+
+            const createdIds = [];
+            parsed.accountsMeta.forEach(account => {
+                const createdId = createTradingAccount(account.nombre || 'Cuenta importada');
+                if (!createdId) return;
+                const data = parsed.accountsById[account.id] || {};
+                writeAccountData(createdId, data);
+                createdIds.push(createdId);
+            });
+
+            if (!createdIds.length) {
+                alert('No se pudo importar ninguna cuenta.');
+                return;
+            }
+            setActiveAccountId(createdIds[0]);
+            alert('Cuentas importadas correctamente.');
+            location.reload();
+        }
+
+        function replaceCurrentAccount(parsed) {
+            if (!confirm('¿Reemplazar los datos de la cuenta activa con los datos del archivo?')) return;
+            if (parsed.kind === 'single') {
+                importDataToActiveAccount(parsed.payload);
+                alert('Datos importados exitosamente');
+                renderStorageInfo();
+                return;
+            }
+
+            const sourceId = parsed.activeAccountId && parsed.accountsById[parsed.activeAccountId]
+                ? parsed.activeAccountId
+                : (parsed.accountsMeta[0] ? parsed.accountsMeta[0].id : null);
+            if (!sourceId || !parsed.accountsById[sourceId]) {
+                alert('No se encontró una cuenta válida dentro del archivo.');
+                return;
+            }
+            importDataToActiveAccount(parsed.accountsById[sourceId]);
+            alert('Datos importados exitosamente');
+            renderStorageInfo();
+        }
+
+        function replaceAllAccounts(parsed) {
+            if (parsed.kind !== 'all') return;
+            if (!confirm('¿Reemplazar TODOS los datos de TODAS las cuentas? Esta acción no se puede deshacer.')) return;
+
+            const currentMeta = readAccountsMeta();
+            currentMeta.forEach(account => {
+                deleteAccountData(account.id);
+            });
+
+            writeAccountsMeta(parsed.accountsMeta);
+            parsed.accountsMeta.forEach(account => {
+                const data = parsed.accountsById[account.id] || {};
+                writeAccountData(account.id, data);
+            });
+
+            const nextActive = parsed.activeAccountId && parsed.accountsMeta.some(a => a.id === parsed.activeAccountId)
+                ? parsed.activeAccountId
+                : (parsed.accountsMeta[0] ? parsed.accountsMeta[0].id : null);
+            if (nextActive) {
+                setActiveAccountId(nextActive);
+            }
+            alert('Datos restaurados correctamente.');
+            location.reload();
+        }
+
+        // Función para eliminar todos los datos
         function clearData() {
             if (confirm('¿Estás seguro de que deseas eliminar todos los datos? Esta acción no se puede deshacer.')) {
                 clearActiveAccountData();
                 alert('Se eliminaron los datos de la cuenta activa');
-                renderStorageInfo(); 
+                renderStorageInfo();
             }
         }
 
-        // Función para renderizar la información de almacenamiento (restaurada y modificada)
+        // Función para renderizar la información de almacenamiento
         function renderStorageInfo() {
             const storageContainer = document.getElementById('storageContainer');
             if (!storageContainer) return;
@@ -234,7 +766,11 @@
             const usernameStorageBytes = username ? username.length * 2 : 0;
             const usernameStorageKB = (usernameStorageBytes / 1024).toFixed(2);
 
-            const totalStorageBytes = tradesStorageBytes + movementsStorageBytes + strategiesStorageBytes + capitalStorageBytes + usernameStorageBytes;
+            const webhookUrl = snapshot.discordWebhookUrl !== null && snapshot.discordWebhookUrl !== undefined ? String(snapshot.discordWebhookUrl) : null;
+            const webhookStorageBytes = webhookUrl ? webhookUrl.length * 2 : 0;
+            const webhookStorageKB = (webhookStorageBytes / 1024).toFixed(4);
+
+            const totalStorageBytes = tradesStorageBytes + movementsStorageBytes + strategiesStorageBytes + capitalStorageBytes + usernameStorageBytes + webhookStorageBytes;
             const totalStorageKB = (totalStorageBytes / 1024).toFixed(2);
             const totalStorageMB = (totalStorageBytes / (1024 * 1024)).toFixed(4);
 
@@ -249,46 +785,99 @@
             const yearsEstimate10MB = remainingTrades10MB > 0 ? Math.floor(remainingTrades10MB / tradesPerYear) : 0;
 
             storageContainer.innerHTML = `
-                <div class="storage-info">
-                    <h3>Uso de Almacenamiento</h3>
-                    <div class="storage-details">
-                        <p>Has registrado un total de ${totalTrades} trades, lo que supone un uso de memoria de ${tradesStorageKB} KB</p>
+                <div class="storage-info space-y-4">
+                    <h3 class="text-xl font-bold text-gray-900 dark:text-white border-b pb-2 border-gray-200 dark:border-gray-700">Uso de Almacenamiento</h3>
+                    <div class="storage-details text-gray-700 dark:text-gray-300 space-y-2">
+                        <p>Has registrado un total de <span class="font-semibold text-orange-600 dark:text-orange-400">${totalTrades} trades</span>, lo que supone un uso de memoria de ${tradesStorageKB} KB</p>
                         ${initialCapital ? `<p>El capital inicial ocupa ${capitalStorageKB} KB de almacenamiento</p>` : ''}
                         ${username ? `<p>El nombre de usuario ocupa ${usernameStorageKB} KB de almacenamiento</p>` : ''}
+                        ${webhookUrl ? `<p>El webhook de Discord ocupa ${webhookStorageKB} KB de almacenamiento</p>` : ''}
                         <p>Tu historial de movimientos ocupa ${movementsStorageKB} KB de almacenamiento</p>
                         <p>Las estrategias guardadas ocupan ${strategiesStorageKB} KB de almacenamiento total</p>
                         <p>Tus estrategias personalizadas (${customStrategies.length}) ocupan ${customStrategiesStorageKB} KB</p>
-                        <p class="storage-limit-info">Uso total estimado: ${totalStorageKB} KB (${totalStorageMB} MB)</p>
-                        <p class="storage-limit-info">El límite de LocalStorage es aproximadamente 5-10 MB</p>
+                        <div class="mt-4 p-4 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                            <p class="font-semibold">Uso total estimado: ${totalStorageKB} KB (${totalStorageMB} MB)</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">El límite de LocalStorage es aproximadamente 5-10 MB</p>
+                        </div>
                     </div>
                     ${totalTrades > 0 && avgSizePerTrade > 0 ? `
-                        <div class="storage-limit-info">
-                            En base a un límite de 5MB y el tamaño promedio del registro (${(avgSizePerTrade / 1024).toFixed(2)} KB por trade), 
-                            se estima que esa capacidad te permita registrar un restante de ${remainingTrades5MB.toLocaleString()} trades.
+                        <div class="storage-projections mt-6 space-y-4">
+                            <h4 class="font-semibold text-gray-900 dark:text-white">Proyecciones</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="p-4 border border-gray-200 dark:border-gray-600 rounded-lg">
+                                    <h5 class="font-medium text-gray-700 dark:text-gray-300 mb-2">Límite 5MB</h5>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">Trades restantes: <span class="font-bold text-gray-900 dark:text-white">${remainingTrades5MB.toLocaleString()}</span></p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">Tiempo estimado: <span class="font-bold text-gray-900 dark:text-white">~${yearsEstimate5MB} años</span></p>
+                                </div>
+                                <div class="p-4 border border-gray-200 dark:border-gray-600 rounded-lg">
+                                    <h5 class="font-medium text-gray-700 dark:text-gray-300 mb-2">Límite 10MB</h5>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">Trades restantes: <span class="font-bold text-gray-900 dark:text-white">${remainingTrades10MB.toLocaleString()}</span></p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">Tiempo estimado: <span class="font-bold text-gray-900 dark:text-white">~${yearsEstimate10MB} años</span></p>
+                                </div>
+                            </div>
                         </div>
-                        <div class="storage-limit-info">
-                            Si el límite fuera de 10MB, podrías registrar aproximadamente ${remainingTrades10MB.toLocaleString()} trades adicionales.
-                        </div>
-                        <div class="storage-capacity-info">
-                            <strong>Capacidad a largo plazo:</strong>
-                            <ul>
-                                <li>Con el límite de 5MB: Podrías registrar aproximadamente ${yearsEstimate5MB} años más de operaciones (asumiendo 600 trades por año)</li>
-                                <li>Con el límite de 10MB: Podrías registrar aproximadamente ${yearsEstimate10MB} años más de operaciones</li>
-                            </ul>
-                        </div>
-                    ` : `<div class="storage-capacity-info"><strong>No hay suficientes datos de trades para estimar la capacidad futura.</strong></div>`}
+                    ` : `<div class="p-4 bg-yellow-50 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-200 rounded-lg"><strong>No hay suficientes datos de trades para estimar la capacidad futura.</strong></div>`}
                 </div>
             `;
         }
 
-        // Cargar tema y actualizar fecha/hora al iniciar
-        loadTheme();
-        setInterval(updateDateTime, 1000);
-        updateDateTime();
+        // Funciones para el menú de navegación
+        const navMenu = document.querySelector('.nav-menu');
+        const menuToggle = document.querySelector('.menu-toggle');
+        const menuOverlay = document.querySelector('.menu-overlay');
+        let scrollPosition = 0;
 
-        // Renderizar la información al cargar la página
-        renderStorageInfo();
+        function toggleMenu() {
+            const isVisible = navMenu.classList.contains('visible');
 
+            if (!isVisible) {
+                scrollPosition = window.pageYOffset;
+                document.body.classList.add('menu-open');
+                document.body.style.top = `-${scrollPosition}px`;
+                menuOverlay.classList.add('visible');
+            } else {
+                document.body.classList.remove('menu-open');
+                document.body.style.top = '';
+                window.scrollTo(0, scrollPosition);
+                menuOverlay.classList.remove('visible');
+            }
+
+            navMenu.classList.toggle('visible');
+            menuToggle.classList.toggle('opened');
+        }
+
+        // Cerrar menú al hacer clic en el overlay
+        menuOverlay.addEventListener('click', toggleMenu);
+
+        // Marcar enlace activo según la página actual
+        function setActiveLink() {
+            const rawPage = window.location.pathname.split('/').pop() || 'index.html';
+            const routeAliases = {
+                'calculadora-roi.html': 'estadisticas.html',
+                'tabla-trades.html': 'diario.html'
+            };
+            const currentPage = routeAliases[rawPage] || rawPage;
+            const links = document.querySelectorAll('.menu-items a');
+
+            links.forEach(link => {
+                link.classList.remove('active', 'bg-orange-600', 'dark:bg-orange-700', 'text-white');
+                link.removeAttribute('aria-current');
+                if (link.getAttribute('href') === currentPage) {
+                    link.classList.add('active', 'bg-orange-600', 'dark:bg-orange-700', 'text-white');
+                    link.setAttribute('aria-current', 'page');
+                }
+            });
+        }
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', () => {
+            loadTheme();
+            renderStorageInfo();
+            setActiveLink();
+            setInterval(updateDateTime, 1000);
+            updateDateTime();
+        });
     </script>
 </body>
+
 </html>

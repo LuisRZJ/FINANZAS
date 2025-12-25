@@ -6,7 +6,17 @@
     <title>Diario Trading Forex - Inicio</title>
     
     <!-- Tailwind CSS CDN -->
+    <script>
+        (function () {
+            const match = document.cookie.match(/(?:^|;\s*)theme=([^;]+)/);
+            if (match && decodeURIComponent(match[1]) === 'dark') document.documentElement.classList.add('dark');
+        })();
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { darkMode: 'class' };
+        if (typeof tailwind !== 'undefined' && typeof tailwind.refresh === 'function') tailwind.refresh();
+    </script>
     
     <!-- Google Fonts (Inter) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -138,6 +148,11 @@
              <div class="account-switcher mt-4 flex flex-wrap items-center gap-2">
                 <label for="account-select" class="text-sm font-medium">Cuenta:</label>
                 <select id="account-select" class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"></select>
+                <label for="view-mode-select" class="text-sm font-medium">Vista:</label>
+                <select id="view-mode-select" class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                    <option value="active">Cuenta activa</option>
+                    <option value="all">Todas las cuentas</option>
+                </select>
                 <button type="button" id="add-account-btn" class="nav-btn px-4 py-2 bg-orange-600 text-white rounded-lg text-sm font-semibold hover:bg-orange-700 transition">Nueva cuenta</button>
                 <button type="button" class="nav-btn secondary px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg text-sm font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition" onclick="window.location.href='gestor-cuentas.html'">Gestionar</button>
                 <span id="active-account-name" class="account-name ml-2 font-semibold"></span>
@@ -298,10 +313,77 @@
         setInterval(updateDateTime, 1000);
         updateDateTime();
 
+        function safeParseArray(raw) {
+            if (!raw) return [];
+            try {
+                const parsed = JSON.parse(raw);
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (error) {
+                return [];
+            }
+        }
+
+        function getViewMode() {
+            const select = document.getElementById('view-mode-select');
+            return select && select.value === 'all' ? 'all' : 'active';
+        }
+
+        function getTradingViewData() {
+            if (getViewMode() !== 'all') {
+                return {
+                    trades: safeParseArray(localStorage.getItem('trades')),
+                    movements: safeParseArray(localStorage.getItem('capitalMovements')),
+                    initialCapital: parseFloat(localStorage.getItem('initialCapital')) || 0
+                };
+            }
+
+            const accounts = typeof getAccountsMeta === 'function' ? getAccountsMeta() : [];
+            const trades = [];
+            const movements = [];
+            let initialCapital = 0;
+
+            accounts.forEach(account => {
+                if (!account || !account.id) return;
+                if (typeof readAccountData !== 'function') return;
+                const data = readAccountData(account.id);
+                if (data && Array.isArray(data.trades)) trades.push(...data.trades);
+                if (data && Array.isArray(data.capitalMovements)) movements.push(...data.capitalMovements);
+                const cap = data && data.initialCapital !== null && data.initialCapital !== undefined ? parseFloat(data.initialCapital) : 0;
+                if (Number.isFinite(cap)) initialCapital += cap;
+            });
+
+            return { trades, movements, initialCapital };
+        }
+
+        function syncViewModeUI() {
+            const mode = getViewMode();
+            const accountSelect = document.getElementById('account-select');
+            if (accountSelect) {
+                accountSelect.disabled = mode === 'all';
+                accountSelect.classList.toggle('opacity-60', mode === 'all');
+                accountSelect.classList.toggle('cursor-not-allowed', mode === 'all');
+            }
+
+            const label = document.getElementById('active-account-name');
+            if (label) {
+                if (mode === 'all') {
+                    label.textContent = 'Todas las cuentas';
+                } else if (typeof updateActiveAccountNameDisplay === 'function') {
+                    updateActiveAccountNameDisplay();
+                }
+            }
+
+            const periodButton = document.querySelector('.period-filter.active') || document.querySelector('.period-filter[data-period="monthly"]') || document.querySelector('.period-filter');
+            if (periodButton && typeof updateCapitalHeader === 'function') {
+                updateCapitalHeader(periodButton.dataset.period);
+            }
+        }
+
         // Cargar datos de las tarjetas
         function loadCardData() {
-            const trades = JSON.parse(localStorage.getItem('trades')) || [];
-            const movements = JSON.parse(localStorage.getItem('capitalMovements')) || []; // Cargar movimientos de capital
+            const viewData = getTradingViewData();
+            const trades = viewData.trades;
+            const movements = viewData.movements;
             const today = new Date();
             today.setHours(0, 0, 0, 0); // Establecer inicio del día
             
@@ -460,7 +542,7 @@
             progressElement.style.color = '#FF6B00';
 
             // --- Calcular y mostrar Saldo Final --- //
-            const initialCapital = parseFloat(localStorage.getItem('initialCapital')) || 0;
+            const initialCapital = viewData.initialCapital;
             const totalMovementsPnl = movements.reduce((sum, movement) => {
                 if (movement.type === 'deposito') {
                     return sum + parseFloat(movement.amount);
@@ -520,13 +602,20 @@
 
         // Marcar enlace activo según la página actual
         function setActiveLink() {
-            const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+            const rawPage = window.location.pathname.split('/').pop() || 'index.html';
+            const routeAliases = {
+                'calculadora-roi.html': 'estadisticas.html',
+                'tabla-trades.html': 'diario.html'
+            };
+            const currentPage = routeAliases[rawPage] || rawPage;
             const links = document.querySelectorAll('.menu-items a');
             
             links.forEach(link => {
                 link.classList.remove('active', 'bg-orange-600', 'dark:bg-orange-700', 'text-white');
+                link.removeAttribute('aria-current');
                 if (link.getAttribute('href') === currentPage) {
                     link.classList.add('active', 'bg-orange-600', 'dark:bg-orange-700', 'text-white');
+                    link.setAttribute('aria-current', 'page');
                 }
             });
         }
@@ -553,12 +642,19 @@
             loadTheme();
             loadCardData();
             setActiveLink();
+
+            const viewSelect = document.getElementById('view-mode-select');
+            if (viewSelect) {
+                viewSelect.value = 'active';
+                viewSelect.addEventListener('change', function () {
+                    syncViewModeUI();
+                    loadCardData();
+                });
+                syncViewModeUI();
+            }
         });
     </script>
 </body>
 </html>
-
-
-
 
 

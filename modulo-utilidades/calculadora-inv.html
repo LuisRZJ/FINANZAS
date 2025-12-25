@@ -13,6 +13,19 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="/styles.css">
+    <script>
+        (function(){
+            try {
+                const pref = localStorage.getItem('fti_theme_preference');
+                const sysDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                if (pref === 'dark' || ((!pref || pref === 'system') && sysDark)) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            } catch(e) {}
+        })();
+    </script>
 
     <style>
         :root {
@@ -209,6 +222,25 @@
                 justify-content: center;
             }
         }
+    </style>
+    <style>
+        .dark body { background: #111827; color: #e5e7eb; }
+        .dark header { background-color: #0f172a; border: 1px solid #1f2937; }
+        .dark .subtitle { color: #cbd5e1; }
+        .dark .input-section, .dark .result-section { background: #0f172a; border: 1px solid #1f2937; }
+        .dark label { color: #e5e7eb; }
+        .dark input { background: #0b1220; color: #e5e7eb; border-color: #334155; }
+        .dark select { background: #ffffff; color: #000000; border-color: #334155; }
+        .dark button { background-color: #2563eb; color: #ffffff; }
+        .dark button:hover { background-color: #1d4ed8; }
+        .dark .result-box { background-color: #0b1220; }
+        .dark .result-title { color: #e5e7eb; }
+        .dark .technical-details { background-color: #0b1220; border-left-color: #f59e0b; color: #e5e7eb; }
+        .dark .summary-card { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); }
+        .dark .back-btn-custom { background-color: #475569; color: #ffffff; }
+        .dark .back-btn-custom:hover { background-color: #334155; }
+        .dark footer { background: #0f172a; color: #94a3b8; border-top: 1px solid #1f2937; }
+        .dark footer span { color: #e5e7eb; }
     </style>
 </head>
 <body>

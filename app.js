@@ -5,8 +5,8 @@ const isSupported = () => {
 
 
 // variables de versión de página
-window.PAGE_VERSION = "4.5.0";
-window.ACT_DATE = "22/11/25";
+window.PAGE_VERSION = "5.0.0";
+window.ACT_DATE = "25/12/25";
 
 console.log("Página versión: " + window.PAGE_VERSION + ", actualizada por ultima vez el: " + window.ACT_DATE);
 
@@ -19,7 +19,9 @@ const installSection = document.querySelector('.install-app-section');
 // Función de utilidad para logs
 const log = (message, type = 'info') => {
   const timestamp = new Date().toLocaleTimeString();
-  console[type](`[${timestamp}] ${message}`);
+  const resolvedType = type === 'warning' ? 'warn' : type;
+  const logger = typeof console?.[resolvedType] === 'function' ? console[resolvedType] : console.log;
+  logger(`[${timestamp}] ${message}`);
 };
 
 // Función para mostrar notificaciones al usuario
@@ -87,13 +89,11 @@ const registerServiceWorker = async () => {
     // con rutas relativas en páginas anidadas.
     let swUrl;
     try {
-      swUrl = new URL('/pwa/service-worker.js', location.origin).href;
+      swUrl = new URL('/service-worker.js', location.origin).href;
     } catch (e) {
-      // Fallback razonable
-      swUrl = '/pwa/service-worker.js';
+      swUrl = '/service-worker.js';
     }
 
-    // Registrar el Service Worker y pedir que controle toda la raíz (o la que corresponda)
     const registration = await navigator.serviceWorker.register(swUrl, { scope: '/' });
     log('Service Worker registrado exitosamente', 'info');
 
@@ -355,4 +355,3 @@ window.addEventListener('error', (event) => {
 window.addEventListener('unhandledrejection', (event) => {
   log(`Promesa rechazada: ${event.reason}`, 'error');
 });
-

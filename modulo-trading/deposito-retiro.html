@@ -1,70 +1,323 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Backtesting - Depósito/Retiro</title>
-    <link rel="stylesheet" href="estilos.css">
+    <title>Diario Trading - Depósito/Retiro</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script>
+        (function () {
+            const match = document.cookie.match(/(?:^|;\s*)theme=([^;]+)/);
+            if (match && decodeURIComponent(match[1]) === 'dark') document.documentElement.classList.add('dark');
+        })();
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { darkMode: 'class' };
+        if (typeof tailwind !== 'undefined' && typeof tailwind.refresh === 'function') tailwind.refresh();
+    </script>
+
+    <!-- Google Fonts (Inter) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Manifest and Icons -->
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/png" sizes="192x192" href="Logo_app_trading-removebg-preview.png">
     <link rel="icon" type="image/png" sizes="512x512" href="Logo_app_trading-removebg-preview.png">
+
+    <!-- Cache Control -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
+    <style>
+        /* Estilos base y para el menú */
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Clases para controlar la visibilidad del menú lateral */
+        .nav-menu.visible {
+            transform: translateX(0);
+        }
+
+        .menu-overlay.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        body.menu-open {
+            position: fixed;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        /* Estilo para ocultar el botón del menú cuando el menú está abierto */
+        .menu-toggle.opened {
+            transform: translateX(-150%);
+            opacity: 0;
+            pointer-events: none;
+            visibility: hidden;
+        }
+    </style>
 </head>
-<body class="deposito-retiro-page">
-    <!-- El botón del menú de navegación se ocultará a través de CSS en esta página -->
-    <!-- <button class="menu-toggle" onclick="toggleMenu()">☰</button>
-    <div class="menu-overlay"></div>
-    <nav class="nav-menu">
-        <div class="menu-items">
-            <a href="index.html">Inicio</a>
-            <a href="registrar-trade.html">Registrar Trade</a>
-            <a href="diario.html">Diario</a>
-            <a href="estadisticas.html">Estadísticas</a>
-            <a href="plan-trading.html">Plan de Trading</a>
-            <a href="almacenamiento.html">Almacenamiento</a>
-            <a href="ajustes.html">Ajustes</a>
-            <a href="deposito-retiro.html" class="active">Deposito/Retiro</a>
+
+<body class="bg-orange-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+
+    <!-- Botón del Menú Hamburguesa -->
+    <button
+        class="menu-toggle fixed z-50 top-4 left-4 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-lg flex items-center justify-center text-2xl text-gray-700 dark:text-gray-300 transition-all duration-300 ease-in-out"
+        onclick="toggleMenu()">
+        ☰
+    </button>
+
+    <!-- Overlay del Menú -->
+    <div
+        class="menu-overlay fixed inset-0 bg-black bg-opacity-50 z-30 opacity-0 pointer-events-none transition-opacity duration-300">
+    </div>
+
+    <!-- Menú de Navegación Lateral -->
+    <nav
+        class="nav-menu fixed top-0 left-0 h-full w-72 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md shadow-xl z-40 transform -translate-x-full transition-transform duration-300 ease-in-out">
+        <div class="p-4">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Menú</h2>
+                <!-- Botón de Cierre -->
+                <button
+                    class="w-10 h-10 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors"
+                    onclick="toggleMenu()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="menu-items space-y-2">
+                <a href="index.html"
+                    class="flex items-center gap-3 py-2.5 px-4 rounded-lg font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                        <polyline points="9 22 9 12 15 12 15 22" />
+                    </svg>
+                    <span>Inicio</span>
+                </a>
+                <a href="/index.html"
+                    class="flex items-center gap-3 py-2.5 px-4 rounded-lg font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect width="7" height="9" x="3" y="3" rx="1" />
+                        <rect width="7" height="5" x="14" y="3" rx="1" />
+                        <rect width="7" height="9" x="14" y="12" rx="1" />
+                        <rect width="7" height="5" x="3" y="16" rx="1" />
+                    </svg>
+                    <span>Volver al panel de control</span>
+                </a>
+                <a href="registrar-trade.html"
+                    class="flex items-center gap-3 py-2.5 px-4 rounded-lg font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M8 12h8" />
+                        <path d="M12 8v8" />
+                    </svg>
+                    <span>Registrar Trade</span>
+                </a>
+                <a href="diario.html"
+                    class="flex items-center gap-3 py-2.5 px-4 rounded-lg font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+                    </svg>
+                    <span>Diario</span>
+                </a>
+                <a href="estadisticas.html"
+                    class="flex items-center gap-3 py-2.5 px-4 rounded-lg font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 3v18h18" />
+                        <path d="M18 17V9" />
+                        <path d="M13 17V5" />
+                        <path d="M8 17v-3" />
+                    </svg>
+                    <span>Estadísticas</span>
+                </a>
+                <a href="plan-trading.html"
+                    class="flex items-center gap-3 py-2.5 px-4 rounded-lg font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
+                        <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+                        <path d="M10 9H8" />
+                        <path d="M16 13H8" />
+                        <path d="M16 17H8" />
+                    </svg>
+                    <span>Plan de Trading</span>
+                </a>
+                <a href="almacenamiento.html"
+                    class="flex items-center gap-3 py-2.5 px-4 rounded-lg font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <ellipse cx="12" cy="5" rx="9" ry="3" />
+                        <path d="M3 5V19A9 3 0 0 0 21 19V5" />
+                        <path d="M3 12A9 3 0 0 0 21 12" />
+                    </svg>
+                    <span>Almacenamiento</span>
+                </a>
+                <a href="ajustes.html"
+                    class="flex items-center gap-3 py-2.5 px-4 rounded-lg font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path
+                            d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1 0-2l.15.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+                        <circle cx="12" cy="12" r="3" />
+                    </svg>
+                    <span>Ajustes</span>
+                </a>
+                <a href="deposito-retiro.html"
+                    class="flex items-center gap-3 py-2.5 px-4 rounded-lg font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M8 3 4 7l4 4" />
+                        <path d="M4 7h16" />
+                        <path d="m16 21 4-4-4-4" />
+                        <path d="M20 17H4" />
+                    </svg>
+                    <span>Deposito/Retiro</span>
+                </a>
+                <a href="gestor-cuentas.html"
+                    class="flex items-center gap-3 py-2.5 px-4 rounded-lg font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                    </svg>
+                    <span>Gestor de Cuentas</span>
+                </a>
+            </div>
         </div>
-    </nav> -->
+    </nav>
 
-    <div class="container">
-        <h1>Registro de Depósito/Retiro</h1>
-        <div class="account-switcher">
-            <label for="account-select">Cuenta:</label>
-            <select id="account-select"></select>
-            <button type="button" id="add-account-btn" class="nav-btn">Nueva cuenta</button>
-            <span id="active-account-name" class="account-name"></span>
-        </div>
-        <button class="back-to-home" onclick="window.location.href='index.html'">Volver al Inicio</button>
+    <!-- Contenido Principal -->
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8 pt-24">
+        <!-- Encabezado -->
+        <header class="mb-8">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <h1 class="text-4xl font-bold text-gray-900 dark:text-white">Depósito y Retiro</h1>
+                <div id="datetime" class="text-sm text-gray-500 dark:text-gray-400"></div>
+            </div>
+            <div class="account-switcher mt-4 flex flex-wrap items-center gap-2">
+                <label for="account-select" class="text-sm font-medium">Cuenta:</label>
+                <select id="account-select"
+                    class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"></select>
+                <button type="button" id="add-account-btn"
+                    class="nav-btn px-4 py-2 bg-orange-600 text-white rounded-lg text-sm font-semibold hover:bg-orange-700 transition">Nueva
+                    cuenta</button>
+                <button type="button"
+                    class="nav-btn secondary px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg text-sm font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+                    onclick="window.location.href='gestor-cuentas.html'">Gestionar</button>
+                <span id="active-account-name" class="account-name ml-2 font-semibold"></span>
+            </div>
+        </header>
 
-        <div class="form-container modern-card">
-            <h2>Nuevo Movimiento</h2>
-            <label for="movement-type">Tipo de Movimiento:</label>
-            <select id="movement-type">
-                <option value="deposito">Depósito</option>
-                <option value="retiro">Retiro</option>
-            </select>
+        <!-- Contenido Específico de Depósito/Retiro -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-            <label for="movement-amount">Monto:</label>
-            <input type="number" id="movement-amount" step="0.01" value="0.00">
+            <!-- Tarjeta de Nuevo Movimiento -->
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md h-fit">
+                <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        class="text-orange-500">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M12 8v8" />
+                        <path d="M8 12h8" />
+                    </svg>
+                    Nuevo Movimiento
+                </h2>
 
-            <button onclick="addMovement()">Registrar Movimiento</button>
-        </div>
+                <div class="space-y-4">
+                    <div>
+                        <label for="movement-type"
+                            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tipo de
+                            Movimiento</label>
+                        <select id="movement-type"
+                            class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-orange-500 focus:border-orange-500 block p-3">
+                            <option value="deposito">Depósito (+)</option>
+                            <option value="retiro">Retiro (-)</option>
+                        </select>
+                    </div>
 
-        <div class="movements-history modern-card">
-            <h2>Historial de Movimientos</h2>
-            <ul id="movements-list"></ul>
+                    <div>
+                        <label for="movement-amount"
+                            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Monto</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <span class="text-gray-500 dark:text-gray-400">$</span>
+                            </div>
+                            <input type="number" id="movement-amount" step="0.01" value="0.00"
+                                class="w-full pl-7 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-orange-500 focus:border-orange-500 block p-3"
+                                placeholder="0.00">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="movement-date"
+                            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Fecha</label>
+                        <input type="date" id="movement-date"
+                            class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-orange-500 focus:border-orange-500 block p-3">
+                    </div>
+
+                    <button onclick="addMovement()"
+                        class="w-full text-white bg-orange-600 hover:bg-orange-700 focus:ring-4 focus:outline-none focus:ring-orange-300 font-medium rounded-lg text-sm px-5 py-3 text-center dark:bg-orange-600 dark:hover:bg-orange-700 dark:focus:ring-orange-800 transition-all shadow-lg hover:shadow-orange-500/30 mt-2">
+                        Registrar Movimiento
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tarjeta de Historial -->
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md">
+                <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        class="text-gray-500">
+                        <path d="M3 3v18h18" />
+                        <path d="M18 17V9" />
+                        <path d="M13 17V5" />
+                        <path d="M8 17v-3" />
+                    </svg>
+                    Historial de Movimientos
+                </h2>
+                <div class="overflow-y-auto max-h-[500px] pr-2 custom-scrollbar">
+                    <ul id="movements-list" class="space-y-3">
+                        <!-- Los movimientos se insertarán aquí dinámicamente -->
+                        <li class="text-center text-gray-500 dark:text-gray-400 py-4">Cargando movimientos...</li>
+                    </ul>
+                </div>
+            </div>
+
         </div>
     </div>
 
     <script src="javascript.js"></script>
     <script>
-        renderMovementsHistory(); // Cargar historial al cargar la página
+        // --- Lógica del Menú y UI (Copiada de index.html) ---
 
         // Función para obtener una cookie
         function getCookie(name) {
             const nameEQ = name + "=";
             const ca = document.cookie.split(';');
-            for(let i = 0; i < ca.length; i++) {
+            for (let i = 0; i < ca.length; i++) {
                 let c = ca[i];
                 while (c.charAt(0) === ' ') c = c.substring(1, c.length);
                 if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
@@ -72,14 +325,328 @@
             return null;
         }
 
+        // Actualizar fecha y hora
+        function updateDateTime() {
+            const now = new Date();
+            const options = {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            };
+            const dateElement = document.getElementById('datetime');
+            if (dateElement) {
+                dateElement.textContent = now.toLocaleDateString('es-ES', options);
+            }
+        }
+
+        setInterval(updateDateTime, 1000);
+        updateDateTime();
+
         // Cargar tema guardado
         function loadTheme() {
             const theme = getCookie('theme') || 'light';
-            document.body.className = theme;
+            if (theme === 'dark') {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
         }
 
-        // Cargar tema al iniciar
-        loadTheme();
+        // Funciones para el menú de navegación
+        const navMenu = document.querySelector('.nav-menu');
+        const menuToggle = document.querySelector('.menu-toggle');
+        const menuOverlay = document.querySelector('.menu-overlay');
+        let scrollPosition = 0;
+
+        function toggleMenu() {
+            const isVisible = navMenu.classList.contains('visible');
+
+            if (!isVisible) {
+                scrollPosition = window.pageYOffset;
+                document.body.classList.add('menu-open');
+                document.body.style.top = `-${scrollPosition}px`;
+                menuOverlay.classList.add('visible');
+            } else {
+                document.body.classList.remove('menu-open');
+                document.body.style.top = '';
+                window.scrollTo(0, scrollPosition);
+                menuOverlay.classList.remove('visible');
+            }
+
+            navMenu.classList.toggle('visible');
+            menuToggle.classList.toggle('opened');
+        }
+
+        menuOverlay.addEventListener('click', toggleMenu);
+
+        // Marcar enlace activo
+        function setActiveLink() {
+            const rawPage = window.location.pathname.split('/').pop() || 'index.html';
+            const routeAliases = {
+                'calculadora-roi.html': 'estadisticas.html',
+                'tabla-trades.html': 'diario.html'
+            };
+            const currentPage = routeAliases[rawPage] || rawPage;
+            const links = document.querySelectorAll('.menu-items a');
+
+            links.forEach(link => {
+                link.classList.remove('active', 'bg-orange-600', 'dark:bg-orange-700', 'text-white');
+                link.removeAttribute('aria-current');
+                if (link.getAttribute('href') === currentPage) {
+                    link.classList.add('active', 'bg-orange-600', 'dark:bg-orange-700', 'text-white');
+                    link.setAttribute('aria-current', 'page');
+                }
+            });
+        }
+
+        // --- SOBRESCRIBIR FUNCIONES DE JAVASCRIPT.JS PARA USAR TAILWIND ---
+
+        // Redefinir renderMovementsHistory para usar clases de Tailwind
+        window.renderMovementsHistory = function () {
+            const movementsList = document.getElementById('movements-list');
+            if (!movementsList) return;
+
+            let movements = typeof getCapitalMovementsNormalized === 'function'
+                ? getCapitalMovementsNormalized()
+                : (JSON.parse(localStorage.getItem('capitalMovements')) || []);
+            movementsList.innerHTML = '';
+
+            if (movements.length === 0) {
+                movementsList.innerHTML = '<li class="text-center text-gray-500 dark:text-gray-400 py-4">No hay movimientos registrados aún.</li>';
+                return;
+            }
+
+            movements.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            movements.forEach((movement) => {
+                const listItem = document.createElement('li');
+                // Estilos Tailwind para el item de la lista
+                listItem.className = 'flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 hover:shadow-md transition-shadow duration-200';
+
+                const date = new Date(movement.date);
+                const dateString = date.toLocaleDateString('es-ES') + ' ' + date.toLocaleTimeString('es-ES');
+                const amountString = `${movement.type === 'deposito' ? '+' : '-'}${movement.amount.toFixed(2)} MXN`;
+                // Colores para monto
+                const amountClass = movement.type === 'deposito' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
+                const typeLabel = movement.type.charAt(0).toUpperCase() + movement.type.slice(1);
+
+                listItem.innerHTML = `
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-2 sm:mb-0">
+                        <span class="text-xs text-gray-500 dark:text-gray-400 font-mono bg-gray-200 dark:bg-gray-600 px-2 py-1 rounded">${dateString}</span>
+                        <span class="font-medium text-gray-900 dark:text-white">${typeLabel}</span>
+                    </div>
+                    <div class="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto">
+                        <span class="font-bold text-lg ${amountClass}">${amountString}</span>
+                        <div class="flex gap-2">
+                            <button class="btn-edit-movement p-2 text-blue-600 hover:bg-blue-100 dark:text-blue-400 dark:hover:bg-gray-600 rounded-full transition-colors" title="Editar" data-id="${movement.id || ''}" data-date="${movement.date}" data-type="${movement.type}">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+                            </button>
+                            <button class="btn-delete-movement p-2 text-red-600 hover:bg-red-100 dark:text-red-400 dark:hover:bg-gray-600 rounded-full transition-colors" title="Eliminar" data-id="${movement.id || ''}" data-date="${movement.date}" data-type="${movement.type}">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                movementsList.appendChild(listItem);
+            });
+
+            // Reasignar eventos (copiado de la lógica original pero adaptado)
+            document.querySelectorAll('.btn-edit-movement').forEach(button => {
+                button.addEventListener('click', function () {
+                    const idToEdit = this.dataset.id;
+                    if (idToEdit) {
+                        showEditMovementModal(idToEdit);
+                        return;
+                    }
+                    const dateToEdit = this.dataset.date;
+                    const typeToEdit = this.dataset.type;
+                    showEditMovementModal(dateToEdit, typeToEdit);
+                });
+            });
+
+            document.querySelectorAll('.btn-delete-movement').forEach(button => {
+                button.addEventListener('click', function () {
+                    const idToDelete = this.dataset.id;
+                    if (idToDelete) {
+                        deleteMovement(idToDelete);
+                        return;
+                    }
+                    const dateToDelete = this.dataset.date;
+                    const typeToDelete = this.dataset.type;
+                    deleteMovement(dateToDelete, typeToDelete);
+                });
+            });
+        };
+
+        // Redefinir showEditMovementModal para usar estilos Tailwind
+        window.showEditMovementModal = function (identifier, type) {
+            const movements = typeof getCapitalMovementsNormalized === 'function'
+                ? getCapitalMovementsNormalized()
+                : (JSON.parse(localStorage.getItem('capitalMovements')) || []);
+            const movementIndex = typeof type === 'string'
+                ? movements.findIndex(movement => movement.date === identifier && movement.type === type)
+                : movements.findIndex(movement => movement.id === identifier);
+            const movement = movements[movementIndex];
+
+            if (!movement) {
+                alert('No se pudo encontrar el movimiento para editar.');
+                return;
+            }
+
+            const oldModal = document.getElementById('edit-movement-modal');
+            if (oldModal) oldModal.remove();
+
+            const movementDate = new Date(movement.date);
+            const dateInputValue = Number.isNaN(movementDate.getTime())
+                ? ''
+                : `${String(movementDate.getFullYear())}-${String(movementDate.getMonth() + 1).padStart(2, '0')}-${String(movementDate.getDate()).padStart(2, '0')}`;
+
+            const modal = document.createElement('div');
+            modal.id = 'edit-movement-modal';
+            // Estilos del overlay
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 backdrop-blur-sm transition-opacity duration-300';
+
+            modal.innerHTML = `
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all scale-100">
+                    <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                        <h2 class="text-xl font-bold text-gray-900 dark:text-white">Editar Movimiento</h2>
+                        <button class="trade-details-close text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        </button>
+                    </div>
+                    
+                    <form id="edit-movement-form" class="p-6 space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tipo</label>
+                            <select name="type" required class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-orange-500 focus:border-orange-500 block p-2.5">
+                                <option value="deposito" ${movement.type === 'deposito' ? 'selected' : ''}>Depósito</option>
+                                <option value="retiro" ${movement.type === 'retiro' ? 'selected' : ''}>Retiro</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Monto (MXN)</label>
+                            <input type="number" step="0.01" name="amount" value="${movement.amount}" required class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-orange-500 focus:border-orange-500 block p-2.5">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Fecha</label>
+                            <input type="date" name="date" value="${dateInputValue}" required class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-orange-500 focus:border-orange-500 block p-2.5">
+                        </div>
+
+                        <div class="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                            <button type="button" id="cancel-edit-movement" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:ring-4 focus:outline-none focus:ring-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-gray-700 transition-colors">Cancelar</button>
+                            <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-orange-600 rounded-lg hover:bg-orange-700 focus:ring-4 focus:outline-none focus:ring-orange-300 dark:bg-orange-600 dark:hover:bg-orange-700 dark:focus:ring-orange-800 transition-colors shadow-lg shadow-orange-500/30">Guardar Cambios</button>
+                        </div>
+                    </form>
+                </div>
+            `;
+
+            // Eventos de cierre
+            const closeBtn = modal.querySelector('.trade-details-close');
+            const cancelBtn = modal.querySelector('#cancel-edit-movement');
+
+            const closeModal = () => {
+                modal.classList.remove('opacity-100');
+                setTimeout(() => modal.remove(), 300);
+            };
+
+            closeBtn.onclick = closeModal;
+            cancelBtn.onclick = closeModal;
+
+            // Cerrar al hacer click fuera
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) closeModal();
+            });
+
+            // Lógica de guardado (copiada y adaptada)
+            modal.querySelector('#edit-movement-form').onsubmit = function (e) {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+
+                const dateRaw = formData.get('date');
+                if (typeof dateRaw !== 'string' || !dateRaw) {
+                    alert('Por favor, selecciona una fecha válida.');
+                    return;
+                }
+                const dateParts = dateRaw.split('-').map(Number);
+                if (dateParts.length !== 3 || !dateParts.every(Number.isFinite)) {
+                    alert('Por favor, selecciona una fecha válida.');
+                    return;
+                }
+                const baseTime = Number.isNaN(movementDate.getTime()) ? new Date() : movementDate;
+                const updatedDate = new Date(
+                    dateParts[0],
+                    dateParts[1] - 1,
+                    dateParts[2],
+                    baseTime.getHours(),
+                    baseTime.getMinutes(),
+                    baseTime.getSeconds(),
+                    baseTime.getMilliseconds()
+                );
+
+                const updatedMovement = {
+                    id: movement.id || (typeof createMovementId === 'function' ? createMovementId() : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`),
+                    type: formData.get('type'),
+                    amount: parseFloat(formData.get('amount')),
+                    date: updatedDate.toISOString()
+                };
+
+                if (isNaN(updatedMovement.amount) || updatedMovement.amount <= 0) {
+                    alert('Por favor, ingresa un monto válido.');
+                    return;
+                }
+
+                let movements = typeof getCapitalMovementsNormalized === 'function'
+                    ? getCapitalMovementsNormalized()
+                    : (JSON.parse(localStorage.getItem('capitalMovements')) || []);
+                const originalIndex = typeof type === 'string'
+                    ? movements.findIndex(m => m.date === identifier && m.type === type)
+                    : movements.findIndex(m => m.id === identifier);
+
+                if (originalIndex !== -1) {
+                    movements[originalIndex] = updatedMovement;
+                    localStorage.setItem('capitalMovements', JSON.stringify(movements));
+                    closeModal();
+                    renderMovementsHistory();
+                    if (typeof loadCardData === 'function') {
+                        loadCardData();
+                    }
+                } else {
+                    alert('Error al actualizar el movimiento.');
+                    closeModal();
+                }
+            };
+
+            document.body.appendChild(modal);
+            // Animación de entrada
+            setTimeout(() => modal.classList.add('opacity-100'), 10);
+        };
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', () => {
+            loadTheme();
+            setActiveLink();
+
+            const movementDateInput = document.getElementById('movement-date');
+            if (movementDateInput && !movementDateInput.value) {
+                const today = new Date();
+                const yyyy = String(today.getFullYear());
+                const mm = String(today.getMonth() + 1).padStart(2, '0');
+                const dd = String(today.getDate()).padStart(2, '0');
+                movementDateInput.value = `${yyyy}-${mm}-${dd}`;
+            }
+
+            // Cargar historial específico de esta página
+            if (typeof renderMovementsHistory === 'function') {
+                renderMovementsHistory();
+            }
+        });
     </script>
 </body>
-</html> 
+
+</html>

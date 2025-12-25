@@ -5,190 +5,364 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ajustes - FTI</title>
     <meta name="theme-color" content="#2563eb">
-    <link rel="icon" href="/pwa/logo-app.png">
+    <link rel="icon" href="pwa/logo-app.png">
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="estilos.css">
 
-    <!-- Font Awesome para iconos -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <!-- Fuente Inter -->
+    <!-- Fonts and Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- Estilos del proyecto -->
-    <link rel="stylesheet" href="/styles.css">
-    
+    <link rel="manifest" href="pwa/manifest.json">
+
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+            },
+          }
+        }
+      }
+    </script>
+
+    <script>
+        (function() {
+            try {
+                const storedTheme = localStorage.getItem('fti_theme_preference');
+                const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                if (storedTheme === 'dark' || ((!storedTheme || storedTheme === 'system') && systemDark)) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            } catch (e) {
+                console.warn('Error accediendo a localStorage para tema:', e);
+            }
+        })();
+    </script>
+
+    <!-- React -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            color: #334155;
-        }
-        .gradient-bg {
-            background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
-        }
-        .card-gradient {
-            background: #ffffff;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-            border: 1px solid #cbd5e1;
-        }
-        .fade-in {
-            animation: fadeIn 0.5s ease-in-out;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        /* Estilos específicos para prevenir fondo azul en el header */
-        header.fade-in {
-            background: transparent !important;
-            background-color: transparent !important;
-            border: none !important;
-            box-shadow: none !important;
-            padding: 0 !important;
-            margin: 0 !important;
-        }
-        
-        header.fade-in h1 {
-            background: none !important;
-            background-color: transparent !important;
-            color: transparent !important;
-            background-image: linear-gradient(to right, #2563eb, #4f46e5) !important;
-            background-clip: text !important;
-            -webkit-background-clip: text !important;
-        }
-        
-        header.fade-in p {
-            background: none !important;
-            background-color: transparent !important;
-            color: #4b5563 !important;
-        }
+        .fade-in { animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .backdrop-blur-md { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+        .backdrop-blur-xl { backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
     </style>
 </head>
-<body class="gradient-bg min-h-screen text-gray-800">
-    <div class="container mx-auto px-4 py-8 max-w-5xl">
-        <!-- Header -->
-        <header class="text-center mb-12 fade-in">
-            <h1 class="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-800 mb-3">
-                Ajustes y Configuración
-            </h1>
-            <p class="text-lg text-gray-600 max-w-2xl mx-auto">
-                Personaliza y gestiona las configuraciones de tu aplicación de finanzas
-            </p>
-        </header>
+<body class="bg-gray-200 text-slate-800 font-sans antialiased min-h-screen dark:bg-gray-900 dark:text-gray-100 transition-colors duration-300">
+    <div id="root"></div>
 
-        <!-- Botón Volver al Inicio -->
-        <div class="flex justify-center mb-8 fade-in">
-            <a href="index.html" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-all duration-300 flex items-center">
-                <i class="fas fa-home mr-2"></i> Volver al Inicio
-            </a>
-        </div>
-
-        <!-- Grid de configuraciones -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            <!-- Analizador de LocalStorage -->
-            <div class="card-gradient rounded-2xl p-6 fade-in hover:shadow-lg transition-shadow duration-300">
-                <div class="flex items-center mb-4">
-                    <div class="bg-blue-100 p-3 rounded-xl mr-4">
-                        <i class="fas fa-database text-blue-600 text-xl"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-semibold text-gray-900">Analizador de LocalStorage</h3>
-                        <p class="text-sm text-gray-600">Monitorea y gestiona el almacenamiento local</p>
-                    </div>
-                </div>
-                <p class="text-gray-600 mb-4 text-sm">
-                    Revisa el espacio utilizado en tu navegador, gestiona los datos almacenados y realiza copias de seguridad.
-                </p>
-                <a href="modulo-utilidades/analizador-LS.html" class="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors duration-300 flex items-center justify-center">
-                    <i class="fas fa-external-link-alt mr-2"></i> Acceder
-                </a>
-            </div>
-
-            <!-- Analizador de Almacenamiento y Memoria -->
-            <div class="card-gradient rounded-2xl p-6 fade-in hover:shadow-lg transition-shadow duration-300">
-                <div class="flex items-center mb-4">
-                    <div class="bg-indigo-100 p-3 rounded-xl mr-4">
-                        <i class="fas fa-hard-drive text-indigo-600 text-xl"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-semibold text-gray-900">Analizador de Almacenamiento y Memoria</h3>
-                        <p class="text-sm text-gray-600">Cuota, uso actual y espacio restante estimado</p>
-                    </div>
-                </div>
-                <p class="text-gray-600 mb-4 text-sm">
-                    Consulta la cuota total de almacenamiento de la página, la memoria usada por el JavaScript y una estimación del espacio restante utilizando las APIs del navegador.
-                </p>
-                <a href="modulo-utilidades/analizador-almacenamiento.html" class="w-full px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors duration-300 flex items-center justify-center">
-                    <i class="fas fa-external-link-alt mr-2"></i> Acceder
-                </a>
-            </div>
-
-            <!-- Espacio reservado para futuras configuraciones -->
-            <div class="card-gradient rounded-2xl p-6 fade-in opacity-50">
-                <div class="flex items-center mb-4">
-                    <div class="bg-gray-100 p-3 rounded-xl mr-4">
-                        <i class="fas fa-cog text-gray-400 text-xl"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-semibold text-gray-400">Configuración General</h3>
-                        <p class="text-sm text-gray-400">Próximamente disponible</p>
-                    </div>
-                </div>
-                <p class="text-gray-400 mb-4 text-sm">
-                    Ajustes generales de la aplicación, preferencias de visualización y más opciones.
-                </p>
-                <button disabled class="w-full px-4 py-2 bg-gray-300 text-gray-500 rounded-lg font-medium cursor-not-allowed">
-                    Próximamente
-                </button>
-            </div>
-
-            <!-- Espacio reservado para futuras configuraciones -->
-            <div class="card-gradient rounded-2xl p-6 fade-in opacity-50">
-                <div class="flex items-center mb-4">
-                    <div class="bg-gray-100 p-3 rounded-xl mr-4">
-                        <i class="fas fa-palette text-gray-400 text-xl"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-semibold text-gray-400">Tema y Apariencia</h3>
-                        <p class="text-sm text-gray-400">Próximamente disponible</p>
-                    </div>
-                </div>
-                <p class="text-gray-400 mb-4 text-sm">
-                    Personaliza los colores, modos claro/oscuro y la apariencia de la aplicación.
-                </p>
-                <button disabled class="w-full px-4 py-2 bg-gray-300 text-gray-500 rounded-lg font-medium cursor-not-allowed">
-                    Próximamente
-                </button>
-            </div>
-        </div>
-
-        <!-- Información adicional -->
-        <div class="mt-8 text-center text-sm text-gray-600">
-            <p>Esta sección se actualizará con nuevas configuraciones en futuras versiones.</p>
-        </div>
-    </div>
-
-    <footer class="text-center py-8 text-gray-500 text-sm">
-        <p>Versión: <span id="appVersion">1.0.0</span> | Última Actualización: <span id="appDate">2024-01-01</span></p>
+    <footer class="py-6 text-center border-t border-gray-300 bg-gray-200 mt-10 dark:bg-slate-900 dark:border-slate-800">
+        <p class="text-[10px] text-gray-600 font-mono dark:text-slate-400">
+            FTI v<span id="appVersion">1.0.0</span> | Actualizado: <span id="appDate">N/A</span>
+        </p>
     </footer>
 
-    <!-- Scripts -->
-    <script src="/app.js"></script>
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const IconBase = ({ children, size = 24, className = "" }) => (
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width={size}
+                height={size}
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className={className}
+            >
+                {children}
+            </svg>
+        );
+
+        // Icons
+        const Wallet = (props) => <IconBase {...props}><path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4" /><path d="M4 6v12c0 1.1.9 2 2 2h14v-4" /><path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h2v-4Z" /></IconBase>;
+        const TrendingUp = (props) => <IconBase {...props}><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" /></IconBase>;
+        const Lightbulb = (props) => <IconBase {...props}><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-1 1.5-2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5" /><path d="M9 18h6" /><path d="M10 22h4" /></IconBase>;
+        const Wrench = (props) => <IconBase {...props}><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" /></IconBase>;
+        const Settings = (props) => <IconBase {...props}><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.47a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" /><circle cx="12" cy="12" r="3" /></IconBase>;
+        const Menu = (props) => <IconBase {...props}><line x1="4" x2="20" y1="12" y2="12" /><line x1="4" x2="20" y1="6" y2="6" /><line x1="4" x2="20" y1="18" y2="18" /></IconBase>;
+        const X = (props) => <IconBase {...props}><path d="M18 6 6 18" /><path d="M6 6 18 18" /></IconBase>;
+        const ChevronRight = (props) => <IconBase {...props}><path d="m9 18 6-6-6-6" /></IconBase>;
+        const ArrowUpRight = (props) => <IconBase {...props}><path d="M7 7h10v10" /><path d="M7 17 17 7" /></IconBase>;
+        const Sun = (props) => <IconBase {...props}><circle cx="12" cy="12" r="4" /><path d="M12 2v2" /><path d="M12 20v2" /><path d="m4.93 4.93 1.41 1.41" /><path d="m17.66 17.66 1.41 1.41" /><path d="M2 12h2" /><path d="M20 12h2" /><path d="m6.34 17.66-1.41 1.41" /><path d="m19.07 4.93-1.41 1.41" /></IconBase>;
+        const Moon = (props) => <IconBase {...props}><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" /></IconBase>;
+        const Monitor = (props) => <IconBase {...props}><rect width="20" height="14" x="2" y="3" rx="2" /><line x1="8" x2="16" y1="21" y2="21" /><line x1="12" x2="12" y1="17" y2="21" /></IconBase>;
+        const Database = (props) => <IconBase {...props}><ellipse cx="12" cy="5" rx="9" ry="3" /><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" /><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" /></IconBase>;
+        const HardDrive = (props) => <IconBase {...props}><line x1="22" x2="2" y1="12" y2="12" /><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" /><line x1="6" x2="6.01" y1="16" y2="16" /><line x1="10" x2="10.01" y1="16" y2="16" /></IconBase>;
+        const LayoutGrid = (props) => <IconBase {...props}><rect width="7" height="7" x="3" y="3" rx="1" /><rect width="7" height="7" x="14" y="3" rx="1" /><rect width="7" height="7" x="14" y="14" rx="1" /><rect width="7" height="7" x="3" y="14" rx="1" /></IconBase>;
+        const Activity = (props) => <IconBase {...props}><path d="M22 12h-4l-3 9L9 3l-3 9H2" /></IconBase>;
+
+        const SettingsPage = () => {
+            const [isMenuOpen, setIsMenuOpen] = useState(false);
+            const [expandedModuleId, setExpandedModuleId] = useState(null);
+            const [currentTheme, setCurrentTheme] = useState('system');
+
+            useEffect(() => {
+                // Sincronizar estado inicial con localStorage
+                const stored = localStorage.getItem('fti_theme_preference') || 'system';
+                setCurrentTheme(stored);
+            }, []);
+
+            const toggleSubmenu = (id) => {
+                setExpandedModuleId(expandedModuleId === id ? null : id);
+            };
+
+            const handleThemeChange = (theme) => {
+                setCurrentTheme(theme);
+                if (window.ThemeManager) {
+                    window.ThemeManager.setTheme(theme);
+                }
+            };
+
+            const modules = [
+                { id: 1, title: 'Finanzas Personales', icon: <Wallet size={20} />, color: 'text-blue-600', href: 'modulo-finanzas/operaciones.html' },
+                {
+                    id: 2,
+                    title: 'Trading',
+                    icon: <TrendingUp size={20} />,
+                    color: 'text-green-600',
+                    submodules: [
+                        { title: 'Terminal Principal', icon: <Activity size={16} />, href: 'modulo-trading/index.html' },
+                        { title: 'Backtesting Forex', icon: <LayoutGrid size={16} />, href: 'modulo-trading/backtesting/inicio.html' },
+                        { title: 'Diario FTT', icon: <LayoutGrid size={16} />, href: 'modulo-trading/registros-ftt.html' }
+                    ]
+                },
+                { id: 3, title: 'Inversiones', icon: <Lightbulb size={20} />, color: 'text-purple-600', href: 'modulo-inversiones/index.html' },
+                { id: 4, title: 'Utilidades', icon: <Wrench size={20} />, color: 'text-yellow-600', href: 'utilidades.html' },
+                { id: 5, title: 'Ajustes', icon: <Settings size={20} />, color: 'text-gray-600', href: 'ajustes.html', active: true },
+            ];
+
+            const settingsCards = [
+                {
+                    title: 'Analizador de LocalStorage',
+                    desc: 'Monitorea y gestiona el almacenamiento local. Revisa el espacio utilizado y realiza copias de seguridad.',
+                    icon: <Database size={24} />,
+                    bg: 'bg-blue-100',
+                    color: 'text-blue-600',
+                    darkBg: 'dark:bg-blue-900/30',
+                    darkColor: 'dark:text-blue-400',
+                    href: 'modulo-utilidades/analizador-LS.html',
+                    btnText: 'Acceder'
+                },
+                {
+                    title: 'Analizador de Almacenamiento',
+                    desc: 'Consulta la cuota total de almacenamiento, memoria usada y espacio restante estimado.',
+                    icon: <HardDrive size={24} />,
+                    bg: 'bg-indigo-100',
+                    color: 'text-indigo-600',
+                    darkBg: 'dark:bg-indigo-900/30',
+                    darkColor: 'dark:text-indigo-400',
+                    href: 'modulo-utilidades/analizador-almacenamiento.html',
+                    btnText: 'Acceder'
+                }
+            ];
+
+            return (
+                <div className="min-h-screen flex flex-col font-sans relative">
+                    <header className="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-20 px-6 py-4 flex justify-between items-center transition-all duration-300 border-b border-white/20 dark:bg-slate-900/60 dark:border-slate-800">
+                        <div>
+                            <h1 className="text-2xl font-extrabold bg-gradient-to-r from-orange-500 to-red-600 bg-clip-text text-transparent tracking-tight leading-none">FTI</h1>
+                            <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wider dark:text-slate-400">Finanzas, Trading e Inversiones</p>
+                        </div>
+
+                        <div className="relative">
+                            <button
+                                type="button"
+                                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 text-sm font-semibold border backdrop-blur-md ${isMenuOpen ? 'bg-blue-50/80 text-blue-700 border-blue-200/50 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-900/40' : 'bg-white/40 text-gray-700 border-gray-200/50 hover:bg-white/60 dark:bg-slate-900/40 dark:text-slate-200 dark:border-slate-700/60 dark:hover:bg-slate-900/60'}`}
+                            >
+                                {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
+                                <span>Navegación</span>
+                            </button>
+
+                            {isMenuOpen && (
+                                <div className="absolute right-0 top-full mt-2 w-72 bg-white/90 backdrop-blur-xl rounded-xl shadow-2xl border border-white/20 overflow-hidden fade-in z-50 ring-1 ring-black/5 dark:bg-slate-900/90 dark:border-slate-700">
+                                    <div className="py-2">
+                                        <div className="px-4 py-3 border-b border-gray-100/50 mb-1 bg-gray-50/30 dark:bg-slate-800/30 dark:border-slate-800">
+                                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider dark:text-slate-400">Módulos del Sistema</p>
+                                        </div>
+
+                                        {modules.map((mod) => (
+                                            <div key={mod.id} className="border-b border-gray-100/50 last:border-0 dark:border-slate-800">
+                                                {mod.submodules ? (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => toggleSubmenu(mod.id)}
+                                                        className={`w-full text-left px-4 py-3 hover:bg-white/60 flex items-center gap-3 transition-colors group dark:hover:bg-slate-800/60 ${expandedModuleId === mod.id ? 'bg-gray-50/50 dark:bg-slate-800/40' : ''}`}
+                                                    >
+                                                        <span className={`${mod.color} bg-gray-50/80 p-2 rounded-lg group-hover:bg-white transition-colors shadow-sm dark:bg-slate-800/70 dark:group-hover:bg-slate-800`}>
+                                                            {mod.icon}
+                                                        </span>
+                                                        <span className="text-sm font-medium text-gray-700 flex-grow dark:text-slate-200">{mod.title}</span>
+                                                        <ChevronRight
+                                                            size={16}
+                                                            className={`text-gray-400 transition-transform duration-200 ${expandedModuleId === mod.id ? 'rotate-90 text-blue-600 dark:text-blue-300' : ''}`}
+                                                        />
+                                                    </button>
+                                                ) : (
+                                                    <a
+                                                        href={mod.href}
+                                                        className={`w-full text-left px-4 py-3 flex items-center gap-3 transition-colors group ${mod.active ? 'bg-gray-100/80 dark:bg-slate-700/50' : 'hover:bg-white/60 dark:hover:bg-slate-800/60'}`}
+                                                    >
+                                                        <span className={`${mod.color} bg-gray-50/80 p-2 rounded-lg group-hover:bg-white transition-colors shadow-sm dark:bg-slate-800/70 dark:group-hover:bg-slate-800`}>
+                                                            {mod.icon}
+                                                        </span>
+                                                        <span className={`text-sm ${mod.active ? 'font-bold text-gray-900 dark:text-white' : 'font-medium text-gray-700 dark:text-slate-200'} flex-grow`}>{mod.title}</span>
+                                                    </a>
+                                                )}
+
+                                                {mod.submodules && expandedModuleId === mod.id && (
+                                                    <div className="bg-gray-50/40 px-4 py-2 space-y-1 fade-in dark:bg-slate-800/30">
+                                                        {mod.submodules.map((sub, idx) => (
+                                                            <a
+                                                                key={idx}
+                                                                href={sub.href}
+                                                                className="w-full flex items-center gap-3 p-2 rounded-md hover:bg-white/80 hover:shadow-sm text-gray-600 hover:text-blue-600 transition-all pl-11 text-xs font-medium group/sub dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-blue-300"
+                                                            >
+                                                                <span className="opacity-50 group-hover/sub:opacity-100 transition-opacity">{sub.icon}</span>
+                                                                {sub.title}
+                                                            </a>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </header>
+
+                    <main className="flex-grow p-4 sm:p-8 max-w-7xl mx-auto w-full">
+                        <div className="mb-8 text-center sm:text-left">
+                            <h2 className="text-3xl font-bold text-gray-800 tracking-tight dark:text-white">Ajustes y Configuración</h2>
+                            <p className="text-gray-500 font-medium dark:text-slate-400">Personaliza y gestiona las configuraciones de tu aplicación</p>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {/* Tarjetas de Utilidades/Settings */}
+                            {settingsCards.map((card, idx) => (
+                                <div key={idx} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col hover:border-blue-200 transition-all hover:shadow-md dark:bg-slate-900 dark:border-slate-800 group">
+                                    <div className="flex items-center gap-4 mb-4">
+                                        <div className={`p-3 rounded-xl ${card.bg} ${card.color} ${card.darkBg} ${card.darkColor} group-hover:scale-110 transition-transform duration-300`}>
+                                            {card.icon}
+                                        </div>
+                                    </div>
+                                    
+                                    <h3 className="text-lg font-bold text-gray-900 mb-2 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                                        {card.title}
+                                    </h3>
+                                    
+                                    <p className="text-sm text-gray-500 mb-6 flex-grow dark:text-slate-400 leading-relaxed">
+                                        {card.desc}
+                                    </p>
+                                    
+                                    <a href={card.href} className={`inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${card.bg} ${card.color} hover:brightness-95 dark:hover:brightness-110 ${card.darkBg} ${card.darkColor}`}>
+                                        {card.btnText} <ArrowUpRight size={16} />
+                                    </a>
+                                </div>
+                            ))}
+
+                            {/* Tarjeta de Tema */}
+                            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col hover:border-purple-200 transition-all hover:shadow-md dark:bg-slate-900 dark:border-slate-800 group">
+                                <div className="flex items-center gap-4 mb-4">
+                                    <div className="p-3 rounded-xl bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400 group-hover:scale-110 transition-transform duration-300">
+                                        <IconBase size={24}><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" /><path d="m19.07 4.93-1.41 1.41" /><path d="m4.93 19.07 1.41-1.41" /></IconBase>
+                                    </div>
+                                </div>
+                                
+                                <h3 className="text-lg font-bold text-gray-900 mb-2 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                                    Tema y Apariencia
+                                </h3>
+                                
+                                <p className="text-sm text-gray-500 mb-6 flex-grow dark:text-slate-400 leading-relaxed">
+                                    Personaliza la visualización de la interfaz.
+                                </p>
+                                
+                                <div className="grid grid-cols-3 gap-2 mt-auto">
+                                    <button 
+                                        onClick={() => handleThemeChange('light')}
+                                        className={`flex flex-col items-center justify-center p-3 rounded-lg border transition-all ${currentTheme === 'light' ? 'ring-2 ring-blue-500 bg-blue-50 border-blue-200 dark:bg-blue-900/30 dark:border-blue-800' : 'border-gray-200 hover:bg-gray-50 dark:border-slate-700 dark:hover:bg-slate-800'}`}
+                                    >
+                                        <Sun size={20} className={`mb-2 ${currentTheme === 'light' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`} />
+                                        <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Claro</span>
+                                    </button>
+                                    <button 
+                                        onClick={() => handleThemeChange('dark')}
+                                        className={`flex flex-col items-center justify-center p-3 rounded-lg border transition-all ${currentTheme === 'dark' ? 'ring-2 ring-blue-500 bg-blue-50 border-blue-200 dark:bg-blue-900/30 dark:border-blue-800' : 'border-gray-200 hover:bg-gray-50 dark:border-slate-700 dark:hover:bg-slate-800'}`}
+                                    >
+                                        <Moon size={20} className={`mb-2 ${currentTheme === 'dark' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`} />
+                                        <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Oscuro</span>
+                                    </button>
+                                    <button 
+                                        onClick={() => handleThemeChange('system')}
+                                        className={`flex flex-col items-center justify-center p-3 rounded-lg border transition-all ${currentTheme === 'system' ? 'ring-2 ring-blue-500 bg-blue-50 border-blue-200 dark:bg-blue-900/30 dark:border-blue-800' : 'border-gray-200 hover:bg-gray-50 dark:border-slate-700 dark:hover:bg-slate-800'}`}
+                                    >
+                                        <Monitor size={20} className={`mb-2 ${currentTheme === 'system' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`} />
+                                        <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Sistema</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="mt-12 text-center">
+                             <a href="index.html" className="inline-flex items-center gap-2 px-6 py-3 bg-white border border-gray-200 rounded-full text-gray-600 font-medium hover:bg-gray-50 hover:text-gray-900 transition-all shadow-sm dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-white">
+                                <ChevronRight size={18} className="rotate-180" /> Volver al Inicio
+                            </a>
+                        </div>
+                    </main>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<SettingsPage />);
+    </script>
+
+    <script src="theme.js"></script>
+    <script src="app.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const appVersionElement = document.getElementById('appVersion');
-            const appDateElement = document.getElementById('appDate');
-            if (typeof PAGE_VERSION !== 'undefined') {
-                appVersionElement.textContent = PAGE_VERSION;
+        (function() {
+            const updateFooter = () => {
+                const appVersionElement = document.getElementById('appVersion');
+                const appDateElement = document.getElementById('appDate');
+                
+                // Intentar obtener variables de window, o usar valores por defecto si no están disponibles
+                const version = window.PAGE_VERSION;
+                const date = window.ACT_DATE;
+
+                if (appVersionElement && version) {
+                    appVersionElement.textContent = version;
+                }
+                
+                if (appDateElement && date) {
+                    appDateElement.textContent = date;
+                }
+            };
+
+            // Ejecutar inmediatamente si es posible, y también en DOMContentLoaded por seguridad
+            updateFooter();
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', updateFooter);
             }
-            if (typeof ACT_DATE !== 'undefined') {
-                appDateElement.textContent = ACT_DATE;
-            }
-        });
+            // Un intento extra por si app.js tarda en cargar
+            window.addEventListener('load', updateFooter);
+        })();
     </script>
 </body>
 </html>

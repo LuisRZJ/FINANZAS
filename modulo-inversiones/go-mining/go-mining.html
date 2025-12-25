@@ -7,11 +7,19 @@
     <meta name="theme-color" content="#2563eb">
     <link rel="icon" href="/pwa/logo-app.png">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { darkMode: 'class', theme: { extend: { colors: { slate: { 850: '#1e293b', 900: '#0f172a' } } } } };
+    </script>
+    <script>
+        (function(){try{var t=localStorage.getItem('fti_theme_preference');var d=window.matchMedia('(prefers-color-scheme: dark)').matches;if(t==='dark'||((!t||t==='system')&&d)){document.documentElement.classList.add('dark');}else{document.documentElement.classList.remove('dark');}}catch(e){}})();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        :root{--bg-body:#f9fafb;--text-body:#374151;--bg-card:#ffffff;--border-card:#e5e7eb;--accent-blue:#3b82f6;--accent-blue-hover:#2563eb;--progress-bg:#e5e7eb;--progress-fg:#10b981;--scrollbar-thumb:#cbd5e1;--scrollbar-thumb-hover:#94a3b8}
+        html.dark{--bg-body:#0f172a;--text-body:#e2e8f0;--bg-card:#1e293b;--border-card:#334155;--accent-blue:#3b82f6;--accent-blue-hover:#60a5fa;--progress-bg:#334155;--progress-fg:#10b981;--scrollbar-thumb:#334155;--scrollbar-thumb-hover:#64748b}
         /* Estilo para la barra de desplazamiento */
         ::-webkit-scrollbar {
             height: 8px;
@@ -22,59 +30,18 @@
             background: transparent;
         }
         
-        ::-webkit-scrollbar-thumb {
-            background-color: #cbd5e1;
-            border-radius: 4px;
-        }
+        ::-webkit-scrollbar-thumb{background-color:var(--scrollbar-thumb);border-radius:4px}
         
-        ::-webkit-scrollbar-thumb:hover {
-            background-color: #94a3b8;
-        }
+        ::-webkit-scrollbar-thumb:hover{background-color:var(--scrollbar-thumb-hover)}
         
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f9fafb; /* bg-gray-50 */
-            color: #374151; /* text-gray-700 */
-        }
-        .card {
-            background-color: #ffffff; /* bg-white */
-            border-radius: 0.75rem; /* rounded-xl */
-            padding: 1.5rem; /* p-6 */
-            border: 1px solid #e5e7eb; /* border-gray-200 */
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-        .form-input {
-            width: 100%;
-            background-color: #ffffff; /* bg-white */
-            border: 1px solid #d1d5db; /* border-gray-300 */
-            color: #374151; /* text-gray-700 */
-            border-radius: 0.5rem; /* rounded-lg */
-            padding: 0.75rem 1rem; /* px-4 py-3 */
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-        .form-input:focus {
-            outline: none;
-            border-color: #3b82f6; /* focus:border-blue-500 */
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-        }
-        .btn {
-            background-color: #3b82f6; /* bg-blue-600 */
-            color: white;
-            font-weight: 600;
-            padding: 0.75rem 1.5rem; /* py-3 px-6 */
-            border-radius: 0.5rem; /* rounded-lg */
-            transition: background-color 0.2s;
-            width: 100%;
-        }
-        .btn:hover {
-            background-color: #2563eb; /* hover:bg-blue-700 */
-        }
-        .progress-bar-bg {
-            background-color: #e5e7eb; /* bg-gray-200 */
-        }
-        .progress-bar-fg {
-            background-color: #10b981; /* bg-green-500 */
-        }
+        body{font-family:'Inter',sans-serif;background-color:var(--bg-body);color:var(--text-body);transition:background-color .3s ease,color .3s ease}
+        .card{background-color:var(--bg-card);border-radius:.75rem;padding:1.5rem;border:1px solid var(--border-card);box-shadow:0 1px 3px rgba(0,0,0,.1);transition:background-color .3s ease,border-color .3s ease}
+        .form-input{width:100%;background-color:var(--bg-card);border:1px solid var(--border-card);color:var(--text-body);border-radius:.5rem;padding:.75rem 1rem;transition:border-color .2s,box-shadow .2s}
+        .form-input:focus{outline:none;border-color:var(--accent-blue);box-shadow:0 0 0 3px rgba(59,130,246,.2)}
+        .btn{background-color:var(--accent-blue);color:#fff;font-weight:600;padding:.75rem 1.5rem;border-radius:.5rem;transition:background-color .2s;width:100%}
+        .btn:hover{background-color:var(--accent-blue-hover)}
+        .progress-bar-bg{background-color:var(--progress-bg)}
+        .progress-bar-fg{background-color:var(--progress-fg)}
         .tag {
             display: inline-block;
             padding: 0.25rem 0.75rem;
@@ -139,14 +106,7 @@
         .modal-overlay.active {
             display: flex;
         }
-        .modal-content {
-            background-color: white;
-            padding: 2rem;
-            border-radius: 0.75rem;
-            max-width: 400px;
-            width: 90%;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
+        .modal-content{background-color:var(--bg-card);padding:2rem;border-radius:.75rem;max-width:400px;width:90%;box-shadow:0 4px 6px rgba(0,0,0,.1)}
         .modal-buttons {
             display: flex;
             gap: 1rem;
@@ -170,12 +130,60 @@
             background-color: #ef4444;
             color: white;
         }
-        .modal-btn-confirm:hover {
-            background-color: #dc2626;
-        }
+        .modal-btn-confirm:hover{background-color:#dc2626}
+
+        html.dark .border-gray-100{border-color:#334155!important}
+        html.dark .border-gray-200{border-color:#334155!important}
+        html.dark .bg-blue-50{background-color:rgba(59,130,246,.12)!important}
+        html.dark .border-blue-400{border-color:#60a5fa!important}
+        html.dark .text-blue-700{color:#60a5fa!important}
+        html.dark .bg-blue-100{background-color:rgba(59,130,246,.12)!important}
+        html.dark .text-blue-800{color:#93c5fd!important}
+        html.dark .bg-white{background-color:var(--bg-card)!important}
+        html.dark .bg-gray-50{background-color:rgba(255,255,255,.04)!important}
+        html.dark .bg-gray-100{background-color:rgba(255,255,255,.06)!important}
+        html.dark .text-gray-900{color:#f1f5f9!important}
+        html.dark .text-gray-800{color:#e2e8f0!important}
+        html.dark .text-gray-700{color:#cbd5e1!important}
+        html.dark .text-gray-600{color:#94a3b8!important}
+        html.dark .text-gray-500{color:#94a3b8!important}
+        html.dark .text-gray-400{color:#94a3b8!important}
+
+        html.dark .tab-btn{color:#94a3b8}
+        html.dark .tab-btn:hover{color:#e2e8f0}
+        html.dark .tab-btn.active{color:#60a5fa;border-color:#60a5fa}
+
+        html.dark .modal-btn-cancel{background-color:#334155;color:#e2e8f0}
+        html.dark .modal-btn-cancel:hover{background-color:#475569}
+
+        html.dark #toggle-roi-table{background-color:var(--bg-card)!important;color:var(--text-body)!important;border-color:var(--border-card)!important}
+        html.dark #toggle-roi-table:hover{background-color:rgba(255,255,255,.06)!important}
+
+        #toast-container{position:fixed;top:1rem;right:1rem;z-index:100;display:flex;flex-direction:column;gap:.75rem;max-width:calc(100vw - 2rem)}
+        .toast{width:352px;max-width:calc(100vw - 2rem);background-color:var(--bg-card);border:1px solid var(--border-card);border-radius:.75rem;box-shadow:0 10px 25px rgba(0,0,0,.12);overflow:hidden}
+        .toast-row{display:flex;gap:.75rem;align-items:flex-start;padding:1rem}
+        .toast-icon{height:36px;width:36px;border-radius:.5rem;display:flex;align-items:center;justify-content:center;flex:none}
+        .toast-body{min-width:0;flex:1}
+        .toast-title{font-weight:700;color:var(--text-body)}
+        .toast-message{margin-top:.125rem;font-size:.875rem;color:var(--text-body);opacity:.9}
+        .toast-close{border:none;background:transparent;color:#94a3b8;cursor:pointer;padding:0;line-height:0}
+        .toast-close:hover{color:var(--text-body)}
+        .toast-bar{height:4px;width:100%;background-color:rgba(148,163,184,.25)}
+        .toast-bar > div{height:4px;width:100%;transform-origin:left;animation:toastBar 4s linear forwards}
+        .toast--success .toast-icon{background-color:rgba(16,185,129,.12);color:#10b981}
+        .toast--success .toast-bar > div{background-color:#10b981}
+        .toast--error .toast-icon{background-color:rgba(239,68,68,.12);color:#ef4444}
+        .toast--error .toast-bar > div{background-color:#ef4444}
+        .toast--info .toast-icon{background-color:rgba(59,130,246,.12);color:#3b82f6}
+        .toast--info .toast-bar > div{background-color:#3b82f6}
+        .spinner{height:16px;width:16px;animation:spin .9s linear infinite}
+        @keyframes toastBar{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+        @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
     </style>
 </head>
 <body>
+
+    <div id="toast-container"></div>
 
     <div class="container mx-auto p-4 md:p-8">
         <header class="text-center mb-8">
@@ -388,9 +396,10 @@
                                     <path d="M20.317 4.492c-1.53-.69-3.17-1.2-4.885-1.49a.075.075 0 0 0-.079.036c-.21.369-.444.85-.608 1.23a18.566 18.566 0 0 0-5.487 0 12.36 12.36 0 0 0-.617-1.23A.077.077 0 0 0 8.562 3c-1.714.29-3.354.8-4.885 1.491a.07.07 0 0 0-.032.027C.533 9.093-.32 13.555.099 17.961a.08.08 0 0 0 .031.055 20.03 20.03 0 0 0 5.993 2.98.078.078 0 0 0 .084-.026 13.83 13.83 0 0 0 1.226-1.963.074.074 0 0 0-.041-.104 13.175 13.175 0 0 1-1.872-.878.075.075 0 0 1-.008-.125c.126-.093.252-.19.372-.287a.075.075 0 0 1 .078-.01c3.927 1.764 8.18 1.764 12.061 0a.075.075 0 0 1 .079.009c.12.098.245.195.372.288a.075.075 0 0 1-.006.125c-.598.344-1.22.635-1.873.877a.075.075 0 0 0-.041.105c.36.687.772 1.341 1.225 1.962a.077.077 0 0 0 .084.028 19.963 19.963 0 0 0 6.002-2.981.076.076 0 0 0 .032-.054c.5-5.094-.838-9.52-3.549-13.442a.06.06 0 0 0-.031-.028zM8.02 15.278c-1.182 0-2.157-1.069-2.157-2.38 0-1.312.956-2.38 2.157-2.38 1.21 0 2.176 1.077 2.157 2.38 0 1.312-.956 2.38-2.157 2.38zm7.975 0c-1.183 0-2.157-1.069-2.157-2.38 0-1.312.955-2.38 2.157-2.38 1.21 0 2.176 1.077 2.157 2.38 0 1.312-.946 2.38-2.157 2.38z"></path>
                                 </svg>
                                 Respaldar en Discord
-                            </button>
-                            <div id="webhook-config" class="mt-4 hidden">
-                                <input type="text" id="discord-webhook" placeholder="URL del Webhook de Discord" class="form-input mb-2">
+                        </button>
+                            <div id="webhook-config" class="mt-4">
+                                <label for="discord-webhook" class="block text-sm font-medium text-gray-600 mb-1">URL del Webhook de Discord</label>
+                                <input type="url" id="discord-webhook" placeholder="https://discord.com/api/webhooks/..." class="form-input mb-2" autocomplete="off" inputmode="url">
                                 <div class="flex justify-end">
                                     <button id="save-webhook" class="bg-indigo-500 text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition-colors text-sm">
                                         Guardar URL
@@ -454,6 +463,81 @@
                 style: 'currency',
                 currency: 'MXN'
             });
+
+            const discordWebhookInput = document.getElementById('discord-webhook');
+            const saveWebhookBtn = document.getElementById('save-webhook');
+            const backupToDiscordBtn = document.getElementById('backup-to-discord');
+            let discordWebhookUrl = localStorage.getItem('goMiningWebhook') || '';
+            if (discordWebhookInput && discordWebhookUrl) discordWebhookInput.value = discordWebhookUrl;
+
+            const setButtonBusy = (btn, busyText, isBusy) => {
+                if (!btn) return;
+                if (isBusy) {
+                    if (!btn.dataset.originalHtml) btn.dataset.originalHtml = btn.innerHTML;
+                    btn.disabled = true;
+                    btn.classList.add('opacity-70', 'cursor-not-allowed');
+                    btn.innerHTML = `
+                        <span class="inline-flex items-center justify-center gap-2">
+                            <svg class="spinner" viewBox="0 0 24 24" fill="none">
+                                <circle style="opacity:.25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path style="opacity:.75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                            </svg>
+                            <span>${busyText}</span>
+                        </span>
+                    `;
+                } else {
+                    btn.disabled = false;
+                    btn.classList.remove('opacity-70', 'cursor-not-allowed');
+                    if (btn.dataset.originalHtml) btn.innerHTML = btn.dataset.originalHtml;
+                }
+            };
+
+            const showToast = ({ type, title, message }) => {
+                const container = document.getElementById('toast-container');
+                if (!container) return;
+
+                const toast = document.createElement('div');
+                toast.className = `toast toast--${type || 'info'}`;
+
+                const iconSvg = type === 'success'
+                    ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-5 w-5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>'
+                    : type === 'error'
+                        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-5 w-5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>'
+                        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-5 w-5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 2a10 10 0 100 20 10 10 0 000-20z"/></svg>';
+
+                toast.innerHTML = `
+                    <div class="toast-row">
+                        <div class="toast-icon">${iconSvg}</div>
+                        <div class="toast-body">
+                            <div class="toast-title">${title || ''}</div>
+                            <div class="toast-message">${message || ''}</div>
+                        </div>
+                        <button type="button" class="toast-close" aria-label="Cerrar">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-5 w-5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+                    <div class="toast-bar"><div></div></div>
+                `;
+
+                container.appendChild(toast);
+                const closeBtn = toast.querySelector('button');
+                const close = () => {
+                    toast.style.transition = 'opacity .2s ease, transform .2s ease';
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateY(-6px)';
+                    window.setTimeout(() => toast.remove(), 220);
+                };
+                if (closeBtn) closeBtn.addEventListener('click', close);
+                window.setTimeout(close, 4200);
+            };
+
+            const validateDiscordWebhookUrl = (url) => {
+                const trimmed = (url || '').trim();
+                if (!trimmed) return { ok: true, value: '' };
+                const isDiscordWebhook = /^https:\/\/(?:canary\.|ptb\.)?discord(?:app)?\.com\/api\/webhooks\//i.test(trimmed);
+                if (!isDiscordWebhook) return { ok: false, value: trimmed };
+                return { ok: true, value: trimmed };
+            };
 
             // Función principal para renderizar todo
             const renderApp = () => {
@@ -1081,10 +1165,26 @@
 
             // Función para descargar datos
             const downloadData = () => {
+                if (discordWebhookInput) {
+                    const validation = validateDiscordWebhookUrl(discordWebhookInput.value);
+                    if (!validation.ok) {
+                        discordWebhookInput.classList.add('ring-2', 'ring-red-500');
+                        showToast({ type: 'error', title: 'URL inválida', message: 'La URL no se incluirá en el backup.' });
+                    } else {
+                        discordWebhookInput.classList.remove('ring-2', 'ring-red-500');
+                        if (validation.value !== discordWebhookUrl) {
+                            discordWebhookUrl = validation.value;
+                            if (discordWebhookUrl) localStorage.setItem('goMiningWebhook', discordWebhookUrl);
+                            else localStorage.removeItem('goMiningWebhook');
+                        }
+                    }
+                }
+
                 const data = {
                     type: 'go-mining-investments',
                     version: '1.0',
                     data: investments,
+                    discordWebhookUrl: discordWebhookUrl,
                     exportDate: new Date().toISOString()
                 };
                 
@@ -1092,7 +1192,7 @@
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `inversiones-mineria-${new Date().toISOString().split('T')[0]}.json`;
+                a.download = `go-mining-backup-${new Date().toISOString().split('T')[0]}.json`;
                 document.body.appendChild(a);
                 a.click();
                 window.URL.revokeObjectURL(url);
@@ -1106,7 +1206,7 @@
                     const importedData = JSON.parse(text);
                     
                     // Verificar que el archivo sea del tipo correcto
-                    if (importedData.type !== 'go-mining-investments') {
+                    if (importedData.type !== 'go-mining-investments' && importedData.type !== 'go-mining') {
                         throw new Error('El archivo no es compatible con esta aplicación');
                     }
 
@@ -1118,13 +1218,30 @@
 
                     if (confirmed) {
                         investments = importedData.data;
-                        localStorage.setItem('btcMiningInvestments', JSON.stringify(investments));
+                        localStorage.setItem('goMiningInvestments', JSON.stringify(investments));
+
+                        const importedWebhookUrl = (importedData && typeof importedData === 'object')
+                            ? (importedData.discordWebhookUrl || (importedData.config && importedData.config.discordWebhookUrl))
+                            : '';
+                        if (typeof importedWebhookUrl === 'string') {
+                            const trimmed = importedWebhookUrl.trim();
+                            if (trimmed) {
+                                discordWebhookUrl = trimmed;
+                                localStorage.setItem('goMiningWebhook', discordWebhookUrl);
+                                if (discordWebhookInput) discordWebhookInput.value = discordWebhookUrl;
+                            } else {
+                                discordWebhookUrl = '';
+                                localStorage.removeItem('goMiningWebhook');
+                                if (discordWebhookInput) discordWebhookInput.value = '';
+                            }
+                        }
+
                         renderApp();
                         updateStorageInfo();
-                        alert('Datos importados correctamente');
+                        showToast({ type: 'success', title: 'Importación completa', message: 'Los datos se importaron correctamente.' });
                     }
                 } catch (error) {
-                    alert('Error al importar el archivo: ' + error.message);
+                    showToast({ type: 'error', title: 'Error al importar', message: error.message || 'No fue posible importar el archivo.' });
                 }
             };
 
@@ -1168,16 +1285,118 @@
                 });
             };
 
+            if (saveWebhookBtn && discordWebhookInput) {
+                saveWebhookBtn.addEventListener('click', () => {
+                    setButtonBusy(saveWebhookBtn, 'Guardando...', true);
+                    try {
+                        const validation = validateDiscordWebhookUrl(discordWebhookInput.value);
+                        if (!validation.ok) {
+                            discordWebhookInput.classList.add('ring-2', 'ring-red-500');
+                            showToast({ type: 'error', title: 'URL inválida', message: 'Usa un Webhook de Discord válido.' });
+                            discordWebhookInput.focus();
+                            return;
+                        }
+
+                        discordWebhookInput.classList.remove('ring-2', 'ring-red-500');
+                        if (validation.value) {
+                            localStorage.setItem('goMiningWebhook', validation.value);
+                            discordWebhookUrl = validation.value;
+                            showToast({ type: 'success', title: 'Webhook guardado', message: 'Se usará para futuros respaldos y exportaciones.' });
+                        } else {
+                            localStorage.removeItem('goMiningWebhook');
+                            discordWebhookUrl = '';
+                            showToast({ type: 'info', title: 'Webhook eliminado', message: 'No se enviarán respaldos a Discord hasta configurar uno.' });
+                        }
+                    } finally {
+                        setButtonBusy(saveWebhookBtn, 'Guardando...', false);
+                    }
+                });
+            }
+
             // Función para respaldar en Discord
             const backupToDiscord = async () => {
-                const webhookUrl = 'https://discord.com/api/webhooks/1414406254322909224/GctCTgBWPjp4NhD3IA1IMOToBjLTrrE0eRWTztptQJ8o2-DlguQWh8m6qf5jh8pyyU1n';
+                setButtonBusy(backupToDiscordBtn, 'Enviando...', true);
+
+                const validation = validateDiscordWebhookUrl(discordWebhookInput ? discordWebhookInput.value : discordWebhookUrl);
+                if (!validation.ok) {
+                    if (discordWebhookInput) {
+                        discordWebhookInput.classList.add('ring-2', 'ring-red-500');
+                        discordWebhookInput.focus();
+                    }
+                    showToast({ type: 'error', title: 'URL inválida', message: 'Usa un Webhook de Discord válido.' });
+                    setButtonBusy(backupToDiscordBtn, 'Enviando...', false);
+                    return;
+                }
+                if (!validation.value) {
+                    showToast({ type: 'error', title: 'Falta la URL', message: 'Configura tu URL de Webhook antes de respaldar.' });
+                    if (discordWebhookInput) discordWebhookInput.focus();
+                    setButtonBusy(backupToDiscordBtn, 'Enviando...', false);
+                    return;
+                }
+                if (discordWebhookInput) discordWebhookInput.classList.remove('ring-2', 'ring-red-500');
+                if (validation.value !== discordWebhookUrl) {
+                    localStorage.setItem('goMiningWebhook', validation.value);
+                    discordWebhookUrl = validation.value;
+                    if (discordWebhookInput) discordWebhookInput.value = discordWebhookUrl;
+                }
+
+                const webhookUrl = discordWebhookUrl;
+
+                const confirmed = await showConfirmationModal('Discord', '¿Enviar respaldo al Webhook configurado?');
+                if (!confirmed) {
+                    setButtonBusy(backupToDiscordBtn, 'Enviando...', false);
+                    return;
+                }
 
                 try {
+                    const now = new Date();
+                    now.setUTCHours(0, 0, 0, 0);
+                    const totalCost = investments.reduce((sum, inv) => sum + (Number(inv.cost) || 0), 0);
+                    const activeInvestments = investments.filter(inv => {
+                        if (!inv.hasExpiration) return true;
+                        return now <= new Date(inv.expirationDate);
+                    });
+                    const totalDaily = activeInvestments.reduce((sum, inv) => sum + (Number(inv.dailyIncome) || 0), 0);
+
+                    const totalRecovered = investments.reduce((total, inv) => {
+                        let investmentEarned = 0;
+                        let currentDate = new Date(inv.date);
+                        currentDate.setUTCHours(0, 0, 0, 0);
+
+                        let limitDate = now;
+                        if (inv.hasExpiration) {
+                            const expirationDate = new Date(inv.expirationDate);
+                            expirationDate.setUTCHours(0, 0, 0, 0);
+                            if (expirationDate < limitDate) limitDate = expirationDate;
+                        }
+
+                        const incomeHistory = inv.incomeHistory
+                            ? [...inv.incomeHistory].sort((a, b) => new Date(a.date) - new Date(b.date))
+                            : [{ date: inv.date, dailyIncome: inv.dailyIncome }];
+
+                        for (let i = 0; i < incomeHistory.length; i++) {
+                            const currentRate = incomeHistory[i];
+                            const nextRate = incomeHistory[i + 1];
+                            let endDate = nextRate ? new Date(nextRate.date) : limitDate;
+                            endDate.setUTCHours(0, 0, 0, 0);
+                            if (endDate > limitDate) endDate = limitDate;
+
+                            if (currentDate < limitDate) {
+                                const periodDays = Math.max(0, Math.floor((endDate - currentDate) / (1000 * 60 * 60 * 24)));
+                                investmentEarned += periodDays * (Number(currentRate.dailyIncome) || 0);
+                            }
+                            currentDate = new Date(endDate);
+                        }
+
+                        return total + investmentEarned;
+                    }, 0);
+
                     // Crear el archivo JSON
                     const fileData = JSON.stringify({
                         type: 'go-mining-investments',
                         version: '1.0',
                         data: investments,
+                        discordWebhookUrl: discordWebhookUrl,
                         exportDate: new Date().toISOString()
                     }, null, 2);
 
@@ -1186,20 +1405,22 @@
                     
                     // Agregar el JSON del mensaje embed
                     const messageData = {
-                        content: '**Respaldo de Inversiones**',
+                        content: 'Respaldo automático GO Mining',
                         embeds: [{
-                            title: 'Respaldo de Datos de Minería BTC',
-                            color: 3447003,
+                            title: 'Respaldo de Datos de Minería GO',
+                            description: 'Resumen',
+                            color: 2454510,
                             fields: [
-                                {
-                                    name: '📊 Resumen',
-                                    value: `Total de inversiones: ${investments.length}\nÚltima actualización: ${new Date().toLocaleString('es-MX')}`
-                                }
+                                { name: 'Total de inversiones', value: String(investments.length), inline: true },
+                                { name: 'Costo total', value: currencyFormatter.format(totalCost), inline: true },
+                                { name: 'Ingreso diario activo', value: currencyFormatter.format(totalDaily), inline: true },
+                                { name: 'Total recuperado', value: currencyFormatter.format(totalRecovered), inline: true },
+                                { name: 'Última actualización', value: new Date().toLocaleString('es-MX'), inline: false }
                             ],
                             footer: {
                                 text: 'Respaldo automático de inversiones'
                             },
-                            timestamp: new Date()
+                            timestamp: new Date().toISOString()
                         }]
                     };
                     
@@ -1208,7 +1429,7 @@
                     
                     // Crear el Blob y agregar el archivo
                     const blob = new Blob([fileData], { type: 'application/json' });
-                    formData.append('file', blob, `inversiones-mineria-${new Date().toISOString().split('T')[0]}.json`);
+                    formData.append('file', blob, `go-mining-backup-${new Date().toISOString().split('T')[0]}.json`);
 
                     // Enviar la solicitud
                     const response = await fetch(webhookUrl, {
@@ -1220,10 +1441,11 @@
                         throw new Error('Error al enviar datos a Discord');
                     }
 
-                    alert('Respaldo enviado correctamente a Discord');
+                    showToast({ type: 'success', title: 'Respaldo enviado', message: 'Se envió el backup y el resumen al canal de Discord.' });
                 } catch (error) {
-                    alert('Error al respaldar datos: ' + error.message);
-                    console.error('Error:', error);
+                    showToast({ type: 'error', title: 'Error al enviar', message: error.message || 'No fue posible enviar el respaldo a Discord.' });
+                } finally {
+                    setButtonBusy(backupToDiscordBtn, 'Enviando...', false);
                 }
             };
 
@@ -1306,5 +1528,6 @@
             }
         });
     </script>
+    <script src="/theme.js"></script>
 </body>
 </html>

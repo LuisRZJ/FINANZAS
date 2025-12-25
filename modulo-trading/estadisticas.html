@@ -1,282 +1,965 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
-    <link rel="stylesheet" href="estilos.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Backtesting - Estadísticas</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts (Inter) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Manifest and Icons -->
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/png" sizes="192x192" href="Logo_app_trading-removebg-preview.png">
     <link rel="icon" type="image/png" sizes="512x512" href="Logo_app_trading-removebg-preview.png">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>Estadísticas</h1>
-            <div class="account-switcher">
-                <label for="account-select">Cuenta:</label>
-                <select id="account-select"></select>
-                <button type="button" id="add-account-btn" class="nav-btn">Nueva cuenta</button>
-                <span id="active-account-name" class="account-name"></span>
-            </div>
-            <div id="datetime" class="datetime"></div>
-        </div>
 
-        <div class="stats-sections">
-            <!-- Nueva Sección de Calificación de Rendimiento -->
-            <section class="stats-section rating-stats">
-                <h2>Calificación de Rendimiento</h2>
-                <div class="stat-content">
-                    <p id="performanceRatingSummary">Calculando rendimiento...</p>
-                    <!-- Barra de Progreso de Rendimiento -->
-                    <div class="performance-progress-bar-container">
-                        <div class="progress-bar-labels">
-                            <span>0%</span>
-                            <span>100%</span>
-                        </div>
-                        <div class="performance-progress-bar">
-                            <div id="performanceProgressBarFill" class="progress-bar-fill"></div>
-                            <div id="performanceProgressBarMarker" class="progress-bar-marker"></div>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        orange: {
+                            50: '#fff7ed',
+                            100: '#ffedd5',
+                            500: '#f97316',
+                            600: '#ea580c',
+                            700: '#c2410c',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Estilos base y para el menú */
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Clases para controlar la visibilidad del menú lateral */
+        .nav-menu.visible {
+            transform: translateX(0);
+        }
+
+        .menu-overlay.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        body.menu-open {
+            position: fixed;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        /* Estilo para ocultar el botón del menú cuando el menú está abierto */
+        .menu-toggle.opened {
+            transform: translateX(-150%);
+            opacity: 0;
+            pointer-events: none;
+            visibility: hidden;
+        }
+
+        /* Estilos específicos para la barra de progreso de rendimiento */
+        .performance-progress-bar-container {
+            position: relative;
+            height: 24px;
+            background-color: #e5e7eb;
+            /* gray-200 */
+            border-radius: 9999px;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+            overflow: hidden;
+        }
+
+        .dark .performance-progress-bar-container {
+            background-color: #374151;
+            /* gray-700 */
+        }
+
+        .performance-progress-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background-color: #3b82f6;
+            /* blue-500 default */
+            transition: width 0.5s ease-in-out, background-color 0.3s;
+        }
+
+        .progress-bar-marker {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background-color: #111827;
+            /* gray-900 */
+            transform: translateX(-50%);
+            z-index: 10;
+        }
+
+        .dark .progress-bar-marker {
+            background-color: #f3f4f6;
+            /* gray-100 */
+        }
+
+        .progress-bar-labels {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 0.5rem;
+            font-size: 0.75rem;
+            color: #6b7280;
+            /* gray-500 */
+            z-index: 20;
+            pointer-events: none;
+        }
+
+        .dark .progress-bar-labels {
+            color: #9ca3af;
+            /* gray-400 */
+        }
+
+        /* Estilos para los criterios de calificación */
+        .criterion-score {
+            font-weight: bold;
+            margin-left: 0.5rem;
+        }
+
+        .criterion-score.scored {
+            color: #10b981;
+            /* green-500 */
+        }
+
+        .criterion-score.not-scored {
+            color: #ef4444;
+            /* red-500 */
+        }
+
+        /* Collapsible */
+        .collapsible-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .collapsible-content.active {
+            max-height: 500px;
+            /* Altura suficiente */
+        }
+
+        .collapsible-header .icon {
+            transition: transform 0.3s;
+        }
+
+        .collapsible-header.active .icon {
+            transform: rotate(180deg);
+        }
+
+        /* Winrate colors based on JS classes */
+        .winrate-excellent {
+            color: #10b981;
+        }
+
+        /* green-500 */
+        .winrate-good {
+            color: #3b82f6;
+        }
+
+        /* blue-500 */
+        .winrate-poor {
+            color: #f59e0b;
+        }
+
+        /* amber-500 */
+        .winrate-bad {
+            color: #ef4444;
+        }
+
+        /* red-500 */
+
+        .positive {
+            color: #10b981;
+        }
+
+        .negative {
+            color: #ef4444;
+        }
+    </style>
+</head>
+
+<body class="bg-orange-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-200">
+
+    <!-- Botón del Menú Hamburguesa -->
+    <button
+        class="menu-toggle fixed z-50 top-4 left-4 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-lg flex items-center justify-center text-2xl text-gray-700 dark:text-gray-300 transition-all duration-300 ease-in-out"
+        onclick="toggleMenu()">
+        ☰
+    </button>
+
+    <!-- Overlay del Menú -->
+    <div
+        class="menu-overlay fixed inset-0 bg-black bg-opacity-50 z-30 opacity-0 pointer-events-none transition-opacity duration-300">
+    </div>
+
+    <!-- Menú de Navegación Lateral -->
+    <nav
+        class="nav-menu fixed top-0 left-0 h-full w-72 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md shadow-xl z-40 transform -translate-x-full transition-transform duration-300 ease-in-out">
+        <div class="p-4">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Menú</h2>
+                <!-- Botón de Cierre -->
+                <button
+                    class="w-10 h-10 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors"
+                    onclick="toggleMenu()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="menu-items space-y-2">
+                <a href="index.html"
+                    class="flex items-center gap-3 py-2.5 px-4 rounded-lg font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                        <polyline points="9 22 9 12 15 12 15 22" />
+                    </svg>
+                    <span>Inicio</span>
+                </a>
+                <a href="/index.html"
+                    class="flex items-center gap-3 py-2.5 px-4 rounded-lg font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect width="7" height="9" x="3" y="3" rx="1" />
+                        <rect width="7" height="5" x="14" y="3" rx="1" />
+                        <rect width="7" height="9" x="14" y="12" rx="1" />
+                        <rect width="7" height="5" x="3" y="16" rx="1" />
+                    </svg>
+                    <span>Volver al panel de control</span>
+                </a>
+                <a href="registrar-trade.html"
+                    class="flex items-center gap-3 py-2.5 px-4 rounded-lg font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M8 12h8" />
+                        <path d="M12 8v8" />
+                    </svg>
+                    <span>Registrar Trade</span>
+                </a>
+                <a href="diario.html"
+                    class="flex items-center gap-3 py-2.5 px-4 rounded-lg font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+                    </svg>
+                    <span>Diario</span>
+                </a>
+                <a href="estadisticas.html"
+                    class="flex items-center gap-3 py-2.5 px-4 rounded-lg font-medium transition duration-200 bg-orange-600 text-white shadow-md">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 3v18h18" />
+                        <path d="M18 17V9" />
+                        <path d="M13 17V5" />
+                        <path d="M8 17v-3" />
+                    </svg>
+                    <span>Estadísticas</span>
+                </a>
+                <a href="plan-trading.html"
+                    class="flex items-center gap-3 py-2.5 px-4 rounded-lg font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
+                        <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+                        <path d="M10 9H8" />
+                        <path d="M16 13H8" />
+                        <path d="M16 17H8" />
+                    </svg>
+                    <span>Plan de Trading</span>
+                </a>
+                <a href="almacenamiento.html"
+                    class="flex items-center gap-3 py-2.5 px-4 rounded-lg font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <ellipse cx="12" cy="5" rx="9" ry="3" />
+                        <path d="M3 5V19A9 3 0 0 0 21 19V5" />
+                        <path d="M3 12A9 3 0 0 0 21 12" />
+                    </svg>
+                    <span>Almacenamiento</span>
+                </a>
+                <a href="ajustes.html"
+                    class="flex items-center gap-3 py-2.5 px-4 rounded-lg font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path
+                            d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1 0-2l.15.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+                        <circle cx="12" cy="12" r="3" />
+                    </svg>
+                    <span>Ajustes</span>
+                </a>
+                <a href="deposito-retiro.html"
+                    class="flex items-center gap-3 py-2.5 px-4 rounded-lg font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M8 3 4 7l4 4" />
+                        <path d="M4 7h16" />
+                        <path d="m16 21 4-4-4-4" />
+                        <path d="M20 17H4" />
+                    </svg>
+                    <span>Deposito/Retiro</span>
+                </a>
+                <a href="gestor-cuentas.html"
+                    class="flex items-center gap-3 py-2.5 px-4 rounded-lg font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                    </svg>
+                    <span>Gestor de Cuentas</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenido Principal -->
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8 pt-24">
+        <!-- Encabezado -->
+        <header class="mb-8">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <h1 class="text-4xl font-bold text-gray-900 dark:text-white">Estadísticas</h1>
+                <div id="datetime" class="text-sm text-gray-500 dark:text-gray-400"></div>
+            </div>
+            <div class="account-switcher mt-4 flex flex-wrap items-center gap-2">
+                <label for="account-select" class="text-sm font-medium">Cuenta:</label>
+                <select id="account-select"
+                    class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"></select>
+                <label for="view-mode-select" class="text-sm font-medium">Vista:</label>
+                <select id="view-mode-select"
+                    class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                    <option value="active">Cuenta activa</option>
+                    <option value="all">Todas las cuentas</option>
+                </select>
+                <button type="button" id="time-filter-btn"
+                    class="flex items-center gap-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500">
+                    <span class="font-medium">Periodo</span>
+                    <span id="time-filter-btn-label" class="text-xs text-gray-500 dark:text-gray-300">Todo el periodo</span>
+                </button>
+                <button type="button" id="add-account-btn"
+                    class="nav-btn px-4 py-2 bg-orange-600 text-white rounded-lg text-sm font-semibold hover:bg-orange-700 transition">Nueva
+                    cuenta</button>
+                <span id="active-account-name" class="account-name ml-2 font-semibold"></span>
+            </div>
+        </header>
+
+        <!-- Sección de Calificación de Rendimiento -->
+        <section class="mb-8">
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md">
+                <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Calificación de Rendimiento</h2>
+
+                <p id="performanceRatingSummary" class="text-lg mb-2">Calculando rendimiento...</p>
+
+                <!-- Barra de Progreso -->
+                <div class="performance-progress-bar-container">
+                    <div class="progress-bar-labels px-2 pt-1">
+                        <span id="currentProgressLabel">0%</span>
+                        <span>100%</span>
+                    </div>
+                    <div class="performance-progress-bar">
+                        <div id="performanceProgressBarFill" class="progress-bar-fill"></div>
+                        <div id="performanceProgressBarMarker" class="progress-bar-marker"></div>
+                    </div>
+                </div>
+
+                <h4 class="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-3">Criterios considerados:</h4>
+
+                <!-- Grid de Criterios -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                    <div id="criterion-samplesize"
+                        class="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg flex justify-between items-center">
+                        <span class="text-sm text-gray-600 dark:text-gray-300">Muestra:</span>
+                        <div>
+                            <span class="criterion-value font-medium">-</span>
+                            <span class="criterion-score"></span>
                         </div>
                     </div>
-                    <h4>Criterios considerados:</h4>
-                    <!-- Contenedor para los criterios de calificación -->
-                    <div class="rating-criteria-grid">
-                        <div id="criterion-winrate" class="rating-criterion-item">
-                            <span class="criterion-label">Win Rate:</span>
-                            <span class="criterion-value">-</span>
-                            <span class="criterion-score"></span>
-                        </div>
-                        <div id="criterion-pnl" class="rating-criterion-item">
-                            <span class="criterion-label">PNL Final:</span>
-                            <span class="criterion-value">-</span>
-                            <span class="criterion-score"></span>
-                        </div>
-                        <div id="criterion-drawdown" class="rating-criterion-item">
-                            <span class="criterion-label">Drawdown Máximo:</span>
-                            <span class="criterion-value">-</span>
-                            <span class="criterion-score"></span>
-                        </div>
-                        <div id="criterion-ratio" class="rating-criterion-item">
-                            <span class="criterion-label">Ratio Beneficio/Riesgo:</span>
-                            <span class="criterion-value">-</span>
-                            <span class="criterion-score"></span>
-                        </div>
-                        <div id="criterion-avgpips" class="rating-criterion-item">
-                            <span class="criterion-label">Promedio Pips por Trade:</span>
-                            <span class="criterion-value">-</span>
-                            <span class="criterion-score"></span>
-                        </div>
-                        <!-- Nuevo Criterio: Promedio Ganancia (MXN) -->
-                        <div id="criterion-avgprofit" class="rating-criterion-item">
-                            <span class="criterion-label">Promedio Ganancia (MXN):</span>
-                            <span class="criterion-value">-</span>
+                    <div id="criterion-winrate"
+                        class="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg flex justify-between items-center">
+                        <span class="text-sm text-gray-600 dark:text-gray-300">Win Rate:</span>
+                        <div>
+                            <span class="criterion-value font-medium">-</span>
                             <span class="criterion-score"></span>
                         </div>
                     </div>
-                    <!-- Mensaje informativo de umbrales -->
-                    <div class="roi-calculation-hint">
-                        <button class="collapsible-header">Detalles de Criterios y Umbrales <span class="icon">▼</span></button>
-                        <div class="collapsible-content">
-                            <p>Umbral mínimo para sumar punto:</p>
-                            <ul>
-                                <li>Win Rate >= 60%</li>
-                                <li>PNL Final > 0</li>
-                                <li>Drawdown Máximo es 0 (si no hay pérdidas) O PNL Final > 0 y Drawdown Máximo (valor absoluto) &lt;= Pérdidas Totales (valor absoluto) (si hay pérdidas)</li>
-                                <li>Ratio Beneficio/Riesgo >= 150.00</li>
-                                <li>Promedio Pips por Trade > 5 pips</li>
-                                <li>Promedio Ganancia (MXN) > 10 MXN (solo si hay operaciones ganadoras).</li>
+                    <div id="criterion-expectancy"
+                        class="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg flex justify-between items-center">
+                        <span class="text-sm text-gray-600 dark:text-gray-300">Expectancy:</span>
+                        <div>
+                            <span class="criterion-value font-medium">-</span>
+                            <span class="criterion-score"></span>
+                        </div>
+                    </div>
+                    <div id="criterion-profitfactor"
+                        class="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg flex justify-between items-center">
+                        <span class="text-sm text-gray-600 dark:text-gray-300">Profit Factor:</span>
+                        <div>
+                            <span class="criterion-value font-medium">-</span>
+                            <span class="criterion-score"></span>
+                        </div>
+                    </div>
+                    <div id="criterion-recovery"
+                        class="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg flex justify-between items-center">
+                        <span class="text-sm text-gray-600 dark:text-gray-300">Recovery Factor:</span>
+                        <div>
+                            <span class="criterion-value font-medium">-</span>
+                            <span class="criterion-score"></span>
+                        </div>
+                    </div>
+                    <div id="criterion-lossstreak"
+                        class="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg flex justify-between items-center">
+                        <span class="text-sm text-gray-600 dark:text-gray-300">Racha Perdedora:</span>
+                        <div>
+                            <span class="criterion-value font-medium">-</span>
+                            <span class="criterion-score"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detalles Collapsible -->
+                <div class="roi-calculation-hint border-t border-gray-200 dark:border-gray-700 pt-4">
+                    <button
+                        class="collapsible-header w-full flex justify-between items-center text-sm font-semibold text-gray-500 hover:text-orange-600 transition-colors">
+                        <span>Detalles de Criterios y Umbrales</span>
+                        <span class="icon">▼</span>
+                    </button>
+                    <div class="collapsible-content mt-2">
+                        <div
+                            class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg text-sm text-gray-600 dark:text-gray-300">
+                            <p class="font-semibold mb-2">Umbral mínimo para sumar punto:</p>
+                            <ul class="list-disc list-inside space-y-1">
+                                <li>Muestra >= 30 operaciones</li>
+                                <li>Win Rate >= 50%</li>
+                                <li>Expectancy >= 0 (MXN/trade)</li>
+                                <li>Profit Factor >= 1.30</li>
+                                <li>Recovery Factor >= 1.00 (PNL / |Drawdown|)</li>
+                                <li>Racha perdedora máxima <= 5</li>
                             </ul>
                         </div>
                     </div>
                 </div>
-            </section>
+            </div>
+        </section>
 
-            <!-- Sección de Estadísticas Generales -->
-            <section class="stats-section general-stats">
-                <h2>Estadísticas Generales</h2>
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-icon">📊</div>
-                        <div class="stat-content">
-                            <h3>Total de Operaciones</h3>
-                            <div class="stat-value" id="totalTrades">-</div>
+        <!-- Estadísticas Generales -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Estadísticas Generales</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md flex flex-col items-center text-center">
+                    <div class="text-4xl mb-2">📊</div>
+                    <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Operaciones</h3>
+                    <div class="text-2xl font-bold text-gray-900 dark:text-white mt-1" id="totalTrades">-</div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md flex flex-col items-center text-center">
+                    <div class="text-4xl mb-2">✅</div>
+                    <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Ganadoras</h3>
+                    <div class="text-2xl font-bold text-green-500 mt-1" id="winningTrades">-</div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md flex flex-col items-center text-center">
+                    <div class="text-4xl mb-2">❌</div>
+                    <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Perdedoras</h3>
+                    <div class="text-2xl font-bold text-red-500 mt-1" id="losingTrades">-</div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md flex flex-col items-center text-center">
+                    <div class="text-4xl mb-2">🤝</div>
+                    <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Break Even</h3>
+                    <div class="text-2xl font-bold text-gray-900 dark:text-white mt-1" id="breakevenTrades">-</div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md flex flex-col items-center text-center">
+                    <div class="text-4xl mb-2">📈</div>
+                    <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Win Rate</h3>
+                    <div class="text-2xl font-bold text-gray-900 dark:text-white mt-1" id="winRate">-</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Rendimiento -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Rendimiento Financiero</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md">
+                    <div class="flex items-center gap-3 mb-2">
+                        <span class="text-2xl">💰</span>
+                        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">PNL Final</h3>
+                    </div>
+                    <div class="text-2xl font-bold" id="totalProfit">-</div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md">
+                    <div class="flex items-center gap-3 mb-2">
+                        <span class="text-2xl">🧾</span>
+                        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Volumen (MXN)</h3>
+                    </div>
+                    <div class="text-2xl font-bold text-gray-900 dark:text-white" id="totalVolume">-</div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md">
+                    <div class="flex items-center gap-3 mb-2">
+                        <span class="text-2xl">📉</span>
+                        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Drawdown Máximo</h3>
+                    </div>
+                    <div class="text-2xl font-bold" id="maxDrawdown">-</div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md">
+                    <div class="flex items-center gap-3 mb-2">
+                        <span class="text-2xl">💵</span>
+                        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Max. Ganancia</h3>
+                    </div>
+                    <div class="text-2xl font-bold text-gray-900 dark:text-white" id="maxProfit">-</div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md">
+                    <div class="flex items-center gap-3 mb-2">
+                        <span class="text-2xl">📏</span>
+                        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Promedio Ganancia</h3>
+                    </div>
+                    <div class="text-2xl font-bold text-gray-900 dark:text-white" id="avgProfit">-</div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md">
+                    <div class="flex items-center gap-3 mb-2">
+                        <span class="text-2xl">⚖️</span>
+                        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Ratio B/R</h3>
+                    </div>
+                    <div class="text-2xl font-bold" id="profitRiskRatio">-</div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md">
+                    <div class="flex items-center gap-3 mb-2">
+                        <span class="text-2xl">📊</span>
+                        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">PNL Pips</h3>
+                    </div>
+                    <div class="text-2xl font-bold text-gray-900 dark:text-white" id="totalPips">-</div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md">
+                    <div class="flex items-center gap-3 mb-2">
+                        <span class="text-2xl">➗</span>
+                        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Promedio Pips</h3>
+                    </div>
+                    <div class="text-2xl font-bold text-gray-900 dark:text-white" id="avgPips">-</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="mb-8">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Métricas de Robustez (KPIs avanzados)</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md">
+                    <div class="flex items-center gap-3 mb-2">
+                        <span class="text-2xl">🧮</span>
+                        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Profit Factor</h3>
+                    </div>
+                    <div class="text-2xl font-bold" id="robustProfitFactor">-</div>
+                    <div class="text-xs text-gray-400 mt-1" id="robustProfitFactorHint">-</div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md">
+                    <div class="flex items-center gap-3 mb-2">
+                        <span class="text-2xl">📐</span>
+                        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Expectancy</h3>
+                    </div>
+                    <div class="text-2xl font-bold" id="robustExpectancy">-</div>
+                    <div class="text-xs text-gray-400 mt-1">Ganancia esperada por trade</div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md" title="< 1.6: Pobre | 1.6–2.0: Promedio | 2.0–2.5: Bueno | > 3.0: Excelente">
+                    <div class="flex items-center gap-3 mb-2">
+                        <span class="text-2xl">🏁</span>
+                        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">SQN</h3>
+                    </div>
+                    <div class="text-2xl font-bold" id="robustSqn">-</div>
+                    <div class="text-xs text-gray-400 mt-1" id="robustSqnHint">-</div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md">
+                    <div class="flex items-center gap-3 mb-2">
+                        <span class="text-2xl">🔥</span>
+                        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Racha Ganadora</h3>
+                    </div>
+                    <div class="text-2xl font-bold text-gray-900 dark:text-white" id="maxWinStreak">-</div>
+                    <div class="text-xs text-gray-400 mt-1">Máxima consecutiva</div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md">
+                    <div class="flex items-center gap-3 mb-2">
+                        <span class="text-2xl">🧊</span>
+                        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Racha Perdedora</h3>
+                    </div>
+                    <div class="text-2xl font-bold text-gray-900 dark:text-white" id="maxLossStreak">-</div>
+                    <div class="text-xs text-gray-400 mt-1">Máxima consecutiva</div>
+                </div>
+            </div>
+
+            <div class="mt-6 bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Análisis Direccional (Long vs Short)</h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-sm">
+                        <thead>
+                            <tr class="text-left text-gray-500 dark:text-gray-400">
+                                <th class="py-2 pr-4 font-semibold">Dirección</th>
+                                <th class="py-2 pr-4 font-semibold">Trades</th>
+                                <th class="py-2 pr-4 font-semibold">Win Rate</th>
+                                <th class="py-2 pr-4 font-semibold">PNL</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-t border-gray-100 dark:border-gray-700">
+                                <td class="py-2 pr-4 font-semibold">Long</td>
+                                <td class="py-2 pr-4" id="dirLongTrades">-</td>
+                                <td class="py-2 pr-4" id="dirLongWinRate">-</td>
+                                <td class="py-2 pr-4" id="dirLongPnl">-</td>
+                            </tr>
+                            <tr class="border-t border-gray-100 dark:border-gray-700">
+                                <td class="py-2 pr-4 font-semibold">Short</td>
+                                <td class="py-2 pr-4" id="dirShortTrades">-</td>
+                                <td class="py-2 pr-4" id="dirShortWinRate">-</td>
+                                <td class="py-2 pr-4" id="dirShortPnl">-</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section class="mb-8" id="resultReasonInsightsSection">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Insights por Motivo (Ganancias vs Pérdidas)</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md">
+                    <div class="flex items-start justify-between gap-4">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-200">Costo por Motivo (Pérdidas)</h3>
+                            <div class="text-xs text-gray-500 dark:text-gray-400 mt-1" id="lossReasonMeta">-</div>
                         </div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">✅</div>
-                        <div class="stat-content">
-                            <h3>Operaciones Ganadoras</h3>
-                            <div class="stat-value" id="winningTrades">-</div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6">
+                        <div class="relative h-60 w-full">
+                            <canvas id="lossReasonDonut"></canvas>
+                            <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                                <div class="text-xs text-gray-500 dark:text-gray-400">Total</div>
+                                <div class="text-2xl font-bold text-gray-900 dark:text-white" id="lossReasonTotal">-</div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400 mt-1" id="lossReasonSample">-</div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">❌</div>
-                        <div class="stat-content">
-                            <h3>Operaciones Perdedoras</h3>
-                            <div class="stat-value" id="losingTrades">-</div>
-                        </div>
-                    </div>
-                    <!-- Nueva tarjeta para Operaciones Break Even -->
-                    <div class="stat-card">
-                        <div class="stat-icon">🤝</div>
-                        <div class="stat-content">
-                            <h3>Operaciones Break Even</h3>
-                            <div class="stat-value" id="breakevenTrades">-</div>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">📈</div>
-                        <div class="stat-content">
-                            <h3>Win Rate</h3>
-                            <div class="stat-value" id="winRate">-</div>
+                        <div>
+                            <div class="space-y-4" id="lossReasonList"></div>
                         </div>
                     </div>
                 </div>
-            </section>
 
-            <!-- Sección de Estadísticas de Rendimiento -->
-            <section class="stats-section performance-stats">
-                <h2>Rendimiento</h2>
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-icon">💰</div>
-                        <div class="stat-content">
-                            <h3>PNL Final</h3>
-                            <div class="stat-value" id="totalProfit">-</div>
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md">
+                    <div class="flex items-start justify-between gap-4">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-200">Ganancias por Motivo</h3>
+                            <div class="text-xs text-gray-500 dark:text-gray-400 mt-1" id="gainReasonMeta">-</div>
                         </div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">📉</div>
-                        <div class="stat-content">
-                            <h3>Drawdown Máximo</h3>
-                            <div class="stat-value" id="maxDrawdown">-</div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6">
+                        <div class="relative h-60 w-full">
+                            <canvas id="gainReasonDonut"></canvas>
+                            <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                                <div class="text-xs text-gray-500 dark:text-gray-400">Total</div>
+                                <div class="text-2xl font-bold text-gray-900 dark:text-white" id="gainReasonTotal">-</div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400 mt-1" id="gainReasonSample">-</div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">💵</div>
-                        <div class="stat-content">
-                            <h3>Max. Ganancia (MXN)</h3>
-                            <div class="stat-value" id="maxProfit">-</div>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">📏</div>
-                        <div class="stat-content">
-                            <h3>Promedio Ganancia (MXN)</h3>
-                            <div class="stat-value" id="avgProfit">-</div>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">⚖️</div>
-                        <div class="stat-content">
-                            <h3>Ratio Beneficio/Riesgo</h3>
-                            <div class="stat-value" id="profitRiskRatio">-</div>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">📊</div>
-                        <div class="stat-content">
-                            <h3>PNL Pips</h3>
-                            <div class="stat-value" id="totalPips">-</div>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">➗</div>
-                        <div class="stat-content">
-                            <h3>Promedio Pips por Trade</h3>
-                            <div class="stat-value" id="avgPips">-</div>
+                        <div>
+                            <div class="space-y-4" id="gainReasonList"></div>
                         </div>
                     </div>
                 </div>
-            </section>
+            </div>
+        </section>
 
-            <!-- Sección de Evolución del Capital -->
-            <section class="stats-section capital-evolution">
-                <h2>Evolución del Capital</h2>
-                <div class="capital-chart-wrapper" style="position: relative; min-height: 280px;">
+        <!-- Evolución del Capital -->
+        <section class="mb-8">
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md">
+                <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Evolución del Capital</h2>
+                <div class="relative h-80 w-full">
                     <canvas id="capitalEvolutionChart"></canvas>
-                    <p id="capitalEvolutionEmptyState" style="display: none; text-align: center; margin-top: 24px;">Registra trades o movimientos para visualizar la evolución del capital.</p>
+                    <p id="capitalEvolutionEmptyState"
+                        class="hidden absolute inset-0 flex items-center justify-center text-gray-500 dark:text-gray-400">
+                        Registra trades o movimientos para visualizar la evolución del capital.
+                    </p>
                 </div>
-                <div class="capital-metrics" style="display: flex; gap: 24px; flex-wrap: wrap; margin-top: 16px;">
-                    <div class="capital-metric-card" style="flex: 1 1 220px; background: rgba(255, 255, 255, 0.04); border-radius: 12px; padding: 16px;">
-                        <h3 style="margin-bottom: 8px; font-size: 1em;">PNL acumulado del período</h3>
-                        <div id="capitalEvolutionPnl" style="font-size: 1.6em; font-weight: bold;">-</div>
+                <div class="flex flex-wrap gap-6 mt-6">
+                    <div class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-xl flex-1 min-w-[200px]">
+                        <h3 class="text-sm text-gray-500 dark:text-gray-400 mb-1">PNL acumulado del período</h3>
+                        <div id="capitalEvolutionPnl" class="text-2xl font-bold">-</div>
                     </div>
-                    <div class="capital-metric-card" style="flex: 1 1 220px; background: rgba(255, 255, 255, 0.04); border-radius: 12px; padding: 16px;">
-                        <h3 style="margin-bottom: 8px; font-size: 1em;">ROI del período</h3>
-                        <div id="capitalEvolutionRoi" style="font-size: 1.6em; font-weight: bold;">-</div>
+                    <div class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-xl flex-1 min-w-[200px]">
+                        <h3 class="text-sm text-gray-500 dark:text-gray-400 mb-1">ROI del período</h3>
+                        <div id="capitalEvolutionRoi" class="text-2xl font-bold">-</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Estrategias y Tiempo -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <!-- Estrategias -->
+            <section>
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Estrategias</h2>
+                <div class="space-y-4">
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md flex items-start gap-4">
+                        <div class="text-3xl">💎</div>
+                        <div>
+                            <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Más Rentable</h3>
+                            <div class="text-xl font-bold text-gray-900 dark:text-white mt-1"
+                                id="mostProfitableStrategy">-</div>
+                            <p class="text-xs text-gray-400 mt-1">Mayor beneficio neto generado</p>
+                        </div>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md flex items-start gap-4">
+                        <div class="text-3xl">📊</div>
+                        <div>
+                            <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Más Operada</h3>
+                            <div class="text-xl font-bold text-gray-900 dark:text-white mt-1" id="mostUsedStrategy">-
+                            </div>
+                            <p class="text-xs text-gray-400 mt-1">Mayor número de operaciones</p>
+                        </div>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md flex items-start gap-4">
+                        <div class="text-3xl">🎯</div>
+                        <div>
+                            <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Más Fiable</h3>
+                            <div class="text-xl font-bold text-gray-900 dark:text-white mt-1" id="mostReliableStrategy">
+                                -</div>
+                            <p class="text-xs text-gray-400 mt-1">Mayor porcentaje de aciertos</p>
+                        </div>
                     </div>
                 </div>
             </section>
 
-            <!-- Sección de Estrategias -->
-            <section class="stats-section strategies-stats">
-                <h2>Estrategias</h2>
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-icon">💎</div>
-                        <div class="stat-content">
-                            <h3>Estrategia más Rentable</h3>
-                            <div class="stat-value" id="mostProfitableStrategy">-</div>
-                            <div class="stat-description">Estrategia que ha generado mayor beneficio neto</div>
+            <!-- Análisis de Tiempo -->
+            <section>
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Análisis de Tiempo</h2>
+                <div class="space-y-4">
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md flex items-start gap-4">
+                        <div class="text-3xl">⏳</div>
+                        <div>
+                            <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Holding Promedio</h3>
+                            <div class="text-xl font-bold text-gray-900 dark:text-white mt-1" id="avgHolding">-</div>
+                            <p class="text-xs text-gray-400 mt-1">Tiempo promedio de operación abierta</p>
                         </div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">📊</div>
-                        <div class="stat-content">
-                            <h3>Estrategia más Operada</h3>
-                            <div class="stat-value" id="mostUsedStrategy">-</div>
-                            <div class="stat-description">Estrategia con mayor número de operaciones</div>
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md flex items-start gap-4">
+                        <div class="text-3xl">🕒</div>
+                        <div>
+                            <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Horario Favorito</h3>
+                            <div class="text-xl font-bold text-gray-900 dark:text-white mt-1" id="favoriteHour">-</div>
+                            <p class="text-xs text-gray-400 mt-1">Franja con más operaciones</p>
                         </div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">🎯</div>
-                        <div class="stat-content">
-                            <h3>Estrategia más Fiable</h3>
-                            <div class="stat-value" id="mostReliableStrategy">-</div>
-                            <div class="stat-description">Estrategia con mayor porcentaje de aciertos</div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Sección de Análisis de Tiempo y Horario -->
-            <section class="stats-section time-analysis-stats">
-                <h2>Análisis de Tiempo y Horario</h2>
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-icon">⏳</div>
-                        <div class="stat-content">
-                            <h3>Holding Promedio</h3>
-                            <div class="stat-value" id="avgHolding">-</div>
-                            <div class="stat-description">Tiempo promedio que los trades permanecen abiertos</div>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">🕒</div>
-                        <div class="stat-content">
-                            <h3>Horario Favorito</h3>
-                            <div class="stat-value" id="favoriteHour">-</div>
-                            <div class="stat-description">Franja horaria con mayor cantidad de operaciones abiertas</div>
-                        </div>
-                    </div>
-                    <div class="stat-card placeholder">
-                        <div class="stat-icon">🚧</div>
-                        <div class="stat-content">
-                            <h3>Métrica Adicional</h3>
-                            <div class="stat-value">Próximamente</div>
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md flex items-start gap-4 opacity-50">
+                        <div class="text-3xl">🚧</div>
+                        <div>
+                            <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Métrica Adicional</h3>
+                            <div class="text-xl font-bold text-gray-900 dark:text-white mt-1">Próximamente</div>
                         </div>
                     </div>
                 </div>
             </section>
         </div>
 
-        <button class="nav-btn btn-roi" onclick="window.location.href='calculadora-roi.html'">Calculadora de Diferencia</button>
+        <section class="mb-8">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Gráficos Avanzados</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md">
+                    <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4">Rentabilidad por día (Lun–Vie)</h3>
+                    <div class="relative h-64 w-full">
+                        <canvas id="weekdayPnlChart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md">
+                    <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4">Duración vs PnL</h3>
+                    <div class="relative h-64 w-full">
+                        <canvas id="durationPnlScatter"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md">
+                    <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4">Distribución de PnL (Histograma)</h3>
+                    <div class="relative h-64 w-full">
+                        <canvas id="pnlHistogramChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-        <div class="navigation-buttons">
-            <button class="nav-btn" onclick="window.location.href='index.html'">Volver al Inicio</button>
+        <section class="mb-8">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Heatmap mensual (PnL diario)</h2>
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md">
+                <div class="flex items-center justify-between gap-4 mb-4">
+                    <div class="flex items-center gap-3">
+                        <button type="button" id="monthlyHeatmapPrevBtn"
+                            class="w-9 h-9 flex items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition focus:outline-none focus:ring-2 focus:ring-orange-500"
+                            aria-label="Mes anterior">
+                            <span class="text-lg leading-none">‹</span>
+                        </button>
+                        <div class="text-sm font-semibold text-gray-600 dark:text-gray-300" id="monthlyHeatmapTitle">-</div>
+                        <button type="button" id="monthlyHeatmapNextBtn"
+                            class="w-9 h-9 flex items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition focus:outline-none focus:ring-2 focus:ring-orange-500"
+                            aria-label="Mes siguiente">
+                            <span class="text-lg leading-none">›</span>
+                        </button>
+                        <button type="button" id="monthlyHeatmapTodayBtn"
+                            class="px-3 py-2 rounded-lg text-xs font-semibold bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition focus:outline-none focus:ring-2 focus:ring-orange-500">
+                            Mes actual
+                        </button>
+                    </div>
+                    <div class="text-xs text-gray-400" id="monthlyHeatmapLegend">-</div>
+                </div>
+                <div class="grid grid-cols-7 gap-2 text-xs text-gray-500 dark:text-gray-400 mb-2" aria-hidden="true">
+                    <div class="text-center">L</div>
+                    <div class="text-center">M</div>
+                    <div class="text-center">X</div>
+                    <div class="text-center">J</div>
+                    <div class="text-center">V</div>
+                    <div class="text-center">S</div>
+                    <div class="text-center">D</div>
+                </div>
+                <div id="monthlyPnlHeatmap" class="grid grid-cols-7 gap-2"></div>
+            </div>
+        </section>
+
+        <section class="mb-8" id="performanceAuditSection">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Auditoría de Rendimiento</h2>
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md">
+                <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
+                    <div class="inline-flex rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+                        <button type="button" id="performanceTabStrategy"
+                            class="px-4 py-2 text-sm font-semibold bg-orange-600 text-white focus:outline-none focus:ring-2 focus:ring-orange-500">
+                            Vista por Estrategia
+                        </button>
+                        <button type="button" id="performanceTabAsset"
+                            class="px-4 py-2 text-sm font-semibold bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition focus:outline-none focus:ring-2 focus:ring-orange-500">
+                            Vista por Activo/Símbolo
+                        </button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-sm">
+                        <thead>
+                            <tr class="text-left text-gray-500 dark:text-gray-400">
+                                <th class="py-2 pr-4 font-semibold" id="performanceRankingNameHeader">Nombre</th>
+                                <th class="py-2 pr-4 font-semibold">Total Trades</th>
+                                <th class="py-2 pr-4 font-semibold">Win Rate</th>
+                                <th class="py-2 pr-4 font-semibold">Profit Factor</th>
+                                <th class="py-2 pr-4 font-semibold">PNL Neto</th>
+                            </tr>
+                        </thead>
+                        <tbody id="performanceRankingBody" class="border-t border-gray-100 dark:border-gray-700"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Botones de Acción -->
+        <div class="flex flex-wrap gap-4 justify-center mt-8 mb-12">
+            <button
+                class="px-6 py-3 bg-orange-600 text-white rounded-xl font-semibold shadow-lg hover:bg-orange-700 transition transform hover:-translate-y-1"
+                onclick="window.location.href='calculadora-roi.html'">
+                Calculadora de Diferencia
+            </button>
+            <button
+                class="px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white rounded-xl font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+                onclick="window.location.href='index.html'">
+                Volver al Inicio
+            </button>
+        </div>
+    </div>
+
+    <div id="time-filter-modal" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true" aria-labelledby="time-filter-title">
+        <div id="time-filter-overlay" class="absolute inset-0 bg-black/50"></div>
+        <div class="relative min-h-full flex items-end sm:items-center justify-center p-4">
+            <div class="w-full max-w-lg bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-6">
+                    <div class="flex items-start justify-between gap-4">
+                        <div>
+                            <h3 id="time-filter-title" class="text-lg font-bold text-gray-900 dark:text-white">Periodo de visualización</h3>
+                            <p class="text-sm text-gray-500 dark:text-gray-300 mt-1">Se aplica a métricas y gráficas. El calendario se mantiene completo.</p>
+                        </div>
+                        <button type="button" id="time-filter-close"
+                            class="w-10 h-10 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
+                            <span class="text-xl leading-none">×</span>
+                        </button>
+                    </div>
+
+                    <div class="mt-6 space-y-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-center">
+                            <label for="time-filter-mode" class="text-sm font-medium">Modo</label>
+                            <div class="sm:col-span-2">
+                                <select id="time-filter-mode"
+                                    class="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                                    <option value="all">Todo el periodo</option>
+                                    <option value="last">Últimos...</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div id="time-filter-last-fields" class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-center">
+                            <label for="time-filter-value" class="text-sm font-medium">Últimos</label>
+                            <div class="sm:col-span-2 flex gap-2">
+                                <input id="time-filter-value" type="number" inputmode="numeric" min="1" step="1" placeholder="30"
+                                    class="w-28 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500" />
+                                <select id="time-filter-unit"
+                                    class="flex-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                                    <option value="days">Días</option>
+                                    <option value="months">Meses</option>
+                                    <option value="years">Años</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="px-6 py-4 bg-gray-50 dark:bg-gray-900/40 flex flex-wrap gap-3 justify-end">
+                    <button type="button" id="time-filter-reset"
+                        class="px-4 py-2 rounded-lg text-sm font-semibold bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-600 transition">
+                        Restablecer
+                    </button>
+                    <button type="button" id="time-filter-cancel"
+                        class="px-4 py-2 rounded-lg text-sm font-semibold bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+                        Cancelar
+                    </button>
+                    <button type="button" id="time-filter-apply"
+                        class="px-4 py-2 rounded-lg text-sm font-semibold bg-orange-600 text-white hover:bg-orange-700 transition">
+                        Aplicar
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -286,7 +969,7 @@
         function getCookie(name) {
             const nameEQ = name + "=";
             const ca = document.cookie.split(';');
-            for(let i = 0; i < ca.length; i++) {
+            for (let i = 0; i < ca.length; i++) {
                 let c = ca[i];
                 while (c.charAt(0) === ' ') c = c.substring(1, c.length);
                 if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
@@ -297,16 +980,20 @@
         // Cargar tema guardado
         function loadTheme() {
             const theme = getCookie('theme') || 'light';
-            document.body.className = theme;
+            if (theme === 'dark') {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
         }
 
         // Actualizar fecha y hora
         function updateDateTime() {
             const now = new Date();
-            const options = { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
+            const options = {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
                 day: 'numeric',
                 hour: '2-digit',
                 minute: '2-digit',
@@ -316,12 +1003,56 @@
         }
 
         // Cargar tema y actualizar fecha/hora al iniciar
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             loadTheme();
             setInterval(updateDateTime, 1000);
             updateDateTime();
-            renderStats(); // Asegurarnos de que las estadísticas se muestren al cargar la página
+
+            const viewSelect = document.getElementById('view-mode-select');
+            if (viewSelect) {
+                viewSelect.value = 'active';
+            }
+
+            function syncViewModeUI() {
+                const mode = viewSelect && viewSelect.value === 'all' ? 'all' : 'active';
+                const accountSelect = document.getElementById('account-select');
+                if (accountSelect) {
+                    accountSelect.disabled = mode === 'all';
+                    accountSelect.classList.toggle('opacity-60', mode === 'all');
+                    accountSelect.classList.toggle('cursor-not-allowed', mode === 'all');
+                }
+
+                const label = document.getElementById('active-account-name');
+                if (label) {
+                    if (mode === 'all') {
+                        label.textContent = 'Todas las cuentas';
+                    } else if (typeof updateActiveAccountNameDisplay === 'function') {
+                        updateActiveAccountNameDisplay();
+                    }
+                }
+            }
+
+            if (viewSelect) {
+                viewSelect.addEventListener('change', function () {
+                    syncViewModeUI();
+                    if (typeof renderStats === 'function') {
+                        renderStats();
+                    }
+                });
+                syncViewModeUI();
+            }
+
+            // Asegurarnos de que las estadísticas se muestren al cargar la página
+            if (typeof renderStats === 'function') {
+                renderStats();
+            }
+
+            // Inicializar menú activo
+            if (typeof setActiveLink === 'function') {
+                setActiveLink();
+            }
         });
     </script>
 </body>
+
 </html>

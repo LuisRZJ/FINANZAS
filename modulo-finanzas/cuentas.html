@@ -27,12 +27,12 @@
         }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800 flex justify-center">
+<body class="text-gray-800 flex justify-center">
 
     <!-- Contenedor principal de la app -->
     <div class="w-full max-w-2xl bg-white shadow-lg relative min-h-screen">
         <!-- Contenido de la página con padding inferior para la barra de navegación -->
-        <div class="p-4 sm:p-6 pb-24">
+        <div class="p-4 sm:p-6 pb-44">
 
             <!-- Encabezado y Saludo -->
             <header class="mb-6 flex justify-between items-start">
@@ -74,9 +74,13 @@
                                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-500"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
                                     Volver a inicio
                                 </a>
-                                <button id="toggleCategoryReorder" type="button" class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left">
+                                <button id="toggleCategoryReorder" type="button" class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left border-b border-gray-100">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-500"><path d="M3 7.5L7.5 3m0 0L12 7.5M7.5 3v13.5m13.5-4.5L16.5 21m0 0L12 16.5m4.5 4.5V7.5"/></svg>
                                     Reordenar categorías
+                                </button>
+                                <button id="resetCategoryOrder" type="button" class="flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+                                    Restablecer orden
                                 </button>
                             </div>
                         </div>
@@ -113,6 +117,40 @@
 
                         <!-- Leyenda del Gráfico (Vista por Cuentas por defecto) -->
                         <div id="accountsChartLegend" class="w-full space-y-2"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="mb-8" id="savingsAllocationCard">
+                <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+                    <div class="flex items-center justify-between gap-4 mb-4">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div class="p-2 rounded-lg bg-emerald-100 text-emerald-700 flex-shrink-0">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 5c-1.5 0-2.8 1.4-3 2.9A5 5 0 0 0 7 9c0 1 .2 1.9.6 2.7C5.7 12.4 4 14.2 4 16.5 4 19 6 21 8.5 21H19c2 0 3.5-1.5 3.5-3.5S21 14 19 14h-1.1"/><path d="M12 12v9"/><path d="M8 16h8"/></svg>
+                            </div>
+                            <div class="min-w-0">
+                                <h2 class="text-base font-bold text-gray-800 truncate">Ahorros asignados</h2>
+                                <p class="text-xs text-gray-500">Distribución de dinero en metas de ahorro</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Total en metas</p>
+                            <p id="savingsGoalsTotalValue" class="text-xl font-extrabold text-gray-900">$0</p>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+                        <div id="savingsGoalsChartContainer" class="relative w-32 h-32 flex-shrink-0">
+                            <svg class="w-full h-full" viewBox="0 0 100 100"></svg>
+                            <div class="absolute inset-0 flex items-center justify-center text-center pointer-events-none">
+                                <div>
+                                    <span class="text-xs text-gray-500">Metas</span>
+                                    <span id="savingsGoalsCenterValue" class="text-lg font-bold text-gray-800 block">$0</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="savingsGoalsLegend" class="w-full space-y-2"></div>
                     </div>
                 </div>
             </section>
@@ -206,6 +244,29 @@
                 </form>
             </div>
         </div>
+
+        <div id="accountHistoryModal" class="fixed inset-0 z-[70] hidden">
+            <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" data-close-account-history="true"></div>
+            <div class="relative w-full max-w-md mx-auto mt-20 bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[70vh] animate-in fade-in zoom-in duration-200">
+                <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2 bg-indigo-100 rounded-lg text-indigo-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        </div>
+                        <div>
+                            <h3 id="accountHistoryModalTitle" class="font-bold text-gray-800 text-lg">Historial de Cuenta</h3>
+                            <p id="accountHistoryModalSubtitle" class="text-[10px] text-gray-400 uppercase tracking-widest font-bold"></p>
+                        </div>
+                    </div>
+                    <button id="closeAccountHistoryModal" type="button" class="p-2 rounded-full text-gray-400 hover:bg-gray-100 transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+                <div id="accountHistoryList" class="flex-grow min-h-0 overflow-y-auto p-6 space-y-4"></div>
+            </div>
+        </div>
+
+        <br><br>
 
         <!-- Barra de Navegación Inferior -->
         <footer class="fixed bottom-0 left-0 right-0 max-w-2xl mx-auto bg-white border-t border-gray-200">

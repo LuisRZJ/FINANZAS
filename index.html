@@ -5,29 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Aplicación web progresiva con funcionalidad offline para finanzas, trading e inversiones.">
     <meta name="theme-color" content="#2563eb">
-    
-    <!-- Tailwind CSS -->
+
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Estilos personalizados -->
     <link rel="stylesheet" href="estilos.css">
-    
-    <!-- Google Fonts - Inter -->
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    
-    <!-- Font Awesome para iconos -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- PWA Manifest e ícono -->
+
     <link rel="manifest" href="pwa/manifest.json">
     <link rel="icon" href="pwa/logo-app.png">
-    
-    <title>FTI - Finanzas, Trading e Inversiones</title>
+
+    <title>FTI Dashboard</title>
+
     <script>
-      // Configuración de Tailwind para usar la fuente Inter
       tailwind.config = {
+        darkMode: 'class',
         theme: {
           extend: {
             fontFamily: {
@@ -37,142 +31,584 @@
         }
       }
     </script>
+
+    <script>
+        (function() {
+            try {
+                const storedTheme = localStorage.getItem('fti_theme_preference');
+                const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                if (storedTheme === 'dark' || ((!storedTheme || storedTheme === 'system') && systemDark)) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            } catch (e) {
+                console.warn('Error accediendo a localStorage para tema:', e);
+            }
+        })();
+    </script>
+
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        .fade-in { animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .backdrop-blur-md { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+        .backdrop-blur-xl { backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
+    </style>
 </head>
-<body class="bg-gray-100 text-slate-800 font-sans antialiased flex flex-col min-h-screen">
-    
-    <!-- Encabezado -->
-    <header class="bg-white shadow-sm w-full">
-        <div class="container mx-auto px-6 py-8 text-center">
-            <h1 class="text-4xl md:text-5xl font-bold text-blue-600">FTI</h1>
-            <p class="text-lg text-slate-500 mt-2">Tu Centro de Finanzas, Trading e Inversiones</p>
-        </div>
-    </header>
-    
-    <!-- Contenido Principal -->
-    <main class="flex-grow container mx-auto px-6 py-12">
-        
-        <!-- Sección de Módulos -->
-        <section class="modules">
-            <h3 class="text-3xl font-bold text-center mb-12 text-slate-900">Nuestros Módulos</h3>
-            
-            <!-- Grid de Módulos -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                
-                <!-- Módulo: Finanzas Personales -->
-                <div class="bg-white rounded-xl shadow-lg p-8 flex flex-col items-center text-center transition-all duration-300 hover:scale-105 hover:shadow-2xl">
-                    <div class="bg-blue-100 text-blue-600 rounded-full p-5 mb-6">
-                        <i class="fas fa-wallet text-4xl"></i>
-                    </div>
-                    <h4 class="text-2xl font-semibold mb-2 text-slate-900">Finanzas Personales</h4>
-                    <p class="text-slate-500 mb-6 flex-grow">Controla tus ingresos, gastos y presupuestos de forma sencilla.</p>
-                    <a href="modulo-finanzas/operaciones.html" class="mt-auto bg-blue-600 text-white font-semibold py-3 px-8 rounded-lg hover:bg-blue-700 transition-colors duration-300 w-full">Acceder</a>
-                </div>
-                
-                <!-- Módulo: Trading -->
-                <div class="bg-white rounded-xl shadow-lg p-8 flex flex-col items-center text-center transition-all duration-300 hover:scale-105 hover:shadow-2xl">
-                    <div class="bg-green-100 text-green-600 rounded-full p-5 mb-6">
-                        <i class="fas fa-chart-line text-4xl"></i>
-                    </div>
-                    <h4 class="text-2xl font-semibold mb-2 text-slate-900">Trading</h4>
-                    <p class="text-slate-500 mb-6 flex-grow">Opera en los mercados financieros con herramientas profesionales.</p>
-                    <a href="modulo-trading/index.html" class="bg-blue-600 text-white font-semibold py-3 px-8 rounded-lg hover:bg-blue-700 transition-colors duración-300 w-full mt-auto mb-2">Acceder</a>
-                    <button id="backtesting-button" class="bg-gray-200 text-slate-700 font-semibold py-2 px-6 rounded-lg hover:bg-gray-300 transition-colors duration-300 w-full text-sm">Otros...</button>
-                </div>
-                
-                <!-- Módulo: Inversiones -->
-                <div class="bg-white rounded-xl shadow-lg p-8 flex flex-col items-center text-center transition-all duration-300 hover:scale-105 hover:shadow-2xl">
-                     <div class="bg-purple-100 text-purple-600 rounded-full p-5 mb-6">
-                        <i class="fas fa-lightbulb text-4xl"></i>
-                    </div>
-                    <h4 class="text-2xl font-semibold mb-2 text-slate-900">Inversiones</h4>
-                    <p class="text-slate-500 mb-6 flex-grow">Descubre y gestiona nuevas oportunidades de inversión.</p>
-                    <a href="modulo-inversiones/index.html" class="mt-auto bg-blue-600 text-white font-semibold py-3 px-8 rounded-lg hover:bg-blue-700 transition-colors duration-300 w-full">Acceder</a>
-                </div>
-                
-                <!-- Módulo: Utilidades -->
-                <div class="bg-white rounded-xl shadow-lg p-8 flex flex-col items-center text-center transition-all duration-300 hover:scale-105 hover:shadow-2xl">
-                    <div class="bg-yellow-100 text-yellow-600 rounded-full p-5 mb-6">
-                        <i class="fas fa-tools text-4xl"></i>
-                    </div>
-                    <h4 class="text-2xl font-semibold mb-2 text-slate-900">Utilidades</h4>
-                    <p class="text-slate-500 mb-6 flex-grow">Calculadoras, conversores y recursos para tus finanzas.</p>
-                    <a href="utilidades.html" class="mt-auto bg-blue-600 text-white font-semibold py-3 px-8 rounded-lg hover:bg-blue-700 transition-colors duration-300 w-full">Acceder</a>
-                </div>
-                
-                <!-- Módulo: Ajustes -->
-                <div class="bg-white rounded-xl shadow-lg p-8 flex flex-col items-center text-center transition-all duration-300 hover:scale-105 hover:shadow-2xl">
-                    <div class="bg-slate-100 text-slate-600 rounded-full p-5 mb-6">
-                        <i class="fas fa-cog text-4xl"></i>
-                    </div>
-                    <h4 class="text-2xl font-semibold mb-2 text-slate-900">Ajustes</h4>
-                    <p class="text-slate-500 mb-6 flex-grow">Configura tus preferencias y personaliza la aplicación.</p>
-                    <a href="ajustes.html" class="mt-auto bg-blue-600 text-white font-semibold py-3 px-8 rounded-lg hover:bg-blue-700 transition-colors duration-300 w-full">Acceder</a>
-                </div>
+<body class="bg-gray-200 text-slate-800 font-sans antialiased min-h-screen dark:bg-gray-900 dark:text-gray-100 transition-colors duration-300">
+    <div id="root"></div>
 
-            </div>
-        </section>
+    <section class="install-app-section text-center mt-10 px-4" style="display: none;">
+        <button id="installButton" class="inline-flex items-center gap-2 bg-green-500 text-white font-bold py-3 px-8 rounded-full hover:bg-green-600 transition-colors duration-300 shadow-lg" style="display: none;">
+            <i class="fas fa-download"></i> Instalar Aplicación
+        </button>
+    </section>
 
-        <!-- Sección de Instalación PWA -->
-        <section class="text-center mt-16">
-            <button id="installButton" class="bg-green-500 text-white font-bold py-3 px-8 rounded-full hover:bg-green-600 transition-colors duration-300 shadow-lg" style="display: none;">
-                <i class="fas fa-download mr-2"></i> Instalar Aplicación
-            </button>
-        </section>
-    </main>
-    
-    <!-- Modal para Backtesting -->
-    <div id="backtestingModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden flex justify-center items-center">
-        <div class="relative p-8 bg-white w-96 mx-auto rounded-lg shadow-xl">
-            <h3 class="text-xl font-bold mb-4 text-slate-900">Selecciona una Opción</h3>
-            <p class="text-slate-700 mb-6">¿Qué deseas realizar?</p>
-            <div class="flex flex-col space-y-4">
-                <a href="modulo-trading/backtesting/inicio.html" class="bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-700 text-center transition-colors duration-300">Backtesting Forex</a>
-                <a href="modulo-trading/registros-ftt.html" class="bg-green-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-green-700 text-center transition-colors duration-300">Diario FTT</a>
-                <button id="closeModalButton" class="bg-gray-300 text-slate-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-400 transition-colors duration-300">Cancelar</button>
-            </div>
-        </div>
-    </div>
 
-    <!-- Pie de Página -->
-    <footer class="bg-white mt-auto w-full border-t border-slate-200">
-        <div class="container mx-auto px-6 py-4 text-center text-slate-400 text-sm">
-            <p>Versión: <span id="appVersion">1.0.0</span> | Última Actualización: <span id="appDate">N/A</span></p>
-        </div>
+
+    <footer class="py-6 text-center border-t border-gray-300 bg-gray-200 mt-10 dark:bg-slate-900 dark:border-slate-800">
+        <p class="text-[10px] text-gray-600 font-mono dark:text-slate-400">
+            FTI v<span id="appVersion">1.0.0</span> | Actualizado: <span id="appDate">N/A</span>
+        </p>
     </footer>
-    
-    <!-- Scripts -->
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        const IconBase = ({ children, size = 24, className = "" }) => (
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width={size}
+                height={size}
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className={className}
+            >
+                {children}
+            </svg>
+        );
+
+        const Wallet = (props) => <IconBase {...props}><path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4" /><path d="M4 6v12c0 1.1.9 2 2 2h14v-4" /><path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h2v-4Z" /></IconBase>;
+        const TrendingUp = (props) => <IconBase {...props}><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" /></IconBase>;
+        const Lightbulb = (props) => <IconBase {...props}><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-1 1.5-2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5" /><path d="M9 18h6" /><path d="M10 22h4" /></IconBase>;
+        const Wrench = (props) => <IconBase {...props}><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" /></IconBase>;
+        const Settings = (props) => <IconBase {...props}><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.47a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" /><circle cx="12" cy="12" r="3" /></IconBase>;
+        const Menu = (props) => <IconBase {...props}><line x1="4" x2="20" y1="12" y2="12" /><line x1="4" x2="20" y1="6" y2="6" /><line x1="4" x2="20" y1="18" y2="18" /></IconBase>;
+        const X = (props) => <IconBase {...props}><path d="M18 6 6 18" /><path d="M6 6 18 18" /></IconBase>;
+        const ArrowUpRight = (props) => <IconBase {...props}><path d="M7 7h10v10" /><path d="M7 17 17 7" /></IconBase>;
+        const ArrowDownRight = (props) => <IconBase {...props}><path d="m7 7 10 10" /><path d="M17 7v10H7" /></IconBase>;
+        const Activity = (props) => <IconBase {...props}><path d="M22 12h-4l-3 9L9 3l-3 9H2" /></IconBase>;
+        const PieChart = (props) => <IconBase {...props}><path d="M21.21 15.89A10 10 0 1 1 8 2.83" /><path d="M22 12A10 10 0 0 0 12 2v10z" /></IconBase>;
+        const Calculator = (props) => <IconBase {...props}><rect width="16" height="20" x="4" y="2" rx="2" /><line x1="8" x2="16" y1="6" y2="6" /><line x1="16" x2="16" y1="14" y2="18" /><path d="M16 10h.01" /><path d="M12 10h.01" /><path d="M8 10h.01" /><path d="M12 14h.01" /><path d="M8 14h.01" /><path d="M12 18h.01" /><path d="M8 18h.01" /></IconBase>;
+        const RefreshCw = (props) => <IconBase {...props}><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M8 16H3v5" /></IconBase>;
+        const ChevronRight = (props) => <IconBase {...props}><path d="m9 18 6-6-6-6" /></IconBase>;
+        const LayoutGrid = (props) => <IconBase {...props}><rect width="7" height="7" x="3" y="3" rx="1" /><rect width="7" height="7" x="14" y="3" rx="1" /><rect width="7" height="7" x="14" y="14" rx="1" /><rect width="7" height="7" x="3" y="14" rx="1" /></IconBase>;
+
+        const Dashboard = () => {
+            const [isMenuOpen, setIsMenuOpen] = useState(false);
+            const [expandedModuleId, setExpandedModuleId] = useState(null);
+            const [weeklyPnl, setWeeklyPnl] = useState(0);
+            const [marketData, setMarketData] = useState([]);
+            const [financials, setFinancials] = useState({
+                totalBalance: 0,
+                balanceChange: 0,
+                changeDirection: 'neutral',
+                budgetTotal: 0,
+                budgetSpent: 0,
+                budgetPercent: 0,
+                budgetRemaining: 0,
+                currency: 'MXN'
+            });
+
+            React.useEffect(() => {
+                const fetchMarketData = async () => {
+                    const symbols = ['BTCUSDT', 'LTCUSDT', 'ETHUSDT'];
+                    try {
+                        const responses = await Promise.all(
+                            symbols.map(sym => 
+                                fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${sym}`).then(res => res.json())
+                            )
+                        );
+                        
+                        const data = responses.map(item => ({
+                            symbol: item.symbol.replace('USDT', '/USDT'),
+                            price: parseFloat(item.lastPrice),
+                            changePercent: parseFloat(item.priceChangePercent),
+                            volume: parseFloat(item.quoteVolume)
+                        }));
+                        setMarketData(data);
+                    } catch (error) {
+                        console.error("Error fetching market data", error);
+                    }
+                };
+                
+                fetchMarketData();
+                const interval = setInterval(fetchMarketData, 60000);
+                return () => clearInterval(interval);
+            }, []);
+
+            const toggleSubmenu = (id) => {
+                setExpandedModuleId(expandedModuleId === id ? null : id);
+            };
+
+            // Cálculo de Finanzas Personales (Balance y Presupuesto)
+            React.useEffect(() => {
+                const calculateFinancials = () => {
+                    try {
+                        // 1. Cuentas y Balance Actual
+                        // Intentamos leer de localStorage donde 'javascript.js' guarda respaldo
+                        const accountsRaw = localStorage.getItem('fti-accounts') || '[]';
+                        let accounts = [];
+                        try { accounts = JSON.parse(accountsRaw); } catch (e) { console.error("Error parseando cuentas", e); }
+                        
+                        // Suma de balance de todas las cuentas
+                        const currentBalance = Array.isArray(accounts) 
+                            ? accounts.reduce((acc, account) => acc + (Number(account.balance) || 0), 0)
+                            : 0;
+
+                        // 2. Operaciones y Comparativa Histórica (Mes anterior)
+                        const opsRaw = localStorage.getItem('fti-operations-v1') || '[]';
+                        let operations = [];
+                        try { operations = JSON.parse(opsRaw); } catch (e) { console.error("Error parseando operaciones", e); }
+                        
+                        const now = new Date();
+                        const oneMonthAgo = new Date();
+                        oneMonthAgo.setMonth(now.getMonth() - 1);
+                        
+                        // Operaciones en el último mes
+                        const recentOps = Array.isArray(operations) ? operations.filter(op => {
+                            const opDate = new Date(op.datetime);
+                            return opDate > oneMonthAgo && opDate <= now && op.status === 'executed';
+                        }) : [];
+
+                        // Reconstruir balance de hace un mes
+                        let balanceOneMonthAgo = currentBalance;
+                        
+                        recentOps.forEach(op => {
+                            const amount = Number(op.amount) || 0;
+                            if (op.type === 'income') {
+                                balanceOneMonthAgo -= amount;
+                            } else if (op.type === 'expense') {
+                                balanceOneMonthAgo += amount;
+                            }
+                        });
+
+                        let changePercent = 0;
+                        if (balanceOneMonthAgo !== 0) {
+                            changePercent = ((currentBalance - balanceOneMonthAgo) / Math.abs(balanceOneMonthAgo)) * 100;
+                        } else if (currentBalance !== 0) {
+                            changePercent = 100;
+                        }
+
+                        // 3. Presupuesto Mensual
+                        const budgetRaw = localStorage.getItem('fti-budget-plan-v1');
+                        let budgetPlan = null;
+                        try { budgetPlan = JSON.parse(budgetRaw); } catch (e) {}
+                        
+                        const budgetTotal = budgetPlan ? (Number(budgetPlan.totalAmount) || 0) : 0;
+                        
+                        // Calcular gasto del mes actual
+                        const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+                        
+                        const monthOps = Array.isArray(operations) ? operations.filter(op => {
+                            const opDate = new Date(op.datetime);
+                            const opMonthKey = op.monthKey || `${opDate.getFullYear()}-${String(opDate.getMonth() + 1).padStart(2, '0')}`;
+                            return opMonthKey === currentMonthKey && op.type === 'expense' && op.status === 'executed';
+                        }) : [];
+
+                        const budgetSpent = monthOps.reduce((acc, op) => acc + (Number(op.amount) || 0), 0);
+                        
+                        let budgetPercent = 0;
+                        if (budgetTotal > 0) {
+                            budgetPercent = Math.min(100, (budgetSpent / budgetTotal) * 100);
+                        }
+
+                        setFinancials({
+                            totalBalance: currentBalance,
+                            balanceChange: changePercent,
+                            changeDirection: changePercent >= 0 ? 'up' : 'down',
+                            budgetTotal,
+                            budgetSpent,
+                            budgetPercent,
+                            budgetRemaining: budgetTotal - budgetSpent,
+                            currency: budgetPlan?.currency || 'MXN'
+                        });
+
+                    } catch (e) {
+                        console.error("Error calculando finanzas:", e);
+                    }
+                };
+
+                calculateFinancials();
+                // Escuchar cambios en localStorage para actualizar en tiempo real si se modifica en otra pestaña/módulo
+                window.addEventListener('storage', calculateFinancials);
+                // Custom event para actualizaciones internas si fuera necesario
+                window.addEventListener('fti-financials-updated', calculateFinancials);
+                
+                return () => {
+                    window.removeEventListener('storage', calculateFinancials);
+                    window.removeEventListener('fti-financials-updated', calculateFinancials);
+                };
+            }, []);
+
+            React.useEffect(() => {
+                const calculateWeeklyPnl = () => {
+                    try {
+                        let totalPnl = 0;
+                        const now = new Date();
+                        const startOfWeek = new Date(now);
+                        startOfWeek.setDate(now.getDate() - now.getDay());
+                        startOfWeek.setHours(0, 0, 0, 0);
+
+                        // 1. Get Accounts
+                        const accountsMetaRaw = localStorage.getItem('tradingAccountsMeta');
+                        let accounts = [];
+                        if (accountsMetaRaw) {
+                            try { accounts = JSON.parse(accountsMetaRaw); } catch (e) {}
+                        }
+
+                        let allTrades = [];
+
+                        // 2. Aggregate Trades
+                        if (Array.isArray(accounts) && accounts.length > 0) {
+                            accounts.forEach(acc => {
+                                const dataRaw = localStorage.getItem(`tradingAccountData:${acc.id}`);
+                                if (dataRaw) {
+                                    try {
+                                        const data = JSON.parse(dataRaw);
+                                        if (data.trades && Array.isArray(data.trades)) {
+                                            allTrades = allTrades.concat(data.trades);
+                                        }
+                                    } catch (e) {}
+                                }
+                            });
+                        } else {
+                            // Fallback
+                            const tradesRaw = localStorage.getItem('trades');
+                            if (tradesRaw) {
+                                try {
+                                    const trades = JSON.parse(tradesRaw);
+                                    if (Array.isArray(trades)) allTrades = trades;
+                                } catch (e) {}
+                            }
+                        }
+
+                        // 3. Filter and Sum
+                        allTrades.forEach(trade => {
+                            if (trade.closeTime && trade.resultMxn !== undefined && trade.resultMxn !== null) {
+                                const closeDate = new Date(trade.closeTime);
+                                if (closeDate >= startOfWeek && closeDate <= now) {
+                                    const val = parseFloat(trade.resultMxn);
+                                    if (!isNaN(val)) {
+                                        totalPnl += val;
+                                    }
+                                }
+                            }
+                        });
+
+                        setWeeklyPnl(totalPnl);
+                    } catch (err) {
+                        console.error("Error calculating Weekly PNL:", err);
+                    }
+                };
+
+                calculateWeeklyPnl();
+                window.addEventListener('storage', calculateWeeklyPnl);
+                return () => window.removeEventListener('storage', calculateWeeklyPnl);
+            }, []);
+
+            const modules = [
+                { id: 1, title: 'Finanzas Personales', icon: <Wallet size={20} />, color: 'text-blue-600', href: 'modulo-finanzas/operaciones.html' },
+                {
+                    id: 2,
+                    title: 'Trading',
+                    icon: <TrendingUp size={20} />,
+                    color: 'text-green-600',
+                    submodules: [
+                        { title: 'Terminal Principal', icon: <Activity size={16} />, href: 'modulo-trading/index.html' },
+                        { title: 'Backtesting Forex', icon: <LayoutGrid size={16} />, href: 'modulo-trading/backtesting/inicio.html' },
+                        { title: 'Diario FTT', icon: <LayoutGrid size={16} />, href: 'modulo-trading/registros-ftt.html' }
+                    ]
+                },
+                { id: 3, title: 'Inversiones', icon: <Lightbulb size={20} />, color: 'text-purple-600', href: 'modulo-inversiones/index.html' },
+                { id: 4, title: 'Utilidades', icon: <Wrench size={20} />, color: 'text-yellow-600', href: 'utilidades.html' },
+                { id: 5, title: 'Ajustes', icon: <Settings size={20} />, color: 'text-gray-600', href: 'ajustes.html' },
+            ];
+
+            return (
+                <div className="min-h-screen bg-gray-200 text-slate-800 flex flex-col font-sans relative dark:bg-gray-900 dark:text-gray-100 transition-colors duration-300">
+                    <header className="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-20 px-6 py-4 flex justify-between items-center transition-all duration-300 border-b border-white/20 dark:bg-slate-900/60 dark:border-slate-800">
+                        <div>
+                            <h1 className="text-2xl font-extrabold bg-gradient-to-r from-orange-500 to-red-600 bg-clip-text text-transparent tracking-tight leading-none">FTI</h1>
+                            <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wider dark:text-slate-400">Finanzas, Trading e Inversiones</p>
+                        </div>
+
+                        <div className="relative">
+                            <button
+                                type="button"
+                                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 text-sm font-semibold border backdrop-blur-md ${isMenuOpen ? 'bg-blue-50/80 text-blue-700 border-blue-200/50 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-900/40' : 'bg-white/40 text-gray-700 border-gray-200/50 hover:bg-white/60 dark:bg-slate-900/40 dark:text-slate-200 dark:border-slate-700/60 dark:hover:bg-slate-900/60'}`}
+                            >
+                                {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
+                                <span>Navegación</span>
+                            </button>
+
+                            {isMenuOpen && (
+                                <div className="absolute right-0 top-full mt-2 w-72 bg-white/90 backdrop-blur-xl rounded-xl shadow-2xl border border-white/20 overflow-hidden fade-in z-50 ring-1 ring-black/5 dark:bg-slate-900/90 dark:border-slate-700">
+                                    <div className="py-2">
+                                        <div className="px-4 py-3 border-b border-gray-100/50 mb-1 bg-gray-50/30 dark:bg-slate-800/30 dark:border-slate-800">
+                                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider dark:text-slate-400">Módulos del Sistema</p>
+                                        </div>
+
+                                        {modules.map((mod) => (
+                                            <div key={mod.id} className="border-b border-gray-100/50 last:border-0 dark:border-slate-800">
+                                                {mod.submodules ? (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => toggleSubmenu(mod.id)}
+                                                        className={`w-full text-left px-4 py-3 hover:bg-white/60 flex items-center gap-3 transition-colors group dark:hover:bg-slate-800/60 ${expandedModuleId === mod.id ? 'bg-gray-50/50 dark:bg-slate-800/40' : ''}`}
+                                                    >
+                                                        <span className={`${mod.color} bg-gray-50/80 p-2 rounded-lg group-hover:bg-white transition-colors shadow-sm dark:bg-slate-800/70 dark:group-hover:bg-slate-800`}>
+                                                            {mod.icon}
+                                                        </span>
+                                                        <span className="text-sm font-medium text-gray-700 flex-grow dark:text-slate-200">{mod.title}</span>
+                                                        <ChevronRight
+                                                            size={16}
+                                                            className={`text-gray-400 transition-transform duration-200 ${expandedModuleId === mod.id ? 'rotate-90 text-blue-600 dark:text-blue-300' : ''}`}
+                                                        />
+                                                    </button>
+                                                ) : (
+                                                    <a
+                                                        href={mod.href}
+                                                        className="w-full text-left px-4 py-3 hover:bg-white/60 flex items-center gap-3 transition-colors group dark:hover:bg-slate-800/60"
+                                                    >
+                                                        <span className={`${mod.color} bg-gray-50/80 p-2 rounded-lg group-hover:bg-white transition-colors shadow-sm dark:bg-slate-800/70 dark:group-hover:bg-slate-800`}>
+                                                            {mod.icon}
+                                                        </span>
+                                                        <span className="text-sm font-medium text-gray-700 flex-grow dark:text-slate-200">{mod.title}</span>
+                                                    </a>
+                                                )}
+
+                                                {mod.submodules && expandedModuleId === mod.id && (
+                                                    <div className="bg-gray-50/40 px-4 py-2 space-y-1 fade-in dark:bg-slate-800/30">
+                                                        {mod.submodules.map((sub, idx) => {
+                                                            if (sub.action === 'openBacktestingModal') {
+                                                                return (
+                                                                    <button
+                                                                        key={idx}
+                                                                        id="backtesting-button"
+                                                                        type="button"
+                                                                        className="w-full flex items-center gap-3 p-2 rounded-md hover:bg-white/80 hover:shadow-sm text-gray-600 hover:text-blue-600 transition-all pl-11 text-xs font-medium group/sub dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-blue-300"
+                                                                    >
+                                                                        <span className="opacity-50 group-hover/sub:opacity-100 transition-opacity">{sub.icon}</span>
+                                                                        {sub.title}
+                                                                    </button>
+                                                                );
+                                                            }
+
+                                                            return (
+                                                                <a
+                                                                    key={idx}
+                                                                    href={sub.href}
+                                                                    className="w-full flex items-center gap-3 p-2 rounded-md hover:bg-white/80 hover:shadow-sm text-gray-600 hover:text-blue-600 transition-all pl-11 text-xs font-medium group/sub dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-blue-300"
+                                                                >
+                                                                    <span className="opacity-50 group-hover/sub:opacity-100 transition-opacity">{sub.icon}</span>
+                                                                    {sub.title}
+                                                                </a>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </header>
+
+                    <main className="flex-grow p-4 sm:p-8 max-w-7xl mx-auto w-full">
+                        <div className="mb-8">
+                            <h2 className="text-3xl font-bold text-gray-800 tracking-tight dark:text-white">Hola, Luis</h2>
+                            <p className="text-gray-500 font-medium dark:text-slate-400">Resumen de mercado y activos &bull; Guadalajara, MX</p>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between h-full hover:border-blue-100 transition-colors dark:bg-slate-900 dark:border-slate-800">
+                                <div className="flex justify-between items-start mb-4">
+                                    <div className="p-2 bg-blue-50 rounded-lg text-blue-600 dark:bg-blue-900/20 dark:text-blue-300">
+                                        <Wallet size={24} />
+                                    </div>
+                                    <span className={`text-xs font-bold px-2 py-1 rounded-full ${financials.changeDirection === 'up' ? 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-300' : 'bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-300'}`}>
+                                        {financials.changeDirection === 'up' ? '+' : ''}{financials.balanceChange.toFixed(1)}% vs mes anterior
+                                    </span>
+                                </div>
+
+                                <div>
+                                    <p className="text-sm text-gray-500 font-medium dark:text-slate-400">Balance Total Líquido</p>
+                                    <h3 className="text-3xl font-extrabold text-gray-900 my-1 dark:text-white">
+                                        {financials.totalBalance.toLocaleString('es-MX', { style: 'currency', currency: financials.currency })}
+                                    </h3>
+                                    <p className="text-xs text-gray-400 dark:text-slate-500">Actualizado hace un momento</p>
+                                </div>
+
+                                <div className="mt-6 pt-6 border-t border-gray-100 dark:border-slate-800">
+                                    <div className="flex justify-between text-sm mb-1">
+                                        <span className="text-gray-600 font-medium dark:text-slate-300">Presupuesto Mensual</span>
+                                        <span className="font-bold text-gray-800 dark:text-white">{financials.budgetPercent.toFixed(0)}%</span>
+                                    </div>
+                                    <div className="w-full bg-gray-100 rounded-full h-2 dark:bg-slate-800">
+                                        <div className={`h-2 rounded-full ${financials.budgetPercent > 90 ? 'bg-red-600' : 'bg-blue-600'}`} style={{ width: `${financials.budgetPercent}%` }}></div>
+                                    </div>
+                                    <p className="text-xs text-gray-500 mt-2 text-right dark:text-slate-400">
+                                        {financials.budgetTotal > 0 
+                                            ? `Te quedan ${financials.budgetRemaining.toLocaleString('es-MX', { style: 'currency', currency: financials.currency })}`
+                                            : 'Sin presupuesto definido'}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 lg:col-span-2 hover:border-green-100 transition-colors dark:bg-slate-900 dark:border-slate-800">
+                                <div className="flex justify-between items-center mb-6">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 bg-green-50 rounded-lg text-green-600 dark:bg-green-900/20 dark:text-green-300">
+                                            <TrendingUp size={24} />
+                                        </div>
+                                        <h3 className="font-bold text-gray-800 text-lg dark:text-white">Mercado en Vivo</h3>
+                                    </div>
+                                    <a href="modulo-utilidades/analizador-roi.html" className="text-sm text-blue-600 font-medium hover:underline flex items-center gap-1 dark:text-blue-300">
+                                        Analizador ROI <ArrowUpRight size={14} />
+                                    </a>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                    {marketData.length > 0 ? (
+                                        marketData.map((asset) => (
+                                            <div key={asset.symbol} className="bg-gray-50 rounded-xl p-4 border border-gray-100 hover:border-blue-200 hover:bg-blue-50/30 transition-all cursor-pointer group dark:bg-slate-800/40 dark:border-slate-800">
+                                                <div className="flex justify-between items-center mb-2">
+                                                    <span className="font-bold text-gray-700 group-hover:text-blue-800 dark:text-slate-200 dark:group-hover:text-blue-300">{asset.symbol}</span>
+                                                    <span className={`text-xs px-1.5 py-0.5 rounded font-bold flex items-center gap-1 ${asset.changePercent >= 0 ? 'bg-green-200 text-green-800 dark:bg-green-900/30 dark:text-green-200' : 'bg-red-200 text-red-800 dark:bg-red-900/30 dark:text-red-200'}`}>
+                                                        {asset.changePercent >= 0 ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />} {Math.abs(asset.changePercent).toFixed(2)}%
+                                                    </span>
+                                                </div>
+                                                <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                                                    {asset.price.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}
+                                                </p>
+                                                <p className="text-xs text-gray-500 mt-1 font-mono dark:text-slate-400">
+                                                    Vol: {(asset.volume / 1000000).toLocaleString('en-US', { maximumFractionDigits: 2 })}M
+                                                </p>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        [1, 2, 3].map(i => (
+                                            <div key={i} className="bg-gray-50 rounded-xl p-4 border border-gray-100 animate-pulse dark:bg-slate-800/40 dark:border-slate-800">
+                                                <div className="h-4 bg-gray-200 rounded w-1/2 mb-2 dark:bg-slate-700"></div>
+                                                <div className="h-8 bg-gray-200 rounded w-3/4 dark:bg-slate-700"></div>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+
+                                <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between dark:border-slate-800">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                                        <span className="text-sm text-gray-500 font-medium dark:text-slate-400">Mercado Abierto</span>
+                                    </div>
+                                    <span className={`text-sm font-bold flex items-center gap-1 px-3 py-1 rounded-full border ${weeklyPnl > 0 ? 'text-green-600 bg-green-50 border-green-100 dark:bg-green-900/20 dark:text-green-300 dark:border-green-900/30' : weeklyPnl < 0 ? 'text-red-600 bg-red-50 border-red-100 dark:bg-red-900/20 dark:text-red-300 dark:border-red-900/30' : 'text-orange-600 bg-orange-50 border-orange-100 dark:bg-orange-900/20 dark:text-orange-300 dark:border-orange-900/30'}`}>
+                                        PNL Semanal: {weeklyPnl > 0 ? '+' : ''}${weeklyPnl.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} 
+                                        {weeklyPnl > 0 ? <ArrowUpRight size={14} /> : weeklyPnl < 0 ? <ArrowDownRight size={14} /> : <Activity size={14} />}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:border-purple-100 transition-colors dark:bg-slate-900 dark:border-slate-800">
+                                <div className="flex justify-between items-start mb-6">
+                                    <div className="p-2 bg-purple-50 rounded-lg text-purple-600 dark:bg-purple-900/20 dark:text-purple-300">
+                                        <Lightbulb size={24} />
+                                    </div>
+                                    <button type="button" className="p-1 hover:bg-gray-100 rounded-full text-gray-400 transition-colors dark:hover:bg-slate-800">
+                                        <PieChart size={20} />
+                                    </button>
+                                </div>
+
+                                <h3 className="text-lg font-bold text-gray-800 mb-1 dark:text-white">Portafolio Largo Plazo</h3>
+                                <div className="flex items-end gap-2 mb-4">
+                                    <span className="text-3xl font-bold text-gray-900 dark:text-white">$45,200</span>
+                                    <span className="text-sm font-bold text-green-600 mb-1.5 flex items-center bg-green-50 px-1.5 rounded dark:bg-green-900/20 dark:text-green-300">
+                                        <ArrowUpRight size={12} className="mr-0.5" /> 12.5%
+                                    </span>
+                                </div>
+
+                                <div className="space-y-3">
+                                    <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer dark:hover:bg-slate-800/40">
+                                        <div className="w-2 h-2 rounded-full bg-purple-500"></div>
+                                        <span className="text-sm text-gray-600 flex-grow font-medium dark:text-slate-300">Tech ETFs</span>
+                                        <span className="text-sm font-bold text-gray-800 dark:text-white">45%</span>
+                                    </div>
+                                    <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer dark:hover:bg-slate-800/40">
+                                        <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                                        <span className="text-sm text-gray-600 flex-grow font-medium dark:text-slate-300">Real Estate</span>
+                                        <span className="text-sm font-bold text-gray-800 dark:text-white">30%</span>
+                                    </div>
+                                    <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer dark:hover:bg-slate-800/40">
+                                        <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
+                                        <span className="text-sm text-gray-600 flex-grow font-medium dark:text-slate-300">Crypto Hold</span>
+                                        <span className="text-sm font-bold text-gray-800 dark:text-white">25%</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 lg:col-span-2 flex flex-col sm:flex-row items-center justify-between gap-6 hover:border-yellow-100 transition-colors dark:bg-slate-900 dark:border-slate-800">
+                                <div className="flex items-center gap-4 w-full sm:w-auto">
+                                    <div className="p-3 bg-yellow-50 rounded-xl text-yellow-600 dark:bg-yellow-900/20 dark:text-yellow-300">
+                                        <Wrench size={24} />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-bold text-gray-800 dark:text-white">Accesos Directos</h3>
+                                        <p className="text-sm text-gray-500 dark:text-slate-400">Herramientas frecuentes</p>
+                                    </div>
+                                </div>
+
+                                <div className="flex flex-wrap gap-3 w-full sm:w-auto">
+                                    <a href="modulo-utilidades/calculadora-riesgo-trading.html" className="flex-1 sm:flex-none flex items-center justify-center sm:justify-start gap-2 px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-white hover:border-gray-300 hover:text-gray-900 hover:shadow-sm transition-all dark:bg-slate-800/40 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white">
+                                        <Calculator size={16} /> <span className="hidden sm:inline">Calculadora</span> Riesgo Trading
+                                    </a>
+                                    <a href="modulo-utilidades/conversor-cripto.html" className="flex-1 sm:flex-none flex items-center justify-center sm:justify-start gap-2 px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-white hover:border-gray-300 hover:text-gray-900 hover:shadow-sm transition-all dark:bg-slate-800/40 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white">
+                                        <RefreshCw size={16} /> <span className="hidden sm:inline">Conversor</span> Cripto
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </main>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<Dashboard />);
+    </script>
+
+    <script src="theme.js"></script>
     <script src="app.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const appVersionElement = document.getElementById('appVersion');
             const appDateElement = document.getElementById('appDate');
 
-            // Estas variables deberían ser definidas en tu proceso de build o en app.js
-            if (typeof window.PAGE_VERSION !== 'undefined') {
+            if (appVersionElement && typeof window.PAGE_VERSION !== 'undefined') {
                 appVersionElement.textContent = window.PAGE_VERSION;
             }
-            if (typeof window.ACT_DATE !== 'undefined') {
+            if (appDateElement && typeof window.ACT_DATE !== 'undefined') {
                 appDateElement.textContent = window.ACT_DATE;
             }
-
-            const backtestingButton = document.getElementById('backtesting-button');
-            const backtestingModal = document.getElementById('backtestingModal');
-            const closeModalButton = document.getElementById('closeModalButton');
-
-            backtestingButton.addEventListener('click', () => {
-                backtestingModal.classList.remove('hidden');
-            });
-
-            closeModalButton.addEventListener('click', () => {
-                backtestingModal.classList.add('hidden');
-            });
-
-            // Cerrar modal al hacer clic fuera de él
-            window.addEventListener('click', (event) => {
-                if (event.target === backtestingModal) {
-                    backtestingModal.classList.add('hidden');
-                }
-            });
         });
     </script>
 </body>
