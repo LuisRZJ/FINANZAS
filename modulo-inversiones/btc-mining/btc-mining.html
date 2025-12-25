@@ -7,11 +7,22 @@
     <meta name="theme-color" content="#2563eb">
     <link rel="icon" href="/pwa/logo-app.png">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: { extend: { colors: { slate: { 850: '#1e293b', 900: '#0f172a' } } } }
+        }
+    </script>
+    <script>
+        (function(){try{var t=localStorage.getItem('fti_theme_preference');var d=window.matchMedia('(prefers-color-scheme: dark)').matches;if(t==='dark'||((!t||t==='system')&&d)){document.documentElement.classList.add('dark');}else{document.documentElement.classList.remove('dark');}}catch(e){}})();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        :root { --bg-body:#f9fafb; --text-body:#374151; --bg-card:#ffffff; --border-card:#e5e7eb; --accent-blue:#3b82f6; --accent-blue-hover:#2563eb; --progress-bg:#e5e7eb; --progress-fg:#10b981; --scrollbar-thumb:#cbd5e1; --scrollbar-thumb-hover:#94a3b8; }
+        html.dark { --bg-body:#0f172a; --text-body:#e2e8f0; --bg-card:#1e293b; --border-card:#334155; --accent-blue:#3b82f6; --accent-blue-hover:#60a5fa; --progress-bg:#334155; --progress-fg:#10b981; --scrollbar-thumb:#334155; --scrollbar-thumb-hover:#64748b; }
         /* Estilo para la barra de desplazamiento */
         ::-webkit-scrollbar {
             height: 8px;
@@ -22,59 +33,18 @@
             background: transparent;
         }
         
-        ::-webkit-scrollbar-thumb {
-            background-color: #cbd5e1;
-            border-radius: 4px;
-        }
+        ::-webkit-scrollbar-thumb { background-color: var(--scrollbar-thumb); border-radius: 4px; }
         
-        ::-webkit-scrollbar-thumb:hover {
-            background-color: #94a3b8;
-        }
+        ::-webkit-scrollbar-thumb:hover { background-color: var(--scrollbar-thumb-hover); }
         
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f9fafb; /* bg-gray-50 */
-            color: #374151; /* text-gray-700 */
-        }
-        .card {
-            background-color: #ffffff; /* bg-white */
-            border-radius: 0.75rem; /* rounded-xl */
-            padding: 1.5rem; /* p-6 */
-            border: 1px solid #e5e7eb; /* border-gray-200 */
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-        .form-input {
-            width: 100%;
-            background-color: #ffffff; /* bg-white */
-            border: 1px solid #d1d5db; /* border-gray-300 */
-            color: #374151; /* text-gray-700 */
-            border-radius: 0.5rem; /* rounded-lg */
-            padding: 0.75rem 1rem; /* px-4 py-3 */
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-        .form-input:focus {
-            outline: none;
-            border-color: #3b82f6; /* focus:border-blue-500 */
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-        }
-        .btn {
-            background-color: #3b82f6; /* bg-blue-600 */
-            color: white;
-            font-weight: 600;
-            padding: 0.75rem 1.5rem; /* py-3 px-6 */
-            border-radius: 0.5rem; /* rounded-lg */
-            transition: background-color 0.2s;
-            width: 100%;
-        }
-        .btn:hover {
-            background-color: #2563eb; /* hover:bg-blue-700 */
-        }
-        .progress-bar-bg {
-            background-color: #e5e7eb; /* bg-gray-200 */
-        }
-        .progress-bar-fg {
-            background-color: #10b981; /* bg-green-500 */
-        }
+        body { font-family:'Inter',sans-serif; background-color: var(--bg-body); color: var(--text-body); transition: background-color .3s ease, color .3s ease; }
+        .card { background-color: var(--bg-card); border-radius: .75rem; padding: 1.5rem; border: 1px solid var(--border-card); box-shadow: 0 1px 3px rgba(0,0,0,.1); transition: background-color .3s ease, border-color .3s ease; }
+        .form-input { width:100%; background-color: var(--bg-card); border:1px solid var(--border-card); color: var(--text-body); border-radius:.5rem; padding:.75rem 1rem; transition:border-color .2s, box-shadow .2s; }
+        .form-input:focus { outline:none; border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(59,130,246,.2); }
+        .btn { background-color: var(--accent-blue); color:#fff; font-weight:600; padding:.75rem 1.5rem; border-radius:.5rem; transition: background-color .2s; width:100%; }
+        .btn:hover { background-color: var(--accent-blue-hover); }
+        .progress-bar-bg { background-color: var(--progress-bg); }
+        .progress-bar-fg { background-color: var(--progress-fg); }
         .tag {
             display: inline-block;
             padding: 0.25rem 0.75rem;
@@ -139,14 +109,7 @@
         .modal-overlay.active {
             display: flex;
         }
-        .modal-content {
-            background-color: white;
-            padding: 2rem;
-            border-radius: 0.75rem;
-            max-width: 400px;
-            width: 90%;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
+        .modal-content { background-color: var(--bg-card); padding:2rem; border-radius:.75rem; max-width:400px; width:90%; box-shadow:0 4px 6px rgba(0,0,0,.1); }
         .modal-buttons {
             display: flex;
             gap: 1rem;
@@ -173,6 +136,13 @@
         .modal-btn-confirm:hover {
             background-color: #dc2626;
         }
+        html.dark .border-gray-200{border-color:#334155!important}
+        html.dark .bg-blue-50{background-color:rgba(59,130,246,.12)!important}
+        html.dark .border-blue-400{border-color:#60a5fa!important}
+        html.dark .text-blue-700{color:#60a5fa!important}
+        html.dark .bg-white{background-color:var(--bg-card)!important}
+        html.dark #toggle-roi-table{background-color:var(--bg-card)!important;color:var(--text-body)!important;border-color:var(--border-card)!important}
+        html.dark #toggle-roi-table:hover{background-color:rgba(255,255,255,.06)!important}
     </style>
 </head>
 <body>
@@ -194,13 +164,13 @@
                     <button id="tab-btn-history" class="tab-btn whitespace-nowrap">Historial</button>
                     <button id="tab-btn-summary" class="tab-btn whitespace-nowrap">Resumen</button>
                     <button id="tab-btn-storage" class="tab-btn whitespace-nowrap">Almacenamiento</button>
-                </nav>
+                    <a href="../index.html" class="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-gray-600 hover:bg-blue-500 hover:text-white transition-colors" title="Volver a Inversiones">
             </div>
         </div>
-
-        <main id="tab-content-wrapper">
-            <!-- Pestaña de Registro -->
-            <div id="tab-content-register" class="tab-content-item">
+                    <button id="tab-btn-register" class="tab-btn active whitespace-nowrap">Registrar</button>
+                    <button id="tab-btn-history" class="tab-btn whitespace-nowrap">Historial</button>
+                    <button id="tab-btn-summary" class="tab-btn whitespace-nowrap">Resumen</button>
+                    <button id="tab-btn-storage" class="tab-btn whitespace-nowrap">Almacenamiento</button>
                 <div class="card max-w-lg mx-auto">
                     <h2 class="text-2xl font-semibold mb-4 text-gray-800">Registrar Nueva Inversión</h2>
                     <form id="investment-form" class="space-y-4">
@@ -289,16 +259,16 @@
                         <!-- Modal overlay para la tabla de referencia -->
                         <div id="roi-reference-table" class="modal-overlay" aria-hidden="true">
                             <div class="modal-content max-w-2xl w-11/12">
-                                    <div class="flex justify-between items-center gap-4">
+                                <button id="toggle-roi-table" class="text-sm px-3 py-1 rounded-md border border-gray-200 bg-white hover:bg-gray-50">Mostrar referencia</button>
                                         <h3 class="text-lg font-semibold text-gray-800 flex-1">Tabla de evaluación del ROI</h3>
                                         <button id="close-roi-table" class="modal-btn modal-btn-cancel px-3 py-1 text-sm">Cerrar</button>
                                     </div>
                                 <div class="mt-4 overflow-auto" style="max-height:60vh">
-                                    <table class="w-full text-sm border-collapse">
+                        <div id="roi-reference-table" class="modal-overlay" aria-hidden="true">
                                         <thead>
                                             <tr>
-                                                <th class="text-left pb-2">Categoría</th>
-                                                <th class="text-left pb-2">Rango anualizado</th>
+                                        <h3 class="text-lg font-semibold text-gray-800 flex-1">Tabla de evaluación del ROI</h3>
+                                        <button id="close-roi-table" class="modal-btn modal-btn-cancel px-3 py-1 text-sm">Cerrar</button>
                                                 <th class="text-left pb-2">Comentario</th>
                                             </tr>
                                         </thead>
@@ -418,42 +388,6 @@
                 const totalDailyIncomeEl = document.getElementById('total-daily-income');
                 const totalRoiEl = document.getElementById('total-roi');
 
-                // Manejar el checkbox de vencimiento
-                const hasExpirationCheckbox = document.getElementById('has-expiration');
-                const durationSelect = document.getElementById('duration');
-                const expirationDurationDiv = document.getElementById('expiration-duration');
-
-                hasExpirationCheckbox.addEventListener('change', (e) => {
-                    expirationDurationDiv.classList.toggle('hidden', !e.target.checked);
-                    durationSelect.disabled = !e.target.checked;
-                });            let investments = JSON.parse(localStorage.getItem('btcMiningInvestments')) || [];
-
-            // Lógica para Pestañas
-            const tabs = [
-                { btn: document.getElementById('tab-btn-register'), content: document.getElementById('tab-content-register') },
-                { btn: document.getElementById('tab-btn-history'), content: document.getElementById('tab-content-history') },
-                { btn: document.getElementById('tab-btn-summary'), content: document.getElementById('tab-content-summary') },
-                { btn: document.getElementById('tab-btn-storage'), content: document.getElementById('tab-content-storage') }
-            ];
-
-            const switchTab = (activeBtn) => {
-                tabs.forEach(tab => {
-                    const isTabActive = tab.btn === activeBtn;
-                    tab.btn.classList.toggle('active', isTabActive);
-                    tab.content.classList.toggle('hidden', !isTabActive);
-                });
-            };
-
-            tabs.forEach(tab => {
-                tab.btn.addEventListener('click', () => switchTab(tab.btn));
-            });
-            // Fin Lógica para Pestañas
-
-            // Formateador de moneda para MXN
-            const currencyFormatter = new Intl.NumberFormat('es-MX', {
-                style: 'currency',
-                currency: 'MXN'
-            });
 
             // Función principal para renderizar todo
             const renderApp = () => {
@@ -469,19 +403,7 @@
                     return;
                 }
                 const sortedInvestments = [...investments].sort((a, b) => new Date(b.date) - new Date(a.date));
-
-                sortedInvestments.forEach(inv => {
-                    const now = new Date();
-                    now.setUTCHours(0, 0, 0, 0);
-                    
-                    // Ordenar el historial de ingresos por fecha
-                    const incomeHistory = inv.incomeHistory ? 
-                        [...inv.incomeHistory].sort((a, b) => new Date(a.date) - new Date(b.date)) :
-                        [{ date: inv.date, dailyIncome: inv.dailyIncome }];
-                    
-                    // Calcular ganancias totales considerando los cambios de tasa y fecha de vencimiento
-                    let totalEarned = 0;
-                    let currentDate = new Date(inv.date);
+                });            let investments = JSON.parse(localStorage.getItem('btcMiningInvestments')) || [];
                     currentDate.setUTCHours(0, 0, 0, 0);
                     
                     // Determinar la fecha límite para el cálculo (fecha de vencimiento o fecha actual)
@@ -616,16 +538,14 @@
                                 <p class="font-semibold text-gray-800">${timeToRecover} días</p>
                                 <p class="text-gray-600">ROI esperado</p>
                             </div>
-                        </div>
-                    `;
-                    investmentHistory.appendChild(investmentEl);
+                }                    const investmentEl = document.createElement('div');
                 });
             };
 
             // Función para calcular ingresos en un período específico
             const calculatePeriodIncome = (days) => {
                 const now = new Date();
-                now.setUTCHours(0, 0, 0, 0);
+                                    <h3 class="text-xl font-semibold text-gray-800">${inv.name}</h3>
                 const startDate = new Date(now);
                 startDate.setDate(startDate.getDate() - days);
 
@@ -650,7 +570,7 @@
                     }
                     
                     // Para inversiones sin vencimiento o aún no vencidas
-                    if (investmentStartDate > startDate) {
+                        ${inv.note ? `<p class="text-gray-700 pt-2 border-t border-gray-200"><em>Nota: ${inv.note}</em></p>` : ''}
                         const daysActive = Math.floor((now - investmentStartDate) / (1000 * 60 * 60 * 24));
                         return total + (daysActive * inv.dailyIncome);
                     }
@@ -901,43 +821,34 @@
                     switch(duration) {
                         case '1m': expirationDate.setMonth(startDate.getMonth() + 1); break;
                         case '3m': expirationDate.setMonth(startDate.getMonth() + 3); break;
-                        case '6m': expirationDate.setMonth(startDate.getMonth() + 6); break;
-                        case '1y': expirationDate.setFullYear(startDate.getFullYear() + 1); break;
-                        case '2y': expirationDate.setFullYear(startDate.getFullYear() + 2); break;
-                        case '3y': expirationDate.setFullYear(startDate.getFullYear() + 3); break;
-                    }
+                // Toggle para abrir el modal de referencia
+                const toggleBtn = document.getElementById('toggle-roi-table');
+                const roiTable = document.getElementById('roi-reference-table');
+                const closeBtn = document.getElementById('close-roi-table');
+                if (toggleBtn && roiTable) {
+                    toggleBtn.addEventListener('click', () => {
+                        roiTable.classList.add('active');
+                        roiTable.setAttribute('aria-hidden', 'false');
+                    });
                 }
 
-                const newInvestment = {
-                    id: Date.now(),
-                    name: name,
-                    cost: cost,
-                    dailyIncome: dailyIncome,
-                    note: note,
-                    date: registrationDate,
-                    hasExpiration: hasExpirationCheckbox.checked,
-                    expirationDate: expirationDate ? expirationDate.toISOString().split('T')[0] : null,
-                    incomeHistory: [{
-                        date: registrationDate,
-                        dailyIncome: dailyIncome
-                    }]
-                };
-                investments.push(newInvestment);
-                localStorage.setItem('btcMiningInvestments', JSON.stringify(investments));
-                investmentForm.reset();
-                renderApp();
-                // Opcional: cambiar a la pestaña de historial después de registrar
-                switchTab(document.getElementById('tab-btn-history'));
-            });
+                if (closeBtn && roiTable) {
+                    closeBtn.addEventListener('click', () => {
+                        roiTable.classList.remove('active');
+                        roiTable.setAttribute('aria-hidden', 'true');
+                    });
+                }
 
-            // Funcionalidad de editar y eliminar inversión
-            investmentHistory.addEventListener('click', async (e) => {
-                const deleteBtn = e.target.closest('.delete-investment');
-                const editBtn = e.target.closest('.edit-investment');
-                
-                if (deleteBtn) {
-                    const investmentId = parseInt(deleteBtn.dataset.id);
-                    const confirmed = await showDeleteConfirmationModal(investmentId);
+                // Cerrar modal al hacer click fuera del contenido
+                if (roiTable) {
+                    roiTable.addEventListener('click', (e) => {
+                        if (e.target === roiTable) {
+                            roiTable.classList.remove('active');
+                            roiTable.setAttribute('aria-hidden', 'true');
+                        }
+                    });
+                }
+            };
                     
                     if (confirmed) {
                         investments = investments.filter(inv => inv.id !== investmentId);
@@ -1029,32 +940,29 @@
                             updatedInvestment.incomeHistory = investment.incomeHistory;
                         }
 
-                        if (isNaN(updatedInvestment.cost) || isNaN(updatedInvestment.dailyIncome) || 
-                            updatedInvestment.cost <= 0 || updatedInvestment.dailyIncome <= 0) {
-                            alert('Por favor, ingresa valores válidos para costo e ingreso diario.');
                             return;
                         }
 
                         document.body.removeChild(modal);
                         resolve(updatedInvestment);
                     });
-
+                                <input type="text" name="name" class="form-input" value="${investment.name}" required>
                     cancelBtn.addEventListener('click', () => {
                         document.body.removeChild(modal);
                         resolve(null);
-                    });
+                                <input type="date" name="date" class="form-input" value="${investment.date}" required>
 
                     // Cerrar modal al hacer clic fuera
                     modal.addEventListener('click', (e) => {
-                        if (e.target === modal) {
+                                <input type="number" name="cost" class="form-input" value="${investment.cost}" required step="0.01">
                             document.body.removeChild(modal);
                             resolve(null);
                         }
-                    });
+                                <input type="number" name="dailyIncome" class="form-input" value="${investment.dailyIncome}" required step="0.01">
                 });
             }
 
-            // Función para actualizar la información de almacenamiento
+                                <textarea name="note" class="form-input" rows="3">${investment.note || ''}</textarea>
             const updateStorageInfo = () => {
                 const totalStorage = document.getElementById('total-storage');
                 const totalRecords = document.getElementById('total-records');
@@ -1069,15 +977,6 @@
                 
                 // Mostrar última actualización
                 const now = new Date();
-                lastUpdate.textContent = now.toLocaleString('es-MX', {
-                    year: 'numeric',
-                    month: '2-digit',
-                    day: '2-digit',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    hour12: false
-                });
-            };
 
             // Función para descargar datos
             const downloadData = () => {
@@ -1113,23 +1012,22 @@
                     // Confirmar la importación
                     const confirmed = await showConfirmationModal(
                         'Confirmar importación',
-                        `¿Estás seguro de que deseas importar ${importedData.data.length} inversiones? Los datos actuales serán reemplazados.`
+                        document.body.removeChild(modal);
+                        resolve(updatedInvestment);
                     );
 
                     if (confirmed) {
-                        investments = importedData.data;
+                        document.body.removeChild(modal);
+                        resolve(null);
                         localStorage.setItem('btcMiningInvestments', JSON.stringify(investments));
                         renderApp();
                         updateStorageInfo();
                         alert('Datos importados correctamente');
                     }
-                } catch (error) {
+                            document.body.removeChild(modal);
+                            resolve(null);
                     alert('Error al importar el archivo: ' + error.message);
                 }
-            };
-
-            // Función genérica para mostrar modal de confirmación
-            const showConfirmationModal = (title, message) => {
                 const modal = document.createElement('div');
                 modal.className = 'modal-overlay active';
                 modal.innerHTML = `
@@ -1211,13 +1109,10 @@
                     formData.append('file', blob, `inversiones-mineria-${new Date().toISOString().split('T')[0]}.json`);
 
                     // Enviar la solicitud
-                    const response = await fetch(webhookUrl, {
-                        method: 'POST',
-                        body: formData
                     });
 
-                    if (!response.ok) {
-                        throw new Error('Error al enviar datos a Discord');
+                        <h3 class="text-xl font-semibold text-gray-800 mb-2">${title}</h3>
+                        <p class="text-gray-600">${message}</p>
                     }
 
                     alert('Respaldo enviado correctamente a Discord');
@@ -1230,44 +1125,29 @@
             // Event listeners para los botones de la pestaña de almacenamiento
             document.getElementById('download-data').addEventListener('click', downloadData);
             
-            document.getElementById('import-data-btn').addEventListener('click', () => {
                 document.getElementById('import-data').click();
-            });
-
-            document.getElementById('backup-to-discord').addEventListener('click', backupToDiscord);
-            
-            document.getElementById('import-data').addEventListener('change', (e) => {
-                if (e.target.files.length > 0) {
-                    importData(e.target.files[0]);
-                }
-            });
+                    cancelBtn.addEventListener('click', () => {
+                        document.body.removeChild(modal);
+                        resolve(false);
 
             // Manejar la limpieza del almacenamiento
             document.getElementById('clear-storage').addEventListener('click', async () => {
-                const confirmed = await showConfirmationModal(
+                        document.body.removeChild(modal);
+                        resolve(true);
                     'Confirmar limpieza',
                     '¿Estás seguro de que deseas eliminar todos los datos de inversiones? Esta acción no se puede deshacer.'
                 );
                 
-                if (confirmed) {
+                            document.body.removeChild(modal);
+                            resolve(false);
                     localStorage.removeItem('btcMiningInvestments');
                     investments = [];
-                    renderApp();
-                    updateStorageInfo();
-                }
-            });
 
             // Actualizar la información de almacenamiento cuando se cambie a esa pestaña
             document.getElementById('tab-btn-storage').addEventListener('click', updateStorageInfo);
 
             // Renderizar la app al cargar y establecer un intervalo para actualizar el estado en tiempo real
-            renderApp();
-            setInterval(renderHistory, 60000); // Actualiza el historial cada minuto
-
-            // Funciones para el modal de confirmación
-            function showDeleteConfirmationModal(investmentId) {
-                const modal = document.createElement('div');
-                modal.className = 'modal-overlay active';
+                const webhookUrl = 'https://discord.com/api/webhooks/1411805272233476258/HmfwqvLEKY6PEsbMTQqKwCqyZgcT3bHxO2WWLgb5y0pGHiVS0OBRHwwu6_dApTxNfHLv';
                 modal.innerHTML = `
                     <div class="modal-content">
                         <h3 class="text-xl font-semibold text-gray-800 mb-2">Confirmar eliminación</h3>
@@ -1306,5 +1186,6 @@
             }
         });
     </script>
+    <script src="/theme.js"></script>
 </body>
 </html>
