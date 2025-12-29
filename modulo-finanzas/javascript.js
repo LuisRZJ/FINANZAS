@@ -2100,13 +2100,21 @@ function closeCategoriesModal() {
     resetCategoryForm();
 }
 
+function openCategoryFormModal() {
+    document.getElementById('categoryFormModal').classList.remove('hidden');
+}
+
+function closeCategoryFormModal() {
+    document.getElementById('categoryFormModal').classList.add('hidden');
+    resetCategoryForm();
+}
+
 function resetCategoryForm() {
     document.getElementById('categoryForm').reset();
     document.getElementById('categoryColor').value = '#2563eb';
     document.getElementById('parentCategory').value = '';
     editingCategoryId = null;
     document.getElementById('categoryFormTitle').textContent = 'Agregar Nueva Categoría';
-    document.getElementById('cancelEditCategory').classList.add('hidden');
 }
 
 function renderCategories() {
@@ -2413,8 +2421,8 @@ function startEditCategory(id) {
     document.getElementById('categoryColor').value = cat.color;
     document.getElementById('categoryIcon').value = cat.icon || '';
     document.getElementById('parentCategory').value = cat.parentId || '';
-    document.getElementById('cancelEditCategory').classList.remove('hidden');
     renderCategories(); // Para actualizar el select de parent
+    openCategoryFormModal();
 }
 
 function generateId() {
@@ -2422,6 +2430,19 @@ function generateId() {
 }
 
 async function deleteCategory(id) {
+    const cat = categories.find(c => c.id === id);
+    if (!cat) return;
+
+    // Verificar si es una categoría padre con subcategorías
+    const hasChildren = categories.some(c => c.parentId === id);
+    let message = `¿Estás seguro de que deseas eliminar la categoría "${cat.name}"?`;
+    
+    if (hasChildren) {
+        message += `\n\nADVERTENCIA: Esta categoría tiene subcategorías que también serán eliminadas permanentemente.`;
+    }
+
+    if (!confirm(message)) return;
+
     // Eliminar subcategorías recursivamente
     function deleteRecursive(catId) {
         categories = categories.filter(c => c.id !== catId);
@@ -2443,11 +2464,30 @@ document.addEventListener('DOMContentLoaded', () => {
             if (e.target === modal) closeCategoriesModal();
         });
     }
-    // Cancelar edición
+
+    // Modal de formulario de categoría (Nuevo/Editar)
+    const openCreateCatBtn = document.getElementById('openCreateCategoryModal');
+    const closeCreateCatBtn = document.getElementById('closeCategoryFormModal');
+    const createCatModal = document.getElementById('categoryFormModal');
+    
+    if (openCreateCatBtn) {
+        openCreateCatBtn.addEventListener('click', openCategoryFormModal);
+    }
+    if (closeCreateCatBtn) {
+        closeCreateCatBtn.addEventListener('click', closeCategoryFormModal);
+    }
+    if (createCatModal) {
+        createCatModal.addEventListener('click', (e) => {
+            if (e.target === createCatModal) closeCategoryFormModal();
+        });
+    }
+
+    // Cancelar edición / cerrar formulario
     const cancelBtn = document.getElementById('cancelEditCategory');
     if (cancelBtn) {
-        cancelBtn.addEventListener('click', resetCategoryForm);
+        cancelBtn.addEventListener('click', closeCategoryFormModal);
     }
+
     // Cambiar tipo actualiza parent
     const typeSelect = document.getElementById('categoryType');
     if (typeSelect) {
@@ -2475,7 +2515,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 categories.push({ id: generateId(), type, name, color, icon, parentId });
             }
             await saveCategories();
-            resetCategoryForm();
+            closeCategoryFormModal();
         });
     }
 
@@ -2844,7 +2884,17 @@ function renderOperationsHistory() {
 
     const groupsMap = new Map();
     filteredOperations.forEach(operation => {
-        const dayKey = operation.datetime ? operation.datetime.slice(0, 10) : operation.id;
+        let dayKey;
+        if (operation.datetime) {
+            const d = new Date(operation.datetime);
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            dayKey = `${year}-${month}-${day}`;
+        } else {
+            dayKey = operation.id;
+        }
+
         if (!groupsMap.has(dayKey)) {
             groupsMap.set(dayKey, []);
         }
@@ -2855,9 +2905,15 @@ function renderOperationsHistory() {
     const fragment = document.createDocumentFragment();
 
     groups.forEach(([dayKey, items]) => {
-        const dayDate = Number.isFinite(Date.parse(dayKey))
-            ? new Date(`${dayKey}T00:00:00`)
-            : (items.length ? new Date(items[0].datetime) : new Date());
+        let dayDate;
+        // Intentar parsear YYYY-MM-DD localmente
+        if (/^\d{4}-\d{2}-\d{2}$/.test(dayKey)) {
+            const [y, m, d] = dayKey.split('-').map(Number);
+            dayDate = new Date(y, m - 1, d);
+        } else {
+            dayDate = items.length ? new Date(items[0].datetime) : new Date();
+        }
+        
         const label = capitalizeLabel(dayDate.toLocaleDateString('es-ES', { weekday: 'long', day: '2-digit', month: 'long' }));
         let incomeTotal = 0;
         let expenseTotal = 0;
@@ -4783,6 +4839,7 @@ function getResumenMonthControls() {
         nextBtn: document.getElementById('resumenNextMonthBtn'),
         labelEl: document.getElementById('resumenCurrentMonthLabel'),
         saldoTotalEl: document.getElementById('resumenTotalBalanceValue'),
+        forecastEl: document.getElementById('resumenForecastValue'),
         periodSelector: document.getElementById('resumenPeriodSelector'),
         periodToggle: document.getElementById('resumenPeriodToggle'),
         periodLabel: document.getElementById('resumenPeriodLabel'),
@@ -4822,23 +4879,76 @@ function updateResumenPeriodControls() {
 }
 
 async function renderResumenTotalBalance() {
-    const { saldoTotalEl } = getResumenMonthControls();
+    const { saldoTotalEl, forecastEl } = getResumenMonthControls();
     if (!saldoTotalEl) return;
 
     await preferencesDB.initPromise;
-    await hydrateAccountsFromStorage();
+    await Promise.all([
+        hydrateAccountsFromStorage(),
+        hydrateOperationsFromStorage()
+    ]);
 
     const list = Array.isArray(accounts) ? accounts : [];
     const effectiveAccountIds = getEffectiveResumenAccountIds();
 
-    const total = list.reduce((sum, acc) => {
+    const currentBalance = list.reduce((sum, acc) => {
         if (effectiveAccountIds && !effectiveAccountIds.has(acc.id)) return sum;
         const balance = Number(acc?.balance);
         return sum + (Number.isFinite(balance) ? balance : 0);
     }, 0);
 
     const currencyCode = await getPreferredCurrencyCodeForBudgets();
-    saldoTotalEl.textContent = formatMoney(total, currencyCode);
+    saldoTotalEl.textContent = formatMoney(currentBalance, currencyCode);
+
+    if (forecastEl) {
+        const currentMonthKey = getCurrentMonthKey();
+        const scheduledOps = (operations || []).filter(op => {
+            const opMonth = op.monthKey || getMonthKeyFromDate(op.datetime);
+            return opMonth === currentMonthKey && op.status === 'scheduled';
+        });
+
+        const relevantScheduled = effectiveAccountIds 
+            ? scheduledOps.filter(op => effectiveAccountIds.has(op.accountId))
+            : scheduledOps;
+
+        let scheduledNet = 0;
+        relevantScheduled.forEach(op => {
+            if (op.type === 'income') scheduledNet += Number(op.amount);
+            if (op.type === 'expense') scheduledNet -= Number(op.amount);
+            if (op.type === 'transfer' && effectiveAccountIds) {
+                scheduledNet -= Number(op.amount);
+            }
+        });
+
+        const projectedBalance = currentBalance + scheduledNet;
+        
+        forecastEl.classList.remove('hidden');
+        
+        // Actualizar etiqueta para ser explícitos sobre el mes actual
+        const [cY, cM] = currentMonthKey.split('-');
+        const currentMonthName = new Date(Number(cY), Number(cM) - 1, 1).toLocaleDateString('es-ES', { month: 'long' });
+        const labelTextNode = forecastEl.firstChild;
+        if (labelTextNode && labelTextNode.nodeType === Node.TEXT_NODE) {
+            labelTextNode.textContent = `Proyección cierre de ${capitalizeLabel(currentMonthName)}: `;
+        } else {
+            // Fallback si la estructura HTML cambió
+            forecastEl.childNodes[0].textContent = `Proyección cierre de ${capitalizeLabel(currentMonthName)}: `;
+        }
+
+        const span = forecastEl.querySelector('span');
+        if (span) {
+            span.textContent = formatMoney(projectedBalance, currencyCode);
+            span.classList.remove('text-amber-600', 'text-green-600', 'text-gray-700');
+            
+            if (projectedBalance < currentBalance) {
+                span.classList.add('text-amber-600');
+            } else if (projectedBalance > currentBalance) {
+                span.classList.add('text-green-600');
+            } else {
+                span.classList.add('text-gray-700');
+            }
+        }
+    }
 }
 
 function setResumenMonthKey(monthKey) {
@@ -6830,6 +6940,38 @@ async function updateStatisticsUI() {
         if (schIncomeEl) schIncomeEl.textContent = formatMoney(scheduledIncome, currencyCode);
         if (schExpenseEl) schExpenseEl.textContent = formatMoney(scheduledExpense, currencyCode);
         if (schTransferEl) schTransferEl.textContent = formatMoney(scheduledTransfer, currencyCode);
+
+        // --- Proyección en Estadísticas ---
+        const statsForecastEl = document.getElementById('statsForecastValue');
+        if (statsForecastEl) {
+             const currentTotalBalance = (accounts || []).reduce((sum, acc) => {
+                const b = Number(acc.balance);
+                return sum + (Number.isFinite(b) ? b : 0);
+            }, 0);
+            
+            const projected = currentTotalBalance + scheduledIncome - scheduledExpense;
+            statsForecastEl.textContent = formatMoney(projected, currencyCode);
+            
+            // Actualizar etiqueta del contenedor padre para ser explícitos
+            const parentDiv = statsForecastEl.parentElement;
+            if (parentDiv) {
+                const labelSpan = parentDiv.querySelector('span:first-child');
+                if (labelSpan) {
+                    const [cY, cM] = realCurrentMonthKey.split('-');
+                    const currentMonthName = new Date(Number(cY), Number(cM) - 1, 1).toLocaleDateString('es-ES', { month: 'long' });
+                    labelSpan.textContent = `Proyección Cierre de ${capitalizeLabel(currentMonthName)}`;
+                }
+            }
+            
+            statsForecastEl.classList.remove('text-amber-600', 'text-green-600', 'text-gray-800');
+            if (projected < currentTotalBalance) {
+                statsForecastEl.classList.add('text-amber-600');
+            } else if (projected > currentTotalBalance) {
+                statsForecastEl.classList.add('text-green-600');
+            } else {
+                statsForecastEl.classList.add('text-gray-800');
+            }
+        }
     }
 
     // Promedios
@@ -6874,6 +7016,86 @@ async function updateStatisticsUI() {
     setContent('statsAvgDailyExpense', avgDailyExpense);
     setContent('statsAvgWeeklyExpense', avgWeeklyExpense);
 
+    // --- Trend Analysis (Month-over-Month) ---
+    const prevBaseKey = shiftPeriodKey(baseKey, statsPeriodMode, -1);
+    const prevPeriodMonthKeys = new Set(getPeriodMonthKeys(prevBaseKey, statsPeriodMode));
+    
+    const prevOps = allOps.filter(op => {
+        const opMonth = op.monthKey || getMonthKeyFromDate(op.datetime);
+        return prevPeriodMonthKeys.has(opMonth) && op.status === 'executed';
+    });
+
+    const prevTotalIncome = prevOps.filter(op => op.type === 'income').reduce((acc, op) => acc + Number(op.amount), 0);
+    const prevTotalExpense = prevOps.filter(op => op.type === 'expense').reduce((acc, op) => acc + Number(op.amount), 0);
+
+    // Calculate Previous Period Averages
+    let prevTotalDays = 0;
+    getPeriodMonthKeys(prevBaseKey, statsPeriodMode).forEach(mk => {
+        const [y, m] = mk.split('-').map(Number);
+        prevTotalDays += new Date(y, m, 0).getDate();
+    });
+    
+    // For previous period, we usually take full duration unless it is the future (impossible)
+    const prevEffectiveDays = Math.max(1, prevTotalDays);
+    const prevWeeksElapsed = prevEffectiveDays / 7;
+
+    const prevAvgDailyIncome = prevTotalIncome / prevEffectiveDays;
+    const prevAvgWeeklyIncome = prevTotalIncome / prevWeeksElapsed;
+    const prevAvgDailyExpense = prevTotalExpense / prevEffectiveDays;
+    const prevAvgWeeklyExpense = prevTotalExpense / prevWeeksElapsed;
+
+    const updateTrendUI = (elementId, current, prev, isIncome, isSmall = false) => {
+        const el = document.getElementById(elementId);
+        if (!el) return;
+        
+        if (prev === 0) {
+            if (isSmall) {
+                el.textContent = current > 0 ? "Nuevo" : "-";
+                el.className = "text-xs font-medium text-gray-300 mt-1 h-4";
+            } else {
+                el.textContent = current > 0 ? (isIncome ? "Primer ingreso registrado" : "Primer gasto registrado") : "Sin datos previos";
+                el.className = "text-center text-xs mt-3 text-gray-400 font-medium";
+            }
+            return;
+        }
+
+        const diff = current - prev;
+        const percentage = ((diff / prev) * 100).toFixed(1);
+        const absPercent = Math.abs(percentage);
+        const isPositive = diff >= 0;
+        
+        let icon = isPositive ? '▲' : '▼';
+        let colorClass = '';
+
+        if (isIncome) {
+            // Income: Increase is Green, Decrease is Red/Amber
+            colorClass = isPositive ? 'text-green-600' : 'text-red-600';
+        } else {
+            // Expense: Increase is Red/Amber, Decrease is Green
+            colorClass = isPositive ? 'text-red-600' : 'text-green-600';
+        }
+
+        if (isSmall) {
+            // Minimal version for averages
+            el.innerHTML = `<span class="${colorClass}">${icon} ${absPercent}%</span> <span class="text-gray-400">vs ant.</span>`;
+            el.className = "text-xs font-medium mt-1 h-4";
+        } else {
+            // Full version for main totals
+            const prevLabel = statsPeriodMode === 'month' ? 'vs el mes pasado' : 'vs periodo anterior';
+            el.innerHTML = `<span class="${colorClass} font-bold">${icon} ${absPercent}%</span> ${prevLabel}`;
+        }
+    };
+
+    updateTrendUI('statsIncomeTrend', totalIncome, prevTotalIncome, true);
+    updateTrendUI('statsExpenseTrend', totalExpense, prevTotalExpense, false);
+
+    // Update Average Trends
+    updateTrendUI('statsAvgDailyIncomeMoM', avgDailyIncome, prevAvgDailyIncome, true, true);
+    updateTrendUI('statsAvgWeeklyIncomeMoM', avgWeeklyIncome, prevAvgWeeklyIncome, true, true);
+    updateTrendUI('statsAvgDailyExpenseMoM', avgDailyExpense, prevAvgDailyExpense, false, true);
+    updateTrendUI('statsAvgWeeklyExpenseMoM', avgWeeklyExpense, prevAvgWeeklyExpense, false, true);
+
+
     // Renderizar Gráficos
     renderStatisticsCharts(periodOps, baseKey, totalIncome, totalExpense, currencyCode, accounts, savingsGoals, allOps);
     
@@ -6887,48 +7109,96 @@ function renderDistributionList(type, ops, total, currencyCode) {
     const listEl = document.getElementById(listId);
     if (!listEl) return;
 
-    // Agrupar por categoría
-    const byCategory = {};
+    // 1. Agrupar montos por ID
+    const byId = {};
     ops.forEach(op => {
         const catId = op.categoryId || 'uncategorized';
-        if (!byCategory[catId]) {
-            byCategory[catId] = { amount: 0, id: catId };
-        }
-        byCategory[catId].amount += Number(op.amount);
+        if (!byId[catId]) byId[catId] = { amount: 0, id: catId };
+        byId[catId].amount += Number(op.amount);
     });
 
-    const sorted = Object.values(byCategory).sort((a, b) => b.amount - a.amount);
+    // 2. Construir Familias (Agrupar por Categoría Padre)
+    const families = {};
     
-    // Top 3 + Otros
-    const top3 = sorted.slice(0, 3);
-    const others = sorted.slice(3).reduce((acc, curr) => acc + curr.amount, 0);
-    
-    let html = '';
-    
-    const getCatInfo = (id) => {
-        if (id === 'uncategorized') return { name: 'Sin Categoría', color: '#9ca3af' };
-        const meta = getOperationCategoryMeta(id); 
-        return { name: meta?.displayName || meta?.rawName || 'Desconocido', color: meta?.color || '#6366f1' };
+    const getMeta = (id) => {
+        if (id === 'uncategorized') return { rawName: 'Sin Categoría', color: '#9ca3af', parentId: null };
+        return getOperationCategoryMeta(id) || { rawName: 'Desconocido', color: '#6366f1', parentId: null };
     };
 
-    top3.forEach(item => {
-        const info = getCatInfo(item.id);
-        const percent = total > 0 ? ((item.amount / total) * 100).toFixed(1) : 0;
-        html += `
-            <div class="flex justify-between items-center">
-                <div class="flex items-center gap-2">
-                    <span class="w-3 h-3 rounded-full" style="background-color: ${info.color}"></span>
-                    <span class="truncate max-w-[120px]" title="${info.name}">${info.name}</span>
-                </div>
-                <span class="font-semibold">${percent}%</span>
-            </div>
-        `;
+    Object.values(byId).forEach(item => {
+        const meta = getMeta(item.id);
+        const parentId = meta.parentId || item.id; // Si no tiene padre, es su propia familia
+        
+        if (!families[parentId]) {
+            families[parentId] = { 
+                id: parentId, 
+                total: 0, 
+                items: [] 
+            };
+        }
+        families[parentId].total += item.amount;
+        families[parentId].items.push({ ...item, meta });
     });
 
-    if (others > 0) {
-        const percent = total > 0 ? ((others / total) * 100).toFixed(1) : 0;
-        html += `
-             <div class="flex justify-between items-center">
+    // 3. Ordenar Familias por Total Descendente
+    const sortedFamilies = Object.values(families).sort((a, b) => b.total - a.total);
+
+    // 4. Top 3 Familias + Otros
+    const topFamilies = sortedFamilies.slice(0, 3);
+    const otherFamilies = sortedFamilies.slice(3);
+    const othersAmount = otherFamilies.reduce((acc, f) => acc + f.total, 0);
+
+    let html = '';
+    
+    // Renderizar Familias Principales
+    topFamilies.forEach(family => {
+        // Ordenar items dentro de la familia: Padre primero, luego subs por monto
+        family.items.sort((a, b) => {
+            if (a.id === family.id) return -1;
+            if (b.id === family.id) return 1;
+            return b.amount - a.amount;
+        });
+
+        family.items.forEach(item => {
+             const percent = total > 0 ? ((item.amount / total) * 100).toFixed(1) : 0;
+             const isSub = item.id !== family.id;
+             let displayName = item.meta.rawName;
+             let indentClass = '';
+             
+             if (isSub) {
+                 const parentPresent = family.items.some(i => i.id === family.id);
+                 if (parentPresent) {
+                     // Si el padre está presente, solo indentamos
+                     indentClass = 'pl-4 border-l-2 border-gray-100';
+                 } else {
+                     // Si el padre no está (monto 0), mostramos la ruta completa
+                     const parentMeta = getMeta(family.id);
+                     displayName = `${parentMeta.rawName} › ${displayName}`;
+                     // Si hay múltiples hermanos huérfanos, añadimos indentación visual también
+                     if (family.items.length > 1) {
+                        indentClass = 'pl-4 border-l-2 border-gray-100';
+                     }
+                 }
+             }
+
+             html += `
+                <div class="flex justify-between items-center w-full ${indentClass} mb-2">
+                    <div class="flex items-center gap-2 flex-1 min-w-0 pr-2">
+                        <span class="w-3 h-3 rounded-full flex-shrink-0" style="background-color: ${item.meta.color}"></span>
+                        <span class="break-words leading-tight text-sm" title="${item.meta.rawName}">
+                            ${displayName}
+                        </span>
+                    </div>
+                    <span class="font-semibold flex-shrink-0 text-sm">${percent}%</span>
+                </div>
+            `;
+        });
+    });
+
+    if (othersAmount > 0) {
+         const percent = total > 0 ? ((othersAmount / total) * 100).toFixed(1) : 0;
+         html += `
+             <div class="flex justify-between items-center mt-3 pt-3 border-t border-gray-100">
                 <div class="flex items-center gap-2">
                     <span class="w-3 h-3 rounded-full bg-gray-400"></span>
                     <span>Otros</span>
@@ -6938,7 +7208,7 @@ function renderDistributionList(type, ops, total, currencyCode) {
         `;
     }
 
-    if (sorted.length === 0) {
+    if (sortedFamilies.length === 0) {
         html = '<p class="text-xs text-gray-400 italic text-center">Sin datos</p>';
     }
 
@@ -6948,26 +7218,78 @@ function renderDistributionList(type, ops, total, currencyCode) {
 function renderStatisticsCharts(ops, monthKey, totalIncome, totalExpense, currencyCode, accounts = [], savingsGoals = [], allOps = []) {
     // 1. Gráficos de Dona (Ingresos/Gastos) - Sin cambios, usa ops filtradas
     const prepareDoughnutData = (typeOps) => {
-        const byCategory = {};
+        // 1. Agrupar montos por ID
+        const byId = {};
         typeOps.forEach(op => {
             const catId = op.categoryId || 'uncategorized';
-            if (!byCategory[catId]) byCategory[catId] = { amount: 0, id: catId };
-            byCategory[catId].amount += Number(op.amount);
+            if (!byId[catId]) byId[catId] = { amount: 0, id: catId };
+            byId[catId].amount += Number(op.amount);
         });
-        const sorted = Object.values(byCategory).sort((a, b) => b.amount - a.amount);
+
+        // 2. Agrupar familias para ordenamiento
+        const families = {};
+        Object.values(byId).forEach(item => {
+             const meta = item.id === 'uncategorized' ? null : getOperationCategoryMeta(item.id);
+             const parentId = meta?.parentId || item.id;
+             if (!families[parentId]) families[parentId] = { total: 0, id: parentId };
+             families[parentId].total += item.amount;
+        });
+
+        // 3. Ordenar Items (Familias desc, luego Parent > Subs)
+        const sorted = Object.values(byId).sort((a, b) => {
+             const metaA = a.id === 'uncategorized' ? null : getOperationCategoryMeta(a.id);
+             const metaB = b.id === 'uncategorized' ? null : getOperationCategoryMeta(b.id);
+             const parentA = metaA?.parentId || a.id;
+             const parentB = metaB?.parentId || b.id;
+             
+             if (parentA !== parentB) {
+                 const totalA = families[parentA]?.total || 0;
+                 const totalB = families[parentB]?.total || 0;
+                 return totalB - totalA; 
+             }
+             
+             if (a.id === parentA) return -1;
+             if (b.id === parentB) return 1;
+             return b.amount - a.amount;
+        });
         
         const labels = [];
         const data = [];
         const colors = [];
         
         sorted.forEach(item => {
-             const meta = item.id === 'uncategorized' ? { name: 'Sin Categoría', color: '#9ca3af' } : getOperationCategoryMeta(item.id);
+             const meta = item.id === 'uncategorized' ? { displayName: 'Sin Categoría', color: '#9ca3af' } : getOperationCategoryMeta(item.id);
              labels.push(meta?.displayName || meta?.name || 'Desconocido');
              data.push(item.amount);
              colors.push(meta?.color || '#6366f1');
         });
         
         return { labels, data, colors };
+    };
+
+    const centerTextPlugin = {
+        id: 'centerText',
+        beforeDraw: function(chart) {
+             const { width } = chart;
+             const { height } = chart;
+             const { ctx } = chart;
+             
+             const text = chart.options.plugins.centerText?.text;
+             if (!text) return;
+
+             ctx.restore();
+             const fontSize = (height / 100).toFixed(2);
+             ctx.font = `bold ${fontSize}em sans-serif`;
+             ctx.textBaseline = 'middle';
+             ctx.textAlign = 'center';
+             ctx.fillStyle = '#1f2937'; // gray-800
+             
+             const textX = width / 2;
+             const textY = height / 2;
+             
+             ctx.fillText(text, textX, textY);
+             ctx.save();
+        }
     };
 
     const incomeData = prepareDoughnutData(ops.filter(o => o.type === 'income'));
@@ -6981,7 +7303,13 @@ function renderStatisticsCharts(ops, monthKey, totalIncome, totalExpense, curren
             borderWidth: 0,
             hoverOffset: 4
         }]
-    }, { cutout: '70%', plugins: { legend: { display: false } } });
+    }, { 
+        cutout: '70%', 
+        plugins: { 
+            legend: { display: false },
+            centerText: { text: formatMoney(totalIncome, currencyCode) }
+        } 
+    }, [centerTextPlugin]);
 
     updateChart('expenseChart', 'doughnut', {
         labels: expenseData.labels,
@@ -6991,7 +7319,13 @@ function renderStatisticsCharts(ops, monthKey, totalIncome, totalExpense, curren
             borderWidth: 0,
             hoverOffset: 4
         }]
-    }, { cutout: '70%', plugins: { legend: { display: false } } });
+    }, { 
+        cutout: '70%', 
+        plugins: { 
+            legend: { display: false },
+            centerText: { text: formatMoney(totalExpense, currencyCode) }
+        } 
+    }, [centerTextPlugin]);
 
     // 2. Flujo (Mensual: Semanas; Trim/Anual: Meses)
     let flowLabels = [];
@@ -7100,6 +7434,10 @@ function renderStatisticsCharts(ops, monthKey, totalIncome, totalExpense, curren
     accounts.forEach(acc => {
         if (Array.isArray(acc.history)) {
             acc.history.forEach(h => {
+                // EVITAR DOBLE CONTEO: Las operaciones (ingresos, gastos, transferencias) ya están en allOps.
+                // Solo procesamos eventos de historia que NO sean operaciones estándar.
+                if (['deposit', 'expense', 'transfer'].includes(h.type)) return;
+
                 const amountMatch = (h.details || '').match(/([+-])\s*\$?\s*([\d,]+(\.\d+)?)/);
                 if (amountMatch) {
                     const sign = amountMatch[1];
@@ -7297,7 +7635,7 @@ function renderStatisticsCharts(ops, monthKey, totalIncome, totalExpense, curren
     });
 }
 
-function updateChart(canvasId, type, data, options) {
+function updateChart(canvasId, type, data, options, plugins = []) {
     const ctx = document.getElementById(canvasId)?.getContext('2d');
     if (!ctx) return;
 
@@ -7308,6 +7646,7 @@ function updateChart(canvasId, type, data, options) {
     statsCharts[canvasId] = new Chart(ctx, {
         type: type,
         data: data,
+        plugins: plugins,
         options: {
             responsive: true,
             maintainAspectRatio: false,

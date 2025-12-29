@@ -153,6 +153,12 @@
                             </a>
                         </div>
                     </div>
+                    
+                    <!-- Proyección de Cierre -->
+                    <div class="mt-4 pt-4 border-t border-gray-200 flex justify-between items-center">
+                        <span class="text-sm font-medium text-gray-600">Proyección Cierre de Mes</span>
+                        <span id="statsForecastValue" class="text-lg font-bold text-gray-800">---</span>
+                    </div>
                 </section>
                 
                 <!-- Gráfico Mensual Ingresos vs Gastos -->
@@ -179,12 +185,15 @@
                         <div class="text-center">
                             <p class="text-sm text-gray-500">Ganancia Diaria Promedio</p>
                             <p id="statsAvgDailyIncome" class="font-bold text-green-600 text-lg">---</p>
+                            <p id="statsAvgDailyIncomeMoM" class="text-xs font-medium text-gray-400 mt-1 h-4"></p>
                         </div>
                         <div class="text-center">
                             <p class="text-sm text-gray-500">Ganancia Semanal Promedio</p>
                             <p id="statsAvgWeeklyIncome" class="font-bold text-green-600 text-lg">---</p>
+                            <p id="statsAvgWeeklyIncomeMoM" class="text-xs font-medium text-gray-400 mt-1 h-4"></p>
                         </div>
                     </div>
+                    <div id="statsIncomeTrend" class="text-center text-xs mt-3 text-gray-500 font-medium"></div>
                 </section>
 
                 <!-- Distribución de Gastos por Categoría -->
@@ -203,12 +212,15 @@
                         <div class="text-center">
                             <p class="text-sm text-gray-500">Gasto Diario Promedio</p>
                             <p id="statsAvgDailyExpense" class="font-bold text-red-600 text-lg">---</p>
+                            <p id="statsAvgDailyExpenseMoM" class="text-xs font-medium text-gray-400 mt-1 h-4"></p>
                         </div>
                         <div class="text-center">
                             <p class="text-sm text-gray-500">Gasto Semanal Promedio</p>
                             <p id="statsAvgWeeklyExpense" class="font-bold text-red-600 text-lg">---</p>
+                            <p id="statsAvgWeeklyExpenseMoM" class="text-xs font-medium text-gray-400 mt-1 h-4"></p>
                         </div>
                     </div>
+                    <div id="statsExpenseTrend" class="text-center text-xs mt-3 text-gray-500 font-medium"></div>
                 </section>
 
             </div>
