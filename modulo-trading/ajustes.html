@@ -639,7 +639,7 @@
             if (periodInput) periodInput.value = goalPeriod;
 
             // Cargar capital inicial
-            const initialCapital = localStorage.getItem('initialCapital') || '100000';
+            const initialCapital = localStorage.getItem('initialCapital') || '0';
             const capitalInput = document.getElementById('initial-capital');
             if (capitalInput) capitalInput.value = initialCapital;
 
@@ -682,13 +682,28 @@
         // Función para guardar el capital inicial
         function saveInitialCapital() {
             const initialCapital = document.getElementById('initial-capital').value;
-            if (initialCapital && initialCapital > 0) {
+            const val = parseFloat(initialCapital);
+            if (initialCapital !== '' && !isNaN(val) && val >= 0) {
                 localStorage.setItem('initialCapital', initialCapital);
                 const timestamp = new Date().toISOString();
                 localStorage.setItem('capitalStartDate', timestamp);
+
+                // Guardar en historial
+                let history = [];
+                try {
+                    history = JSON.parse(localStorage.getItem('capitalHistory')) || [];
+                } catch (e) { history = []; }
+                
+                history.push({
+                    date: timestamp,
+                    amount: val,
+                    type: 'initial_capital_update'
+                });
+                localStorage.setItem('capitalHistory', JSON.stringify(history));
+
                 alert('Capital inicial guardado exitosamente');
             } else {
-                alert('Por favor ingrese un valor válido para el capital inicial');
+                alert('Por favor ingrese un valor válido para el capital inicial (positivo).');
             }
         }
 

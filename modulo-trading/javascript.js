@@ -3,7 +3,7 @@
 const ACCOUNT_META_KEY = 'tradingAccountsMeta';
 const ACCOUNT_ACTIVE_KEY = 'activeTradingAccountId';
 const ACCOUNT_DATA_PREFIX = 'tradingAccountData:';
-const ACCOUNT_SCOPED_KEYS = new Set(['trades', 'capitalMovements', 'initialCapital', 'username', 'capitalStartDate', 'discordWebhookUrl', 'strategies']);
+const ACCOUNT_SCOPED_KEYS = new Set(['trades', 'capitalMovements', 'initialCapital', 'capitalHistory', 'username', 'capitalStartDate', 'discordWebhookUrl', 'strategies']);
 const ACCOUNT_SELECT_ID = 'account-select';
 const ACCOUNT_CREATE_BUTTON_ID = 'add-account-btn';
 const ACCOUNT_NAME_ID = 'active-account-name';
@@ -141,7 +141,8 @@ function normalizeAccountData(data) {
     ? data.discordWebhookUrl.trim().slice(0, 2048)
     : null;
   const strategies = normalizeStrategiesList(data && data.strategies);
-  return { trades, capitalMovements, initialCapital, username, capitalStartDate, discordWebhookUrl, strategies };
+  const capitalHistory = Array.isArray(data && data.capitalHistory) ? data.capitalHistory : [];
+  return { trades, capitalMovements, initialCapital, capitalHistory, username, capitalStartDate, discordWebhookUrl, strategies };
 }
 
 function readAccountData(accountId) {
@@ -644,6 +645,7 @@ localStorage.getItem = function (key) {
     const data = readAccountData(accountId);
     if (key === 'trades') return JSON.stringify(data.trades);
     if (key === 'capitalMovements') return JSON.stringify(data.capitalMovements);
+    if (key === 'capitalHistory') return JSON.stringify(data.capitalHistory);
     if (key === 'initialCapital') return data.initialCapital !== null ? String(data.initialCapital) : null;
     if (key === 'username') return data.username !== null ? String(data.username) : null;
     if (key === 'capitalStartDate') return data.capitalStartDate;
@@ -657,7 +659,7 @@ localStorage.setItem = function (key, value) {
   if (ACCOUNT_SCOPED_KEYS.has(key)) {
     const accountId = getActiveAccountId();
     const data = readAccountData(accountId);
-    if (key === 'trades' || key === 'capitalMovements') {
+    if (key === 'trades' || key === 'capitalMovements' || key === 'capitalHistory') {
       try {
         data[key] = value ? JSON.parse(value) : [];
       } catch (error) {
@@ -690,7 +692,7 @@ localStorage.removeItem = function (key) {
   if (ACCOUNT_SCOPED_KEYS.has(key)) {
     const accountId = getActiveAccountId();
     const data = readAccountData(accountId);
-    if (key === 'trades' || key === 'capitalMovements') {
+    if (key === 'trades' || key === 'capitalMovements' || key === 'capitalHistory') {
       data[key] = [];
     } else if (key === 'initialCapital') {
       data.initialCapital = null;
@@ -937,6 +939,12 @@ function syncResultReasonControls(inputEl, groupEl, labelEl, selectEl, hintEl, s
 }
 
 function addTrade() {
+  const currentBalance = getCurrentBalance();
+  if (currentBalance <= 0) {
+    alert('No puedes registrar trades sin saldo en la cuenta. Por favor, configura un capital inicial o realiza un depósito.');
+    return;
+  }
+
   const marginEl = document.getElementById('margin');
   const marginValue = marginEl ? marginEl.value : '';
   const leverageEl = document.getElementById('leverage');
@@ -1076,7 +1084,7 @@ function renderTradesTable() {
     html += `<tr>` +
       `<td>${formattedAsset}</td>` +
       `<td class="${directionClass}">${direction}</td>` +
-      `<td>${parseFloat(trade.lots).toFixed(3)}</td>` +
+      `<td>${parseFloat(trade.lots).toFixed(8).replace(/\.?0+$/, '')}</td>` +
       `<td>${marginDisplay}</td>` +
       `<td>${leverageDisplay}</td>` +
       `<td class="${parseFloat(trade.resultMxn) >= 0 ? 'positive' : 'negative'}">${parseFloat(trade.resultMxn).toFixed(2)}</td>` +
@@ -1266,7 +1274,7 @@ function showTradeDetails(index) {
           
           <div class="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
             <span class="text-gray-500 dark:text-gray-400">Lotes</span>
-            <span class="font-medium text-gray-900 dark:text-white">${parseFloat(trade.lots).toFixed(3)}</span>
+            <span class="font-medium text-gray-900 dark:text-white">${parseFloat(trade.lots).toFixed(8).replace(/\.?0+$/, '')}</span>
           </div>
 
           <div class="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
@@ -1633,21 +1641,160 @@ function setupMonthlyHeatmapNavigationUI() {
 
 function getStatsTimeFilterRange() {
   if (!statsTimeFilterState || statsTimeFilterState.mode !== 'last') return null;
-  const value = Number(statsTimeFilterState.value);
+  const value = Math.floor(Number(statsTimeFilterState.value));
   if (!Number.isFinite(value) || value <= 0) return null;
   const unit = statsTimeFilterState.unit;
   if (unit !== 'days' && unit !== 'months' && unit !== 'years') return null;
   const end = new Date();
-  const start = new Date(end);
-  if (unit === 'days') {
-    start.setDate(start.getDate() - value);
-  } else if (unit === 'months') {
-    start.setMonth(start.getMonth() - value);
-  } else {
-    start.setFullYear(start.getFullYear() - value);
+  const anchor = unit === 'years' ? startOfYear(end) : (unit === 'months' ? startOfMonth(end) : startOfDay(end));
+  const start = unit === 'years'
+    ? addYears(anchor, -(value - 1))
+    : (unit === 'months'
+      ? addMonths(anchor, -(value - 1))
+      : addDays(anchor, -(value - 1)));
+  return Number.isFinite(start.getTime()) ? { start, end } : null;
+}
+
+function clampValidDate(date) {
+  if (!(date instanceof Date)) return null;
+  return Number.isFinite(date.getTime()) ? date : null;
+}
+
+function startOfDay(date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function startOfMonth(date) {
+  return new Date(date.getFullYear(), date.getMonth(), 1);
+}
+
+function startOfYear(date) {
+  return new Date(date.getFullYear(), 0, 1);
+}
+
+function addDays(date, amount) {
+  const next = new Date(date);
+  next.setDate(next.getDate() + amount);
+  return next;
+}
+
+function addMonths(date, amount) {
+  return new Date(date.getFullYear(), date.getMonth() + amount, 1);
+}
+
+function addYears(date, amount) {
+  return new Date(date.getFullYear() + amount, 0, 1);
+}
+
+function startOfIsoWeek(date) {
+  const d = startOfDay(date);
+  const day = d.getDay();
+  const diff = (day === 0 ? -6 : 1) - day;
+  d.setDate(d.getDate() + diff);
+  return d;
+}
+
+function startOfWeekSunday(date) {
+  const d = startOfDay(date);
+  d.setDate(d.getDate() - d.getDay());
+  return d;
+}
+
+function formatCapitalPeriodLabel(date, unit) {
+  if (unit === 'years') return String(date.getFullYear());
+  if (unit === 'months') return `${CAPITAL_MONTH_NAMES_ES[date.getMonth()]} ${date.getFullYear()}`;
+  const label = date.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
+  return label.replace('.', '');
+}
+
+function roundMoney(value) {
+  return Number(Number(value).toFixed(2));
+}
+
+function computeCapitalAtDate(events, initialCapital, date, inclusive) {
+  const end = clampValidDate(date);
+  if (!end) return roundMoney(initialCapital);
+  const isInclusive = inclusive !== false;
+  let running = Number.isFinite(initialCapital) ? initialCapital : 0;
+  (Array.isArray(events) ? events : []).forEach(item => {
+    if (!item || !(item.date instanceof Date) || !Number.isFinite(item.date.getTime()) || !Number.isFinite(item.value)) return;
+    if (isInclusive ? item.date <= end : item.date < end) running += item.value;
+  });
+  return roundMoney(running);
+}
+
+function buildCapitalSeriesByUnit({ events, initialCapital, capitalStartDate, unit, startBoundary, periodsCount, endDate, includeBaselinePoint }) {
+  const safeUnit = unit === 'years' ? 'years' : (unit === 'months' ? 'months' : 'days');
+  const now = clampValidDate(endDate) || new Date();
+  let start = clampValidDate(startBoundary);
+  if (!start) start = safeUnit === 'years' ? startOfYear(now) : (safeUnit === 'months' ? startOfMonth(now) : startOfDay(now));
+
+  const baselineDate = clampValidDate(capitalStartDate);
+  const startFloor = safeUnit === 'years' ? startOfYear(start) : (safeUnit === 'months' ? startOfMonth(start) : startOfDay(start));
+  let effectiveStart = startFloor;
+  let allowBaseline = includeBaselinePoint === true;
+
+  if (baselineDate) {
+    const baselineFloor = safeUnit === 'years' ? startOfYear(baselineDate) : (safeUnit === 'months' ? startOfMonth(baselineDate) : startOfDay(baselineDate));
+    if (effectiveStart < baselineFloor) {
+      effectiveStart = baselineFloor;
+      allowBaseline = false;
+    }
   }
-  if (!Number.isFinite(start.getTime())) return null;
-  return { start, end };
+
+  const netByPeriodStart = new Map();
+  (Array.isArray(events) ? events : []).forEach(item => {
+    if (!item || !(item.date instanceof Date) || !Number.isFinite(item.date.getTime()) || !Number.isFinite(item.value)) return;
+    if (baselineDate && item.date < baselineDate) return;
+    if (item.date < effectiveStart || item.date > now) return;
+    const periodStart = safeUnit === 'years' ? startOfYear(item.date) : (safeUnit === 'months' ? startOfMonth(item.date) : startOfDay(item.date));
+    const key = periodStart.getTime();
+    netByPeriodStart.set(key, (netByPeriodStart.get(key) || 0) + item.value);
+  });
+
+  const baseCapital = computeCapitalAtDate(events, initialCapital, effectiveStart, false);
+  const labels = [];
+  const values = [];
+  let running = baseCapital;
+
+  if (allowBaseline) {
+    const prev = safeUnit === 'years' ? addYears(effectiveStart, -1) : (safeUnit === 'months' ? addMonths(effectiveStart, -1) : addDays(effectiveStart, -1));
+    labels.push(formatCapitalPeriodLabel(prev, safeUnit));
+    values.push(baseCapital);
+  }
+
+  const count = Number.isFinite(periodsCount) && periodsCount > 0 ? Math.floor(periodsCount) : 1;
+  for (let i = 0; i < count; i++) {
+    const periodStart = safeUnit === 'years' ? addYears(effectiveStart, i) : (safeUnit === 'months' ? addMonths(effectiveStart, i) : addDays(effectiveStart, i));
+    const key = periodStart.getTime();
+    running += netByPeriodStart.get(key) || 0;
+    labels.push(formatCapitalPeriodLabel(periodStart, safeUnit));
+    values.push(roundMoney(running));
+  }
+
+  let peak = values.length ? values[0] : baseCapital;
+  const drawdownPercents = values.map(value => {
+    if (!Number.isFinite(value)) return 0;
+    if (!Number.isFinite(peak) || value > peak) peak = value;
+    if (peak === 0) return 0;
+    return Number((((value - peak) / peak) * 100).toFixed(2));
+  });
+
+  const finalCapital = values.length ? values[values.length - 1] : baseCapital;
+  const pnl = roundMoney(finalCapital - baseCapital);
+  const roi = baseCapital !== 0 ? Number(((pnl / baseCapital) * 100).toFixed(2)) : null;
+
+  return {
+    unit: safeUnit,
+    axisTitle: safeUnit === 'years' ? 'Años' : (safeUnit === 'months' ? 'Meses' : 'Días'),
+    labels,
+    values,
+    pnl,
+    roi,
+    baseCapital,
+    finalCapital,
+    drawdownPercents
+  };
 }
 
 function applyStatsTimeFilterToTrades(trades) {
@@ -1769,13 +1916,13 @@ function calculateCapitalEvolutionData(range) {
   const snapshot = typeof getTradingViewSnapshot === 'function' ? getTradingViewSnapshot() : null;
 
   if (mode !== 'all') {
-    const initialCapitalRaw = localStorage.getItem('initialCapital');
-    if (initialCapitalRaw === null || initialCapitalRaw === '') {
-      return { labels: [], values: [], pnl: null, roi: null, baseCapital: null, finalCapital: null };
-    }
+    let initialCapital = parseFloat(localStorage.getItem('initialCapital'));
+    if (!Number.isFinite(initialCapital)) initialCapital = 0;
 
-    const initialCapital = parseFloat(initialCapitalRaw);
-    if (!Number.isFinite(initialCapital)) {
+    const trades = JSON.parse(localStorage.getItem('trades')) || [];
+    const movements = JSON.parse(localStorage.getItem('capitalMovements')) || [];
+
+    if (initialCapital === 0 && trades.length === 0 && movements.length === 0) {
       return { labels: [], values: [], pnl: null, roi: null, baseCapital: null, finalCapital: null };
     }
 
@@ -1784,9 +1931,6 @@ function calculateCapitalEvolutionData(range) {
     if (capitalStartDate && Number.isNaN(capitalStartDate.getTime())) {
       capitalStartDate = null;
     }
-
-    const trades = JSON.parse(localStorage.getItem('trades')) || [];
-    const movements = JSON.parse(localStorage.getItem('capitalMovements')) || [];
 
     return calculateCapitalEvolutionDataFromCollections({ initialCapital, capitalStartDate, trades, movements, range });
   }
@@ -1806,6 +1950,9 @@ function calculateCapitalEvolutionData(range) {
 
 function calculateCapitalEvolutionDataFromCollections({ initialCapital, capitalStartDate, trades, movements, range }) {
   if (!Number.isFinite(initialCapital)) {
+    initialCapital = 0;
+  }
+  if (initialCapital === 0 && (!trades || trades.length === 0) && (!movements || movements.length === 0)) {
     return { labels: [], values: [], pnl: null, roi: null, baseCapital: null, finalCapital: null };
   }
 
@@ -1849,58 +1996,55 @@ function calculateCapitalEvolutionDataFromCollections({ initialCapital, capitalS
   });
   events.sort((a, b) => a.date.getTime() - b.date.getTime());
 
+  const filter = typeof statsTimeFilterState === 'object' && statsTimeFilterState ? statsTimeFilterState : null;
+  const isLastMode = filter && filter.mode === 'last';
+  const filterValue = isLastMode ? Number(filter.value) : NaN;
+  const filterUnit = isLastMode && (filter.unit === 'days' || filter.unit === 'months' || filter.unit === 'years') ? filter.unit : null;
+
+  if (isLastMode && Number.isFinite(filterValue) && filterValue > 0 && filterUnit) {
+    const nowAnchor = filterUnit === 'years' ? startOfYear(now) : (filterUnit === 'months' ? startOfMonth(now) : startOfDay(now));
+    const startBoundary = filterUnit === 'years'
+      ? addYears(nowAnchor, -(Math.floor(filterValue) - 1))
+      : (filterUnit === 'months'
+        ? addMonths(nowAnchor, -(Math.floor(filterValue) - 1))
+        : addDays(nowAnchor, -(Math.floor(filterValue) - 1)));
+
+    return buildCapitalSeriesByUnit({
+      events,
+      initialCapital,
+      capitalStartDate,
+      unit: filterUnit,
+      startBoundary,
+      periodsCount: Math.floor(filterValue),
+      endDate: now,
+      includeBaselinePoint: true
+    });
+  }
+
   let effectiveStart = rangeStart;
   if (!effectiveStart) {
-    effectiveStart = new Date(now.getFullYear(), 0, 1);
-  }
-
-  let runningCapital = initialCapital;
-  events.forEach(item => {
-    if (item.date < effectiveStart) {
-      runningCapital += item.value;
+    if (capitalStartDate) {
+      effectiveStart = startOfMonth(capitalStartDate);
+    } else if (events.length > 0) {
+      effectiveStart = startOfMonth(events[0].date);
+    } else {
+      effectiveStart = new Date(now.getFullYear(), 0, 1);
     }
-  });
-  const baseCapital = Number(runningCapital.toFixed(2));
-
-  const monthlyNet = new Map();
-  events.forEach(item => {
-    if (item.date < effectiveStart || item.date > now) return;
-    const year = item.date.getFullYear();
-    const month = item.date.getMonth();
-    const key = `${year}-${month}`;
-    monthlyNet.set(key, (monthlyNet.get(key) || 0) + item.value);
-  });
-
-  const labels = [];
-  const values = [];
-  const cursor = new Date(effectiveStart.getFullYear(), effectiveStart.getMonth(), 1);
-  const endCursor = new Date(now.getFullYear(), now.getMonth(), 1);
-  while (cursor <= endCursor) {
-    const key = `${cursor.getFullYear()}-${cursor.getMonth()}`;
-    runningCapital += monthlyNet.get(key) || 0;
-    labels.push(`${CAPITAL_MONTH_NAMES_ES[cursor.getMonth()]} ${cursor.getFullYear()}`);
-    values.push(Number(runningCapital.toFixed(2)));
-    cursor.setMonth(cursor.getMonth() + 1);
+  } else {
+    effectiveStart = startOfMonth(effectiveStart);
   }
 
-  if (!labels.length) {
-    labels.push(`${CAPITAL_MONTH_NAMES_ES[now.getMonth()]} ${now.getFullYear()}`);
-    values.push(Number(runningCapital.toFixed(2)));
-  }
-
-  let peak = values.length ? values[0] : baseCapital;
-  const drawdownPercents = values.map(value => {
-    if (!Number.isFinite(value)) return 0;
-    if (!Number.isFinite(peak) || value > peak) peak = value;
-    if (peak === 0) return 0;
-    return Number((((value - peak) / peak) * 100).toFixed(2));
+  const monthsSpan = (now.getFullYear() - effectiveStart.getFullYear()) * 12 + (now.getMonth() - effectiveStart.getMonth()) + 1;
+  return buildCapitalSeriesByUnit({
+    events,
+    initialCapital,
+    capitalStartDate,
+    unit: 'months',
+    startBoundary: effectiveStart,
+    periodsCount: Math.max(1, monthsSpan),
+    endDate: now,
+    includeBaselinePoint: false
   });
-
-  const finalCapital = values.length ? values[values.length - 1] : Number(runningCapital.toFixed(2));
-  const pnl = Number((finalCapital - baseCapital).toFixed(2));
-  const roi = baseCapital !== 0 ? Number(((pnl / baseCapital) * 100).toFixed(2)) : null;
-
-  return { labels, values, pnl, roi, baseCapital, finalCapital, drawdownPercents };
 }
 
 function renderCapitalEvolutionChart(range) {
@@ -1914,7 +2058,7 @@ function renderCapitalEvolutionChart(range) {
     return;
   }
 
-  const { labels, values, pnl, roi, baseCapital, drawdownPercents } = calculateCapitalEvolutionData(range);
+  const { labels, values, pnl, roi, baseCapital, drawdownPercents, axisTitle } = calculateCapitalEvolutionData(range);
   const hasSeries = labels.length && values.length;
 
   if (!hasSeries) {
@@ -2047,6 +2191,15 @@ function renderCapitalEvolutionChart(range) {
       capitalEvolutionChartInstance.options.scales.yDrawdown.suggestedMin = Math.min(minDrawdown, -0.01);
       capitalEvolutionChartInstance.options.scales.yDrawdown.suggestedMax = 0;
     }
+    if (capitalEvolutionChartInstance.options.scales.x && capitalEvolutionChartInstance.options.scales.x.title) {
+      capitalEvolutionChartInstance.options.scales.x.title.text = typeof axisTitle === 'string' && axisTitle ? axisTitle : 'Meses';
+    }
+    if (capitalEvolutionChartInstance.options.scales.x && capitalEvolutionChartInstance.options.scales.x.ticks) {
+      const shouldSkip = labels.length > 18;
+      capitalEvolutionChartInstance.options.scales.x.ticks.autoSkip = shouldSkip;
+      capitalEvolutionChartInstance.options.scales.x.ticks.maxRotation = labels.length > 35 ? 45 : 0;
+      capitalEvolutionChartInstance.options.scales.x.ticks.minRotation = labels.length > 35 ? 45 : 0;
+    }
     capitalEvolutionChartInstance.update();
     return;
   }
@@ -2062,11 +2215,11 @@ function renderCapitalEvolutionChart(range) {
       maintainAspectRatio: false,
       scales: {
         x: {
-          title: { display: true, text: 'Meses' },
+          title: { display: true, text: typeof axisTitle === 'string' && axisTitle ? axisTitle : 'Meses' },
           ticks: {
-            autoSkip: false,
-            maxRotation: 0,
-            minRotation: 0
+            autoSkip: labels.length > 18,
+            maxRotation: labels.length > 35 ? 45 : 0,
+            minRotation: labels.length > 35 ? 45 : 0
           }
         },
         y: {
@@ -2405,24 +2558,39 @@ function renderWeekdayPnlChart(trades) {
   const canvas = document.getElementById('weekdayPnlChart');
   if (!canvas || typeof Chart === 'undefined') return;
 
-  const labels = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie'];
-  const sums = new Array(5).fill(0);
+  const labels = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+  const sums = new Array(7).fill(0);
   trades.forEach(trade => {
     const pnl = resolveTradePnl(trade);
     if (!Number.isFinite(pnl)) return;
     const date = getTradeEffectiveDate(trade);
     if (!date) return;
-    const dow = (date.getDay() + 6) % 7;
-    if (dow > 4) return;
+    const dow = date.getDay(); // 0 (Domingo) - 6 (Sábado)
     sums[dow] += pnl;
   });
 
-  const data = sums.map(value => Number(value.toFixed(2)));
+  // Reordenar para empezar en Lunes si se prefiere, pero el estándar JS es Domingo=0
+  // Para visualización financiera suele ser L-D. Ajustemos a L-D.
+  // JS getDay(): 0=Dom, 1=Lun, ..., 6=Sáb
+  // Queremos: 0=Lun, 1=Mar, ..., 5=Sáb, 6=Dom
+  
+  const displayLabels = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+  const displaySums = [
+      sums[1], // Lun
+      sums[2], // Mar
+      sums[3], // Mié
+      sums[4], // Jue
+      sums[5], // Vie
+      sums[6], // Sáb
+      sums[0]  // Dom
+  ];
+
+  const data = displaySums.map(value => Number(value.toFixed(2)));
   const bg = data.map(value => value >= 0 ? 'rgba(46, 204, 113, 0.6)' : 'rgba(231, 76, 60, 0.6)');
   const border = data.map(value => value >= 0 ? 'rgba(46, 204, 113, 0.9)' : 'rgba(231, 76, 60, 0.9)');
 
   if (weekdayPnlChartInstance) {
-    weekdayPnlChartInstance.data.labels = labels;
+    weekdayPnlChartInstance.data.labels = displayLabels;
     weekdayPnlChartInstance.data.datasets[0].data = data;
     weekdayPnlChartInstance.data.datasets[0].backgroundColor = bg;
     weekdayPnlChartInstance.data.datasets[0].borderColor = border;
@@ -2433,7 +2601,7 @@ function renderWeekdayPnlChart(trades) {
   weekdayPnlChartInstance = new Chart(canvas.getContext('2d'), {
     type: 'bar',
     data: {
-      labels,
+      labels: displayLabels,
       datasets: [{
         label: 'PnL (MXN)',
         data,
@@ -2687,7 +2855,7 @@ function renderMonthlyPnlHeatmap(trades) {
   }
 
   for (let day = 1; day <= daysInMonth; day++) {
-    const pnl = pnlByDay.has(day) ? Number(pnlByDay.get(day).toFixed(2)) : null;
+    const pnl = pnlByDay.has(day) ? pnlByDay.get(day) : null;
     const tradesCount = tradesCountByDay.has(day) ? tradesCountByDay.get(day) : 0;
     const cell = document.createElement('button');
     cell.type = 'button';
@@ -2725,7 +2893,7 @@ function renderMonthlyPnlHeatmap(trades) {
 
     const pnlEl = document.createElement('div');
     pnlEl.className = 'leading-none opacity-80';
-    pnlEl.textContent = pnl === null ? '' : `${pnl >= 0 ? '+' : ''}${Math.abs(pnl).toFixed(0)}`;
+    pnlEl.textContent = pnl === null ? '' : (pnl > 0 ? '+' : '') + parseFloat(pnl).toFixed(2).replace(/\.?0+$/, '');
     cell.appendChild(pnlEl);
 
     if (pnl !== null && tradesCount > 0) {
@@ -3372,85 +3540,44 @@ function updateCapitalHeader(period) {
     welcomeMessage.textContent = getTradingViewMode() === 'all' ? 'Hola, Todas las cuentas' : `Hola, ${username}`;
   }
 
-  let initialCapital = snapshot.initialCapital;
-  let trades = Array.isArray(snapshot.trades) ? snapshot.trades : [];
-  if (trades.length === 0) {
-    // Sin trades, mostrar solo el saldo inicial
-    const balanceElement = document.getElementById('capital-balance');
-    const roiElement = document.getElementById('capital-roi');
-    if (balanceElement) {
-      balanceElement.textContent = `$${initialCapital.toFixed(2)}`;
-      balanceElement.style.color = initialCapital >= 0 ? '#2ecc71' : '#e74c3c';
-      balanceElement.style.fontWeight = 'bold';
-      balanceElement.style.fontSize = '2.2em';
-      balanceElement.style.display = 'none'; // Ocultar Saldo Actual
-    }
-    if (roiElement) {
-      roiElement.textContent = `PNL del período: $0.00`; // Mostrar PNL 0 si no hay trades
-      roiElement.style.color = '#00b894';
-      roiElement.style.fontWeight = 'bold';
-    }
-    return;
-  }
+  let initialCapital = Number(snapshot && snapshot.initialCapital);
+  if (!Number.isFinite(initialCapital)) initialCapital = 0;
 
-  // Ordenar trades por fecha de apertura
-  trades = trades.slice().sort((a, b) => new Date(a.openTime) - new Date(b.openTime));
+  const trades = snapshot && Array.isArray(snapshot.trades) ? snapshot.trades : [];
+  const movements = snapshot && Array.isArray(snapshot.capitalMovements) ? snapshot.capitalMovements : [];
+  const capitalStartDate = snapshot && snapshot.capitalStartDate ? clampValidDate(new Date(snapshot.capitalStartDate)) : null;
+  const baselineDate = capitalStartDate || null;
 
-  // Agrupar trades por periodo
-  function getPeriodKey(date, period) {
-    const d = new Date(date);
-    if (period === 'monthly') {
-      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-    } else if (period === 'yearly') {
-      return `${d.getFullYear()}`;
-    } else if (period === 'weekly') {
-      // Semana ISO: lunes como primer día
-      const temp = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-      const dayNum = temp.getUTCDay() || 7;
-      temp.setUTCDate(temp.getUTCDate() + 4 - dayNum);
-      const yearStart = new Date(Date.UTC(temp.getUTCFullYear(), 0, 1));
-      const weekNum = Math.ceil((((temp - yearStart) / 86400000) + 1) / 7);
-      return `${temp.getUTCFullYear()}-W${String(weekNum).padStart(2, '0')}`;
-    }
-    return 'all';
-  }
-
-  // Agrupar trades por periodo
-  const periods = {};
+  const events = [];
   trades.forEach(trade => {
-    const key = getPeriodKey(trade.openTime, period);
-    if (!periods[key]) periods[key] = [];
-    periods[key].push(trade);
+    const date = typeof getTradeEffectiveDate === 'function' ? getTradeEffectiveDate(trade) : null;
+    if (!date || !Number.isFinite(date.getTime())) return;
+    if (baselineDate && date < baselineDate) return;
+    const value = parseFloat(trade && trade.resultMxn);
+    if (!Number.isFinite(value)) return;
+    events.push({ date, value });
   });
-  const periodKeys = Object.keys(periods).sort();
-
-  // Calcular balances acumulativos por periodo
-  let balances = [];
-  let lastBalance = initialCapital;
-  periodKeys.forEach((key, idx) => {
-    const pnl = periods[key].reduce((sum, t) => sum + parseFloat(t.resultMxn), 0);
-    const balance = lastBalance + pnl;
-    balances.push({ key, pnl, balance });
-    lastBalance = balance;
+  movements.forEach(movement => {
+    if (!movement) return;
+    const date = movement.date ? new Date(movement.date) : null;
+    if (!date || Number.isNaN(date.getTime())) return;
+    if (baselineDate && date < baselineDate) return;
+    const rawAmount = parseFloat(movement.amount);
+    if (!Number.isFinite(rawAmount)) return;
+    const value = movement.type === 'retiro' ? -Math.abs(rawAmount) : Math.abs(rawAmount);
+    events.push({ date, value });
   });
+  events.sort((a, b) => a.date.getTime() - b.date.getTime());
 
-  // Determinar el periodo actual
   const now = new Date();
-  const currentKey = getPeriodKey(now, period);
-  let currentIdx = periodKeys.indexOf(currentKey);
+  const periodMode = period === 'yearly' ? 'yearly' : (period === 'weekly' ? 'weekly' : 'monthly');
+  const periodStart = periodMode === 'yearly' ? startOfYear(now) : (periodMode === 'weekly' ? startOfWeekSunday(now) : startOfMonth(now));
 
-  let balance, ganancia;
-  if (currentIdx === -1) {
-    // No hay trades en el periodo actual
-    balance = balances.length > 0 ? balances[balances.length - 1].balance : initialCapital;
-    ganancia = 0;
-  } else {
-    const current = balances[currentIdx];
-    balance = current.balance;
-    ganancia = current.pnl;
-  }
+  const currentBalance = computeCapitalAtDate(events, initialCapital, now, true);
+  const baseBalance = computeCapitalAtDate(events, initialCapital, periodStart, false);
+  const ganancia = roundMoney(currentBalance - baseBalance);
+  const balance = currentBalance;
 
-  // Mostrar datos
   const balanceElement = document.getElementById('capital-balance');
   const roiElement = document.getElementById('capital-roi');
   if (balanceElement) {
@@ -3458,7 +3585,7 @@ function updateCapitalHeader(period) {
     balanceElement.style.color = balance >= initialCapital ? '#2ecc71' : '#e74c3c';
     balanceElement.style.fontWeight = 'bold';
     balanceElement.style.fontSize = '2.2em';
-    balanceElement.style.display = 'none'; // Ocultar Saldo Actual
+    balanceElement.style.display = 'none';
   }
   if (roiElement) {
     roiElement.textContent = `PNL del período: ${ganancia >= 0 ? '+' : ''}$${ganancia.toFixed(2)}`; // Añadir etiqueta y mostrar solo la ganancia/pérdida
@@ -3544,7 +3671,7 @@ function showEditTradeModal(index) {
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Lotes</label>
-              <input type="number" step="0.001" name="lots" value="${trade.lots}" required class="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 dark:text-white">
+              <input type="number" step="0.00000001" min="0.00000001" name="lots" value="${trade.lots}" required class="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 dark:text-white">
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Margen (MXN)</label>
@@ -3598,21 +3725,35 @@ function showEditTradeModal(index) {
             <div class="col-span-1 md:col-span-2">
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Estrategia</label>
               <select name="strategy" required class="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 dark:text-white">
-                <option value="Script CCI" ${trade.strategy === 'Script CCI' ? 'selected' : ''}>Script CCI</option>
-                <option value="Script RSI" ${trade.strategy === 'Script RSI' ? 'selected' : ''}>Script RSI</option>
-                <option value="Script MACD" ${trade.strategy === 'Script MACD' ? 'selected' : ''}>Script MACD</option>
-                <option value="Script AO" ${trade.strategy === 'Script AO' ? 'selected' : ''}>Script AO</option>
-                <option value="Script TII" ${trade.strategy === 'Script TII' ? 'selected' : ''}>Script TII</option>
-                <option value="Script DeMarker" ${trade.strategy === 'Script DeMarker' ? 'selected' : ''}>Script DeMarker</option>
-                <option value="Script Estocastico" ${trade.strategy === 'Script Estocastico' ? 'selected' : ''}>Script Estocastico</option>
-                <option value="Script Cruce de MMs" ${trade.strategy === 'Script Cruce de MMs' ? 'selected' : ''}>Script Cruce de MMs</option>
-                <option value="Script SAR" ${trade.strategy === 'Script SAR' ? 'selected' : ''}>Script SAR</option>
-                <option value="Script BMSB" ${trade.strategy === 'Script BMSB' ? 'selected' : ''}>Script BMSB</option>
-                <option value="Script CDM-RSI" ${trade.strategy === 'Script CDM-RSI' ? 'selected' : ''}>Script CDM-RSI</option>
-                <option value="Script EMA Grupos" ${trade.strategy === 'Script EMA Grupos' ? 'selected' : ''}>Script EMA Grupos</option>
-                <option value="Script FCT" ${trade.strategy === 'Script FCT' ? 'selected' : ''}>Script FCT</option>
-                <option value="Señales app" ${trade.strategy === 'Señales app' ? 'selected' : ''}>Señales app</option>
-                <option value="Análisis técnico" ${trade.strategy === 'Análisis técnico' ? 'selected' : ''}>Análisis técnico</option>
+                ${(() => {
+                  let strategies = [];
+                  try {
+                    strategies = JSON.parse(localStorage.getItem('strategies')) || [];
+                  } catch (e) {
+                    console.error('Error loading strategies', e);
+                  }
+                  
+                  if (!Array.isArray(strategies) || strategies.length === 0) {
+                     strategies = [
+                        {name: "Script CCI"}, {name: "Script RSI"}, {name: "Script MACD"}, 
+                        {name: "Script AO"}, {name: "Script TII"}, {name: "Script DeMarker"}, 
+                        {name: "Script Estocastico"}, {name: "Script Cruce de MMs"}, 
+                        {name: "Script SAR"}, {name: "Script BMSB"}, {name: "Script CDM-RSI"}, 
+                        {name: "Script EMA Grupos"}, {name: "Script FCT"}, 
+                        {name: "Señales app"}, {name: "Análisis técnico"}
+                     ];
+                  }
+                  
+                  let options = strategies.map(s => 
+                    `<option value="${s.name}" ${trade.strategy === s.name ? 'selected' : ''}>${s.name}</option>`
+                  ).join('');
+
+                  const exists = strategies.some(s => s.name === trade.strategy);
+                  if (trade.strategy && !exists) {
+                    options += `<option value="${trade.strategy}" selected>${trade.strategy} (Archivada)</option>`;
+                  }
+                  return options;
+                })()}
               </select>
             </div>
             <div class="col-span-1 md:col-span-2">
@@ -3760,6 +3901,20 @@ function getCapitalMovementsNormalized() {
   return normalized;
 }
 
+function getCurrentBalance() {
+  const initialCapital = parseFloat(localStorage.getItem('initialCapital')) || 0;
+  const trades = JSON.parse(localStorage.getItem('trades')) || [];
+  const movements = JSON.parse(localStorage.getItem('capitalMovements')) || [];
+
+  const tradesPnl = trades.reduce((sum, trade) => sum + (parseFloat(trade.resultMxn) || 0), 0);
+  const movementsPnl = movements.reduce((sum, m) => {
+    const val = parseFloat(m.amount) || 0;
+    return sum + (m.type === 'retiro' ? -val : val);
+  }, 0);
+
+  return initialCapital + tradesPnl + movementsPnl;
+}
+
 // Función para añadir un nuevo movimiento de capital (depósito/retiro)
 function addMovement() {
   const type = document.getElementById('movement-type').value;
@@ -3768,6 +3923,14 @@ function addMovement() {
   if (isNaN(amount) || amount <= 0) {
     alert('Por favor, ingresa un monto válido.');
     return;
+  }
+
+  if (type === 'retiro') {
+    const currentBalance = getCurrentBalance();
+    if (amount > currentBalance) {
+      alert(`Fondos insuficientes. Tu saldo actual es $${currentBalance.toFixed(2)} MXN.`);
+      return;
+    }
   }
 
   const dateInput = document.getElementById('movement-date');
@@ -4276,7 +4439,7 @@ function renderDiary() {
             
             <div class="flex justify-between items-center">
               <span class="text-sm text-gray-500 dark:text-gray-400">Lotes</span>
-              <span class="text-sm font-medium text-gray-900 dark:text-white">${parseFloat(trade.lots).toFixed(3)}</span>
+              <span class="text-sm font-medium text-gray-900 dark:text-white">${parseFloat(trade.lots).toFixed(8).replace(/\.?0+$/, '')}</span>
             </div>
 
             <div class="flex justify-between items-center">

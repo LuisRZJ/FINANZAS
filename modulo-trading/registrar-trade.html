@@ -376,7 +376,7 @@
                     <div class="form-group">
                         <label for="lots" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tamaño
                             (Lotes)</label>
-                        <input type="number" id="lots" step="0.001" min="0.001" required
+                        <input type="number" id="lots" step="0.00000001" min="0.00000001" required
                             class="form-input w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-colors">
                     </div>
 
@@ -471,6 +471,53 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <button type="button" id="calc-fab-btn"
+        class="fixed bottom-5 left-5 z-40 w-14 h-14 rounded-full bg-orange-600 hover:bg-orange-700 text-white shadow-lg flex items-center justify-center text-2xl focus:outline-none focus:ring-2 focus:ring-orange-500"
+        aria-label="Abrir calculadora">
+        ÷
+    </button>
+
+    <div id="calc-overlay" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 hidden" aria-hidden="true"></div>
+    <div id="calc-modal" class="fixed bottom-24 left-5 z-50 hidden w-[19rem] max-w-[calc(100vw-2.5rem)]">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+                <div class="font-semibold text-gray-900 dark:text-gray-100">Calculadora</div>
+                <button type="button" id="calc-close-btn"
+                    class="w-9 h-9 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center text-gray-700 dark:text-gray-200"
+                    aria-label="Cerrar">✕</button>
+            </div>
+            <div class="p-4">
+                <input id="calc-display" type="text" inputmode="decimal" autocomplete="off" autocapitalize="off" spellcheck="false"
+                    class="w-full px-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-right text-xl font-semibold text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    value="0" aria-label="Display de calculadora">
+                <div class="grid grid-cols-4 gap-2 mt-3">
+                    <button type="button" class="calc-btn col-span-2 px-3 py-3 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 font-semibold" data-action="clear">C</button>
+                    <button type="button" class="calc-btn px-3 py-3 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 font-semibold" data-action="backspace">⌫</button>
+                    <button type="button" class="calc-btn px-3 py-3 rounded-lg bg-orange-600 hover:bg-orange-700 text-white font-semibold" data-action="operator" data-value="/">÷</button>
+
+                    <button type="button" class="calc-btn px-3 py-3 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 font-semibold" data-action="digit" data-value="7">7</button>
+                    <button type="button" class="calc-btn px-3 py-3 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 font-semibold" data-action="digit" data-value="8">8</button>
+                    <button type="button" class="calc-btn px-3 py-3 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 font-semibold" data-action="digit" data-value="9">9</button>
+                    <button type="button" class="calc-btn px-3 py-3 rounded-lg bg-orange-600 hover:bg-orange-700 text-white font-semibold" data-action="operator" data-value="*">×</button>
+
+                    <button type="button" class="calc-btn px-3 py-3 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 font-semibold" data-action="digit" data-value="4">4</button>
+                    <button type="button" class="calc-btn px-3 py-3 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 font-semibold" data-action="digit" data-value="5">5</button>
+                    <button type="button" class="calc-btn px-3 py-3 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 font-semibold" data-action="digit" data-value="6">6</button>
+                    <button type="button" class="calc-btn px-3 py-3 rounded-lg bg-orange-600 hover:bg-orange-700 text-white font-semibold" data-action="operator" data-value="-">−</button>
+
+                    <button type="button" class="calc-btn px-3 py-3 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 font-semibold" data-action="digit" data-value="1">1</button>
+                    <button type="button" class="calc-btn px-3 py-3 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 font-semibold" data-action="digit" data-value="2">2</button>
+                    <button type="button" class="calc-btn px-3 py-3 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 font-semibold" data-action="digit" data-value="3">3</button>
+                    <button type="button" class="calc-btn px-3 py-3 rounded-lg bg-orange-600 hover:bg-orange-700 text-white font-semibold" data-action="operator" data-value="+">+</button>
+
+                    <button type="button" class="calc-btn col-span-2 px-3 py-3 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 font-semibold" data-action="digit" data-value="0">0</button>
+                    <button type="button" class="calc-btn px-3 py-3 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 font-semibold" data-action="dot">.</button>
+                    <button type="button" class="calc-btn px-3 py-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold" data-action="equals">=</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -627,6 +674,248 @@
             setActiveLink();
             setInterval(updateDateTime, 1000);
             updateDateTime();
+
+            (function initCalculator() {
+                const fab = document.getElementById('calc-fab-btn');
+                const modal = document.getElementById('calc-modal');
+                const overlay = document.getElementById('calc-overlay');
+                const closeBtn = document.getElementById('calc-close-btn');
+                const display = document.getElementById('calc-display');
+                if (!fab || !modal || !overlay || !closeBtn || !display) return;
+
+                const state = { firstValue: null, operator: null, waitingSecond: false };
+
+                function sanitizeNumericText(text) {
+                    const raw = String(text || '').replace(/\s+/g, '').replace(/,/g, '.');
+                    let out = '';
+                    let dotUsed = false;
+                    let signUsed = false;
+                    for (let i = 0; i < raw.length; i++) {
+                        const ch = raw[i];
+                        if (ch >= '0' && ch <= '9') {
+                            out += ch;
+                            continue;
+                        }
+                        if (ch === '.' && !dotUsed) {
+                            dotUsed = true;
+                            out += ch;
+                            continue;
+                        }
+                        if (ch === '-' && out.length === 0 && !signUsed) {
+                            signUsed = true;
+                            out += ch;
+                        }
+                    }
+                    if (out === '' || out === '-' || out === '.' || out === '-.') return '';
+                    return out;
+                }
+
+                function parseDisplay() {
+                    const raw = display.value === '' ? '0' : display.value;
+                    const parsed = Number(String(raw).replace(/,/g, '.'));
+                    return Number.isFinite(parsed) ? parsed : 0;
+                }
+
+                function setDisplay(value) {
+                    display.value = value;
+                }
+
+                function open() {
+                    overlay.classList.remove('hidden');
+                    modal.classList.remove('hidden');
+                    overlay.setAttribute('aria-hidden', 'false');
+                    document.body.style.overflow = 'hidden';
+                    display.focus();
+                    display.select();
+                }
+
+                function close() {
+                    overlay.classList.add('hidden');
+                    modal.classList.add('hidden');
+                    overlay.setAttribute('aria-hidden', 'true');
+                    document.body.style.overflow = '';
+                    fab.focus();
+                }
+
+                function clearAll() {
+                    state.firstValue = null;
+                    state.operator = null;
+                    state.waitingSecond = false;
+                    setDisplay('0');
+                }
+
+                function appendDigit(digit) {
+                    const current = display.value;
+                    if (current === 'Error') clearAll();
+                    if (state.waitingSecond) {
+                        state.waitingSecond = false;
+                        setDisplay(String(digit));
+                        return;
+                    }
+                    if (current === '0') {
+                        setDisplay(String(digit));
+                        return;
+                    }
+                    setDisplay(current + String(digit));
+                }
+
+                function appendDot() {
+                    const current = display.value;
+                    if (current === 'Error') clearAll();
+                    if (state.waitingSecond) {
+                        state.waitingSecond = false;
+                        setDisplay('0.');
+                        return;
+                    }
+                    if (current.includes('.')) return;
+                    setDisplay(current === '' ? '0.' : (current + '.'));
+                }
+
+                function backspace() {
+                    const current = display.value;
+                    if (current === 'Error') {
+                        clearAll();
+                        return;
+                    }
+                    if (state.waitingSecond) {
+                        state.waitingSecond = false;
+                        setDisplay('0');
+                        return;
+                    }
+                    if (current.length <= 1 || (current.length === 2 && current.startsWith('-'))) {
+                        setDisplay('0');
+                        return;
+                    }
+                    setDisplay(current.slice(0, -1));
+                }
+
+                function compute(a, b, op) {
+                    if (op === '+') return a + b;
+                    if (op === '-') return a - b;
+                    if (op === '*') return a * b;
+                    if (op === '/') return b === 0 ? null : a / b;
+                    return null;
+                }
+
+                function setOperator(nextOperator) {
+                    if (display.value === 'Error') clearAll();
+                    const currentValue = parseDisplay();
+                    if (state.operator && !state.waitingSecond) {
+                        const result = compute(state.firstValue ?? 0, currentValue, state.operator);
+                        if (result === null || !Number.isFinite(result)) {
+                            setDisplay('Error');
+                            state.firstValue = null;
+                            state.operator = null;
+                            state.waitingSecond = false;
+                            return;
+                        }
+                        state.firstValue = result;
+                        setDisplay(String(result));
+                    } else if (state.firstValue === null) {
+                        state.firstValue = currentValue;
+                    }
+                    state.operator = nextOperator;
+                    state.waitingSecond = true;
+                }
+
+                function equals() {
+                    if (display.value === 'Error') {
+                        clearAll();
+                        return;
+                    }
+                    if (!state.operator || state.firstValue === null) return;
+                    const secondValue = parseDisplay();
+                    const result = compute(state.firstValue, secondValue, state.operator);
+                    if (result === null || !Number.isFinite(result)) {
+                        setDisplay('Error');
+                        state.firstValue = null;
+                        state.operator = null;
+                        state.waitingSecond = false;
+                        return;
+                    }
+                    setDisplay(String(result));
+                    state.firstValue = result;
+                    state.operator = null;
+                    state.waitingSecond = false;
+                }
+
+                function normalizeDisplay() {
+                    const sanitized = sanitizeNumericText(display.value);
+                    setDisplay(sanitized === '' ? '0' : sanitized);
+                }
+
+                fab.addEventListener('click', open);
+                closeBtn.addEventListener('click', close);
+                overlay.addEventListener('click', close);
+
+                modal.addEventListener('click', function (event) {
+                    const button = event.target && event.target.closest ? event.target.closest('button.calc-btn') : null;
+                    if (!button) return;
+                    const action = button.dataset.action;
+                    const value = button.dataset.value;
+                    if (action === 'digit') appendDigit(value);
+                    else if (action === 'dot') appendDot();
+                    else if (action === 'operator') setOperator(value);
+                    else if (action === 'equals') equals();
+                    else if (action === 'clear') clearAll();
+                    else if (action === 'backspace') backspace();
+                    display.focus();
+                });
+
+                display.addEventListener('paste', function (event) {
+                    const text = event.clipboardData ? event.clipboardData.getData('text') : '';
+                    const sanitized = sanitizeNumericText(text);
+                    if (sanitized === '') return;
+                    event.preventDefault();
+                    setDisplay(sanitized);
+                    state.waitingSecond = false;
+                });
+
+                display.addEventListener('input', function () {
+                    const sanitized = sanitizeNumericText(display.value);
+                    display.value = sanitized;
+                });
+
+                display.addEventListener('blur', normalizeDisplay);
+
+                document.addEventListener('keydown', function (event) {
+                    if (modal.classList.contains('hidden')) return;
+                    if (event.key === 'Escape') {
+                        event.preventDefault();
+                        close();
+                        return;
+                    }
+                    if (event.key >= '0' && event.key <= '9') {
+                        event.preventDefault();
+                        appendDigit(event.key);
+                        return;
+                    }
+                    if (event.key === '.') {
+                        event.preventDefault();
+                        appendDot();
+                        return;
+                    }
+                    if (event.key === 'Backspace') {
+                        event.preventDefault();
+                        backspace();
+                        return;
+                    }
+                    if (event.key === 'Delete') {
+                        event.preventDefault();
+                        clearAll();
+                        return;
+                    }
+                    if (event.key === 'Enter' || event.key === '=') {
+                        event.preventDefault();
+                        equals();
+                        return;
+                    }
+                    if (event.key === '+' || event.key === '-' || event.key === '*' || event.key === '/') {
+                        event.preventDefault();
+                        setOperator(event.key);
+                    }
+                });
+            })();
         });
     </script>
 </body>

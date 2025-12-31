@@ -164,9 +164,9 @@
             
             <!-- Columna Izquierda -->
             <div class="lg:col-span-2 space-y-6">
-                <!-- Tarjeta de Saldo Final -->
+                <!-- Tarjeta de Saldo Actual -->
                 <div class="main-balance-card bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md">
-                    <h3 class="text-lg font-semibold text-gray-600 dark:text-gray-300 mb-2">Saldo Final de la Cuenta</h3>
+                    <h3 class="text-lg font-semibold text-gray-600 dark:text-gray-300 mb-2">Saldo Actual de la Cuenta</h3>
                     <div class="final-balance">
                         <span id="final-account-balance" class="text-5xl font-bold text-gray-900 dark:text-white">$0.00</span>
                     </div>
@@ -184,22 +184,34 @@
                         <button class="period-filter py-2 px-3 text-sm font-medium text-gray-500 dark:text-gray-400 border-b-2 border-transparent hover:text-orange-600 dark:hover:text-orange-400 hover:border-orange-600" data-period="monthly">Mensual</button>
                         <button class="period-filter py-2 px-3 text-sm font-medium text-gray-500 dark:text-gray-400 border-b-2 border-transparent hover:text-orange-600 dark:hover:text-orange-400 hover:border-orange-600" data-period="yearly">Anual</button>
                     </div>
-                     <!-- Ayuda para ROI -->
+                    <!-- Ayuda para ROI -->
                     <div class="roi-calculation-hint text-sm">
                         <button class="collapsible-header w-full text-left font-semibold text-gray-700 dark:text-gray-300 flex justify-between items-center py-2">
-                            <span>Ayuda para calcular ROI</span>
+                            <span>Análisis de Rendimiento y Balance</span>
                             <span class="icon transform transition-transform duration-300">▼</span>
                         </button>
                         <div class="collapsible-content">
-                             <p class="mt-2 text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
-                                Para la <a href="calculadora-roi.html" class="roi-calculator-link text-orange-500 hover:underline font-semibold">Calculadora de ROI</a>, necesitas:
-                                <br><br>
-                                <strong>Cantidad A (Saldo Inicial):</strong> Resta el 'PNL del periodo' del 'Saldo Final de la Cuenta'.
-                                <br>
-                                <strong>Cantidad B (Saldo Final):</strong> Es el 'Saldo Final de la Cuenta'.
-                                <br><br>
-                                Introduce ambas cantidades en la calculadora para obtener tu ROI.
-                            </p>
+                            <div class="mt-2 text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 p-4 rounded-lg space-y-4">
+                                <section>
+                                    <h4 class="font-bold text-gray-800 dark:text-gray-200 mb-1">Seguimiento Avanzado</h4>
+                                    <p>
+                                        Para un análisis profesional del rendimiento, te recomendamos el gráfico de evolución en la página de <a href="estadisticas.html" class="text-orange-500 hover:underline font-semibold">Estadísticas</a>. Este gráfico rastrea tu <strong>Equity real</strong> (Balance + Trades + Movimientos) y calcula automáticamente el ROI exacto para cualquier periodo filtrado.
+                                    </p>
+                                </section>
+
+                                <hr class="border-gray-200 dark:border-gray-600">
+
+                                <section>
+                                    <h4 class="font-bold text-gray-800 dark:text-gray-200 mb-1">Cálculo de ROI Manual</h4>
+                                    <p>
+                                        Si deseas usar la <a href="calculadora-roi.html" class="roi-calculator-link text-orange-500 hover:underline font-semibold">Calculadora de ROI</a>, obtén los valores de este panel:
+                                        <br><br>
+                                        <strong>Cantidad A (Saldo Inicial):</strong> Resta el 'PNL del periodo' al saldo actual mostrado arriba.
+                                        <br>
+                                        <strong>Cantidad B (Saldo Final):</strong> Es el saldo actual que visualizas en pantalla.
+                                    </p>
+                                </section>
+                            </div>
                         </div>
                     </div>
                 </div>
