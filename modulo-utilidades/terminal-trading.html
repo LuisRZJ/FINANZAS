@@ -93,18 +93,21 @@
         ];
 
         const AUTOLOAD_ENTRY_TFS = [
+            { label: '15M', interval: '15m' },
             { label: '1H', interval: '1h' },
             { label: '4H', interval: '4h' },
             { label: '1D', interval: '1d' }
         ];
 
         const AUTOLOAD_TF_MAP = {
+            '15m': { htf: '1h', ltf: '5m' },
             '1h': { htf: '4h', ltf: '15m' },
             '4h': { htf: '1d', ltf: '1h' },
             '1d': { htf: '1w', ltf: '4h' }
         };
 
         const AUTOLOAD_TF_LABEL = {
+            '5m': '5m',
             '15m': '15m',
             '1h': '1H',
             '4h': '4H',
@@ -948,6 +951,7 @@
             };
 
             const TWELVE_INTERVAL_MAP = {
+                '5m': '5min',
                 '15m': '15min',
                 '1h': '1h',
                 '4h': '4h',
