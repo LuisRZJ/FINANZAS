@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -25,21 +26,21 @@
         }
     </script>
     <script>
-        // Script inline para prevenir flash de tema incorrecto
-        (function() {
-            try {
-                const storedTheme = localStorage.getItem('fti_theme_preference');
-                const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                
-                if (storedTheme === 'dark' || ((!storedTheme || storedTheme === 'system') && systemDark)) {
-                    document.documentElement.classList.add('dark');
-                } else {
-                    document.documentElement.classList.remove('dark');
+            // Script inline para prevenir flash de tema incorrecto
+            (function () {
+                try {
+                    const storedTheme = localStorage.getItem('fti_theme_preference');
+                    const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+                    if (storedTheme === 'dark' || ((!storedTheme || storedTheme === 'system') && systemDark)) {
+                        document.documentElement.classList.add('dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                    }
+                } catch (e) {
+                    console.warn('Error accediendo a localStorage para tema:', e);
                 }
-            } catch (e) {
-                console.warn('Error accediendo a localStorage para tema:', e);
-            }
-        })();
+            })();
     </script>
     <!-- Chart.js for graphs -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -50,10 +51,10 @@
                 const isDark = document.documentElement.classList.contains('dark');
                 const textColor = isDark ? '#cbd5e1' : '#64748b';
                 const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
-                
+
                 Chart.defaults.color = textColor;
                 Chart.defaults.borderColor = gridColor;
-                
+
                 // Actualizar gráficos existentes si los hay
                 Object.values(Chart.instances).forEach(chart => {
                     chart.options.scales.x.grid.color = gridColor;
@@ -91,63 +92,64 @@
             position: relative;
             transition: all 0.3s ease;
         }
-        
+
         .chart-container:hover {
             transform: scale(1.02);
         }
-        
+
         #incomeSourceChart {
             transition: all 0.3s ease;
             filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
         }
-        
-        #incomeSourceLegend > div {
+
+        #incomeSourceLegend>div {
             transition: all 0.2s ease;
             border-left: 3px solid transparent;
         }
-        
-        #incomeSourceLegend > div:hover {
+
+        #incomeSourceLegend>div:hover {
             background-color: rgba(59, 130, 246, 0.05);
             border-left-color: #3b82f6;
             transform: translateX(2px);
         }
-        
+
         /* Animación de carga para el gráfico */
         @keyframes chartFadeIn {
             from {
                 opacity: 0;
                 transform: scale(0.9);
             }
+
             to {
                 opacity: 1;
                 transform: scale(1);
             }
         }
-        
+
         .chart-animate {
             animation: chartFadeIn 0.6s ease-out;
         }
-        
+
         /* Estilos para el resumen del total */
         #incomeSourceLegend .border-t {
             border-color: #e5e7eb;
             margin-top: 1rem;
             padding-top: 0.75rem;
         }
-        
+
         /* Responsive adjustments */
         @media (max-width: 640px) {
             .chart-container {
                 height: 250px !important;
             }
-            
-            #incomeSourceLegend > div {
+
+            #incomeSourceLegend>div {
                 flex-direction: column;
                 align-items: flex-start !important;
                 gap: 0.5rem;
             }
         }
-        
+
         /* Efecto de brillo en hover para las rebanadas del gráfico */
         .chart-highlight {
             filter: brightness(1.1) drop-shadow(0 0 8px rgba(255, 255, 255, 0.5));
@@ -187,41 +189,53 @@
             color: var(--text-body);
             transition: background-color 0.3s ease, color 0.3s ease;
         }
+
         .card {
             background-color: var(--bg-card);
             border: 1px solid var(--border-card);
-            border-radius: 0.75rem; /* rounded-xl */
-            padding: 1.5rem; /* p-6 */
+            border-radius: 0.75rem;
+            /* rounded-xl */
+            padding: 1.5rem;
+            /* p-6 */
             box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
             transition: background-color 0.3s ease, border-color 0.3s ease;
         }
+
         .chart-container {
             position: relative;
             height: 300px;
             width: 100%;
         }
-        .table-custom th, .table-custom td {
+
+        .table-custom th,
+        .table-custom td {
             padding: 0.75rem 1rem;
             text-align: left;
             border-bottom: 1px solid var(--border-color);
             color: var(--text-body);
         }
+
         .table-custom thead {
             background-color: var(--bg-table-head);
         }
+
         .table-custom thead th {
             color: var(--text-muted);
             font-weight: 600;
         }
+
         .table-custom tbody tr {
             transition: background-color 0.15s ease-in-out;
         }
+
         .table-custom tbody tr:nth-child(even) {
             background-color: var(--bg-table-row-even);
         }
+
         .table-custom tbody tr:nth-child(odd) {
             background-color: var(--bg-table-row-odd);
         }
+
         /* Tab Styles */
         .tab-button {
             transition: all 0.2s ease-in-out;
@@ -230,38 +244,119 @@
             border-bottom: 3px solid transparent;
             color: var(--text-muted);
         }
+
         .tab-button:hover {
             color: var(--text-heading);
         }
+
         .tab-button.active {
-            color: #0891b2; /* text-cyan-600 */
+            color: #0891b2;
+            /* text-cyan-600 */
             font-weight: 600;
-            border-bottom-color: #0891b2; /* border-cyan-600 */
+            border-bottom-color: #0891b2;
+            /* border-cyan-600 */
         }
+
         /* Spinner for loading state */
         .loader {
-          display: inline-block;
-          width: 14px; height: 14px;
-          border-radius: 50%;
-          border: 2px solid var(--border-card);
-          border-top-color: #0891b2; /* border-cyan-600 */
-          animation: spin 1s linear infinite;
-          vertical-align: middle;
-          margin-left: 8px;
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 2px solid var(--border-card);
+            border-top-color: #0891b2;
+            /* border-cyan-600 */
+            animation: spin 1s linear infinite;
+            vertical-align: middle;
+            margin-left: 8px;
         }
-        @keyframes spin{to{transform:rotate(360deg)}}
-        
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg)
+            }
+        }
+
+        /* Custom Tooltip */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 220px;
+            background-color: var(--bg-card);
+            color: var(--text-body);
+            text-align: left;
+            border-radius: 8px;
+            padding: 12px;
+            position: absolute;
+            z-index: 100;
+            bottom: 140%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.2s, transform 0.2s;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border-card);
+            font-size: 0.75rem;
+            pointer-events: none;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+            transform: translateX(-50%) translateY(-5px);
+        }
+
+        .tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: var(--border-card) transparent transparent transparent;
+        }
+
         /* Utility overrides for dark mode specific elements not covered by variables */
-        html.dark .text-gray-900 { color: var(--text-heading) !important; }
-        html.dark .text-gray-800 { color: var(--text-heading) !important; }
-        html.dark .text-gray-700 { color: var(--text-body) !important; }
-        html.dark .text-gray-600 { color: var(--text-muted) !important; }
-        html.dark .text-gray-500 { color: var(--text-muted) !important; }
-        html.dark .bg-gray-50 { background-color: rgba(255,255,255,0.03) !important; }
-        html.dark .bg-gray-100 { background-color: rgba(255,255,255,0.05) !important; }
-        html.dark .border-gray-200 { border-color: var(--border-card) !important; }
+        html.dark .text-gray-900 {
+            color: var(--text-heading) !important;
+        }
+
+        html.dark .text-gray-800 {
+            color: var(--text-heading) !important;
+        }
+
+        html.dark .text-gray-700 {
+            color: var(--text-body) !important;
+        }
+
+        html.dark .text-gray-600 {
+            color: var(--text-muted) !important;
+        }
+
+        html.dark .text-gray-500 {
+            color: var(--text-muted) !important;
+        }
+
+        html.dark .bg-gray-50 {
+            background-color: rgba(255, 255, 255, 0.03) !important;
+        }
+
+        html.dark .bg-gray-100 {
+            background-color: rgba(255, 255, 255, 0.05) !important;
+        }
+
+        html.dark .border-gray-200 {
+            border-color: var(--border-card) !important;
+        }
     </style>
 </head>
+
 <body class="antialiased">
 
     <div class="container mx-auto p-4 md:p-8 max-w-7xl">
@@ -269,8 +364,10 @@
         <!-- Header -->
         <header class="mb-6">
             <div class="mb-6 text-left">
-                <a href="index.html" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5 mr-2">
+                <a href="index.html"
+                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5"
+                        stroke="currentColor" class="w-5 h-5 mr-2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h17" />
                     </svg>
                     Volver a Inversiones
@@ -321,7 +418,8 @@
 
                         <!-- Costos y ROI -->
                         <div class="card">
-                            <h2 class="text-xl font-semibold text-gray-800 mb-4">Costos y Retorno de Inversión (ROI)</h2>
+                            <h2 class="text-xl font-semibold text-gray-800 mb-4">Costos y Retorno de Inversión (ROI)
+                            </h2>
                             <div class="space-y-4">
                                 <div class="flex justify-between items-center">
                                     <span class="text-gray-500">Costos Mensuales</span>
@@ -335,15 +433,50 @@
                                     <span class="text-gray-500">Tiempo para Break-Even</span>
                                     <span id="break-even-time" class="font-semibold text-amber-600"></span>
                                 </div>
-                                 <hr class="border-gray-200 my-2">
+                                <hr class="border-gray-200 my-2">
                                 <div class="text-center py-2">
-                                     <span class="text-gray-500 text-sm">ROI Anual Estimado</span>
+                                    <span class="text-gray-500 text-sm">ROI Anual Estimado</span>
                                     <div class="flex items-center justify-center gap-2 mt-1">
                                         <span id="roi-calculado" class="text-3xl font-bold text-cyan-600"></span>
-                                        <span id="roi-calificacion" class="text-xs font-semibold px-2 py-1 rounded-full"></span>
+                                        <span id="roi-calificacion"
+                                            class="text-xs font-semibold px-2 py-1 rounded-full"></span>
                                     </div>
                                 </div>
                             </div>
+                        </div>
+
+                        <!-- Gráfico de Procedencia de Ingresos -->
+                        <div class="card chart-animate">
+                            <div class="flex items-center justify-between mb-4">
+                                <h2 class="text-xl font-semibold text-gray-800">
+                                    <i class="fas fa-chart-pie text-cyan-600 mr-2"></i>
+                                    Procedencia de Ingresos
+                                </h2>
+                                <div class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                                    Live
+                                </div>
+                            </div>
+                            <div class="chart-container !h-[200px] my-2">
+                                <canvas id="incomeSourceChart" class="rounded-lg"></canvas>
+                            </div>
+                            <div id="incomeSourceLegend" class="border-t border-gray-200 pt-3 mt-3 space-y-2"></div>
+                        </div>
+
+                        <!-- Gráfico de Aporte al ROI -->
+                        <div class="card chart-animate">
+                            <div class="flex items-center justify-between mb-4">
+                                <h2 class="text-xl font-semibold text-gray-800">
+                                    <i class="fas fa-chart-pie text-cyan-600 mr-2"></i>
+                                    Aporte al ROI Total
+                                </h2>
+                                <div class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                                    Live
+                                </div>
+                            </div>
+                            <div class="chart-container !h-[200px] my-2">
+                                <canvas id="roiSourceChart" class="rounded-lg"></canvas>
+                            </div>
+                            <div id="roiSourceLegend" class="border-t border-gray-200 pt-3 mt-3 space-y-2"></div>
                         </div>
                     </div>
 
@@ -365,53 +498,44 @@
                             </div>
                         </div>
 
-                        <!-- Gráficos Circulares y Tabla ROI -->
-                        <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
-                            <div class="md:col-span-2 flex flex-col gap-6">
-                                <!-- Gráfico de Procedencia de Ingresos -->
-                                <div class="card chart-animate">
-                                    <div class="flex items-center justify-between mb-4">
-                                        <h2 class="text-xl font-semibold text-gray-800">
-                                            <i class="fas fa-chart-pie text-cyan-600 mr-2"></i>
-                                            Procedencia de Ingresos
-                                        </h2>
-                                        <div class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                                            Actualizado en tiempo real
-                                        </div>
-                                    </div>
-                                    <div class="chart-container !h-[200px] my-2">
-                                        <canvas id="incomeSourceChart" class="rounded-lg"></canvas>
-                                    </div>
-                                    <div id="incomeSourceLegend" class="border-t border-gray-200 pt-3 mt-3 space-y-2"></div>
-                                </div>
-                                <!-- Gráfico de Aporte al ROI -->
-                                <div class="card">
-                                    <h2 class="text-xl font-semibold text-gray-800 mb-2">Aporte al ROI Total</h2>
-                                    <div class="chart-container !h-[200px] my-2">
-                                        <canvas id="roiSourceChart"></canvas>
-                                    </div>
-                                    <div id="roiSourceLegend" class="border-t border-gray-200 pt-3 mt-3 space-y-2"></div>
+                        <!-- Tabla Comparativa de ROI (Expandida) -->
+                        <div class="card">
+                            <div
+                                class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
+                                <h2 class="text-xl font-semibold text-gray-800">Comparativa de ROI</h2>
+                                <div
+                                    class="flex items-center space-x-2 bg-gray-50 dark:bg-slate-700 p-1 rounded-lg border border-gray-200 dark:border-slate-600">
+                                    <span
+                                        class="text-xs font-medium text-gray-500 dark:text-gray-400 px-2 uppercase tracking-wider">Ordenar
+                                        por:</span>
+                                    <button id="sort-ytd" onclick="setSortMethod('ytd')"
+                                        class="px-3 py-1.5 text-xs font-bold rounded-md transition-all duration-200 shadow-sm">
+                                        ROI YTD
+                                    </button>
+                                    <button id="sort-annualized" onclick="setSortMethod('annualized')"
+                                        class="px-3 py-1.5 text-xs font-bold rounded-md transition-all duration-200 shadow-sm">
+                                        ROI Anualizado
+                                    </button>
                                 </div>
                             </div>
-                            <div class="md:col-span-3 card">
-                                <h2 class="text-xl font-semibold text-gray-800 mb-4">Comparativa de ROI (Ordenado)</h2>
-                                <div class="overflow-x-auto">
-                                    <table class="w-full text-sm text-gray-700 table-custom rounded-lg overflow-hidden">
-                                        <thead class="text-xs text-gray-500 uppercase">
-                                            <tr>
-                                                <th>Tipo de Inversión</th>
-                                                <th>ROI Anual</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="roi-comparison-body">
-                                            <tr>
-                                                <td colspan="2" class="text-center text-gray-500 py-4">
-                                                    Cargando y ordenando datos... <span class="loader"></span>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm text-gray-700 table-custom rounded-lg overflow-hidden">
+                                    <thead class="text-xs text-gray-500 uppercase bg-gray-50 dark:bg-slate-700">
+                                        <tr>
+                                            <th class="py-3 px-4 text-left w-12">#</th>
+                                            <th class="py-3 px-4 text-left">Activo</th>
+                                            <th class="py-3 px-4 text-right">ROI (YTD/Anual)</th>
+                                            <th class="py-3 px-4 text-right">ROI Anualizado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="roi-comparison-body">
+                                        <tr>
+                                            <td colspan="4" class="text-center text-gray-500 py-4">
+                                                Cargando y ordenando datos... <span class="loader"></span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
@@ -419,68 +543,52 @@
             </div>
 
             <!-- Tab 2: Gastos Mensuales -->
-            <div id="tab-content-mensual" class="tab-content hidden"><div class="card"><h2 class="text-2xl font-semibold text-gray-800">Desglose de Gastos Mensuales</h2><p class="mt-2 text-gray-600">Esta sección mostrará un análisis detallado de los costos recurrentes.</p></div></div>
-            
-            <!-- Tab 3: Costos Únicos -->
-            <div id="tab-content-unicos" class="tab-content hidden">
-                 <div class="card">
-                    <!-- Main Header -->
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 pb-6 border-b border-gray-200">
+            <div id="tab-content-mensual" class="tab-content hidden">
+                <div class="card">
+                    <!-- Header with total summary -->
+                    <div
+                        class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 pb-6 border-b border-gray-200">
                         <div>
-                            <h2 class="text-2xl font-bold text-gray-800">Inversión Inicial del Proyecto</h2>
-                            <p class="mt-1 text-gray-500">Desglose de los planes de inversión que componen el costo inicial.</p>
-                            <!-- Botón "Ver más" -->
-                            <a href="#" class="inline-flex items-center gap-2 text-sm font-semibold text-cyan-600 hover:text-cyan-700 mt-4 transition-colors">
-                                Ver más detalles
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-right-short" viewBox="0 0 16 16">
-                                    <path fill-rule="evenodd" d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"/>
-                                </svg>
-                            </a>
+                            <h2 class="text-2xl font-bold text-gray-800">Gastos Mensuales Recurrentes</h2>
+                            <p class="mt-1 text-gray-500">Desglose de suscripciones y costos de mantenimiento para
+                                minería y servicios.</p>
                         </div>
                         <div class="text-left md:text-right mt-4 md:mt-0 flex-shrink-0">
-                            <span class="text-sm text-gray-500 block">Costo Total</span>
+                            <span class="text-sm text-gray-500 block">Presupuesto Mensual Total</span>
+                            <span class="text-3xl font-bold text-red-600" id="total-monthly-expense-value">$0.00</span>
+                        </div>
+                    </div>
+
+                    <!-- Expenses grid -->
+                    <div id="monthly-expenses-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Card examples will be injected here -->
+                        <div class="col-span-full text-center py-12 text-gray-400">
+                            <i class="fas fa-receipt text-4xl mb-3 block"></i>
+                            <p>No hay gastos mensuales registrados.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 3: Costos Únicos -->
+            <div id="tab-content-unicos" class="tab-content hidden">
+                <div class="card">
+                    <!-- Main Header -->
+                    <div
+                        class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 pb-6 border-b border-gray-200">
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-800">Costos Únicos por Servicio</h2>
+                            <p class="mt-1 text-gray-500">Resumen de inversiones de pago único registradas en cada
+                                plataforma.</p>
+                        </div>
+                        <div class="text-left md:text-right mt-4 md:mt-0 flex-shrink-0">
+                            <span class="text-sm text-gray-500 block">Gasto Total (Inversiones)</span>
                             <span class="text-3xl font-bold text-cyan-600" id="total-cost-unicos"></span>
                         </div>
                     </div>
 
                     <!-- Plans/Phases container -->
-                    <div class="space-y-6">
-                        <!-- Plan 1 Card -->
-                        <div class="p-4 border border-gray-200 rounded-lg bg-gray-50/50">
-                            <div class="flex justify-between items-center">
-                                <h3 class="text-lg font-semibold text-gray-800">Plan 1 - Equipo de Cómputo</h3>
-                                <span class="text-xl font-bold text-gray-900">$2,000.00</span>
-                            </div>
-                            <div class="mt-2 text-sm text-gray-500">
-                                <span class="font-medium">Fecha: 15 de Enero, 2024</span>
-                                <p class="mt-1">Compra de hardware esencial, incluyendo laptops y monitores para el equipo de desarrollo.</p>
-                            </div>
-                        </div>
-
-                        <!-- Plan 2 Card -->
-                        <div class="p-4 border border-gray-200 rounded-lg bg-gray-50/50">
-                            <div class="flex justify-between items-center">
-                                <h3 class="text-lg font-semibold text-gray-800">Plan 2 - Licencias de Software</h3>
-                                <span class="text-xl font-bold text-gray-900">$1,500.00</span>
-                            </div>
-                            <div class="mt-2 text-sm text-gray-500">
-                                <span class="font-medium">Fecha: 20 de Enero, 2024</span>
-                                <p class="mt-1">Adquisición de licencias anuales para herramientas de diseño, desarrollo y gestión de proyectos.</p>
-                            </div>
-                        </div>
-
-                        <!-- Plan 3 Card -->
-                        <div class="p-4 border border-gray-200 rounded-lg bg-gray-50/50">
-                            <div class="flex justify-between items-center">
-                                <h3 class="text-lg font-semibold text-gray-800">Plan 3 - Marketing Inicial</h3>
-                                <span class="text-xl font-bold text-gray-900">$700.00</span>
-                            </div>
-                            <div class="mt-2 text-sm text-gray-500">
-                                <span class="font-medium">Fecha: 01 de Febrero, 2024</span>
-                                <p class="mt-1">Inversión en campañas publicitarias de lanzamiento en redes sociales y buscadores.</p>
-                            </div>
-                        </div>
-                    </div>
+                    <div id="one-time-costs-cards" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
                 </div>
             </div>
         </div>
@@ -499,17 +607,17 @@
             try {
                 const investmentsData = localStorage.getItem(storageKey);
                 if (!investmentsData) return 0;
-                
+
                 const investments = JSON.parse(investmentsData);
                 if (!Array.isArray(investments)) return 0;
-                
+
                 // Filter active investments (not expired)
                 const now = new Date();
                 const activeInvestments = investments.filter(inv => {
                     if (!inv.hasExpiration || !inv.expirationDate) return true;
                     return new Date(inv.expirationDate) >= now;
                 });
-                
+
                 // Sum up daily income from all active investments
                 return activeInvestments.reduce((sum, inv) => sum + (inv.dailyIncome || 0), 0);
             } catch (error) {
@@ -518,45 +626,1226 @@
             }
         }
 
+        // --- Módulo Finanzas Personales: Lectura de Ingresos ---
+        const FTI_OPERATIONS_STORAGE_KEY = 'fti-operations-v1';
+
+        function getFinanzasOperations() {
+            try {
+                const raw = localStorage.getItem(FTI_OPERATIONS_STORAGE_KEY);
+                if (!raw) return [];
+                const parsed = JSON.parse(raw);
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (e) {
+                console.error('Error reading finanzas operations:', e);
+                return [];
+            }
+        }
+
+        // Calcular ingreso diario promedio de finanzas personales (últimos 30 días)
+        function calculateFinanzasDailyIncome() {
+            const operations = getFinanzasOperations();
+            const now = new Date();
+            const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+            const recentIncomeOps = operations.filter(op => {
+                if (op.type !== 'income') return false;
+                const opDate = new Date(op.datetime);
+                return opDate >= thirtyDaysAgo && opDate <= now;
+            });
+
+            const totalIncome = recentIncomeOps.reduce((sum, op) => sum + (op.amount || 0), 0);
+
+            // Promedio diario = total / 30 días
+            return totalIncome / 30;
+        }
+
+        // Construir serie diaria de ingresos de finanzas para gráfico de evolución
+        function buildFinanzasDailySeries(dates) {
+            const operations = getFinanzasOperations();
+            return dates.map(date => {
+                const dateKey = getDateKey(date);
+                const dayOps = operations.filter(op => {
+                    if (op.type !== 'income') return false;
+                    const opDate = new Date(op.datetime);
+                    return getDateKey(opDate) === dateKey;
+                });
+                return dayOps.reduce((sum, op) => sum + (op.amount || 0), 0);
+            });
+        }
+
+        // --- Módulo Trading Tradicional: Lectura de PNL ---
+        const TRADING_ACCOUNTS_META_KEY = 'tradingAccountsMeta';
+        const TRADING_ACCOUNT_DATA_PREFIX = 'tradingAccountData:';
+
+        function getTradingAccountsMeta() {
+            try {
+                const raw = localStorage.getItem(TRADING_ACCOUNTS_META_KEY);
+                return raw ? JSON.parse(raw) : [];
+            } catch (e) { return []; }
+        }
+
+        function getTradingAccountData(accountId) {
+            try {
+                const raw = localStorage.getItem(TRADING_ACCOUNT_DATA_PREFIX + accountId);
+                return raw ? JSON.parse(raw) : { trades: [] };
+            } catch (e) { return { trades: [] }; }
+        }
+
+        function getAllTradingTrades() {
+            const accounts = getTradingAccountsMeta();
+            let allTrades = [];
+            accounts.forEach(acc => {
+                const data = getTradingAccountData(acc.id);
+                if (Array.isArray(data.trades)) {
+                    allTrades = allTrades.concat(data.trades);
+                }
+            });
+            return allTrades;
+        }
+
+        function calculateTradingDailyPnl() {
+            const trades = getAllTradingTrades();
+            const now = new Date();
+            const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+            const recentTrades = trades.filter(t => {
+                const closeDate = new Date(t.closeTime);
+                return closeDate >= thirtyDaysAgo && closeDate <= now;
+            });
+
+            const totalPnl = recentTrades.reduce((sum, t) => sum + (parseFloat(t.resultMxn) || 0), 0);
+            return totalPnl / 30;
+        }
+
+        function buildTradingDailySeries(dates) {
+            const trades = getAllTradingTrades();
+            return dates.map(date => {
+                const dateKey = getDateKey(date);
+                const dayTrades = trades.filter(t => {
+                    const closeDate = new Date(t.closeTime);
+                    return getDateKey(closeDate) === dateKey;
+                });
+                return dayTrades.reduce((sum, t) => sum + (parseFloat(t.resultMxn) || 0), 0);
+            });
+        }
+
+        // --- Módulo Trading FTT: Lectura de PNL ---
+        const FTT_ACCOUNT_STORAGE_KEY = 'btMultiAccountState_v1';
+        const FTT_PROFIT_RATE = 0.85;
+        const FTT_LOSS_RATE = -1.00;
+
+        function getFttAccountState() {
+            try {
+                const raw = localStorage.getItem(FTT_ACCOUNT_STORAGE_KEY);
+                return raw ? JSON.parse(raw) : { accounts: [], data: {} };
+            } catch (e) { return { accounts: [], data: {} }; }
+        }
+
+        function getAllFttTrades() {
+            const state = getFttAccountState();
+            let allTrades = [];
+            if (state.data && typeof state.data === 'object') {
+                Object.values(state.data).forEach(accountData => {
+                    if (Array.isArray(accountData.trades)) {
+                        allTrades = allTrades.concat(accountData.trades);
+                    }
+                });
+            }
+            return allTrades;
+        }
+
+        function calculateFttTradePnl(trade) {
+            const monto = parseFloat(trade.monto) || 0;
+            if (trade.resultado === 'Éxito') return monto * FTT_PROFIT_RATE;
+            if (trade.resultado === 'Fracaso') return monto * FTT_LOSS_RATE;
+            return 0; // Empate
+        }
+
+        function calculateFttDailyPnl() {
+            const trades = getAllFttTrades();
+            const now = new Date();
+            const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+            const recentTrades = trades.filter(t => {
+                const tradeDate = new Date(t.fecha);
+                return tradeDate >= thirtyDaysAgo && tradeDate <= now;
+            });
+
+            const totalPnl = recentTrades.reduce((sum, t) => sum + calculateFttTradePnl(t), 0);
+            return totalPnl / 30;
+        }
+
+        function buildFttDailySeries(dates) {
+            const trades = getAllFttTrades();
+            return dates.map(date => {
+                const dateKey = getDateKey(date);
+                const dayTrades = trades.filter(t => {
+                    const tradeDate = new Date(t.fecha);
+                    return getDateKey(tradeDate) === dateKey;
+                });
+                return dayTrades.reduce((sum, t) => sum + calculateFttTradePnl(t), 0);
+            });
+        }
+
+        function parseInvestmentsFromStorage(storageKey) {
+            try {
+                const raw = localStorage.getItem(storageKey);
+                if (!raw) return [];
+                const parsed = JSON.parse(raw);
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function parseValidDate(value) {
+            if (!value) return null;
+            const d = new Date(value);
+            return Number.isNaN(d.getTime()) ? null : d;
+        }
+
+        function formatDateRange(minDate, maxDate) {
+            if (!minDate && !maxDate) return '—';
+            const options = { year: 'numeric', month: 'short', day: '2-digit' };
+            if (minDate && maxDate) return `${minDate.toLocaleDateString('es-ES', options)} → ${maxDate.toLocaleDateString('es-ES', options)}`;
+            const d = minDate || maxDate;
+            return d.toLocaleDateString('es-ES', options);
+        }
+
+        function computeOneTimeCostSummary(storageKey, roiMethod) {
+            const investments = parseInvestmentsFromStorage(storageKey);
+            const now = new Date();
+            now.setUTCHours(0, 0, 0, 0);
+
+            let totalCost = 0;
+            let activeCount = 0;
+            let minDate = null;
+            let maxDate = null;
+            let maxCost = 0;
+            let maxCostName = '';
+            let totalRecovered = 0;
+
+            investments.forEach(inv => {
+                const cost = Number(inv && inv.cost);
+                if (Number.isFinite(cost)) totalCost += cost;
+
+                const hasExpiration = Boolean(inv && inv.hasExpiration);
+                const expirationDate = parseValidDate(inv && inv.expirationDate);
+                if (expirationDate) expirationDate.setUTCHours(0, 0, 0, 0);
+                const isActive = !hasExpiration || !expirationDate || now <= expirationDate;
+                if (isActive) activeCount += 1;
+
+                const startDate = parseValidDate(inv && inv.date);
+                if (startDate) {
+                    startDate.setUTCHours(0, 0, 0, 0);
+                    if (!minDate || startDate < minDate) minDate = startDate;
+                    if (!maxDate || startDate > maxDate) maxDate = startDate;
+
+                    let limitDate = new Date(now);
+                    if (hasExpiration && expirationDate && expirationDate < limitDate) limitDate = expirationDate;
+                    if (startDate < limitDate) {
+                        const days = Math.floor((limitDate - startDate) / (1000 * 60 * 60 * 24));
+                        const dailyIncome = Number(inv && inv.dailyIncome);
+                        if (Number.isFinite(dailyIncome)) totalRecovered += Math.max(0, days * dailyIncome);
+                    }
+                }
+
+                if (Number.isFinite(cost) && cost >= maxCost) {
+                    maxCost = cost;
+                    maxCostName = inv && inv.name ? String(inv.name) : '';
+                }
+            });
+
+            const avgCost = investments.length ? totalCost / investments.length : 0;
+            let annualizedRoiPct = null;
+
+            if (totalCost > 0 && investments.length > 0 && minDate) {
+                const daysSinceFirst = Math.max(1, Math.floor((now - minDate) / (1000 * 60 * 60 * 24)));
+                const years = daysSinceFirst / 365;
+
+                if (years > 0) {
+                    if (roiMethod === 'linear') {
+                        let annualRoi = 0;
+                        if (years < 1) {
+                            const roiRatio = totalRecovered / totalCost;
+                            annualRoi = (roiRatio / years) * 100;
+                        } else {
+                            annualRoi = ((totalRecovered - totalCost) / totalCost) / years * 100;
+                        }
+                        if (Number.isFinite(annualRoi)) annualizedRoiPct = annualRoi;
+                    } else if (roiMethod === 'cagr') {
+                        const totalReturnRatio = totalRecovered / totalCost;
+                        if (totalReturnRatio > 0) {
+                            const cagr = Math.pow(totalReturnRatio, 1 / years) - 1;
+                            const annualRoi = cagr * 100;
+                            if (Number.isFinite(annualRoi)) annualizedRoiPct = annualRoi;
+                        }
+                    }
+                }
+            }
+
+            return {
+                totalCost,
+                count: investments.length,
+                activeCount,
+                avgCost,
+                maxCost,
+                maxCostName,
+                dateRange: formatDateRange(minDate, maxDate),
+                totalRecovered,
+                annualizedRoiPct
+            };
+        }
+
+        function updateOneTimeCostsUI() {
+            const services = [
+                { storageKey: 'btcMiningInvestments', title: 'BTC Mining', accentClass: 'text-orange-600', badgeClass: 'bg-gray-100 text-orange-700', roiMethod: 'linear' },
+                { storageKey: 'cloudPowerMinerInvestments', title: 'Cloud Power Miner', accentClass: 'text-cyan-600', badgeClass: 'bg-gray-100 text-cyan-700', roiMethod: 'linear' },
+                { storageKey: 'goMiningInvestments', title: 'GO Mining', accentClass: 'text-blue-600', badgeClass: 'bg-gray-100 text-blue-700', roiMethod: 'cagr' },
+                { storageKey: 'tapMiningInvestments', title: 'TAP Mining', accentClass: 'text-emerald-600', badgeClass: 'bg-gray-100 text-emerald-700', roiMethod: 'cagr' }
+            ];
+
+            const container = document.getElementById('one-time-costs-cards');
+            if (!container) return;
+
+            container.innerHTML = '';
+
+            let totalAll = 0;
+
+            services.forEach(service => {
+                const summary = computeOneTimeCostSummary(service.storageKey, service.roiMethod);
+                totalAll += summary.totalCost;
+
+                const card = document.createElement('div');
+                card.className = 'p-5 border border-gray-200 rounded-lg bg-gray-50/50';
+
+                const maxLabel = summary.maxCost > 0 ? currencyFormatter.format(summary.maxCost) : '—';
+                const maxName = summary.maxCostName ? ` (${summary.maxCostName})` : '';
+                const avgLabel = summary.count ? currencyFormatter.format(summary.avgCost) : '—';
+                const roiLabel = summary.annualizedRoiPct === null ? 'N/A' : `${summary.annualizedRoiPct.toFixed(2)}%`;
+
+                card.innerHTML = `
+                    <div class="flex items-start justify-between gap-4">
+                        <div class="min-w-0">
+                            <h3 class="text-lg font-semibold text-gray-800 truncate">${service.title}</h3>
+                            <div class="mt-2 flex flex-wrap gap-2">
+                                <span class="text-xs font-semibold px-2 py-1 rounded-full ${service.badgeClass}">Inversiones: ${summary.count}</span>
+                                <span class="text-xs font-semibold px-2 py-1 rounded-full bg-gray-100 text-gray-700">Activas: ${summary.activeCount}</span>
+                            </div>
+                            <div class="mt-2 text-sm text-gray-500">Rango: ${summary.dateRange}</div>
+                        </div>
+                        <div class="text-right flex-shrink-0">
+                            <div class="text-xs text-gray-500">Gasto total</div>
+                            <div class="text-2xl font-bold ${service.accentClass}">${currencyFormatter.format(summary.totalCost)}</div>
+                        </div>
+                    </div>
+                    <div class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div class="p-3 rounded-lg border border-gray-200 bg-white/60">
+                            <div class="text-xs text-gray-500">ROI anualizado</div>
+                            <div class="text-sm font-semibold text-gray-900">${roiLabel}</div>
+                        </div>
+                        <div class="p-3 rounded-lg border border-gray-200 bg-white/60">
+                            <div class="text-xs text-gray-500">Costo promedio</div>
+                            <div class="text-sm font-semibold text-gray-900">${avgLabel}</div>
+                        </div>
+                        <div class="p-3 rounded-lg border border-gray-200 bg-white/60">
+                            <div class="text-xs text-gray-500">Mayor inversión</div>
+                            <div class="text-sm font-semibold text-gray-900">${maxLabel}${maxName}</div>
+                        </div>
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+
+            const totalInTab = document.getElementById('total-cost-unicos');
+            if (totalInTab) totalInTab.textContent = currencyFormatter.format(totalAll);
+
+            const totalInGeneral = document.getElementById('costos-unicos');
+            if (totalInGeneral) totalInGeneral.textContent = currencyFormatter.format(totalAll);
+        }
+
+        // --- Gastos Mensuales (Data from registro-inv.html) ---
+        function updateMonthlyExpensesUI() {
+            const grid = document.getElementById('monthly-expenses-grid');
+            const totalValueEl = document.getElementById('total-monthly-expense-value');
+            if (!grid) return;
+
+            try {
+                const records = JSON.parse(localStorage.getItem('records')) || [];
+                const options = JSON.parse(localStorage.getItem('options')) || { apps: [], plazos: [], metodosPago: [] };
+
+                if (records.length === 0) {
+                    grid.innerHTML = `
+                        <div class="col-span-full text-center py-12 text-gray-400">
+                            <i class="fas fa-receipt text-4xl mb-3 block"></i>
+                            <p>No hay gastos mensuales registrados.</p>
+                        </div>
+                    `;
+                    if (totalValueEl) totalValueEl.textContent = currencyFormatter.format(0);
+                    return;
+                }
+
+                grid.innerHTML = '';
+                let totalMonthlySum = 0;
+
+                // Helper to get option by Name (since records store the name string)
+                const getOpt = (type, name) => options[type].find(o => o.name === name) || { name: name || 'Desconocido', color: '#94a3b8' };
+
+                // Helper to calculate next renewal date (replicated from registro-inv.html)
+                const computeNextRenewal = (record, plazoOpt) => {
+                    if (!plazoOpt || !record.fechaCompra) return null;
+                    const dateParts = record.fechaCompra.split('-');
+                    const base = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    const len = plazoOpt.length || 0;
+
+                    if (plazoOpt.unit === 'months') {
+                        const monthsDiff = (today.getFullYear() - base.getFullYear()) * 12 + (today.getMonth() - base.getMonth());
+                        const cycles = Math.max(0, Math.floor(monthsDiff / Math.max(1, len)));
+                        const d = new Date(base);
+                        d.setMonth(d.getMonth() + cycles * len);
+                        if (d <= today) d.setMonth(d.getMonth() + len);
+                        return d;
+                    } else {
+                        const msPerDay = 86400000;
+                        const diffDays = Math.floor((today - base) / msPerDay);
+                        const cycles = Math.max(0, Math.floor(diffDays / Math.max(1, len)));
+                        const d = new Date(base);
+                        d.setDate(d.getDate() + cycles * len);
+                        if (d <= today) d.setDate(d.getDate() + len);
+                        return d;
+                    }
+                };
+
+                // Helper to format time remaining (replicated from registro-inv.html)
+                const formatRemaining = (targetDate) => {
+                    if (!targetDate) return '';
+                    const now = new Date();
+                    now.setHours(0, 0, 0, 0);
+                    const target = new Date(targetDate);
+                    target.setHours(0, 0, 0, 0);
+                    if (target < now) return 'Vencido';
+                    if (target.getTime() === now.getTime()) return 'Hoy';
+                    let years = target.getFullYear() - now.getFullYear();
+                    let months = target.getMonth() - now.getMonth();
+                    let days = target.getDate() - now.getDate();
+                    if (days < 0) {
+                        months -= 1;
+                        const prevMonth = new Date(target.getFullYear(), target.getMonth(), 0).getDate();
+                        days += prevMonth;
+                    }
+                    if (months < 0) { years -= 1; months += 12; }
+                    const parts = [];
+                    if (years > 0) parts.push(`${years} ${years === 1 ? 'año' : 'años'}`);
+                    if (months > 0) parts.push(`${months} ${months === 1 ? 'mes' : 'meses'}`);
+                    if (days > 0) parts.push(`${days} ${days === 1 ? 'día' : 'días'}`);
+                    return parts.slice(0, 2).join(' '); // Show only top 2 units
+                };
+
+                // Helper for intelligent grouping labels
+                const getGroupLabel = (targetDate) => {
+                    if (!targetDate) return 'Sin fecha';
+                    const now = new Date();
+                    now.setHours(0, 0, 0, 0);
+                    const target = new Date(targetDate);
+                    target.setHours(0, 0, 0, 0);
+
+                    if (target < now) return 'Vencidos';
+
+                    const monthsDiff = (target.getFullYear() - now.getFullYear()) * 12 + (target.getMonth() - now.getMonth());
+
+                    if (monthsDiff === 0) return 'Este mes';
+                    if (monthsDiff === 1) return 'Próximo mes';
+                    if (monthsDiff > 1) return `En ${monthsDiff} meses`;
+
+                    return 'Futuro';
+                };
+
+                // Process records to add metadata for sorting and grouping
+                const processedRecords = records.map(record => {
+                    const app = getOpt('apps', record.app);
+                    const plazo = getOpt('plazos', record.plazo);
+                    const metodo = getOpt('metodosPago', record.metodoPago);
+                    const costo = parseFloat(record.costo) || 0;
+                    const nextRenewal = computeNextRenewal(record, plazo);
+
+                    let monthlyEquivalent = 0;
+                    if (plazo.unit === 'days') {
+                        monthlyEquivalent = (costo / plazo.length) * 30.4375;
+                    } else if (plazo.unit === 'months') {
+                        monthlyEquivalent = costo / plazo.length;
+                    } else {
+                        const fallbackDays = parseInt(plazo.name) || 30;
+                        monthlyEquivalent = (costo / fallbackDays) * 30.4375;
+                    }
+
+                    totalMonthlySum += monthlyEquivalent;
+
+                    return {
+                        ...record,
+                        app,
+                        plazo,
+                        metodo,
+                        costo,
+                        nextRenewal,
+                        monthlyEquivalent,
+                        groupLabel: getGroupLabel(nextRenewal)
+                    };
+                });
+
+                // Sort by next renewal date
+                processedRecords.sort((a, b) => (a.nextRenewal || 0) - (b.nextRenewal || 0));
+
+                // Group by label
+                const groups = {};
+                processedRecords.forEach(rec => {
+                    if (!groups[rec.groupLabel]) groups[rec.groupLabel] = [];
+                    groups[rec.groupLabel].push(rec);
+                });
+
+                // Order of labels to display
+                const labelOrder = ['Vencidos', 'Este mes', 'Próximo mes'];
+                // Add any "En X meses" dynamic labels
+                Object.keys(groups).forEach(label => {
+                    if (!labelOrder.includes(label)) labelOrder.push(label);
+                });
+
+                labelOrder.forEach(label => {
+                    if (!groups[label]) return;
+
+                    // Calculate group total (Real Pay)
+                    const groupTotalReal = groups[label].reduce((sum, rec) => sum + rec.costo, 0);
+
+                    // Section Header
+                    const header = document.createElement('div');
+                    header.className = "col-span-full mt-8 mb-4 flex items-center gap-4";
+                    header.innerHTML = `
+                        <div class="h-px flex-grow bg-gradient-to-r from-transparent via-gray-200 dark:via-slate-700 to-transparent"></div>
+                        <div class="flex items-center gap-3 bg-gray-50 dark:bg-slate-900 px-6 py-2 rounded-full border border-gray-100 dark:border-slate-800 shadow-sm">
+                            <span class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 dark:text-slate-500">
+                                ${label}
+                            </span>
+                            <div class="w-px h-3 bg-gray-200 dark:bg-slate-700"></div>
+                            <span class="text-xs font-bold text-gray-700 dark:text-gray-300">
+                                Capital Necesario: <span class="text-blue-600 dark:text-blue-400">${currencyFormatter.format(groupTotalReal)}</span>
+                            </span>
+                        </div>
+                        <div class="h-px flex-grow bg-gradient-to-r from-transparent via-gray-200 dark:via-slate-700 to-transparent"></div>
+                    `;
+                    grid.appendChild(header);
+
+                    groups[label].forEach(record => {
+                        const remainingStr = record.nextRenewal ? formatRemaining(record.nextRenewal) : '';
+                        const dateParts = record.fechaCompra ? record.fechaCompra.split('-') : [];
+                        const displayDate = dateParts.length === 3
+                            ? new Date(dateParts[0], dateParts[1] - 1, dateParts[2]).toLocaleDateString()
+                            : 'N/A';
+
+                        const card = document.createElement('div');
+                        card.className = "group p-5 border border-gray-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800/50 hover:shadow-lg transition-all duration-300 relative overflow-hidden flex flex-col h-full";
+
+                        card.innerHTML = `
+                            <div class="absolute top-0 left-0 w-1.5 h-full" style="background-color: ${record.app.color}"></div>
+                            
+                            <div class="flex justify-between items-start mb-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg flex items-center justify-center text-white shadow-sm" style="background-color: ${record.app.color}">
+                                        <i class="fas fa-server"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-gray-800 dark:text-gray-100 leading-tight">${record.app.name}</h3>
+                                        <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400">${record.hashRate || 0} GH/s</span>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-xs text-gray-400 font-medium">Costo Mensual</div>
+                                    <div class="text-xl font-black text-red-500">${currencyFormatter.format(record.monthlyEquivalent)}</div>
+                                </div>
+                            </div>
+
+                            <div class="flex-grow">
+                                <!-- Descripción/Notas -->
+                                <div class="mb-4 bg-gray-50 dark:bg-slate-700/30 p-2.5 rounded-lg border-l-2 border-gray-200 dark:border-slate-600">
+                                    <div class="text-[9px] font-bold text-gray-400 uppercase mb-1">Descripción / Notas</div>
+                                    <p class="text-xs text-gray-600 dark:text-gray-300 leading-relaxed italic">
+                                        ${record.notas || 'Sin descripción adicional.'}
+                                    </p>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-4 py-3 border-t border-gray-100 dark:border-slate-700/50">
+                                    <div>
+                                        <div class="text-[10px] font-bold text-gray-400 uppercase">Pago Real</div>
+                                        <div class="text-sm font-bold text-gray-700 dark:text-gray-200">${currencyFormatter.format(record.costo)}</div>
+                                        <div class="text-[10px] text-gray-500 italic">${record.plazo.name}</div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="text-[10px] font-bold text-gray-400 uppercase">Próxima Renovación</div>
+                                        <div class="text-sm font-bold text-blue-600 dark:text-blue-400">${record.nextRenewal ? record.nextRenewal.toLocaleDateString() : 'N/A'}</div>
+                                        <div class="text-[10px] text-gray-500 font-medium">${remainingStr ? 'Faltan ' + remainingStr : ''}</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-4 pt-3 border-t border-gray-100 dark:border-slate-700/50 flex items-center justify-between text-[11px]">
+                                <div class="flex flex-col">
+                                    <span class="text-gray-400 text-[9px] uppercase font-bold">Método</span>
+                                    <div class="flex items-center gap-1.5 text-gray-600 dark:text-gray-300 font-semibold">
+                                        <div class="w-2 h-2 rounded-full" style="background-color: ${record.metodo.color}"></div>
+                                        ${record.metodo.name}
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-gray-400 text-[9px] uppercase font-bold">Fecha Compra</span>
+                                    <div class="text-gray-500 dark:text-gray-400 font-medium">
+                                        <i class="far fa-calendar-alt mr-1"></i>${displayDate}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        grid.appendChild(card);
+                    });
+                });
+
+                if (totalValueEl) totalValueEl.textContent = currencyFormatter.format(totalMonthlySum);
+
+                const generalCostEl = document.getElementById('costos-mensuales');
+                if (generalCostEl) generalCostEl.textContent = currencyFormatter.format(totalMonthlySum);
+
+            } catch (error) {
+                console.error('Error updating monthly expenses UI:', error);
+            }
+        }
+
+        function renderRoiContributionDonut(chartData, highlightedTitle = null) {
+            const canvas = document.getElementById('roiSourceChart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return;
+
+            const container = canvas.parentElement;
+            if (container) {
+                const w = container.offsetWidth;
+                const h = container.offsetHeight;
+                if (w > 0 && h > 0) {
+                    canvas.width = w;
+                    canvas.height = h;
+                }
+            }
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const total = chartData.reduce((sum, item) => sum + (Number(item.value) || 0), 0);
+            if (!(total > 0)) return;
+
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const outerRadius = Math.max(10, Math.min(centerX, centerY) - 18);
+            const innerRadius = Math.max(6, outerRadius * 0.62);
+
+            let currentAngle = -Math.PI / 2;
+            const slices = [];
+
+            chartData.forEach(item => {
+                const v = Number(item.value) || 0;
+                if (!(v > 0)) return;
+
+                const sliceAngle = (v / total) * 2 * Math.PI;
+                const isHighlighted = Boolean(highlightedTitle && item.title === highlightedTitle);
+                const r = isHighlighted ? outerRadius + 5 : outerRadius;
+
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, r, currentAngle, currentAngle + sliceAngle);
+                ctx.arc(centerX, centerY, innerRadius, currentAngle + sliceAngle, currentAngle, true);
+                ctx.closePath();
+                ctx.fillStyle = item.color;
+                ctx.fill();
+
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = isHighlighted ? 3 : 2;
+                ctx.stroke();
+
+                slices.push({
+                    startAngle: currentAngle,
+                    endAngle: currentAngle + sliceAngle,
+                    title: item.title
+                });
+
+                currentAngle += sliceAngle;
+            });
+
+            canvas.roiContributionChartData = chartData;
+            canvas.roiContributionSlices = slices;
+            canvas.roiContributionOuterRadius = outerRadius;
+            canvas.roiContributionInnerRadius = innerRadius;
+        }
+
+        function ensureRoiContributionInteractions() {
+            const canvas = document.getElementById('roiSourceChart');
+            if (!canvas || canvas.roiContributionListenersAttached) return;
+
+            const pickHoveredTitle = (event) => {
+                const rect = canvas.getBoundingClientRect();
+                const x = event.clientX - rect.left;
+                const y = event.clientY - rect.top;
+
+                const centerX = canvas.width / 2;
+                const centerY = canvas.height / 2;
+                const dx = x - centerX;
+                const dy = y - centerY;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                const outerRadius = Number(canvas.roiContributionOuterRadius) || 0;
+                const innerRadius = Number(canvas.roiContributionInnerRadius) || 0;
+                if (!(distance <= outerRadius + 8 && distance >= innerRadius - 2)) return null;
+
+                let angle = Math.atan2(dy, dx);
+                if (angle < -Math.PI / 2) angle += 2 * Math.PI;
+
+                const slices = Array.isArray(canvas.roiContributionSlices) ? canvas.roiContributionSlices : [];
+                const slice = slices.find(s => angle >= s.startAngle && angle <= s.endAngle);
+                return slice ? slice.title : null;
+            };
+
+            canvas.addEventListener('mousemove', (e) => {
+                const title = pickHoveredTitle(e);
+                const current = canvas.roiContributionHighlightedTitle || null;
+                if (title === current) return;
+                canvas.roiContributionHighlightedTitle = title;
+
+                const data = Array.isArray(canvas.roiContributionChartData) ? canvas.roiContributionChartData : [];
+                if (data.length) renderRoiContributionDonut(data, title);
+
+                canvas.style.cursor = title ? 'pointer' : 'default';
+            });
+
+            canvas.addEventListener('mouseleave', () => {
+                if (!canvas.roiContributionHighlightedTitle) return;
+                canvas.roiContributionHighlightedTitle = null;
+                const data = Array.isArray(canvas.roiContributionChartData) ? canvas.roiContributionChartData : [];
+                if (data.length) renderRoiContributionDonut(data, null);
+                canvas.style.cursor = 'default';
+            });
+
+            canvas.roiContributionListenersAttached = true;
+        }
+
+        function showEmptyRoiContribution(message) {
+            const legendEl = document.getElementById('roiSourceLegend');
+            const canvas = document.getElementById('roiSourceChart');
+            if (legendEl) {
+                legendEl.innerHTML = `<p class="text-gray-500 text-center">${message || 'Sin datos para mostrar'}</p>`;
+            }
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return;
+            const container = canvas.parentElement;
+            if (container) {
+                const w = container.offsetWidth;
+                const h = container.offsetHeight;
+                if (w > 0) canvas.width = w;
+                if (h > 0) canvas.height = h;
+            }
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#f8fafc';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#64748b';
+            ctx.font = '14px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(message || 'No hay datos de ROI disponibles', canvas.width / 2, canvas.height / 2);
+        }
+
+        function updateRoiContributionChart() {
+            try {
+                const legendEl = document.getElementById('roiSourceLegend');
+                const canvas = document.getElementById('roiSourceChart');
+                if (!legendEl || !canvas) return;
+
+                const services = [
+                    { storageKey: 'btcMiningInvestments', title: 'BTC Mining', roiMethod: 'linear', color: '#f97316' },
+                    { storageKey: 'cloudPowerMinerInvestments', title: 'Cloud Power Miner', roiMethod: 'linear', color: '#06b6d4' },
+                    { storageKey: 'goMiningInvestments', title: 'GO Mining', roiMethod: 'cagr', color: '#3b82f6' },
+                    { storageKey: 'tapMiningInvestments', title: 'TAP Mining', roiMethod: 'cagr', color: '#10b981' }
+                ];
+
+                const items = services.map(s => {
+                    const summary = computeOneTimeCostSummary(s.storageKey, s.roiMethod);
+                    const roiPct = summary.annualizedRoiPct;
+                    const annualReturn = roiPct === null ? 0 : (summary.totalCost * (roiPct / 100));
+                    return { ...s, summary, roiPct, annualReturn };
+                });
+
+                const totalCost = items.reduce((sum, it) => sum + (Number(it.summary.totalCost) || 0), 0);
+                const totalAnnualReturn = items.reduce((sum, it) => sum + (Number(it.annualReturn) || 0), 0);
+                const totalRoiPct = totalCost > 0 ? (totalAnnualReturn / totalCost) * 100 : null;
+
+                // Actualizar la tabla de comparativa de ROI
+                updateRoiComparisonTable(totalRoiPct);
+
+                const roiValueEl = document.getElementById('roi-calculado');
+                const roiBadgeEl = document.getElementById('roi-calificacion');
+                if (roiValueEl) roiValueEl.textContent = totalRoiPct === null ? 'N/A' : `${totalRoiPct.toFixed(2)}%`;
+
+                if (roiBadgeEl) {
+                    if (totalRoiPct === null || !Number.isFinite(totalRoiPct)) {
+                        roiBadgeEl.textContent = 'N/A';
+                        roiBadgeEl.className = 'text-xs font-semibold px-2 py-1 rounded-full bg-gray-100 text-gray-700';
+                    } else if (totalRoiPct < 5) {
+                        roiBadgeEl.textContent = 'Malo';
+                        roiBadgeEl.className = 'text-xs font-semibold px-2 py-1 rounded-full bg-red-100 text-red-700';
+                    } else if (totalRoiPct < 10) {
+                        roiBadgeEl.textContent = 'Aceptable';
+                        roiBadgeEl.className = 'text-xs font-semibold px-2 py-1 rounded-full bg-yellow-100 text-yellow-700';
+                    } else if (totalRoiPct < 20) {
+                        roiBadgeEl.textContent = 'Bueno';
+                        roiBadgeEl.className = 'text-xs font-semibold px-2 py-1 rounded-full bg-green-100 text-green-700';
+                    } else {
+                        roiBadgeEl.textContent = 'Excelente';
+                        roiBadgeEl.className = 'text-xs font-semibold px-2 py-1 rounded-full bg-indigo-100 text-indigo-700';
+                    }
+                }
+
+                const nonZero = items
+                    .filter(it => Number.isFinite(Number(it.annualReturn)))
+                    .filter(it => Math.abs(Number(it.annualReturn)) > 0);
+                const absTotal = nonZero.reduce((sum, it) => sum + Math.abs(Number(it.annualReturn) || 0), 0);
+
+                if (!nonZero.length || !(absTotal > 0)) {
+                    showEmptyRoiContribution('Sin datos para mostrar');
+                    return;
+                }
+
+                const chartData = nonZero.map(it => ({
+                    title: it.title,
+                    value: Math.abs(Number(it.annualReturn) || 0),
+                    color: it.color,
+                    roiPct: it.roiPct,
+                    annualReturn: Number(it.annualReturn) || 0
+                }));
+
+                ensureRoiContributionInteractions();
+                renderRoiContributionDonut(chartData, canvas.roiContributionHighlightedTitle || null);
+
+                legendEl.innerHTML = '';
+                nonZero.forEach(it => {
+                    const annualReturn = Number(it.annualReturn) || 0;
+                    const pct = absTotal > 0 ? (Math.abs(annualReturn) / absTotal) * 100 : 0;
+                    const roiText = it.roiPct === null ? 'N/A' : `${it.roiPct.toFixed(2)}%`;
+                    const signLabel = annualReturn < 0 ? 'Pérdida anual' : 'Retorno anual';
+                    const row = document.createElement('div');
+                    row.className = 'flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 transition-colors';
+                    row.innerHTML = `
+                        <div class="flex items-center space-x-3">
+                            <div class="w-4 h-4 rounded-full" style="background-color: ${it.color}"></div>
+                            <div class="min-w-0">
+                                <div class="text-sm font-medium text-gray-700 truncate">${it.title}</div>
+                                <div class="text-xs text-gray-500">ROI anualizado: ${roiText}</div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-sm font-semibold text-gray-900">${pct.toFixed(1)}%</div>
+                            <div class="text-xs text-gray-500">${signLabel}: ${currencyFormatter.format(annualReturn)} / año</div>
+                        </div>
+                    `;
+                    legendEl.appendChild(row);
+                });
+
+                const summary = document.createElement('div');
+                summary.className = 'mt-4 pt-3 border-t border-gray-200';
+                summary.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm font-semibold text-gray-700">Retorno anual estimado:</span>
+                        <span class="text-sm font-bold text-cyan-600">${currencyFormatter.format(totalAnnualReturn)} / año</span>
+                    </div>
+                    <div class="flex justify-between items-center mt-1">
+                        <span class="text-sm font-semibold text-gray-700">ROI total:</span>
+                        <span class="text-sm font-bold text-cyan-600">${totalRoiPct === null ? 'N/A' : `${totalRoiPct.toFixed(2)}%`}</span>
+                    </div>
+                `;
+                legendEl.appendChild(summary);
+            } catch (e) {
+                showEmptyRoiContribution('Error cargando Aporte al ROI');
+            }
+        }
+
+        // --- Comparativa de ROI (Multi-Activo vs Usuario) ---
+        let multiAssetRoiCache = {};
+        let annualizedRoiCache = {}; // Cache para ROI histórico anualizado
+        let lastMultiFetchTime = 0;
+        let currentSortMethod = 'ytd'; // 'ytd' o 'annualized'
+
+        // Configuración editable de inflación
+        const INFLACION_GDL_VALOR = 5.0; // % Anual estático editable
+        const BOLSA_VALOR = 10.0; // % Anualizado estático editable (Benchmark S&P 500)
+
+        function setSortMethod(method) {
+            currentSortMethod = method;
+            updateSortButtons();
+            // Disparar actualización de la tabla con el último ROI de usuario conocido
+            const roiValueEl = document.getElementById('roi-calculado');
+            if (roiValueEl) {
+                const currentRoi = parseFloat(roiValueEl.textContent.replace('%', '')) || 0;
+                updateRoiComparisonTable(currentRoi);
+            }
+        }
+
+        function updateSortButtons() {
+            const ytdBtn = document.getElementById('sort-ytd');
+            const annBtn = document.getElementById('sort-annualized');
+            if (!ytdBtn || !annBtn) return;
+
+            if (currentSortMethod === 'ytd') {
+                ytdBtn.className = "px-3 py-1.5 text-xs font-bold rounded-md bg-cyan-600 text-white shadow-md";
+                annBtn.className = "px-3 py-1.5 text-xs font-bold rounded-md text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-600";
+            } else {
+                annBtn.className = "px-3 py-1.5 text-xs font-bold rounded-md bg-cyan-600 text-white shadow-md";
+                ytdBtn.className = "px-3 py-1.5 text-xs font-bold rounded-md text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-600";
+            }
+        }
+
+        async function fetchMultiAssetAnnualizedRoi(symbols) {
+            const currentYear = new Date().getFullYear();
+            const results = {};
+
+            const promises = symbols.map(async (symbol) => {
+                if (annualizedRoiCache[symbol] !== undefined) {
+                    results[symbol] = annualizedRoiCache[symbol];
+                    return;
+                }
+
+                try {
+                    const pair = `${symbol}USDT`;
+                    const annualRois = [];
+
+                    // Obtener precios de apertura de cada año desde 2017 (inicio razonable de datos en Binance)
+                    // Para mayor precisión, podríamos buscar el primer kline disponible, 
+                    // pero promediar años completos es lo solicitado.
+                    const years = [];
+                    for (let y = 2017; y <= currentYear; y++) {
+                        years.push(new Date(y, 0, 1).getTime());
+                    }
+
+                    const pricePromises = years.map(startTime =>
+                        fetch(`https://api.binance.com/api/v3/klines?symbol=${pair}&interval=1d&startTime=${startTime}&limit=1`)
+                            .then(res => res.json())
+                    );
+
+                    const priceData = await Promise.all(pricePromises);
+                    const yearlyPrices = priceData
+                        .map((data, index) => ({
+                            year: 2017 + index,
+                            price: data && data.length > 0 ? parseFloat(data[0][1]) : null
+                        }))
+                        .filter(item => item.price !== null);
+
+                    if (yearlyPrices.length < 2) {
+                        // Si solo tenemos el precio de este año, el ROI anualizado es el YTD actual
+                        results[symbol] = null; // Se calculará dinámicamente con el YTD
+                        return;
+                    }
+
+                    // Calcular ROI para cada año completo
+                    for (let i = 0; i < yearlyPrices.length - 1; i++) {
+                        const startPrice = yearlyPrices[i].price;
+                        const endPrice = yearlyPrices[i + 1].price;
+                        const annualRoi = ((endPrice - startPrice) / startPrice) * 100;
+                        annualRois.push(annualRoi);
+                    }
+
+                    // Guardamos la suma y el conteo de años previos para combinar con el YTD actual
+                    annualizedRoiCache[symbol] = {
+                        previousYearsRoiSum: annualRois.reduce((a, b) => a + b, 0),
+                        previousYearsCount: annualRois.length,
+                        lastJan1Price: yearlyPrices[yearlyPrices.length - 1].price
+                    };
+                    results[symbol] = annualizedRoiCache[symbol];
+                } catch (e) {
+                    console.warn(`Error fetching annualized ROI for ${symbol}:`, e);
+                    results[symbol] = null;
+                }
+            });
+
+            await Promise.all(promises);
+            return results;
+        }
+
+        async function fetchMultiAssetYtdRoi() {
+            const now = Date.now();
+            // Cache por 1 minuto para eficiencia según requerimiento
+            if (Object.keys(multiAssetRoiCache).length > 0 && (now - lastMultiFetchTime < 60 * 1000)) {
+                return multiAssetRoiCache;
+            }
+
+            const symbols = ['BTC', 'ETH', 'LTC', 'BNB', 'SOL', 'XRP', 'ADA', 'DOT', 'DOGE', 'SHIB', 'PEPE', 'WIF', 'BONK']; // Agregamos activos de cultura meme
+            const startOfYear = new Date(new Date().getFullYear(), 0, 1).getTime();
+
+            try {
+                const promises = symbols.map(async (symbol) => {
+                    try {
+                        const pair = `${symbol}USDT`;
+                        // 1. Precio de apertura el 1 de enero
+                        const startRes = await fetch(`https://api.binance.com/api/v3/klines?symbol=${pair}&interval=1d&startTime=${startOfYear}&limit=1`);
+                        const startData = await startRes.json();
+                        if (!startData || startData.length === 0) return { symbol, roi: null };
+                        const jan1Price = parseFloat(startData[0][1]);
+
+                        // 2. Precio actual
+                        const currentRes = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${pair}`);
+                        const currentData = await currentRes.json();
+                        const currentPrice = parseFloat(currentData.price);
+
+                        const roi = ((currentPrice - jan1Price) / jan1Price) * 100;
+                        return { symbol, roi };
+                    } catch (e) {
+                        console.warn(`Error fetching ROI for ${symbol}:`, e);
+                        return { symbol, roi: multiAssetRoiCache[symbol] || null };
+                    }
+                });
+
+                const results = await Promise.all(promises);
+                results.forEach(res => {
+                    multiAssetRoiCache[res.symbol] = res.roi;
+                });
+
+                lastMultiFetchTime = now;
+                return multiAssetRoiCache;
+            } catch (error) {
+                console.error('Error fetching Multi-Asset ROI:', error);
+                return multiAssetRoiCache;
+            }
+        }
+
+        async function updateRoiComparisonTable(userRoi) {
+            const tbody = document.getElementById('roi-comparison-body');
+            if (!tbody) return;
+
+            // Obtener/Actualizar ROI de activos (YTD y Histórico)
+            const symbols = ['BTC', 'ETH', 'LTC', 'BNB', 'SOL', 'XRP', 'ADA', 'DOT', 'DOGE', 'SHIB', 'PEPE', 'WIF', 'BONK'];
+            const [cryptoRois, historicalData] = await Promise.all([
+                fetchMultiAssetYtdRoi(),
+                fetchMultiAssetAnnualizedRoi(symbols)
+            ]);
+
+            const getAnnualizedRoi = (sym) => {
+                const ytd = cryptoRois[sym];
+                const hist = historicalData[sym];
+                if (ytd === null || ytd === undefined) return null;
+                if (!hist) return ytd; // Solo tenemos este año
+
+                // Promedio: (Suma años anteriores + YTD actual) / (Total años)
+                return (hist.previousYearsRoiSum + ytd) / (hist.previousYearsCount + 1);
+            };
+
+            const assetConfigs = {
+                'BTC': { name: 'Bitcoin', icon: 'fab fa-bitcoin', color: 'text-orange-500' },
+                'ETH': { name: 'Ethereum', icon: 'fab fa-ethereum', color: 'text-blue-400' },
+                'BNB': { name: 'Binance Coin', icon: 'fas fa-coins', color: 'text-yellow-500' },
+                'SOL': { name: 'Solana', icon: 'fas fa-bolt', color: 'text-purple-500' },
+                'XRP': { name: 'Ripple', icon: 'fas fa-wave-square', color: 'text-cyan-400' },
+                'LTC': { name: 'Litecoin', icon: 'fas fa-dot-circle', color: 'text-slate-400' },
+                'ADA': { name: 'Cardano', icon: 'fab fa-creative-commons-share', color: 'text-blue-600' },
+                'DOT': { name: 'Polkadot', icon: 'fas fa-braille', color: 'text-pink-500' },
+                'DOGE': { name: 'Dogecoin', icon: 'fas fa-dog', color: 'text-yellow-600' },
+                'SHIB': { name: 'Shiba Inu', icon: 'fas fa-paw', color: 'text-orange-600' },
+                'PEPE': { name: 'Pepe', icon: 'fas fa-frog', color: 'text-green-500' },
+                'WIF': { name: 'Dogwifhat', icon: 'fas fa-hat-wizard', color: 'text-pink-400' },
+                'BONK': { name: 'Bonk', icon: 'fas fa-hammer', color: 'text-orange-400' }
+            };
+
+            // Cálculo de Activos Compuestos
+            const getRoi = (sym) => cryptoRois[sym] || 0;
+
+            // Holding Core: BTC 50%, ETH 30%, BNB 10%, SOL 10%
+            const coreRoi = (getRoi('BTC') * 0.50) + (getRoi('ETH') * 0.30) + (getRoi('BNB') * 0.10) + (getRoi('SOL') * 0.10);
+            const coreAnn = (getAnnualizedRoi('BTC') * 0.50) + (getAnnualizedRoi('ETH') * 0.30) + (getAnnualizedRoi('BNB') * 0.10) + (getAnnualizedRoi('SOL') * 0.10);
+
+            // Holding Risk-on: BTC 30%, ETH 30%, SOL 20%, Otras Alts 20% (Promedio ADA/DOT/LTC/XRP)
+            const altsRoi = (getRoi('ADA') + getRoi('DOT') + getRoi('LTC') + getRoi('XRP')) / 4;
+            const altsAnn = (getAnnualizedRoi('ADA') + getAnnualizedRoi('DOT') + getAnnualizedRoi('LTC') + getAnnualizedRoi('XRP')) / 4;
+            const riskOnRoi = (getRoi('BTC') * 0.30) + (getRoi('ETH') * 0.30) + (getRoi('SOL') * 0.20) + (altsRoi * 0.20);
+            const riskOnAnn = (getAnnualizedRoi('BTC') * 0.30) + (getAnnualizedRoi('ETH') * 0.30) + (getAnnualizedRoi('SOL') * 0.20) + (altsAnn * 0.20);
+
+            // Holding Culture-Beta: DOGE 35%, SHIB 25%, PEPE 20%, WIF 15%, BONK 5%
+            const cultureBetaRoi = (getRoi('DOGE') * 0.35) + (getRoi('SHIB') * 0.25) + (getRoi('PEPE') * 0.20) + (getRoi('WIF') * 0.15) + (getRoi('BONK') * 0.05);
+            const cultureBetaAnn = (getAnnualizedRoi('DOGE') * 0.35) + (getAnnualizedRoi('SHIB') * 0.25) + (getAnnualizedRoi('PEPE') * 0.20) + (getAnnualizedRoi('WIF') * 0.15) + (getAnnualizedRoi('BONK') * 0.05);
+
+            const data = [
+                {
+                    name: 'Mi Cartera (Anual Est.)',
+                    roi: userRoi,
+                    annRoi: null,
+                    color: 'text-cyan-500',
+                    icon: 'fas fa-wallet'
+                },
+                {
+                    name: 'Holding Core (Ponderado)',
+                    roi: coreRoi,
+                    annRoi: coreAnn,
+                    color: 'text-emerald-500',
+                    icon: 'fas fa-shield-alt',
+                    details: '<b>Composición:</b><br>• BTC: 50%<br>• ETH: 30%<br>• BNB: 10%<br>• SOL: 10%'
+                },
+                {
+                    name: 'Holding Risk-on (Ponderado)',
+                    roi: riskOnRoi,
+                    annRoi: riskOnAnn,
+                    color: 'text-rose-500',
+                    icon: 'fas fa-fire',
+                    details: '<b>Composición:</b><br>• BTC: 30%<br>• ETH: 30%<br>• SOL: 20%<br>• Alts (ADA, DOT, LTC, XRP): 20%'
+                },
+                {
+                    name: 'Holding Culture-Beta (Ponderado)',
+                    roi: cultureBetaRoi,
+                    annRoi: cultureBetaAnn,
+                    color: 'text-indigo-500',
+                    icon: 'fas fa-mask',
+                    details: '<b>Composición Memes:</b><br>• DOGE: 35%<br>• SHIB: 25%<br>• PEPE: 20%<br>• WIF: 15%<br>• BONK: 5%'
+                },
+                {
+                    name: 'Inflación Guadalajara (MX)',
+                    roi: INFLACION_GDL_VALOR,
+                    annRoi: null,
+                    color: 'text-red-400',
+                    icon: 'fas fa-chart-line',
+                    isInflation: true
+                },
+                {
+                    name: 'Inversión en Bolsa (Benchmark)',
+                    roi: null,
+                    annRoi: BOLSA_VALOR,
+                    color: 'text-blue-500',
+                    icon: 'fas fa-university',
+                    isBolsa: true
+                }
+            ];
+
+            // Agregar datos de criptos
+            Object.keys(cryptoRois).forEach(symbol => {
+                const config = assetConfigs[symbol];
+                data.push({
+                    name: config.name,
+                    roi: cryptoRois[symbol],
+                    annRoi: getAnnualizedRoi(symbol),
+                    color: config.color,
+                    icon: config.icon
+                });
+            });
+
+            // Ordenar según el método seleccionado
+            data.sort((a, b) => {
+                let valA, valB;
+                if (currentSortMethod === 'annualized') {
+                    valA = a.annRoi === null ? -Infinity : a.annRoi;
+                    valB = b.annRoi === null ? -Infinity : b.annRoi;
+                } else {
+                    valA = a.roi === null ? -Infinity : a.roi;
+                    valB = b.roi === null ? -Infinity : b.roi;
+                }
+                return valB - valA;
+            });
+
+            // Inicializar estados de botones si es la primera vez
+            updateSortButtons();
+
+            tbody.innerHTML = '';
+            data.forEach((item, index) => {
+                const roiValue = item.roi;
+                const roiText = item.isBolsa ? '-' : (roiValue === null ? '<span class="loader"></span>' : `${roiValue.toFixed(2)}%`);
+
+                // Lógica de colores: Normal (Verde +, Rojo -) vs Inflación (Rojo +, Verde -)
+                let roiClass = '';
+                if (roiValue !== null) {
+                    if (item.isInflation) {
+                        roiClass = roiValue >= 0 ? 'text-red-600' : 'text-green-600';
+                    } else {
+                        roiClass = roiValue >= 0 ? 'text-green-600' : 'text-red-600';
+                    }
+                }
+
+                const annValue = item.annRoi;
+                const annText = (item.name.includes('Mi Cartera') || item.isInflation) ? '-' : (annValue === null ? '<span class="loader"></span>' : `${annValue.toFixed(2)}%`);
+                const annClass = (annValue === null || item.name.includes('Mi Cartera') || item.isInflation) ? '' : (annValue >= 0 ? 'text-green-600' : 'text-red-600');
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50 dark:hover:bg-slate-800/50 transition-colors";
+
+                let nameHtml = `<span class="font-semibold text-gray-700 dark:text-gray-200">${item.name}</span>`;
+                if (item.details) {
+                    nameHtml += `
+                        <div class="tooltip ml-2">
+                            <i class="fas fa-question-circle text-gray-400 hover:text-cyan-500 transition-colors"></i>
+                            <div class="tooltiptext">
+                                ${item.details}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                tr.innerHTML = `
+                    <td class="py-3 px-4 font-bold text-gray-400 dark:text-gray-500">
+                        ${index + 1}
+                    </td>
+                    <td class="py-3 px-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-gray-100 dark:bg-slate-700 flex items-center justify-center">
+                                <i class="${item.icon} ${item.color} text-lg"></i>
+                            </div>
+                            <div class="flex items-center">
+                                ${nameHtml}
+                            </div>
+                        </div>
+                    </td>
+                    <td class="py-3 px-4 text-right">
+                        <span class="font-bold text-lg ${roiClass}">${roiText}</span>
+                    </td>
+                    <td class="py-3 px-4 text-right">
+                        <span class="font-bold text-lg ${annClass}">${annText}</span>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
         // Function to get the most recent daily income from Cryptotab IndexedDB
         function getCryptotabDailyIncome(dbName) {
             return new Promise((resolve) => {
                 try {
                     const request = indexedDB.open(dbName);
-                    
-                    request.onsuccess = function(event) {
+
+                    request.onsuccess = function (event) {
                         const db = event.target.result;
-                        
+
                         // Check if the object store exists
                         if (!db.objectStoreNames.contains('records')) {
                             console.log(`Object store 'records' not found in ${dbName}`);
                             resolve(0);
                             return;
                         }
-                        
+
                         try {
                             const transaction = db.transaction(['records'], 'readonly');
                             const store = transaction.objectStore('records');
-                            
+
                             // Get all records and find the most recent one
                             const getAllRequest = store.getAll();
-                            
-                            getAllRequest.onsuccess = function(event) {
+
+                            getAllRequest.onsuccess = function (event) {
                                 const records = event.target.result;
                                 if (!records || records.length === 0) {
                                     resolve(0);
                                     return;
                                 }
-                                
+
                                 // Sort by dateISO in descending order to get the most recent
                                 records.sort((a, b) => new Date(b.dateISO) - new Date(a.dateISO));
                                 const mostRecentRecord = records[0];
-                                
+
                                 // Return the mxn_static value (daily income in MXN)
                                 resolve(mostRecentRecord.mxn_static || 0);
                             };
-                            
-                            getAllRequest.onerror = function() {
+
+                            getAllRequest.onerror = function () {
                                 console.error(`Error getting records from ${dbName}`);
                                 resolve(0);
                             };
@@ -565,8 +1854,8 @@
                             resolve(0);
                         }
                     };
-                    
-                    request.onerror = function() {
+
+                    request.onerror = function () {
                         console.error(`Error opening database ${dbName}`);
                         resolve(0);
                     };
@@ -583,24 +1872,33 @@
             const btcDailyIncome = calculateMiningDailyIncome('btcMiningInvestments');
             const goDailyIncome = calculateMiningDailyIncome('goMiningInvestments');
             const tapDailyIncome = calculateMiningDailyIncome('tapMiningInvestments');
-            
+            const cloudPowerMinerDailyIncome = calculateMiningDailyIncome('cloudPowerMinerInvestments');
+
             // Get daily income from Cryptotab databases
             const ctFarmIncome = await getCryptotabDailyIncome('ctFarm_registroDiario_db_v1');
             const ctPoolIncome = await getCryptotabDailyIncome('ctPool_registroDiario_db_v1');
             const ctBrowserIncome = await getCryptotabDailyIncome('ctBrowser_registroDiario_db_v1');
-            
-            // Calculate total daily income
-            const totalDailyIncome = btcDailyIncome + goDailyIncome + tapDailyIncome + ctFarmIncome + ctPoolIncome + ctBrowserIncome;
-            
+            const ctNftIncome = await getCryptotabDailyIncome('ctNft_registroDiario_db_v1');
+
+            // Get daily income from Finanzas Personales module (average from last 30 days)
+            const finanzasDailyIncome = calculateFinanzasDailyIncome();
+
+            // Get daily PNL from Trading modules
+            const tradingDailyPnl = calculateTradingDailyPnl();
+            const fttDailyPnl = calculateFttDailyPnl();
+
+            // Calculate total daily income (including Finanzas, Trading, and FTT)
+            const totalDailyIncome = btcDailyIncome + goDailyIncome + tapDailyIncome + cloudPowerMinerDailyIncome + ctFarmIncome + ctPoolIncome + ctBrowserIncome + ctNftIncome + finanzasDailyIncome + tradingDailyPnl + fttDailyPnl;
+
             // Update the daily income field
             document.getElementById('ganancia-diaria').textContent = currencyFormatter.format(totalDailyIncome);
-            
+
             // Calculate and update other time periods
             document.getElementById('ganancia-semanal').textContent = currencyFormatter.format(totalDailyIncome * 7);
             document.getElementById('ganancia-quincenal').textContent = currencyFormatter.format(totalDailyIncome * 15);
             document.getElementById('ganancia-mensual').textContent = currencyFormatter.format(totalDailyIncome * 30);
-            
-            console.log(`Daily income updated: BTC=${btcDailyIncome}, GO=${goDailyIncome}, TAP=${tapDailyIncome}, CT-FARM=${ctFarmIncome}, CT-POOL=${ctPoolIncome}, CT-BROWSER=${ctBrowserIncome}, TOTAL=${totalDailyIncome}`);
+
+            console.log(`Daily income updated: BTC=${btcDailyIncome}, GO=${goDailyIncome}, TAP=${tapDailyIncome}, CPM=${cloudPowerMinerDailyIncome}, CT-FARM=${ctFarmIncome}, CT-POOL=${ctPoolIncome}, CT-BROWSER=${ctBrowserIncome}, CT-NFT=${ctNftIncome}, FINANZAS=${finanzasDailyIncome.toFixed(2)}, TRADING=${tradingDailyPnl.toFixed(2)}, FTT=${fttDailyPnl.toFixed(2)}, TOTAL=${totalDailyIncome}`);
         }
 
         // Function to create and update the income source chart
@@ -610,98 +1908,112 @@
                 const btcDailyIncome = calculateMiningDailyIncome('btcMiningInvestments');
                 const goDailyIncome = calculateMiningDailyIncome('goMiningInvestments');
                 const tapDailyIncome = calculateMiningDailyIncome('tapMiningInvestments');
+                const cloudPowerMinerDailyIncome = calculateMiningDailyIncome('cloudPowerMinerInvestments');
                 const ctFarmIncome = await getCryptotabDailyIncome('ctFarm_registroDiario_db_v1');
                 const ctPoolIncome = await getCryptotabDailyIncome('ctPool_registroDiario_db_v1');
                 const ctBrowserIncome = await getCryptotabDailyIncome('ctBrowser_registroDiario_db_v1');
-                
-                // Create data structure with all sources
+                const ctNftIncome = await getCryptotabDailyIncome('ctNft_registroDiario_db_v1');
+
+                // Get daily income from Finanzas Personales module
+                const finanzasDailyIncome = calculateFinanzasDailyIncome();
+
+                // Get daily PNL from Trading modules
+                const tradingDailyPnl = calculateTradingDailyPnl();
+                const fttDailyPnl = calculateFttDailyPnl();
+
+                // Create data structure with all sources (including Finanzas, Trading, FTT)
                 const incomeSources = [
                     { name: 'BTC Mining', value: btcDailyIncome, color: '#F7931A' },
                     { name: 'GO Mining', value: goDailyIncome, color: '#4285F4' },
                     { name: 'TAP Mining', value: tapDailyIncome, color: '#34A853' },
+                    { name: 'Cloud Power Miner', value: cloudPowerMinerDailyIncome, color: '#06b6d4' },
                     { name: 'CT Farm', value: ctFarmIncome, color: '#FBBC04' },
                     { name: 'CT Pool', value: ctPoolIncome, color: '#EA4335' },
-                    { name: 'CT Browser', value: ctBrowserIncome, color: '#9C27B0' }
+                    { name: 'CT Browser', value: ctBrowserIncome, color: '#9C27B0' },
+                    { name: 'CT NFT', value: ctNftIncome, color: '#8b5cf6' },
+                    { name: 'Finanzas Personales', value: finanzasDailyIncome, color: '#10b981' },
+                    { name: 'Trading', value: Math.max(0, tradingDailyPnl), color: '#f59e0b' },
+                    { name: 'Trading FTT', value: Math.max(0, fttDailyPnl), color: '#ec4899' }
                 ];
-                
+
                 // Filter out sources with 0 income and calculate total
                 const activeSources = incomeSources.filter(source => source.value > 0);
                 const totalIncome = activeSources.reduce((sum, source) => sum + source.value, 0);
-                
+
                 if (totalIncome === 0) {
                     // Show empty state
                     showEmptyChart();
                     return;
                 }
-                
+
                 // Calculate percentages
                 const chartData = activeSources.map(source => ({
                     ...source,
                     percentage: ((source.value / totalIncome) * 100).toFixed(1)
                 }));
-                
+
                 // Create the chart
                 createPieChart(chartData);
-                
+
                 // Create the legend
                 createInteractiveLegend(chartData);
-                
+
             } catch (error) {
                 console.error('Error updating income source chart:', error);
                 showEmptyChart();
             }
         }
-        
+
         // Function to show empty chart state
         function showEmptyChart() {
             const canvas = document.getElementById('incomeSourceChart');
             const ctx = canvas.getContext('2d');
-            
+
             // Clear canvas
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
+
             // Draw empty state
             ctx.fillStyle = '#f8fafc';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
+
             ctx.fillStyle = '#64748b';
             ctx.font = '14px sans-serif';
             ctx.textAlign = 'center';
             ctx.fillText('No hay datos de ingresos disponibles', canvas.width / 2, canvas.height / 2);
-            
+
             // Update legend
-            document.getElementById('incomeSourceLegend').innerHTML = 
+            document.getElementById('incomeSourceLegend').innerHTML =
                 '<p class="text-gray-500 text-center">Sin datos para mostrar</p>';
         }
-        
+
         // Function to create the pie chart
         function createPieChart(data) {
             const canvas = document.getElementById('incomeSourceChart');
             const ctx = canvas.getContext('2d');
-            
+
             // Set canvas size
             const container = canvas.parentElement;
             canvas.width = container.offsetWidth;
             canvas.height = container.offsetHeight;
-            
+
             // Clear canvas
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
+
             // Calculate center and radius
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
             const radius = Math.min(centerX, centerY) - 20;
-            
+
             // Calculate total for angles
             const total = data.reduce((sum, item) => sum + parseFloat(item.value), 0);
-            
+
             // Draw pie slices
             let currentAngle = -Math.PI / 2; // Start from top
             const slices = [];
-            
+
             data.forEach((item, index) => {
                 const sliceAngle = (parseFloat(item.value) / total) * 2 * Math.PI;
-                
+
                 // Store slice info for hover detection
                 slices.push({
                     startAngle: currentAngle,
@@ -709,7 +2021,7 @@
                     color: item.color,
                     data: item
                 });
-                
+
                 // Draw slice
                 ctx.beginPath();
                 ctx.moveTo(centerX, centerY);
@@ -717,33 +2029,33 @@
                 ctx.closePath();
                 ctx.fillStyle = item.color;
                 ctx.fill();
-                
+
                 // Add subtle border
                 ctx.strokeStyle = '#ffffff';
                 ctx.lineWidth = 2;
                 ctx.stroke();
-                
+
                 currentAngle += sliceAngle;
             });
-            
+
             // Add hover effect
             canvas.addEventListener('mousemove', (e) => {
                 const rect = canvas.getBoundingClientRect();
                 const x = e.clientX - rect.left;
                 const y = e.clientY - rect.top;
-                
+
                 const dx = x - centerX;
                 const dy = y - centerY;
                 const distance = Math.sqrt(dx * dx + dy * dy);
-                
+
                 if (distance <= radius) {
                     let angle = Math.atan2(dy, dx);
                     if (angle < -Math.PI / 2) angle += 2 * Math.PI;
-                    
-                    const hoveredSlice = slices.find(slice => 
+
+                    const hoveredSlice = slices.find(slice =>
                         angle >= slice.startAngle && angle <= slice.endAngle
                     );
-                    
+
                     if (hoveredSlice) {
                         canvas.style.cursor = 'pointer';
                         // Redraw with highlight
@@ -757,57 +2069,57 @@
                     createPieChart(data);
                 }
             });
-            
+
             canvas.addEventListener('mouseleave', () => {
                 canvas.style.cursor = 'default';
                 createPieChart(data);
             });
-            
+
             // Store chart data for redraws
             canvas.chartData = data;
         }
-        
+
         // Function to redraw chart with highlight
         function redrawChartWithHighlight(data, highlightSlice) {
             const canvas = document.getElementById('incomeSourceChart');
             const ctx = canvas.getContext('2d');
-            
+
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
+
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
             const radius = Math.min(centerX, centerY) - 20;
-            
+
             const total = data.reduce((sum, item) => sum + parseFloat(item.value), 0);
             let currentAngle = -Math.PI / 2;
-            
+
             data.forEach((item, index) => {
                 const sliceAngle = (parseFloat(item.value) / total) * 2 * Math.PI;
                 const isHighlighted = item.name === highlightSlice.data.name;
                 const currentRadius = isHighlighted ? radius + 5 : radius;
-                
+
                 ctx.beginPath();
                 ctx.moveTo(centerX, centerY);
                 ctx.arc(centerX, centerY, currentRadius, currentAngle, currentAngle + sliceAngle);
                 ctx.closePath();
                 ctx.fillStyle = item.color;
                 ctx.fill();
-                
+
                 ctx.strokeStyle = '#ffffff';
                 ctx.lineWidth = isHighlighted ? 3 : 2;
                 ctx.stroke();
-                
+
                 currentAngle += sliceAngle;
             });
         }
-        
+
         // Function to create interactive legend
         function createInteractiveLegend(data) {
             const legendContainer = document.getElementById('incomeSourceLegend');
             legendContainer.innerHTML = '';
-            
+
             const total = data.reduce((sum, item) => sum + parseFloat(item.value), 0);
-            
+
             data.forEach(item => {
                 const legendItem = document.createElement('div');
                 legendItem.className = 'flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer';
@@ -821,24 +2133,24 @@
                         <div class="text-xs text-gray-500">${currencyFormatter.format(item.value)}</div>
                     </div>
                 `;
-                
+
                 // Add hover effect
                 legendItem.addEventListener('mouseenter', () => {
                     const canvas = document.getElementById('incomeSourceChart');
                     const ctx = canvas.getContext('2d');
-                    
+
                     // Find the corresponding slice and highlight it
                     const total = data.reduce((sum, d) => sum + parseFloat(d.value), 0);
                     let currentAngle = -Math.PI / 2;
-                    
+
                     const sliceAngle = (parseFloat(item.value) / total) * 2 * Math.PI;
                     const centerX = canvas.width / 2;
                     const centerY = canvas.height / 2;
                     const radius = Math.min(centerX, centerY) - 20 + 5;
-                    
+
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
                     createPieChart(data);
-                    
+
                     // Draw highlight
                     ctx.beginPath();
                     ctx.moveTo(centerX, centerY);
@@ -850,14 +2162,14 @@
                     ctx.lineWidth = 3;
                     ctx.stroke();
                 });
-                
+
                 legendItem.addEventListener('mouseleave', () => {
                     createPieChart(data);
                 });
-                
+
                 legendContainer.appendChild(legendItem);
             });
-            
+
             // Add summary
             const summary = document.createElement('div');
             summary.className = 'mt-4 pt-3 border-t border-gray-200';
@@ -876,9 +2188,14 @@
             'BTC Mining': '#F7931A',
             'GO Mining': '#4285F4',
             'TAP Mining': '#34A853',
+            'Cloud Power Miner': '#06b6d4',
             'CT Farm': '#FBBC04',
             'CT Pool': '#EA4335',
             'CT Browser': '#9C27B0',
+            'CT NFT': '#8b5cf6',
+            'Finanzas Personales': '#10b981',
+            'Trading': '#f59e0b',
+            'Trading FTT': '#ec4899',
             'Total': '#0891b2'
         };
 
@@ -901,7 +2218,7 @@
             return new Promise((resolve) => {
                 try {
                     const request = indexedDB.open(dbName);
-                    request.onsuccess = function(event) {
+                    request.onsuccess = function (event) {
                         const db = event.target.result;
                         if (!db.objectStoreNames.contains('records')) {
                             resolve({});
@@ -911,26 +2228,26 @@
                             const tx = db.transaction(['records'], 'readonly');
                             const store = tx.objectStore('records');
                             const getAllReq = store.getAll();
-                            getAllReq.onsuccess = function(ev) {
+                            getAllReq.onsuccess = function (ev) {
                                 const records = ev.target.result || [];
                                 const map = {};
                                 records.forEach(r => {
                                     if (!r || !r.dateISO) return;
                                     try {
-                                        const key = new Date(r.dateISO).toISOString().slice(0,10);
+                                        const key = new Date(r.dateISO).toISOString().slice(0, 10);
                                         // keep the latest record for the date
                                         if (!map[key] || new Date(r.dateISO) > new Date(map[key].dateISO)) {
                                             map[key] = r;
                                         }
-                                    } catch(e) { /* ignore malformed dates */ }
+                                    } catch (e) { /* ignore malformed dates */ }
                                 });
                                 resolve(map);
                             };
-                            getAllReq.onerror = function() { resolve({}); };
-                        } catch(e) { resolve({}); }
+                            getAllReq.onerror = function () { resolve({}); };
+                        } catch (e) { resolve({}); }
                     };
-                    request.onerror = function() { resolve({}); };
-                } catch(e) { resolve({}); }
+                    request.onerror = function () { resolve({}); };
+                } catch (e) { resolve({}); }
             });
         }
 
@@ -971,7 +2288,7 @@
                         }
                     }
 
-                    history.sort((a,b) => new Date(a.date) - new Date(b.date));
+                    history.sort((a, b) => new Date(a.date) - new Date(b.date));
 
                     keys.forEach((key, idx) => {
                         if (startKey && key < startKey) return;
@@ -1004,43 +2321,54 @@
                 const dates = getLastNDates(days);
                 const labels = dates.map(d => d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }));
 
-                // Constant daily incomes from localStorage-based investments
-                const btcDaily = calculateMiningDailyIncome('btcMiningInvestments');
-                const goDaily = calculateMiningDailyIncome('goMiningInvestments');
-                const tapDaily = calculateMiningDailyIncome('tapMiningInvestments');
-
                 // Fetch CT DBs maps in parallel
-                const [farmMap, poolMap, browserMap] = await Promise.all([
+                const [farmMap, poolMap, browserMap, nftMap] = await Promise.all([
                     fetchCryptotabRecordsMap('ctFarm_registroDiario_db_v1'),
                     fetchCryptotabRecordsMap('ctPool_registroDiario_db_v1'),
-                    fetchCryptotabRecordsMap('ctBrowser_registroDiario_db_v1')
+                    fetchCryptotabRecordsMap('ctBrowser_registroDiario_db_v1'),
+                    fetchCryptotabRecordsMap('ctNft_registroDiario_db_v1')
                 ]);
 
                 const farmValues = buildValuesForLastNDatesFromMap(farmMap, dates);
                 const poolValues = buildValuesForLastNDatesFromMap(poolMap, dates);
                 const browserValues = buildValuesForLastNDatesFromMap(browserMap, dates);
+                const nftValues = buildValuesForLastNDatesFromMap(nftMap, dates);
 
                 // Build source-series for BTC/GO/TAP using their change history in localStorage
                 const btcSeries = buildSeriesFromLocalStorage('btcMiningInvestments', dates);
                 const goSeries = buildSeriesFromLocalStorage('goMiningInvestments', dates);
                 const tapSeries = buildSeriesFromLocalStorage('tapMiningInvestments', dates);
+                const cloudPowerMinerSeries = buildSeriesFromLocalStorage('cloudPowerMinerInvestments', dates);
 
-                // Total per day
+                // Build series for Finanzas Personales (daily income)
+                const finanzasSeries = buildFinanzasDailySeries(dates);
+
+                // Build series for Trading and FTT
+                const tradingSeries = buildTradingDailySeries(dates);
+                const fttSeries = buildFttDailySeries(dates);
+
+                // Total per day (including Finanzas, Trading, and FTT)
                 const totalSeries = [];
                 for (let i = 0; i < days; i++) {
-                    const total = (btcSeries[i] || 0) + (goSeries[i] || 0) + (tapSeries[i] || 0)
-                        + (farmValues[i] || 0) + (poolValues[i] || 0) + (browserValues[i] || 0);
+                    const total = (btcSeries[i] || 0) + (goSeries[i] || 0) + (tapSeries[i] || 0) + (cloudPowerMinerSeries[i] || 0)
+                        + (farmValues[i] || 0) + (poolValues[i] || 0) + (browserValues[i] || 0) + (nftValues[i] || 0)
+                        + (finanzasSeries[i] || 0) + (tradingSeries[i] || 0) + (fttSeries[i] || 0);
                     totalSeries.push(Number(total));
                 }
 
-                // Prepare Chart.js datasets: one per source + total
+                // Prepare Chart.js datasets: one per source + total (including Finanzas, Trading, FTT)
                 const datasets = [
                     { label: 'BTC Mining', data: btcSeries, borderColor: incomeEvolutionColors['BTC Mining'], backgroundColor: incomeEvolutionColors['BTC Mining'], fill: false, tension: 0.2 },
                     { label: 'GO Mining', data: goSeries, borderColor: incomeEvolutionColors['GO Mining'], backgroundColor: incomeEvolutionColors['GO Mining'], fill: false, tension: 0.2 },
                     { label: 'TAP Mining', data: tapSeries, borderColor: incomeEvolutionColors['TAP Mining'], backgroundColor: incomeEvolutionColors['TAP Mining'], fill: false, tension: 0.2 },
+                    { label: 'Cloud Power Miner', data: cloudPowerMinerSeries, borderColor: incomeEvolutionColors['Cloud Power Miner'], backgroundColor: incomeEvolutionColors['Cloud Power Miner'], fill: false, tension: 0.2 },
                     { label: 'CT Farm', data: farmValues, borderColor: incomeEvolutionColors['CT Farm'], backgroundColor: incomeEvolutionColors['CT Farm'], fill: false, tension: 0.2 },
                     { label: 'CT Pool', data: poolValues, borderColor: incomeEvolutionColors['CT Pool'], backgroundColor: incomeEvolutionColors['CT Pool'], fill: false, tension: 0.2 },
                     { label: 'CT Browser', data: browserValues, borderColor: incomeEvolutionColors['CT Browser'], backgroundColor: incomeEvolutionColors['CT Browser'], fill: false, tension: 0.2 },
+                    { label: 'CT NFT', data: nftValues, borderColor: incomeEvolutionColors['CT NFT'], backgroundColor: incomeEvolutionColors['CT NFT'], fill: false, tension: 0.2 },
+                    { label: 'Finanzas Personales', data: finanzasSeries, borderColor: incomeEvolutionColors['Finanzas Personales'], backgroundColor: incomeEvolutionColors['Finanzas Personales'], fill: false, tension: 0.2 },
+                    { label: 'Trading', data: tradingSeries, borderColor: incomeEvolutionColors['Trading'], backgroundColor: incomeEvolutionColors['Trading'], fill: false, tension: 0.2 },
+                    { label: 'Trading FTT', data: fttSeries, borderColor: incomeEvolutionColors['Trading FTT'], backgroundColor: incomeEvolutionColors['Trading FTT'], fill: false, tension: 0.2 },
                     { label: 'Total', data: totalSeries, borderColor: incomeEvolutionColors['Total'], backgroundColor: incomeEvolutionColors['Total'], fill: true, tension: 0.15, pointRadius: 2 }
                 ];
 
@@ -1071,7 +2399,7 @@
                                 legend: { position: 'top', labels: { usePointStyle: true } },
                                 tooltip: {
                                     callbacks: {
-                                        label: function(context) {
+                                        label: function (context) {
                                             const v = context.parsed.y || 0;
                                             return context.dataset.label + ': ' + currencyFormatter.format(v);
                                         }
@@ -1091,39 +2419,52 @@
         }
 
         // Initialize when DOM is loaded
-        document.addEventListener('DOMContentLoaded', async function() {
+        document.addEventListener('DOMContentLoaded', async function () {
             await updateStatistics();
             await updateIncomeSourceChart();
             // Create and update income evolution chart (últimos 30 días)
             await updateIncomeEvolutionChart();
+            updateOneTimeCostsUI();
+            updateMonthlyExpensesUI();
+            updateRoiContributionChart();
 
-            // Update statistics and charts every 30 seconds to reflect any changes
-            setInterval(updateStatistics, 30000);
-            setInterval(updateIncomeSourceChart, 30000);
-            setInterval(updateIncomeEvolutionChart, 30000);
+            // Update statistics and charts every 1 minute for efficiency
+            setInterval(updateStatistics, 60000);
+            setInterval(updateIncomeSourceChart, 60000);
+            setInterval(updateIncomeEvolutionChart, 60000);
+            setInterval(updateOneTimeCostsUI, 60000);
+            setInterval(updateMonthlyExpensesUI, 60000);
+            setInterval(updateRoiContributionChart, 60000);
         });
 
         // Tab functionality
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const tabButtons = document.querySelectorAll('.tab-button');
             const tabContents = document.querySelectorAll('.tab-content');
 
             tabButtons.forEach(button => {
                 button.addEventListener('click', () => {
                     const targetTab = button.getAttribute('data-tab');
-                    
+
                     // Remove active class from all buttons and contents
                     tabButtons.forEach(btn => btn.classList.remove('active'));
                     tabContents.forEach(content => content.classList.add('hidden'));
-                    
+
                     // Add active class to clicked button and corresponding content
                     button.classList.add('active');
                     document.getElementById(`tab-content-${targetTab}`).classList.remove('hidden');
+
+                    // Refresh specific tab data if needed
+                    if (targetTab === 'mensual') {
+                        updateMonthlyExpensesUI();
+                    } else if (targetTab === 'unicos') {
+                        updateOneTimeCostsUI();
+                    }
                 });
             });
         });
     </script>
     <script src="/theme.js"></script>
 </body>
-</html>
 
+</html>

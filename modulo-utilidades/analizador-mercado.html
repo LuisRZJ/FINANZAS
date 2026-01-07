@@ -334,22 +334,17 @@
                 setData([]);
                 setCurrentPage(1);
                 try {
-                    const startTs = new Date(startDate).getTime();
+                    let startTs = new Date(startDate).getTime();
                     const endTs = new Date(endDate).getTime();
                     if (startTs >= endTs) throw new Error("La fecha de inicio debe ser anterior a la final.");
                     if (!symbol) throw new Error("Escribe un par (ej. EUR/USD).");
                     const apiKey = localStorage.getItem('fti_twelve_api_key');
                     if (!apiKey) throw new Error("Ingresa y guarda tu API Key de TwelveData.");
-                    const fmt = (d) => {
-                        const dd = new Date(d);
-                        const pad = (num) => (num < 10 ? '0' + num : num);
-                        const Y = dd.getFullYear();
-                        const M = pad(dd.getMonth() + 1);
-                        const D = pad(dd.getDate());
-                        const h = pad(dd.getHours());
-                        const m = pad(dd.getMinutes());
-                        const s = pad(dd.getSeconds());
-                        return `${Y}-${M}-${D} ${h}:${m}:${s}`;
+                    // Usamos formato compatible SQL (YYYY-MM-DD HH:mm:ss) para evitar problemas con TwelveData
+                    // Eliminamos la 'T' y la 'Z' del ISOString
+                    const fmt = (ts) => {
+                         const d = new Date(ts);
+                         return d.toISOString().replace('T', ' ').split('.')[0];
                     };
 
                     if (!ALLOWED_INTERVALS.includes(interval)) {
@@ -357,50 +352,147 @@
                     }
 
                     const mapped = forexIntervalMap[interval] || '1h';
-                    const url = `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(symbol)}&interval=${mapped}&start_date=${encodeURIComponent(fmt(startDate))}&end_date=${encodeURIComponent(fmt(endDate))}&order=asc&timezone=UTC&format=JSON&apikey=${apiKey}`;
-                    await new Promise((resolve) => scheduleTwelveTask(async () => {
-                        setProgress(`Solicitando datos TwelveData (${symbol}, ${mapped})...`);
-                        const response = await fetch(url);
-                        if (!response.ok) {
-                            const errData = await response.json().catch(() => ({}));
-                            throw new Error(errData.message || `Error ${response.status}: Verifica el par y tu API Key.`);
+                    
+                    let allRawValues = [];
+                    let keepFetching = true;
+                    let requestCount = 0;
+                    
+                    // Estrategia: Paginación Inversa (Backwards Pagination)
+                    // Empezamos desde el final (endTs) y pedimos hacia atrás hasta llegar a startTs.
+                    // Esto es mucho más estable en TwelveData.
+                    
+                    let currentAnchorTs = endTs; 
+
+                    // Estimación para barra de progreso
+                    const totalEstimatedCandles = estimates.candles;
+                    const estimatedRequests = Math.ceil(totalEstimatedCandles / 5000) || 1;
+
+                    while(keepFetching) {
+                        requestCount++;
+                        // Evitamos división por cero o números raros
+                        const progressPct = estimatedRequests > 0 ? Math.min(Math.round((requestCount / estimatedRequests) * 100), 99) : 50;
+                        setProgress(`Petición ${requestCount} (Retrocediendo desde ${new Date(currentAnchorTs).toLocaleDateString()})...`);
+
+                        // Usamos currentAnchorTs como end_date
+                        const currentEndStr = fmt(currentAnchorTs);
+                        
+                        // NO enviamos start_date en la URL del bucle.
+                        // Solo enviamos end_date y dejamos que la API nos de las 5000 velas ANTERIORES a esa fecha.
+                        // La API por defecto ordena DESC (lo más reciente primero), que es lo que queremos para ir hacia atrás.
+                        const url = `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(symbol)}&interval=${mapped}&end_date=${encodeURIComponent(currentEndStr)}&outputsize=5000&timezone=UTC&format=JSON&apikey=${apiKey}`;
+                        
+                        const batchValues = await new Promise((resolve, reject) => scheduleTwelveTask(async () => {
+                            try {
+                                const response = await fetch(url);
+                                if (!response.ok) {
+                                    const errData = await response.json().catch(() => ({}));
+                                    if (response.status === 400 && (errData.message || "").includes("No data")) {
+                                         resolve([]); 
+                                         return;
+                                    }
+                                    reject(new Error(errData.message || `Error ${response.status}: Verifica el par y tu API Key.`));
+                                    return;
+                                }
+                                const json = await response.json();
+                                if (json.status && json.status !== 'ok') {
+                                    if ((json.message || "").includes("No data")) {
+                                        resolve([]);
+                                        return;
+                                    }
+                                    reject(new Error(json.message || 'Respuesta inválida de TwelveData.'));
+                                    return;
+                                }
+                                resolve(json.values || []);
+                            } catch (e) {
+                                reject(e);
+                            }
+                        }));
+
+                        if (!batchValues || batchValues.length === 0) {
+                            keepFetching = false;
+                            break;
                         }
-                        const json = await response.json();
-                        if (json.status && json.status !== 'ok') {
-                            throw new Error(json.message || 'Respuesta inválida de TwelveData.');
+
+                        // batchValues viene ordenado DESC (el índice 0 es el más reciente, el último es el más antiguo)
+                        // Filtramos lo que sea anterior a nuestra fecha de inicio global (startTs)
+                        const validBatch = [];
+                        let reachedStart = false;
+
+                        for (const item of batchValues) {
+                            const itemTs = Date.parse(item.datetime.replace(' ', 'T') + 'Z');
+                            
+                            // Si el dato es posterior a nuestro fin global (raro, pero posible), lo ignoramos
+                            if (itemTs > endTs) continue;
+
+                            // Si el dato es anterior a nuestro inicio global, hemos llegado al principio
+                            if (itemTs < startTs) {
+                                reachedStart = true;
+                                // No hacemos break inmediato porque queremos procesar este bloque, 
+                                // pero marcamos para detener el bucle externo
+                            } else {
+                                validBatch.push(item);
+                            }
                         }
-                        const vals = json.values || [];
-                        if (!vals.length) {
-                            setError("No se encontraron datos en este rango de fechas.");
-                            setLoading(false);
-                            setProgress("");
-                            resolve();
-                            return;
+
+                        // Acumulamos. Como vamos hacia atrás, estos datos son "anteriores" a los que ya tenemos.
+                        allRawValues = [...allRawValues, ...validBatch];
+
+                        if (reachedStart || batchValues.length < 5000) {
+                            keepFetching = false;
+                        } else {
+                            // Preparamos siguiente ancla
+                            // El último elemento del batch es el más antiguo recibido.
+                            const oldestItem = batchValues[batchValues.length - 1];
+                            const oldestItemTs = Date.parse(oldestItem.datetime.replace(' ', 'T') + 'Z');
+                            
+                            // Si la API se estanca y nos devuelve lo mismo, cortamos
+                            if (oldestItemTs >= currentAnchorTs) {
+                                keepFetching = false;
+                            } else {
+                                // Retrocedemos 1ms/1s desde el dato más antiguo para pedir el siguiente bloque hacia atrás
+                                currentAnchorTs = oldestItemTs - 1000; 
+                                
+                                // Seguridad: si ya nos pasamos del inicio, paramos
+                                if (currentAnchorTs < startTs) keepFetching = false;
+                            }
                         }
-                        const formatted = vals.map(v => {
-                            const ts = Date.parse(v.datetime.replace(' ', 'T'));
-                            const vol = v.volume !== undefined ? parseFloat(v.volume) : null;
-                            return {
-                                time: ts,
-                                open: parseFloat(v.open),
-                                high: parseFloat(v.high),
-                                low: parseFloat(v.low),
-                                close: parseFloat(v.close),
-                                volume: isNaN(vol) ? null : vol,
-                                trades: null,
-                                takerBuyVol: null,
-                                takerSellVol: null,
-                                delta: null,
-                                buyPressure: null,
-                                isLive: false
-                            };
-                        });
-                        setData(formatted);
-                        setProgress("Completado ✅");
+                    }
+
+                    if (allRawValues.length === 0) {
+                        setError("No se encontraron datos en este rango de fechas.");
                         setLoading(false);
-                        setTimeout(() => { setProgress(""); }, 3000);
-                        resolve();
-                    }));
+                        setProgress("");
+                        return;
+                    }
+
+                    const formatted = allRawValues.map(v => {
+                        // Parseo consistente UTC
+                        const ts = Date.parse(v.datetime.replace(' ', 'T') + 'Z');
+                        const vol = v.volume !== undefined ? parseFloat(v.volume) : null;
+                        return {
+                            time: ts,
+                            open: parseFloat(v.open),
+                            high: parseFloat(v.high),
+                            low: parseFloat(v.low),
+                            close: parseFloat(v.close),
+                            volume: isNaN(vol) ? null : vol,
+                            trades: null,
+                            takerBuyVol: null,
+                            takerSellVol: null,
+                            delta: null,
+                            buyPressure: null,
+                            isLive: false
+                        };
+                    });
+                    
+                    // Filtrar duplicados y asegurar orden CRONOLÓGICO (ASC) final
+                    const uniqueData = Array.from(new Map(formatted.map(item => [item.time, item])).values());
+                    uniqueData.sort((a, b) => a.time - b.time);
+
+                    setData(uniqueData);
+                    setProgress("Completado ✅");
+                    setLoading(false);
+                    setTimeout(() => { setProgress(""); }, 3000);
                 } catch (err) {
                     setError(err.message);
                     setLoading(false);

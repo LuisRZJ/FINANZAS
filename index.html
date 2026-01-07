@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Aplicación web progresiva con funcionalidad offline para finanzas, trading e inversiones.">
+    <meta name="description"
+        content="Aplicación web progresiva con funcionalidad offline para finanzas, trading e inversiones.">
     <meta name="theme-color" content="#2563eb">
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -11,7 +13,8 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <link rel="manifest" href="pwa/manifest.json">
@@ -20,32 +23,32 @@
     <title>FTI Dashboard</title>
 
     <script>
-      tailwind.config = {
-        darkMode: 'class',
-        theme: {
-          extend: {
-            fontFamily: {
-              sans: ['Inter', 'sans-serif'],
-            },
-          }
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
         }
-      }
     </script>
 
     <script>
-        (function() {
-            try {
-                const storedTheme = localStorage.getItem('fti_theme_preference');
-                const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                if (storedTheme === 'dark' || ((!storedTheme || storedTheme === 'system') && systemDark)) {
-                    document.documentElement.classList.add('dark');
-                } else {
-                    document.documentElement.classList.remove('dark');
+            (function () {
+                try {
+                    const storedTheme = localStorage.getItem('fti_theme_preference');
+                    const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    if (storedTheme === 'dark' || ((!storedTheme || storedTheme === 'system') && systemDark)) {
+                        document.documentElement.classList.add('dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                    }
+                } catch (e) {
+                    console.warn('Error accediendo a localStorage para tema:', e);
                 }
-            } catch (e) {
-                console.warn('Error accediendo a localStorage para tema:', e);
-            }
-        })();
+            })();
     </script>
 
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
@@ -53,17 +56,42 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <style>
-        .fade-in { animation: fadeIn 0.3s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-        .backdrop-blur-md { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
-        .backdrop-blur-xl { backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
+        .fade-in {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .backdrop-blur-md {
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        .backdrop-blur-xl {
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+        }
     </style>
 </head>
-<body class="bg-gray-200 text-slate-800 font-sans antialiased min-h-screen dark:bg-gray-900 dark:text-gray-100 transition-colors duration-300">
+
+<body
+    class="bg-gray-200 text-slate-800 font-sans antialiased min-h-screen dark:bg-gray-900 dark:text-gray-100 transition-colors duration-300">
     <div id="root"></div>
 
     <section class="install-app-section text-center mt-10 px-4" style="display: none;">
-        <button id="installButton" class="inline-flex items-center gap-2 bg-green-500 text-white font-bold py-3 px-8 rounded-full hover:bg-green-600 transition-colors duration-300 shadow-lg" style="display: none;">
+        <button id="installButton"
+            class="inline-flex items-center gap-2 bg-green-500 text-white font-bold py-3 px-8 rounded-full hover:bg-green-600 transition-colors duration-300 shadow-lg"
+            style="display: none;">
             <i class="fas fa-download"></i> Instalar Aplicación
         </button>
     </section>
@@ -111,12 +139,181 @@
         const RefreshCw = (props) => <IconBase {...props}><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M8 16H3v5" /></IconBase>;
         const ChevronRight = (props) => <IconBase {...props}><path d="m9 18 6-6-6-6" /></IconBase>;
         const LayoutGrid = (props) => <IconBase {...props}><rect width="7" height="7" x="3" y="3" rx="1" /><rect width="7" height="7" x="14" y="3" rx="1" /><rect width="7" height="7" x="14" y="14" rx="1" /><rect width="7" height="7" x="3" y="14" rx="1" /></IconBase>;
+        const Loader = ({ className = "" }) => (
+            <div className={`animate-spin rounded-full h-4 w-4 border-2 border-blue-500 border-t-transparent ${className}`}></div>
+        );
+
+        // --- Helpers de ROI (Replicados de estadisticas.html) ---
+        const currencyFormatter = new Intl.NumberFormat('es-MX', {
+            style: 'currency',
+            currency: 'MXN',
+        });
+
+        const parseInvestmentsFromStorage = (key) => {
+            try { return JSON.parse(localStorage.getItem(key)) || []; } catch (e) { return []; }
+        };
+
+        const parseValidDate = (val) => {
+            if (!val) return null;
+            const d = new Date(val);
+            return isNaN(d.getTime()) ? null : d;
+        };
+
+        const computeUserRoi = () => {
+            const services = [
+                { key: 'btcMiningInvestments', method: 'linear' },
+                { key: 'cloudPowerMinerInvestments', method: 'linear' },
+                { key: 'goMiningInvestments', method: 'cagr' },
+                { key: 'tapMiningInvestments', method: 'cagr' }
+            ];
+
+            let totalCost = 0;
+            let totalAnnualReturn = 0;
+
+            services.forEach(s => {
+                const invs = parseInvestmentsFromStorage(s.key);
+                const now = new Date();
+                now.setUTCHours(0, 0, 0, 0);
+
+                let costSum = 0;
+                let recoveredSum = 0;
+                let minDate = null;
+
+                invs.forEach(inv => {
+                    const c = Number(inv.cost) || 0;
+                    costSum += c;
+
+                    const start = parseValidDate(inv.date);
+                    if (start) {
+                        start.setUTCHours(0, 0, 0, 0);
+                        if (!minDate || start < minDate) minDate = start;
+
+                        const exp = inv.hasExpiration ? parseValidDate(inv.expirationDate) : null;
+                        if (exp) exp.setUTCHours(0, 0, 0, 0);
+
+                        let limit = new Date(now);
+                        if (exp && exp < limit) limit = exp;
+
+                        if (start < limit) {
+                            const days = Math.floor((limit - start) / 86400000);
+                            recoveredSum += Math.max(0, days * (Number(inv.dailyIncome) || 0));
+                        }
+                    }
+                });
+
+                if (costSum > 0 && minDate) {
+                    const daysSinceFirst = Math.max(1, Math.floor((now - minDate) / 86400000));
+                    const years = daysSinceFirst / 365;
+                    let annualizedRoiPct = null;
+
+                    if (years > 0) {
+                        if (s.method === 'linear') {
+                            if (years < 1) {
+                                annualizedRoiPct = (recoveredSum / costSum) / years * 100;
+                            } else {
+                                annualizedRoiPct = ((recoveredSum - costSum) / costSum) / years * 100;
+                            }
+                        } else if (s.method === 'cagr') {
+                            const ratio = recoveredSum / costSum;
+                            if (ratio > 0) {
+                                annualizedRoiPct = (Math.pow(ratio, 1 / years) - 1) * 100;
+                            }
+                        }
+                    }
+
+                    if (annualizedRoiPct !== null && isFinite(annualizedRoiPct)) {
+                        totalCost += costSum;
+                        totalAnnualReturn += (costSum * (annualizedRoiPct / 100));
+                    }
+                }
+            });
+
+            return totalCost > 0 ? (totalAnnualReturn / totalCost) * 100 : null;
+        };
+
+        const fetchBinanceRoi = async () => {
+            const symbols = ['BTC', 'ETH', 'SOL', 'BNB'];
+            const startOfYear = new Date(new Date().getFullYear(), 0, 1).getTime();
+            const results = [];
+
+            for (const sym of symbols) {
+                try {
+                    const pair = `${sym}USDT`;
+                    const [sRes, cRes] = await Promise.all([
+                        fetch(`https://api.binance.com/api/v3/klines?symbol=${pair}&interval=1d&startTime=${startOfYear}&limit=1`).then(r => r.json()),
+                        fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${pair}`).then(r => r.json())
+                    ]);
+
+                    if (sRes.length && cRes.price) {
+                        const start = parseFloat(sRes[0][1]);
+                        const curr = parseFloat(cRes.price);
+                        const ytd = ((curr - start) / start) * 100;
+
+                        // ROI Anualizado (Dummy para no saturar con fetches históricos en el dashboard)
+                        // Usamos un factor de estabilidad basado en YTD para visualización
+                        const ann = ytd * 0.8;
+
+                        results.push({
+                            symbol: sym,
+                            name: sym === 'BTC' ? 'Bitcoin' : sym === 'ETH' ? 'Ethereum' : sym === 'SOL' ? 'Solana' : 'Binance Coin',
+                            icon: sym === 'BTC' ? 'fab fa-bitcoin' : sym === 'ETH' ? 'fab fa-ethereum' : sym === 'SOL' ? 'fas fa-bolt' : 'fas fa-coins',
+                            color: sym === 'BTC' ? 'text-orange-500' : sym === 'ETH' ? 'text-blue-400' : sym === 'SOL' ? 'text-purple-500' : 'text-yellow-500',
+                            ytd,
+                            ann
+                        });
+                    }
+                } catch (e) { console.error(e); }
+            }
+            return results;
+        };
+
+        const RoiTable = ({ data, userRoi, loading }) => {
+            const allData = [
+                { name: 'Mi Cartera', icon: 'fas fa-wallet', color: 'text-cyan-500', ytd: userRoi, ann: userRoi, isUser: true },
+                ...data
+            ].sort((a, b) => (b.ytd || 0) - (a.ytd || 0));
+
+            return (
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs">
+                        <thead>
+                            <tr className="text-gray-400 uppercase tracking-wider border-b border-gray-100 dark:border-slate-800">
+                                <th className="py-2 font-bold">Activo</th>
+                                <th className="py-2 font-bold text-right">YTD</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-50 dark:divide-slate-800/50">
+                            {allData.map((item, idx) => (
+                                <tr key={idx} className={`hover:bg-gray-50/50 dark:hover:bg-slate-800/30 transition-colors ${item.isUser ? 'bg-blue-50/30 dark:bg-blue-900/10' : ''}`}>
+                                    <td className="py-3 pr-2">
+                                        <div className="flex items-center gap-2">
+                                            <i className={`${item.icon} ${item.color} text-sm w-4 text-center`}></i>
+                                            <span className="font-semibold text-gray-700 dark:text-slate-200 truncate max-w-[80px]">{item.name}</span>
+                                        </div>
+                                    </td>
+                                    <td className="py-3 text-right">
+                                        {loading && item.ytd === undefined ? <Loader className="inline-block" /> :
+                                            <span className={`font-bold ${item.ytd >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                                {item.ytd !== null ? `${item.ytd.toFixed(1)}%` : '-'}
+                                            </span>
+                                        }
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            );
+        };
 
         const Dashboard = () => {
             const [isMenuOpen, setIsMenuOpen] = useState(false);
             const [expandedModuleId, setExpandedModuleId] = useState(null);
             const [weeklyPnl, setWeeklyPnl] = useState(0);
             const [marketData, setMarketData] = useState([]);
+            const [roiData, setRoiData] = useState([]);
+            const [userRoi, setUserRoi] = useState(null);
+            const [isRoiLoading, setIsRoiLoading] = useState(true);
             const [financials, setFinancials] = useState({
                 totalBalance: 0,
                 balanceChange: 0,
@@ -129,15 +326,29 @@
             });
 
             React.useEffect(() => {
+                const loadRoi = async () => {
+                    setIsRoiLoading(true);
+                    const [binance, user] = await Promise.all([
+                        fetchBinanceRoi(),
+                        Promise.resolve(computeUserRoi())
+                    ]);
+                    setRoiData(binance);
+                    setUserRoi(user);
+                    setIsRoiLoading(false);
+                };
+                loadRoi();
+            }, []);
+
+            React.useEffect(() => {
                 const fetchMarketData = async () => {
                     const symbols = ['BTCUSDT', 'LTCUSDT', 'ETHUSDT'];
                     try {
                         const responses = await Promise.all(
-                            symbols.map(sym => 
+                            symbols.map(sym =>
                                 fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${sym}`).then(res => res.json())
                             )
                         );
-                        
+
                         const data = responses.map(item => ({
                             symbol: item.symbol.replace('USDT', '/USDT'),
                             price: parseFloat(item.lastPrice),
@@ -149,7 +360,7 @@
                         console.error("Error fetching market data", error);
                     }
                 };
-                
+
                 fetchMarketData();
                 const interval = setInterval(fetchMarketData, 60000);
                 return () => clearInterval(interval);
@@ -168,9 +379,9 @@
                         const accountsRaw = localStorage.getItem('fti-accounts') || '[]';
                         let accounts = [];
                         try { accounts = JSON.parse(accountsRaw); } catch (e) { console.error("Error parseando cuentas", e); }
-                        
+
                         // Suma de balance de todas las cuentas
-                        const currentBalance = Array.isArray(accounts) 
+                        const currentBalance = Array.isArray(accounts)
                             ? accounts.reduce((acc, account) => acc + (Number(account.balance) || 0), 0)
                             : 0;
 
@@ -178,11 +389,11 @@
                         const opsRaw = localStorage.getItem('fti-operations-v1') || '[]';
                         let operations = [];
                         try { operations = JSON.parse(opsRaw); } catch (e) { console.error("Error parseando operaciones", e); }
-                        
+
                         const now = new Date();
                         const oneMonthAgo = new Date();
                         oneMonthAgo.setMonth(now.getMonth() - 1);
-                        
+
                         // Operaciones en el último mes
                         const recentOps = Array.isArray(operations) ? operations.filter(op => {
                             const opDate = new Date(op.datetime);
@@ -191,7 +402,7 @@
 
                         // Reconstruir balance de hace un mes
                         let balanceOneMonthAgo = currentBalance;
-                        
+
                         recentOps.forEach(op => {
                             const amount = Number(op.amount) || 0;
                             if (op.type === 'income') {
@@ -211,13 +422,13 @@
                         // 3. Presupuesto Mensual
                         const budgetRaw = localStorage.getItem('fti-budget-plan-v1');
                         let budgetPlan = null;
-                        try { budgetPlan = JSON.parse(budgetRaw); } catch (e) {}
-                        
+                        try { budgetPlan = JSON.parse(budgetRaw); } catch (e) { }
+
                         const budgetTotal = budgetPlan ? (Number(budgetPlan.totalAmount) || 0) : 0;
-                        
+
                         // Calcular gasto del mes actual
                         const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-                        
+
                         const monthOps = Array.isArray(operations) ? operations.filter(op => {
                             const opDate = new Date(op.datetime);
                             const opMonthKey = op.monthKey || `${opDate.getFullYear()}-${String(opDate.getMonth() + 1).padStart(2, '0')}`;
@@ -225,7 +436,7 @@
                         }) : [];
 
                         const budgetSpent = monthOps.reduce((acc, op) => acc + (Number(op.amount) || 0), 0);
-                        
+
                         let budgetPercent = 0;
                         if (budgetTotal > 0) {
                             budgetPercent = Math.min(100, (budgetSpent / budgetTotal) * 100);
@@ -252,7 +463,7 @@
                 window.addEventListener('storage', calculateFinancials);
                 // Custom event para actualizaciones internas si fuera necesario
                 window.addEventListener('fti-financials-updated', calculateFinancials);
-                
+
                 return () => {
                     window.removeEventListener('storage', calculateFinancials);
                     window.removeEventListener('fti-financials-updated', calculateFinancials);
@@ -272,7 +483,7 @@
                         const accountsMetaRaw = localStorage.getItem('tradingAccountsMeta');
                         let accounts = [];
                         if (accountsMetaRaw) {
-                            try { accounts = JSON.parse(accountsMetaRaw); } catch (e) {}
+                            try { accounts = JSON.parse(accountsMetaRaw); } catch (e) { }
                         }
 
                         let allTrades = [];
@@ -287,7 +498,7 @@
                                         if (data.trades && Array.isArray(data.trades)) {
                                             allTrades = allTrades.concat(data.trades);
                                         }
-                                    } catch (e) {}
+                                    } catch (e) { }
                                 }
                             });
                         } else {
@@ -297,7 +508,7 @@
                                 try {
                                     const trades = JSON.parse(tradesRaw);
                                     if (Array.isArray(trades)) allTrades = trades;
-                                } catch (e) {}
+                                } catch (e) { }
                             }
                         }
 
@@ -469,7 +680,7 @@
                                         <div className={`h-2 rounded-full ${financials.budgetPercent > 90 ? 'bg-red-600' : 'bg-blue-600'}`} style={{ width: `${financials.budgetPercent}%` }}></div>
                                     </div>
                                     <p className="text-xs text-gray-500 mt-2 text-right dark:text-slate-400">
-                                        {financials.budgetTotal > 0 
+                                        {financials.budgetTotal > 0
                                             ? `Te quedan ${financials.budgetRemaining.toLocaleString('es-MX', { style: 'currency', currency: financials.currency })}`
                                             : 'Sin presupuesto definido'}
                                     </p>
@@ -523,7 +734,7 @@
                                         <span className="text-sm text-gray-500 font-medium dark:text-slate-400">Mercado Abierto</span>
                                     </div>
                                     <span className={`text-sm font-bold flex items-center gap-1 px-3 py-1 rounded-full border ${weeklyPnl > 0 ? 'text-green-600 bg-green-50 border-green-100 dark:bg-green-900/20 dark:text-green-300 dark:border-green-900/30' : weeklyPnl < 0 ? 'text-red-600 bg-red-50 border-red-100 dark:bg-red-900/20 dark:text-red-300 dark:border-red-900/30' : 'text-orange-600 bg-orange-50 border-orange-100 dark:bg-orange-900/20 dark:text-orange-300 dark:border-orange-900/30'}`}>
-                                        PNL Semanal: {weeklyPnl > 0 ? '+' : ''}${weeklyPnl.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} 
+                                        PNL Semanal: {weeklyPnl > 0 ? '+' : ''}${weeklyPnl.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                         {weeklyPnl > 0 ? <ArrowUpRight size={14} /> : weeklyPnl < 0 ? <ArrowDownRight size={14} /> : <Activity size={14} />}
                                     </span>
                                 </div>
@@ -534,36 +745,20 @@
                                     <div className="p-2 bg-purple-50 rounded-lg text-purple-600 dark:bg-purple-900/20 dark:text-purple-300">
                                         <Lightbulb size={24} />
                                     </div>
-                                    <button type="button" className="p-1 hover:bg-gray-100 rounded-full text-gray-400 transition-colors dark:hover:bg-slate-800">
+                                    <a href="modulo-inversiones/estadisticas.html" className="p-1 hover:bg-gray-100 rounded-full text-gray-400 transition-colors dark:hover:bg-slate-800">
                                         <PieChart size={20} />
-                                    </button>
+                                    </a>
                                 </div>
 
                                 <h3 className="text-lg font-bold text-gray-800 mb-1 dark:text-white">Portafolio Largo Plazo</h3>
                                 <div className="flex items-end gap-2 mb-4">
-                                    <span className="text-3xl font-bold text-gray-900 dark:text-white">$45,200</span>
-                                    <span className="text-sm font-bold text-green-600 mb-1.5 flex items-center bg-green-50 px-1.5 rounded dark:bg-green-900/20 dark:text-green-300">
-                                        <ArrowUpRight size={12} className="mr-0.5" /> 12.5%
+                                    <span className="text-3xl font-bold text-gray-900 dark:text-white">
+                                        {userRoi !== null ? `${userRoi.toFixed(1)}%` : '...'}
                                     </span>
+                                    <span className="text-sm font-bold text-gray-500 mb-1.5 dark:text-slate-400">ROI Proyectado</span>
                                 </div>
 
-                                <div className="space-y-3">
-                                    <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer dark:hover:bg-slate-800/40">
-                                        <div className="w-2 h-2 rounded-full bg-purple-500"></div>
-                                        <span className="text-sm text-gray-600 flex-grow font-medium dark:text-slate-300">Tech ETFs</span>
-                                        <span className="text-sm font-bold text-gray-800 dark:text-white">45%</span>
-                                    </div>
-                                    <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer dark:hover:bg-slate-800/40">
-                                        <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                                        <span className="text-sm text-gray-600 flex-grow font-medium dark:text-slate-300">Real Estate</span>
-                                        <span className="text-sm font-bold text-gray-800 dark:text-white">30%</span>
-                                    </div>
-                                    <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer dark:hover:bg-slate-800/40">
-                                        <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
-                                        <span className="text-sm text-gray-600 flex-grow font-medium dark:text-slate-300">Crypto Hold</span>
-                                        <span className="text-sm font-bold text-gray-800 dark:text-white">25%</span>
-                                    </div>
-                                </div>
+                                <RoiTable data={roiData} userRoi={userRoi} loading={isRoiLoading} />
                             </div>
 
                             <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 lg:col-span-2 flex flex-col sm:flex-row items-center justify-between gap-6 hover:border-yellow-100 transition-colors dark:bg-slate-900 dark:border-slate-800">
@@ -612,4 +807,5 @@
         });
     </script>
 </body>
+
 </html>

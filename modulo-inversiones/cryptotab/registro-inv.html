@@ -312,6 +312,43 @@
             metodoPago: 'all',
             order: 'none'
         }
+    }
+
+
+    function formatTimeRemaining(targetDate) {
+        if (!targetDate) return '';
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
+        const target = new Date(targetDate);
+        target.setHours(0, 0, 0, 0);
+
+        if (target < now) return 'Vencido';
+        if (target.getTime() === now.getTime()) return 'Hoy';
+
+        let years = target.getFullYear() - now.getFullYear();
+        let months = target.getMonth() - now.getMonth();
+        let days = target.getDate() - now.getDate();
+
+        if (days < 0) {
+            months -= 1;
+            // Días en el mes anterior al de la fecha objetivo
+            const prevMonth = new Date(target.getFullYear(), target.getMonth(), 0).getDate();
+            days += prevMonth;
+        }
+        if (months < 0) {
+            years -= 1;
+            months += 12;
+        }
+
+        const parts = [];
+        if (years > 0) parts.push(`${years} ${years === 1 ? 'año' : 'años'}`);
+        if (months > 0) parts.push(`${months} ${months === 1 ? 'mes' : 'meses'}`);
+        if (days > 0) parts.push(`${days} ${days === 1 ? 'día' : 'días'}`);
+
+        const totalUnits = (years > 0 ? 1 : 0) + (months > 0 ? 1 : 0) + (days > 0 ? 1 : 0);
+        const isSingular = totalUnits === 1 && (years === 1 || months === 1 || days === 1);
+
+        return parts.join(' ') + (isSingular ? ' restante' : ' restantes');
     };
 
     // Normalize old plazos format (days) to new format (length + unit)
@@ -529,6 +566,7 @@
                 tr.className = 'hover:bg-slate-50/50 transition-colors';
                 const nextDate = computeNextRenewal(record);
                 const fechaRenovacion = nextDate ? nextDate.toLocaleDateString() : 'N/A';
+                const tiempoRestante = nextDate ? formatTimeRemaining(nextDate) : '';
                 
                 const appOption = state.options.apps.find(a => a.name === record.app);
                 const plazoOpt = state.options.plazos.find(p => p.name === record.plazo);
@@ -540,7 +578,10 @@
                     <td class="px-6 py-4 whitespace-nowrap"><span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ring-1 ring-inset ring-slate-200" style="background-color:${plazoOpt?.color || '#ffffff'}; color: ${getContrastYIQ(plazoOpt?.color)}">${record.plazo}</span></td>
                     <td class="px-6 py-4 whitespace-nowrap"><span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ring-1 ring-inset ring-slate-200" style="background-color:${metodoOpt?.color || '#ffffff'}; color: ${getContrastYIQ(metodoOpt?.color)}">${record.metodoPago}</span></td>
                     <td class="px-6 py-4 whitespace-nowrap">${formatCurrency(parseFloat(record.costo) || 0)}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">${fechaRenovacion}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm font-medium text-slate-900">${fechaRenovacion}</div>
+                        <div class="text-[10px] text-slate-500 font-medium">${tiempoRestante}</div>
+                    </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">${record.notas}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <button onclick="editRecord(${record.id})" class="text-indigo-600 hover:text-indigo-700 transition-transform duration-200 hover:scale-105"><i class="fas fa-edit"></i></button>

@@ -73,7 +73,7 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useMemo, useRef } = React;
+        const { useState, useEffect, useMemo, useRef, useCallback } = React;
 
         const POPULAR_PAIRS = [
             "BTCUSDT", "ETHUSDT", "ETCUSDT", "LTCUSDT", "XRPUSDT",
@@ -139,7 +139,8 @@
             Camera: (p) => <IconBase {...p}><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></IconBase>,
             HelpCircle: (p) => <IconBase {...p}><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" x2="12.01" y1="17" y2="17"/></IconBase>,
             Map: (p) => <IconBase {...p}><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21 3 6"/><line x1="9" x2="9" y1="3" y2="18"/><line x1="15" x2="15" y1="6" y2="21"/></IconBase>,
-            ChevronDown: (p) => <IconBase {...p}><polyline points="6 9 12 15 18 9"/></IconBase>
+            ChevronDown: (p) => <IconBase {...p}><polyline points="6 9 12 15 18 9"/></IconBase>,
+            Trash2: (p) => <IconBase {...p}><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></IconBase>
         };
 
         // --- UTILIDADES ---
@@ -294,6 +295,11 @@
             const autoAbortRef = useRef(null);
             const twelveRateRef = useRef({ windowStart: 0, count: 0, queue: [], timer: null });
 
+            // PERSISTENCIA DE SESIÓN (Refs y Keys)
+            const SESSION_KEY = 'fti_terminal_session';
+            const SIMS_KEY = 'fti_saved_simulations';
+            const isRestoringRef = useRef(true);
+
             const refreshTwelveApiKeyStatus = () => {
                 try {
                     setAutoHasTwelveApiKey(!!localStorage.getItem('fti_twelve_api_key'));
@@ -313,6 +319,7 @@
             }, [isAutoLoadOpen]);
 
             useEffect(() => {
+                if (isRestoringRef.current) return;
                 if (autoMarket === 'crypto') {
                     if (!POPULAR_PAIRS.includes(autoSymbol)) setAutoSymbol(POPULAR_PAIRS[0] || 'BTCUSDT');
                     return;
@@ -351,8 +358,173 @@
 
             const [useLtfIntra, setUseLtfIntra] = useState(false);
             const [ltfMaxCandles, setLtfMaxCandles] = useState(20000);
+
+            // RESULTADOS & ESTADOS ADICIONALES
+            const [simResult, setSimResult] = useState(null);
+            const [optimizationResults, setOptimizationResults] = useState(null);
+            const [isOptimizing, setIsOptimizing] = useState(false);
+            const [isAutoDetecting, setIsAutoDetecting] = useState(false);
+            const [copyAllStatus, setCopyAllStatus] = useState('idle');
+            const [currentPrice, setCurrentPrice] = useState('');
+            const [candlesSinceEntry, setCandlesSinceEntry] = useState(0);
+
+            // --- PERSISTENCIA DE SESIÓN ---
             const [savedSims, setSavedSims] = useState([]);
-            const SIMS_KEY = 'fti_saved_simulations';
+
+            // Función para guardar el estado actual en localStorage
+            const saveSession = useCallback(() => {
+                if (isRestoringRef.current) return;
+
+                const session = {
+                    lastUpdate: Date.now(),
+                    activeTab,
+                    selectedCandleIndex,
+                    tfMinutes,
+                    fileName,
+                    tradeType,
+                    entryPrice,
+                    stopLoss,
+                    takeProfit,
+                    spread,
+                    useMacroMode,
+                    useRsiFilter,
+                    targetRsi,
+                    rsiTolerance,
+                    useTrendFilter,
+                    trendCondition,
+                    useTimeFilter,
+                    timeMode,
+                    useVolFilter,
+                    useCooldownFilter,
+                    useVolumeFilter,
+                    volumeTolerance,
+                    useBuyPressureFilter,
+                    bpTolerance,
+                    useDeltaSignFilter,
+                    useHtfFilter,
+                    htfMode,
+                    requireHtf,
+                    useLtfIntra,
+                    ltfMaxCandles,
+                    simResult,
+                    optimizationResults,
+                    csvData,
+                    htfData,
+                    ltfData,
+                    htfTfMinutes,
+                    htfFileName,
+                    ltfTfMinutes,
+                    ltfFileName,
+                    autoMarket,
+                    autoSymbol,
+                    autoEntryTf,
+                    autoStartDate,
+                    autoEndDate
+                };
+
+                try {
+                    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+                } catch (e) {
+                    console.warn('Espacio insuficiente en localStorage. Guardando sesión sin datasets pesados.');
+                    const lightSession = { ...session, csvData: [], htfData: [], ltfData: [] };
+                    try {
+                        localStorage.setItem(SESSION_KEY, JSON.stringify(lightSession));
+                    } catch (e2) {
+                        console.error('Error al guardar sesión ligera:', e2);
+                    }
+                }
+            }, [
+                activeTab, selectedCandleIndex, tfMinutes, fileName,
+                tradeType, entryPrice, stopLoss, takeProfit, spread, useMacroMode,
+                useRsiFilter, targetRsi, rsiTolerance, useTrendFilter, trendCondition,
+                useTimeFilter, timeMode, useVolFilter, useCooldownFilter, useVolumeFilter,
+                volumeTolerance, useBuyPressureFilter, bpTolerance, useDeltaSignFilter,
+                useHtfFilter, htfMode, requireHtf, useLtfIntra, ltfMaxCandles,
+                simResult, optimizationResults, csvData, htfData, ltfData,
+                htfTfMinutes, htfFileName, ltfTfMinutes, ltfFileName,
+                autoMarket, autoSymbol, autoEntryTf, autoStartDate, autoEndDate
+            ]);
+
+            // Efecto para cargar la sesión al iniciar
+            useEffect(() => {
+                const saved = localStorage.getItem(SESSION_KEY);
+                if (saved) {
+                    try {
+                        const session = JSON.parse(saved, (key, value) => {
+                            if ((key === 'datetime' || key === 'dateIso') && typeof value === 'string') {
+                                const d = new Date(value);
+                                return isNaN(d.getTime()) ? value : d;
+                            }
+                            return value;
+                        });
+
+                        // EXPIRACIÓN: Si han pasado más de 5 minutos, ignorar y borrar
+                        const FIVE_MINUTES_MS = 5 * 60 * 1000;
+                        if (session.lastUpdate && (Date.now() - session.lastUpdate > FIVE_MINUTES_MS)) {
+                            console.log('Sesión activa expirada (>5 min). Iniciando nueva sesión.');
+                            localStorage.removeItem(SESSION_KEY);
+                            isRestoringRef.current = false;
+                            return;
+                        }
+
+                        // Restaurar estados uno por uno
+                        if (session.activeTab) setActiveTab(session.activeTab);
+                        if (session.csvData) setCsvData(session.csvData);
+                        if (session.selectedCandleIndex !== undefined) setSelectedCandleIndex(session.selectedCandleIndex);
+                        if (session.tfMinutes) setTfMinutes(session.tfMinutes);
+                        if (session.fileName) setFileName(session.fileName);
+                        if (session.tradeType) setTradeType(session.tradeType);
+                        if (session.entryPrice) setEntryPrice(session.entryPrice);
+                        if (session.stopLoss) setStopLoss(session.stopLoss);
+                        if (session.takeProfit) setTakeProfit(session.takeProfit);
+                        if (session.spread) setSpread(session.spread);
+                        if (session.useMacroMode !== undefined) setUseMacroMode(session.useMacroMode);
+                        if (session.useRsiFilter !== undefined) setUseRsiFilter(session.useRsiFilter);
+                        if (session.targetRsi) setTargetRsi(session.targetRsi);
+                        if (session.rsiTolerance) setRsiTolerance(session.rsiTolerance);
+                        if (session.useTrendFilter !== undefined) setUseTrendFilter(session.useTrendFilter);
+                        if (session.trendCondition) setTrendCondition(session.trendCondition);
+                        if (session.useTimeFilter !== undefined) setUseTimeFilter(session.useTimeFilter);
+                        if (session.timeMode) setTimeMode(session.timeMode);
+                        if (session.useVolFilter !== undefined) setUseVolFilter(session.useVolFilter);
+                        if (session.useCooldownFilter !== undefined) setUseCooldownFilter(session.useCooldownFilter);
+                        if (session.useVolumeFilter !== undefined) setUseVolumeFilter(session.useVolumeFilter);
+                        if (session.volumeTolerance) setVolumeTolerance(session.volumeTolerance);
+                        if (session.useBuyPressureFilter !== undefined) setUseBuyPressureFilter(session.useBuyPressureFilter);
+                        if (session.bpTolerance) setBpTolerance(session.bpTolerance);
+                        if (session.useDeltaSignFilter !== undefined) setUseDeltaSignFilter(session.useDeltaSignFilter);
+                        if (session.useHtfFilter !== undefined) setUseHtfFilter(session.useHtfFilter);
+                        if (session.htfMode) setHtfMode(session.htfMode);
+                        if (session.requireHtf !== undefined) setRequireHtf(session.requireHtf);
+                        if (session.useLtfIntra !== undefined) setUseLtfIntra(session.useLtfIntra);
+                        if (session.ltfMaxCandles) setLtfMaxCandles(session.ltfMaxCandles);
+                        if (session.simResult) setSimResult(session.simResult);
+                        if (session.optimizationResults) setOptimizationResults(session.optimizationResults);
+                        if (session.htfData) setHtfData(session.htfData);
+                        if (session.htfTfMinutes) setHtfTfMinutes(session.htfTfMinutes);
+                        if (session.htfFileName) setHtfFileName(session.htfFileName);
+                        if (session.ltfData) setLtfData(session.ltfData);
+                        if (session.ltfTfMinutes) setLtfTfMinutes(session.ltfTfMinutes);
+                        if (session.ltfFileName) setLtfFileName(session.ltfFileName);
+                        if (session.autoMarket) setAutoMarket(session.autoMarket);
+                        if (session.autoSymbol) setAutoSymbol(session.autoSymbol);
+                        if (session.autoEntryTf) setAutoEntryTf(session.autoEntryTf);
+                        if (session.autoStartDate) setAutoStartDate(session.autoStartDate);
+                        if (session.autoEndDate) setAutoEndDate(session.autoEndDate);
+
+                    } catch (e) {
+                        console.error('Error al restaurar la sesión:', e);
+                    }
+                }
+                isRestoringRef.current = false;
+            }, []);
+
+            // Efecto para disparar el guardado cuando algo cambia (debounced)
+            useEffect(() => {
+                const timer = setTimeout(saveSession, 1500);
+                return () => clearTimeout(timer);
+            }, [saveSession]);
+
             const refreshSavedSims = () => {
                 try {
                     const arr = JSON.parse(localStorage.getItem(SIMS_KEY) || '[]');
@@ -374,6 +546,13 @@
                 localStorage.setItem(SIMS_KEY, JSON.stringify(next));
                 setSavedSims(next);
             };
+
+            const handleClearCurrentSession = () => {
+                if (!window.confirm('¿Deseas limpiar la sesión actual y comenzar de cero? (Esto borrará los parámetros y resultados no guardados)')) return;
+                localStorage.removeItem(SESSION_KEY);
+                window.location.reload();
+            };
+
             const handleSaveSimulation = () => {
                 if (!simResult) return;
                 const name = window.prompt('Nombre para esta simulación');
@@ -712,13 +891,6 @@
                     window.setTimeout(() => setCopyAllStatus('idle'), 2000);
                 }
             };
-
-            // RESULTADOS SIMULACION
-            const [simResult, setSimResult] = useState(null);
-
-            // MONITOR ACTIVO (Inputs)
-            const [currentPrice, setCurrentPrice] = useState('');
-            const [candlesSinceEntry, setCandlesSinceEntry] = useState(0);
 
             // --- CARGA DE DATOS ---
             const lowerBound = (arr, x) => {
@@ -1483,6 +1655,7 @@
             };
 
             useEffect(() => {
+                if (isRestoringRef.current) return;
                 const range = getSeriesRangeMs(csvData);
                 if (!range) return;
                 if (htfData && htfData.length) {
@@ -1506,6 +1679,7 @@
 
             // SYNC ENTRY PRICE
             useEffect(() => {
+                if (isRestoringRef.current) return;
                 if (csvData[selectedCandleIndex]) {
                     const c = csvData[selectedCandleIndex];
                     setEntryPrice(c.close);
@@ -1964,12 +2138,6 @@
                     ltfResolved
                 };
             };
-
-            const [optimizationResults, setOptimizationResults] = useState(null);
-            const [isOptimizing, setIsOptimizing] = useState(false);
-            const [isAutoDetecting, setIsAutoDetecting] = useState(false);
-
-            const [copyAllStatus, setCopyAllStatus] = useState('idle');
 
             const handleOptimize = async () => {
                 if (!csvData.length || !stopLoss || !takeProfit) return;
@@ -2628,6 +2796,13 @@
                                         <Icons.CheckCircle size={12} /> Dataset Cargado ({csvData.length} velas)
                                     </div>
                                 )}
+                                <button 
+                                    onClick={handleClearCurrentSession}
+                                    className="bg-white dark:bg-slate-800 hover:bg-red-50 dark:hover:bg-red-950/30 text-slate-400 hover:text-red-500 p-2 rounded-lg border border-slate-200 dark:border-slate-700 transition-all hover:border-red-200 dark:hover:border-red-900 shadow-sm"
+                                    title="Limpiar sesión actual"
+                                >
+                                    <Icons.Trash2 size={18} />
+                                </button>
                                 <a href="/utilidades.html" className="bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 px-4 py-2 rounded-lg text-sm font-medium border border-slate-200 dark:border-slate-700 flex items-center gap-2 transition-all hover:border-slate-300 dark:hover:border-slate-600 shadow-sm">
                                     <Icons.History size={16} />
                                     Volver a Utilidades
