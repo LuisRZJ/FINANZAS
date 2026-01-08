@@ -1,19 +1,20 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Terminal Trading | Probabilidad & Gestión | FTI</title>
     <meta name="theme-color" content="#2563eb">
     <link rel="icon" href="/pwa/logo-app.png">
-    
+
     <!-- React & ReactDOM -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    
+
     <!-- Babel -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -31,44 +32,78 @@
             }
         }
     </script>
-    
+
     <!-- Script Anti-Flash de Tema -->
     <script>
-        (function() {
-            try {
-                const storedTheme = localStorage.getItem('fti_theme_preference');
-                const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                
-                if (storedTheme === 'dark' || ((!storedTheme || storedTheme === 'system') && systemDark)) {
-                    document.documentElement.classList.add('dark');
-                } else {
-                    document.documentElement.classList.remove('dark');
+            (function () {
+                try {
+                    const storedTheme = localStorage.getItem('fti_theme_preference');
+                    const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+                    if (storedTheme === 'dark' || ((!storedTheme || storedTheme === 'system') && systemDark)) {
+                        document.documentElement.classList.add('dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                    }
+                } catch (e) {
+                    console.warn('Error accediendo a localStorage para tema:', e);
                 }
-            } catch (e) {
-                console.warn('Error accediendo a localStorage para tema:', e);
-            }
-        })();
+            })();
     </script>
 
     <!-- Google Font: Inter & JetBrains Mono -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
 
     <!-- html2canvas -->
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        .font-mono { font-family: 'JetBrains Mono', monospace; }
-        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fade-in 0.5s ease-out forwards;
+        }
+
         /* Animaciones suaves */
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
-        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
         /* Detalles desplegables */
-        details[open] summary ~ * { animation: fadeIn 0.3s ease-in-out; }
-        details[open] .group-open\:rotate-180 { transform: rotate(180deg); }
+        details[open] summary~* {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        details[open] .group-open\:rotate-180 {
+            transform: rotate(180deg);
+        }
     </style>
 </head>
+
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-200 transition-colors duration-300">
     <div id="root"></div>
 
@@ -100,7 +135,6 @@
         ];
 
         const AUTOLOAD_TF_MAP = {
-            '15m': { htf: '1h', ltf: '5m' },
             '1h': { htf: '4h', ltf: '15m' },
             '4h': { htf: '1d', ltf: '1h' },
             '1d': { htf: '1w', ltf: '4h' }
@@ -114,33 +148,70 @@
             '1d': '1D',
             '1w': '1W'
         };
-
-        // --- ICONOS SVG (Lucide) ---
         const IconBase = ({ children, size = 20, className = "", ...props }) => (
             <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>{children}</svg>
         );
+
         const Icons = {
-            Upload: (p) => <IconBase {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></IconBase>,
-            Play: (p) => <IconBase {...p}><polygon points="5 3 19 12 5 21 5 3"/></IconBase>,
-            AlertCircle: (p) => <IconBase {...p}><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></IconBase>,
-            CheckCircle: (p) => <IconBase {...p}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></IconBase>,
-            TrendingUp: (p) => <IconBase {...p}><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></IconBase>,
-            History: (p) => <IconBase {...p}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 12"/><path d="M3 3v9h9"/><path d="M12 7v5l3 3"/></IconBase>,
-            Lock: (p) => <IconBase {...p}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></IconBase>,
-            ShieldAlert: (p) => <IconBase {...p}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></IconBase>,
-            BarChart3: (p) => <IconBase {...p}><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></IconBase>,
-            Activity: (p) => <IconBase {...p}><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></IconBase>,
-            Stethoscope: (p) => <IconBase {...p}><path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"/><path d="M8 15v1a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6v-4"/><circle cx="20" cy="10" r="2"/></IconBase>,
-            Clock: (p) => <IconBase {...p}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></IconBase>,
-            Target: (p) => <IconBase {...p}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></IconBase>,
-            Sun: (p) => <IconBase {...p}><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></IconBase>,
-            Zap: (p) => <IconBase {...p}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></IconBase>,
-            FileText: (p) => <IconBase {...p}><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></IconBase>,
-            Camera: (p) => <IconBase {...p}><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></IconBase>,
-            HelpCircle: (p) => <IconBase {...p}><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" x2="12.01" y1="17" y2="17"/></IconBase>,
-            Map: (p) => <IconBase {...p}><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21 3 6"/><line x1="9" x2="9" y1="3" y2="18"/><line x1="15" x2="15" y1="6" y2="21"/></IconBase>,
-            ChevronDown: (p) => <IconBase {...p}><polyline points="6 9 12 15 18 9"/></IconBase>,
-            Trash2: (p) => <IconBase {...p}><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></IconBase>
+            Upload: (p) => <IconBase {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" x2="12" y1="3" y2="15" /></IconBase>,
+            Play: (p) => <IconBase {...p}><polygon points="5 3 19 12 5 21 5 3" /></IconBase>,
+
+            AlertCircle: (p) => <IconBase {...p}><circle cx="12" cy="12" r="10" /><line x1="12" x2="12" y1="8" y2="12" /><line x1="12" x2="12.01" y1="16" y2="16" /></IconBase>,
+            CheckCircle: (p) => <IconBase {...p}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></IconBase>,
+            Activity: (p) => <IconBase {...p}><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" /></IconBase>,
+            Sun: (p) => <IconBase {...p}><circle cx="12" cy="12" r="5" /><line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" /><line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" /><line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" /><line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" /></IconBase>,
+            AlertTriangle: (p) => <IconBase {...p}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></IconBase>,
+            Stethoscope: (p) => <IconBase {...p}><path d="M6 2v6a6 6 0 0 0 12 0V2" /><path d="M8 2v6a4 4 0 0 0 8 0V2" /><path d="M12 14v2a4 4 0 0 0 8 0v-1" /><circle cx="20" cy="15" r="2" /></IconBase>,
+            Target: (p) => <IconBase {...p}><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" /></IconBase>,
+            ShieldAlert: (p) => <IconBase {...p}><path d="M12 22s8-4 8-10V5L12 2 4 5v7c0 6 8 10 8 10" /><line x1="12" x2="12" y1="8" y2="12" /><line x1="12" x2="12.01" y1="16" y2="16" /></IconBase>,
+            ShieldCheck: (p) => <IconBase {...p}><path d="M12 22s8-4 8-10V5L12 2 4 5v7c0 6 8 10 8 10" /><polyline points="9 12 12 15 15 10" /></IconBase>,
+            BarChart3: (p) => <IconBase {...p}><path d="M3 3v18h18" /><path d="M18 17V9" /><path d="M13 17V5" /><path d="M8 17v-3" /></IconBase>,
+            Clock: (p) => <IconBase {...p}><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></IconBase>,
+
+            TrendingUp: (p) => <IconBase {...p}><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" /></IconBase>,
+            History: (p) => <IconBase {...p}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 12" /><path d="M3 3v9h9" /><path d="M12 7v5l3 3" /></IconBase>,
+            Lock: (p) => <IconBase {...p}><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></IconBase>,
+
+            Zap: (p) => <IconBase {...p}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></IconBase>,
+            FileText: (p) => <IconBase {...p}><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" /><polyline points="14 2 14 8 20 8" /></IconBase>,
+            Camera: (p) => <IconBase {...p}><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" /></IconBase>,
+            HelpCircle: (p) => <IconBase {...p}><circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /><line x1="12" x2="12.01" y1="17" y2="17" /></IconBase>,
+            Map: (p) => <IconBase {...p}><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21 3 6" /><line x1="9" x2="9" y1="3" y2="18" /><line x1="15" x2="15" y1="6" y2="21" /></IconBase>,
+            ChevronDown: (p) => <IconBase {...p}><polyline points="6 9 12 15 18 9" /></IconBase>,
+            Trash2: (p) => <IconBase {...p}><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></IconBase>
+        };
+
+        const AUDIT_VARIANTS = {
+            INSUFFICIENTE: {
+                container: 'bg-slate-100 dark:bg-slate-900/40 border-slate-300 dark:border-slate-700 text-slate-600',
+                message: 'Datos Insuficientes',
+                icon: Icons.HelpCircle
+            },
+            FRAGIL: {
+                container: 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-600 dark:text-red-400',
+                message: 'Estructura Frágil',
+                icon: Icons.Activity
+            },
+            NEGATIVO: {
+                container: 'bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400',
+                message: 'Edge Negativo',
+                icon: Icons.AlertCircle
+            },
+            ESPECULATIVO: {
+                container: 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 text-orange-600 dark:text-orange-400',
+                message: 'Edge Especulativo',
+                icon: Icons.ShieldAlert
+            },
+            ROBUSTO: {
+                container: 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400',
+                message: 'Edge Robusto',
+                icon: Icons.ShieldCheck
+            },
+            DEFAULT: {
+                container: 'bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300',
+                message: 'Sin evaluación aún',
+                icon: Icons.Activity
+            }
         };
 
         // --- UTILIDADES ---
@@ -198,16 +269,16 @@
             const sma200 = [];
 
             // Para volatilidad (Cuerpo promedio últimas 5 velas)
-            const bodySizes = []; 
+            const bodySizes = [];
 
             for (let i = 0; i < data.length; i++) {
                 const c = data[i];
-                
+
                 // SMA
                 if (i >= 199) {
                     let sum = 0;
-                    for(let j=0; j<200; j++) sum += data[i-j].close;
-                    sma200.push(sum/200);
+                    for (let j = 0; j < 200; j++) sum += data[i - j].close;
+                    sma200.push(sum / 200);
                 } else sma200.push(null);
 
                 // Volatilidad (Tamaño cuerpo %)
@@ -216,7 +287,7 @@
                 let avgBodySize = 0;
                 if (i >= 4) {
                     let sumBody = 0;
-                    for(let k=0; k<5; k++) sumBody += bodySizes[i-k];
+                    for (let k = 0; k < 5; k++) sumBody += bodySizes[i - k];
                     avgBodySize = sumBody / 5;
                 } else {
                     avgBodySize = bodySize; // Fallback inicial
@@ -226,9 +297,9 @@
                 if (i === 0) { results.push(null); continue; }
                 const change = data[i].close - data[i - 1].close;
                 if (change > 0) gains += change; else losses += Math.abs(change);
-                
+
                 if (i < period) { results.push(null); continue; }
-                
+
                 let avgGain, avgLoss;
                 if (i === period) {
                     avgGain = gains / period;
@@ -237,18 +308,18 @@
                     const currentGain = change > 0 ? change : 0;
                     const currentLoss = change < 0 ? Math.abs(change) : 0;
                     // Formula RSI suavizada Wilder
-                    avgGain = (results[i-1].avgGain * 13 + currentGain) / 14;
-                    avgLoss = (results[i-1].avgLoss * 13 + currentLoss) / 14;
+                    avgGain = (results[i - 1].avgGain * 13 + currentGain) / 14;
+                    avgLoss = (results[i - 1].avgLoss * 13 + currentLoss) / 14;
                 }
-                
+
                 const rs = avgLoss === 0 ? 100 : avgGain / avgLoss;
                 const rsi = 100 - (100 / (1 + rs));
                 results.push({ val: rsi, avgGain, avgLoss });
             }
-            
-            return data.map((d, i) => ({ 
-                ...d, 
-                rsi: (results[i] && results[i].val) || null, 
+
+            return data.map((d, i) => ({
+                ...d,
+                rsi: (results[i] && results[i].val) || null,
                 sma200: sma200[i],
                 hour: d.datetime ? d.datetime.getHours() : 0,
                 hourLocal: d.datetime ? d.datetime.getHours() : null,
@@ -326,7 +397,7 @@
                 }
                 if (!FOREX_PAIRS.includes(autoSymbol)) setAutoSymbol(FOREX_PAIRS[0] || 'XAU/USD');
             }, [autoMarket]);
-            
+
             // PARAMETROS DE TRADE
             const [tradeType, setTradeType] = useState('LONG');
             const [entryPrice, setEntryPrice] = useState(0);
@@ -335,7 +406,7 @@
             const [spread, setSpread] = useState('0');
 
             const [useMacroMode, setUseMacroMode] = useState(false);
-            
+
             // FILTROS
             const [useRsiFilter, setUseRsiFilter] = useState(false);
             const [targetRsi, setTargetRsi] = useState(50);
@@ -367,6 +438,8 @@
             const [copyAllStatus, setCopyAllStatus] = useState('idle');
             const [currentPrice, setCurrentPrice] = useState('');
             const [candlesSinceEntry, setCandlesSinceEntry] = useState(0);
+            const [liveTradeStatus, setLiveTradeStatus] = useState(null); // null | { status: 'WIN'|'LOSS'|'ACTIVE', exitPrice, exitDate }
+            const [isDurationModalOpen, setIsDurationModalOpen] = useState(false);
 
             // --- PERSISTENCIA DE SESIÓN ---
             const [savedSims, setSavedSims] = useState([]);
@@ -553,6 +626,178 @@
                 window.location.reload();
             };
 
+            const handleSyncLivePrice = async () => {
+                if (selectedCandleIndex < 0 || !csvData[selectedCandleIndex]) {
+                    alert('Selecciona primero una vela de entrada en la pestaña Laboratorio.');
+                    return;
+                }
+
+                let symbol = autoSymbol;
+                if (!symbol) {
+                    symbol = prompt("No se detectó un símbolo automático. Ingresa el par (ej. BTCUSDT o EUR/USD):", "BTCUSDT");
+                    if (!symbol) return;
+                    setAutoSymbol(symbol);
+                }
+
+                let tf = tfMinutes;
+                if (!tf) {
+                    const tfMap = { '1m': 1, '5m': 5, '15m': 15, '30m': 30, '1h': 60, '4h': 240, '1d': 1440 };
+                    tf = tfMap[autoEntryTf] || 60;
+                }
+
+                // Resetear estado previo
+                setLiveTradeStatus(null);
+
+                try {
+                    const btn = document.getElementById('btn-sync-live');
+                    if (btn) btn.innerHTML = '<span class="animate-spin inline-block">↻</span> ...';
+
+                    let price = null;
+                    const isForex = autoMarket === 'forex' || symbol.includes('/') || (symbol.length === 6 && !symbol.includes('USDT'));
+                    
+                    // Datos para verificación histórica
+                    const entryCandle = csvData[selectedCandleIndex];
+                    let entryDate = new Date(entryCandle.datetime);
+                    if (isNaN(entryDate.getTime()) && entryCandle.dateIso) entryDate = new Date(entryCandle.dateIso);
+                    
+                    const slVal = parseFloat(stopLoss);
+                    const tpVal = parseFloat(takeProfit);
+                    const hasLevels = !isNaN(slVal) && !isNaN(tpVal);
+
+                    // Función auxiliar para verificar TP/SL en una vela
+                    const checkCandle = (high, low, time) => {
+                        if (!hasLevels) return null;
+                        if (tradeType === 'LONG') {
+                            if (low <= slVal) return { status: 'LOSS', price: slVal, date: time };
+                            if (high >= tpVal) return { status: 'WIN', price: tpVal, date: time };
+                        } else {
+                            if (high >= slVal) return { status: 'LOSS', price: slVal, date: time };
+                            if (low <= tpVal) return { status: 'WIN', price: tpVal, date: time };
+                        }
+                        return null;
+                    };
+
+                    let tradeOutcome = null;
+
+                    if (isForex) {
+                        // --- TWELVE DATA (FOREX) ---
+                        const apiKey = localStorage.getItem('fti_twelve_api_key');
+                        if (!apiKey) throw new Error('Se requiere API Key de TwelveData para sincronizar Forex.');
+                        
+                        let tdSymbol = symbol;
+                        if (!tdSymbol.includes('/') && tdSymbol.length === 6) {
+                            tdSymbol = tdSymbol.slice(0, 3) + '/' + tdSymbol.slice(3);
+                        }
+
+                        // 1. Obtener precio actual
+                        const resPrice = await fetch(`https://api.twelvedata.com/price?symbol=${tdSymbol}&apikey=${apiKey}`);
+                        if (!resPrice.ok) throw new Error('Error API TwelveData Price');
+                        const dataPrice = await resPrice.json();
+                        if (dataPrice.code && dataPrice.code !== 200) throw new Error(dataPrice.message || 'Error TwelveData');
+                        price = parseFloat(dataPrice.price);
+
+                        // 2. Verificación Histórica (Solo si hay niveles definidos)
+                        if (hasLevels && !isNaN(entryDate.getTime())) {
+                            // Pedimos velas de 4h o 1d para economizar API, o 1h si es reciente
+                            // TwelveData TimeSeries
+                            const interval = '1h'; // Balance entre precisión y economía
+                            // Construir fecha start para API (YYYY-MM-DD)
+                            const startDateStr = entryDate.toISOString().split('T')[0];
+                            
+                            const resHist = await fetch(`https://api.twelvedata.com/time_series?symbol=${tdSymbol}&interval=${interval}&start_date=${startDateStr}&apikey=${apiKey}&outputsize=500&order=ASC`);
+                            if (resHist.ok) {
+                                const dataHist = await resHist.json();
+                                if (dataHist.values && Array.isArray(dataHist.values)) {
+                                    // TwelveData devuelve orden DESC por defecto si no se especifica, pero pedimos ASC
+                                    // Asegurar orden cronológico
+                                    const candles = dataHist.values.sort((a, b) => new Date(a.datetime) - new Date(b.datetime));
+                                    
+                                    for (const c of candles) {
+                                        const cTime = new Date(c.datetime);
+                                        if (cTime < entryDate) continue; // Ignorar velas previas a entrada exacta
+                                        
+                                        const outcome = checkCandle(parseFloat(c.high), parseFloat(c.low), cTime);
+                                        if (outcome) {
+                                            tradeOutcome = outcome;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                    } else {
+                        // --- BINANCE (CRYPTO) ---
+                        const binanceSymbol = symbol.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+                        
+                        // 1. Precio Actual
+                        const resPrice = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${binanceSymbol}`);
+                        if (!resPrice.ok) throw new Error('Error API Binance');
+                        const dataPrice = await resPrice.json();
+                        price = parseFloat(dataPrice.price);
+
+                        // 2. Verificación Histórica
+                        if (hasLevels && !isNaN(entryDate.getTime())) {
+                            const interval = '1h'; 
+                            const startTime = entryDate.getTime();
+                            // Binance klines limit 1000
+                            const resKlines = await fetch(`https://api.binance.com/api/v3/klines?symbol=${binanceSymbol}&interval=${interval}&startTime=${startTime}&limit=1000`);
+                            
+                            if (resKlines.ok) {
+                                const klines = await resKlines.json();
+                                // klines: [openTime, open, high, low, close, ...]
+                                for (const k of klines) {
+                                    const cTime = new Date(k[0]);
+                                    const outcome = checkCandle(parseFloat(k[2]), parseFloat(k[3]), cTime);
+                                    if (outcome) {
+                                        tradeOutcome = outcome;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (isNaN(price)) throw new Error('Precio inválido recibido');
+                    setCurrentPrice(price);
+
+                    // Verificar con precio actual si no se encontró en histórico (por si acaso la vela actual no cerró o gap)
+                    if (!tradeOutcome && hasLevels) {
+                        if (tradeType === 'LONG') {
+                            if (price <= slVal) tradeOutcome = { status: 'LOSS', price: price, date: new Date() };
+                            else if (price >= tpVal) tradeOutcome = { status: 'WIN', price: price, date: new Date() };
+                        } else {
+                            if (price >= slVal) tradeOutcome = { status: 'LOSS', price: price, date: new Date() };
+                            else if (price <= tpVal) tradeOutcome = { status: 'WIN', price: price, date: new Date() };
+                        }
+                    }
+
+                    // Establecer estado final
+                    if (tradeOutcome) {
+                        setLiveTradeStatus(tradeOutcome);
+                    } else {
+                        setLiveTradeStatus({ status: 'ACTIVE' });
+                    }
+
+                    // Calculo de velas
+                    if (!isNaN(entryDate.getTime())) {
+                        const now = tradeOutcome ? tradeOutcome.date : new Date();
+                        const diffMs = now - entryDate;
+                        const diffMins = diffMs / (1000 * 60);
+                        const candles = Math.floor(diffMins / tf);
+                        setCandlesSinceEntry(Math.max(0, candles));
+                    }
+
+                } catch (e) {
+                    console.error(e);
+                    alert(`No se pudo sincronizar precio para ${symbol}.\n\nDetalle: ${e.message}`);
+                    setLiveTradeStatus(null); 
+                } finally {
+                    const btn = document.getElementById('btn-sync-live');
+                    if (btn) btn.innerHTML = '⚡ Sincronizar Ahora';
+                }
+            };
+
             const handleSaveSimulation = () => {
                 if (!simResult) return;
                 const name = window.prompt('Nombre para esta simulación');
@@ -617,7 +862,7 @@
             const takeScreenshot = async () => {
                 const btn = document.activeElement;
                 const prevContent = btn ? btn.innerHTML : '';
-                if(btn && btn.tagName === 'BUTTON') {
+                if (btn && btn.tagName === 'BUTTON') {
                     btn.disabled = true;
                     btn.innerHTML = '<span class="animate-pulse">...</span>';
                 }
@@ -627,23 +872,23 @@
                         await document.fonts.ready;
                     }
                     const element = document.body;
-                    
+
                     const canvas = await html2canvas(element, {
                         scale: 2,
                         useCORS: true,
                         allowTaint: true,
-                        
+
                         backgroundColor: document.documentElement.classList.contains('dark') ? '#0f172a' : '#f8fafc',
-                        
-                        windowWidth: 1600, 
+
+                        windowWidth: 1600,
                         windowHeight: document.documentElement.scrollHeight,
-                        
+
                         onclone: (clonedDoc) => {
                             const clonedRoot = clonedDoc.getElementById('root');
                             if (clonedRoot) {
                                 clonedRoot.style.backgroundColor = document.documentElement.classList.contains('dark') ? '#0f172a' : '#f8fafc';
                                 clonedRoot.style.minHeight = '100vh';
-                                
+
                                 const animated = clonedRoot.querySelectorAll('.animate-fade-in');
                                 animated.forEach(el => {
                                     el.style.animation = 'none';
@@ -690,16 +935,16 @@
                         },
                         ignoreElements: (el) => el.classList.contains('no-screenshot')
                     });
-                    
+
                     const link = document.createElement('a');
-                    link.download = `SmartTrading_${new Date().toISOString().slice(0,19).replace(/[:]/g,'-')}.png`;
+                    link.download = `SmartTrading_${new Date().toISOString().slice(0, 19).replace(/[:]/g, '-')}.png`;
                     link.href = canvas.toDataURL('image/png');
                     link.click();
                 } catch (err) {
                     console.error('Error al capturar pantalla:', err);
                     alert('Error generando la imagen. Intente en pantalla completa.');
                 } finally {
-                    if(btn && btn.tagName === 'BUTTON') {
+                    if (btn && btn.tagName === 'BUTTON') {
                         btn.innerHTML = prevContent;
                         btn.disabled = false;
                     }
@@ -1211,7 +1456,7 @@
                             try {
                                 const j = await res.json();
                                 if (j && j.message) msg = String(j.message);
-                            } catch (e) {}
+                            } catch (e) { }
                             throw new Error(msg);
                         }
                         return await res.json();
@@ -1298,7 +1543,7 @@
                         try {
                             const j = await res.json();
                             if (j && j.msg) msg = String(j.msg);
-                        } catch (e) {}
+                        } catch (e) { }
                         throw new Error(msg);
                     }
                     const data = await res.json();
@@ -1363,7 +1608,7 @@
             const closeAutoLoad = () => {
                 try {
                     if (autoAbortRef.current) autoAbortRef.current.abort();
-                } catch (e) {}
+                } catch (e) { }
                 autoAbortRef.current = null;
                 setAutoLoadPhase('idle');
                 setAutoLoadError(null);
@@ -1544,7 +1789,7 @@
 
             const processFile = (file) => {
                 if (!file) return;
-                
+
                 // Validación básica de extensión
                 if (!file.name.toLowerCase().endsWith('.csv')) {
                     setFileError('El archivo debe tener extensión .CSV');
@@ -1715,7 +1960,7 @@
             }, [ltfData]);
 
             // --- SIMULACION & OPTIMIZACION ---
-            
+
             // Función pura de backtest desacoplada del estado para permitir iteraciones rápidas
             const calculateBacktest = (data, targetIdx, tradeParams, filters) => {
                 if (!data || !data.length) return { error: 'Sin datos' };
@@ -1973,6 +2218,9 @@
                 let wins = 0;
                 let losses = 0;
                 let totalDuration = 0;
+                let minDuration = Infinity;
+                let maxDurationWin = 0;
+                const durationList = [];
                 let totalMae = 0;
                 let maxMae = 0;
                 let totalVolAll = 0;
@@ -2089,6 +2337,9 @@
                     if (sim.outcome === 'WIN') {
                         wins++;
                         totalDuration += sim.duration;
+                        durationList.push(sim.duration);
+                        if (sim.duration < minDuration) minDuration = sim.duration;
+                        if (sim.duration > maxDurationWin) maxDurationWin = sim.duration;
                         const mae = tradeParams.tradeType === 'LONG' ? (sim.entryEff - sim.worst) / sim.entryEff : (sim.worst - sim.entryEff) / sim.entryEff;
                         const maeClamped = Math.max(0, isFinite(mae) ? mae : 0);
                         totalMae += maeClamped;
@@ -2114,6 +2365,23 @@
                 const wilsonLower95 = wilson != null ? (wilson * 100).toFixed(1) : null;
                 const painRatio = riskDist > 0 ? (((wins > 0 ? (totalMae / wins) : 0) / riskDist) * 100) : null;
 
+                // Calcular estadísticas avanzadas de duración
+                const sortedDurations = durationList.slice().sort((a, b) => a - b);
+                const medianDuration = sortedDurations.length > 0
+                    ? (sortedDurations.length % 2 === 1
+                        ? sortedDurations[Math.floor(sortedDurations.length / 2)]
+                        : Math.round((sortedDurations[sortedDurations.length / 2 - 1] + sortedDurations[sortedDurations.length / 2]) / 2))
+                    : 0;
+                const p80Index = Math.ceil(sortedDurations.length * 0.8) - 1;
+                const p80Duration = sortedDurations.length > 0 ? sortedDurations[Math.max(0, p80Index)] : 0;
+
+                // Generar distribución de duraciones
+                const durationDistribution = {};
+                for (let d = 0; d < durationList.length; d++) {
+                    const dur = durationList[d];
+                    durationDistribution[dur] = (durationDistribution[dur] || 0) + 1;
+                }
+
                 return {
                     matches,
                     closedTrades,
@@ -2123,6 +2391,11 @@
                     wins,
                     losses,
                     avgDuration: wins > 0 ? Math.round(totalDuration / wins) : 0,
+                    minDuration: wins > 0 ? minDuration : 0,
+                    maxDuration: wins > 0 ? maxDurationWin : 0,
+                    medianDuration,
+                    p80Duration,
+                    durationDistribution,
                     avgMae: wins > 0 ? ((totalMae / wins) * 100).toFixed(2) : 0,
                     maxMae: (maxMae * 100).toFixed(2),
                     painRatio: painRatio != null ? painRatio.toFixed(1) : null,
@@ -2142,7 +2415,7 @@
             const handleOptimize = async () => {
                 if (!csvData.length || !stopLoss || !takeProfit) return;
                 setIsOptimizing(true);
-                
+
                 // Dar tiempo al UI para renderizar el loader
                 await new Promise(r => setTimeout(r, 100));
 
@@ -2197,7 +2470,7 @@
                         requireHtf: false,
                         useLtfIntra: false
                     };
-                    
+
                     const activeLabels = [];
 
                     for (let j = 0; j < toggleableFilters.length; j++) {
@@ -2243,7 +2516,7 @@
                 // 2. Rellenar hasta 6 con los mejores restantes (por WinRate)
                 // Usamos un Set para evitar duplicados
                 const usedIndices = new Set(robustPicks.map(p => combinations.indexOf(p)));
-                
+
                 for (const comb of combinations) {
                     if (finalResults.length >= 6) break;
                     if (!usedIndices.has(combinations.indexOf(comb))) {
@@ -2258,7 +2531,7 @@
                 // Vamos a ordenarlos finalmente por WinRate para que la lista se vea coherente, pero manteniendo los marcados.
                 finalResults.sort((a, b) => b.stats.winRateNum - a.stats.winRateNum);
 
-                setOptimizationResults(finalResults); 
+                setOptimizationResults(finalResults);
                 setIsOptimizing(false);
             };
 
@@ -2276,7 +2549,7 @@
                 if (config.htfMode !== undefined) setHtfMode(config.htfMode);
                 if (config.requireHtf !== undefined) setRequireHtf(config.requireHtf);
                 if (config.useLtfIntra !== undefined) setUseLtfIntra(config.useLtfIntra);
-                
+
                 // Ejecutar simulacion con los nuevos parametros
                 setTimeout(() => {
                     // Actualizamos manualmente para asegurar que el runSimulation tome los nuevos valores
@@ -2291,7 +2564,7 @@
 
             const runSimulation = () => {
                 if (!csvData.length || !stopLoss || !takeProfit) return;
-                
+
                 const slVal = parseFloat(stopLoss);
                 const tpVal = parseFloat(takeProfit);
                 const spreadVal = Math.max(0, parseFloat(spread || '0') || 0);
@@ -2350,7 +2623,7 @@
                 let sum = 0;
                 let count = 0;
                 for (let i = start; i <= endIdx; i++) {
-                    const prevClose = data[i-1] ? data[i-1].close : data[i].close;
+                    const prevClose = data[i - 1] ? data[i - 1].close : data[i].close;
                     const high = data[i].high;
                     const low = data[i].low;
                     const tr = Math.max(high - low, Math.abs(high - prevClose), Math.abs(prevClose - low));
@@ -2363,9 +2636,9 @@
             const findRecentSwingLow = (data, endIdx, lookback) => {
                 const start = Math.max(1, endIdx - lookback);
                 for (let i = endIdx - 1; i >= start; i--) {
-                    const prev = data[i-1];
+                    const prev = data[i - 1];
                     const cur = data[i];
-                    const next = data[i+1];
+                    const next = data[i + 1];
                     if (!prev || !next) continue;
                     if (cur.low < prev.low && cur.low <= next.low) return cur.low;
                 }
@@ -2375,9 +2648,9 @@
             const findRecentSwingHigh = (data, endIdx, lookback) => {
                 const start = Math.max(1, endIdx - lookback);
                 for (let i = endIdx - 1; i >= start; i--) {
-                    const prev = data[i-1];
+                    const prev = data[i - 1];
                     const cur = data[i];
-                    const next = data[i+1];
+                    const next = data[i + 1];
                     if (!prev || !next) continue;
                     if (cur.high > prev.high && cur.high >= next.high) return cur.high;
                 }
@@ -2494,7 +2767,7 @@
                 if (!simResult || !currentPrice || simResult.error) return null;
                 const curr = parseFloat(currentPrice);
                 const ep = parseFloat(entryPrice);
-                
+
                 // Calcular Estado Actual
                 let pnlPercent = 0;
                 let drawdownPercent = 0;
@@ -2510,7 +2783,7 @@
                 // Diagnostico de Salud (Semáforo)
                 let health = 'HEALTHY'; // Green
                 let msg = "Comportamiento normal dentro de los parámetros históricos.";
-                
+
                 const avgMae = parseFloat(simResult.avgMae);
                 const maxMae = parseFloat(simResult.maxMae);
 
@@ -2524,17 +2797,26 @@
                     }
                 }
 
-                // Diagnostico de Tiempo
-                let timeStatus = 'NORMAL';
-                if (candlesSinceEntry > simResult.avgDuration * 1.5) {
-                    timeStatus = 'STAGNANT';
+                // Diagnostico de Tiempo (Semáforo Inteligente)
+                const median = simResult.medianDuration || simResult.avgDuration;
+                const p80 = simResult.p80Duration || simResult.avgDuration;
+                let timeStatus = 'EARLY'; // Verde: < mediana
+                let timeMsg = `Fase temprana. El 50% de los ganadores aún no cierra hasta la vela ${median}.`;
+
+                if (candlesSinceEntry >= p80) {
+                    timeStatus = 'TIME_STOP';
+                    timeMsg = `⚠️ TIME STOP: El 80% de los ganadores ya cerraron antes de la vela ${p80}. Mover a BE obligatorio o evaluar cierre.`;
+                } else if (candlesSinceEntry >= median) {
+                    timeStatus = 'DECISION';
+                    timeMsg = `Fase de decisión. Ya pasaron ${candlesSinceEntry} velas (mediana: ${median}). Considera BE si hay eventos cercanos.`;
                 }
 
-                return { pnlPercent, drawdownPercent, health, msg, timeStatus };
+                return { pnlPercent, drawdownPercent, health, msg, timeStatus, timeMsg, median, p80 };
 
             }, [currentPrice, simResult, tradeType, entryPrice, candlesSinceEntry]);
 
             const rrMetrics = useMemo(() => {
+
                 const ep = Number(entryPrice);
                 const sl = parseFloat(stopLoss);
                 const tp = parseFloat(takeProfit);
@@ -2559,7 +2841,34 @@
                 const ratio = risk > 0 && reward > 0 ? (reward / risk) : 0;
                 const beWr = ratio > 0 ? (100 / (1 + ratio)) : null;
                 const hist = simResult && !simResult.error && simResult.winRate ? parseFloat(simResult.winRate) : null;
+                const wilson = simResult && !simResult.error && simResult.wilsonLower95 ? parseFloat(simResult.wilsonLower95) : 0;
                 const edge = beWr != null && hist != null ? (hist - beWr) : null;
+                const closedTrades = simResult && !simResult.error
+                    ? Number(simResult.closedTrades != null ? simResult.closedTrades : (Number(simResult.wins || 0) + Number(simResult.losses || 0)))
+                    : 0;
+                const riskDistPercent = simResult && simResult.riskDistPercent != null ? parseFloat(simResult.riskDistPercent) : null;
+                const avgMae = simResult && simResult.avgMae != null ? parseFloat(simResult.avgMae) : null;
+                const maeRatio = riskDistPercent && riskDistPercent > 0 && avgMae != null
+                    ? avgMae / riskDistPercent
+                    : null;
+                let auditState = null;
+
+                if (simResult && !simResult.error) {
+                    if (closedTrades < 30) {
+                        auditState = 'INSUFFICIENTE';
+                    } else if (riskDistPercent > 0 && maeRatio != null && maeRatio > 0.7) {
+                        auditState = 'FRAGIL';
+                    } else if (hist != null && beWr != null) {
+                        if (hist < beWr) {
+                            auditState = 'NEGATIVO';
+                        } else if (wilson < beWr) {
+                            auditState = 'ESPECULATIVO';
+                        } else {
+                            auditState = 'ROBUSTO';
+                        }
+                    }
+                }
+
                 let label = null;
                 if (edge != null) {
                     if (edge >= 20) label = 'Excellent Trade';
@@ -2567,8 +2876,29 @@
                     else if (edge >= 0) label = 'Marginal';
                     else label = 'Esperanza Negativa';
                 }
-                return { risk, reward, ratio, beWr, hist, edge, label };
+
+                return {
+                    risk,
+                    reward,
+
+                    ratio,
+                    beWr,
+                    hist,
+                    edge,
+                    label,
+                    wilson,
+                    auditState,
+                    maeRatio,
+                    closedTrades
+                };
             }, [entryPrice, stopLoss, takeProfit, tradeType, simResult, spread]);
+
+            const auditVariant = useMemo(() => {
+                if (!rrMetrics) return AUDIT_VARIANTS.DEFAULT;
+                const key = rrMetrics.auditState || (rrMetrics.edge != null && rrMetrics.edge < 0 ? 'NEGATIVO' : 'DEFAULT');
+                return AUDIT_VARIANTS[key] || AUDIT_VARIANTS.DEFAULT;
+            }, [rrMetrics]);
+            const AuditIcon = auditVariant.icon || Icons.Activity;
 
             const formatPrice = (value) => {
                 const num = Number(value);
@@ -2598,11 +2928,10 @@
             };
 
             // --- RENDERIZADO ---
-            const tabClass = (tab) => `flex-1 py-4 text-center font-bold text-sm uppercase tracking-wider cursor-pointer transition-all border-b-2 ${
-                activeTab === tab 
-                ? 'border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-slate-800' 
+            const tabClass = (tab) => `flex-1 py-4 text-center font-bold text-sm uppercase tracking-wider cursor-pointer transition-all border-b-2 ${activeTab === tab
+                ? 'border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-slate-800'
                 : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/50'
-            }`;
+                }`;
             const hasExtended = React.useMemo(() => {
                 return csvData.some(d => d.volume !== undefined || d.buyPressurePct !== undefined || d.delta !== undefined);
             }, [csvData]);
@@ -2780,8 +3109,118 @@
                             </div>
                         </div>
                     )}
+                    {/* MODAL DE DISTRIBUCIÓN DE DURACIÓN */}
+                    {isDurationModalOpen && simResult && !simResult.error && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                            <div
+                                className="absolute inset-0 bg-slate-950/60"
+                                onClick={() => setIsDurationModalOpen(false)}
+                            ></div>
+                            <div className="relative w-full max-w-2xl max-h-[90vh] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+                                <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex items-start justify-between gap-4">
+                                    <div>
+                                        <div className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                                            <Icons.Clock size={20} className="text-blue-500" /> Distribución de Duración
+                                        </div>
+                                        <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">Análisis detallado de cuántas velas tardan los trades ganadores en cerrar.</div>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsDurationModalOpen(false)}
+                                        className="px-3 py-2 rounded-lg text-sm font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-200"
+                                    >
+                                        Cerrar
+                                    </button>
+                                </div>
+
+                                <div className="p-5 space-y-5 overflow-y-auto">
+                                    {/* MÉTRICAS CLAVE */}
+                                    <div className="grid grid-cols-5 gap-2 text-center">
+                                        <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
+                                            <div className="text-[10px] text-slate-400 uppercase">Min</div>
+                                            <div className="font-mono font-bold text-lg text-slate-700 dark:text-slate-200">{simResult.minDuration}</div>
+                                        </div>
+                                        <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg border border-green-200 dark:border-green-800">
+                                            <div className="text-[10px] text-green-600 dark:text-green-400 uppercase">Mediana</div>
+                                            <div className="font-mono font-bold text-lg text-green-600 dark:text-green-400">{simResult.medianDuration}</div>
+                                        </div>
+                                        <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
+                                            <div className="text-[10px] text-blue-600 dark:text-blue-400 uppercase">Media</div>
+                                            <div className="font-mono font-bold text-lg text-blue-600 dark:text-blue-400">{simResult.avgDuration}</div>
+                                        </div>
+                                        <div className="bg-orange-50 dark:bg-orange-900/20 p-3 rounded-lg border border-orange-200 dark:border-orange-800">
+                                            <div className="text-[10px] text-orange-600 dark:text-orange-400 uppercase">P80</div>
+                                            <div className="font-mono font-bold text-lg text-orange-600 dark:text-orange-400">{simResult.p80Duration}</div>
+                                        </div>
+                                        <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
+                                            <div className="text-[10px] text-slate-400 uppercase">Max</div>
+                                            <div className="font-mono font-bold text-lg text-slate-700 dark:text-slate-200">{simResult.maxDuration}</div>
+                                        </div>
+                                    </div>
+
+                                    {/* HISTOGRAMA / DISTRIBUCIÓN */}
+                                    <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+                                        <div className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-3">Histograma de Duraciones</div>
+                                        <div className="space-y-1 max-h-60 overflow-y-auto">
+                                            {(() => {
+                                                const dist = simResult.durationDistribution || {};
+                                                const entries = Object.entries(dist).map(([k, v]) => [parseInt(k), v]).sort((a, b) => a[0] - b[0]);
+                                                const maxCount = Math.max(...entries.map(e => e[1]), 1);
+                                                const totalWins = simResult.wins || 1;
+                                                if (entries.length === 0) return <div className="text-sm text-slate-500 italic">Sin datos de distribución.</div>;
+                                                return entries.map(([dur, count]) => {
+                                                    const pct = ((count / totalWins) * 100).toFixed(1);
+                                                    const barWidth = (count / maxCount) * 100;
+                                                    const isMedian = dur === simResult.medianDuration;
+                                                    const isP80 = dur === simResult.p80Duration;
+                                                    return (
+                                                        <div key={dur} className="flex items-center gap-2 text-xs">
+                                                            <div className="w-12 text-right font-mono text-slate-600 dark:text-slate-300">{dur} <span className="text-[9px] text-slate-400">v</span></div>
+                                                            <div className="flex-1 h-5 bg-slate-200 dark:bg-slate-700 rounded-sm overflow-hidden relative">
+                                                                <div
+                                                                    className={`h-full rounded-sm transition-all ${isP80 ? 'bg-orange-500' : isMedian ? 'bg-green-500' : 'bg-blue-500'}`}
+                                                                    style={{ width: barWidth + '%' }}
+                                                                ></div>
+                                                            </div>
+                                                            <div className="w-16 text-right font-mono">
+                                                                <span className="text-slate-700 dark:text-slate-200">{count}</span>
+                                                                <span className="text-slate-400 ml-1">({pct}%)</span>
+                                                            </div>
+                                                            {isMedian && <span className="text-[9px] bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 px-1 rounded">Mediana</span>}
+                                                            {isP80 && <span className="text-[9px] bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300 px-1 rounded">P80</span>}
+                                                        </div>
+                                                    );
+                                                });
+                                            })()}
+                                        </div>
+                                    </div>
+
+                                    {/* GUÍA ESTRATÉGICA */}
+                                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-800 p-4 rounded-xl border border-blue-200 dark:border-indigo-900">
+                                        <div className="text-xs font-bold text-indigo-700 dark:text-indigo-400 uppercase mb-2 flex items-center gap-2">
+                                            <Icons.ShieldAlert size={14} /> Guía para Break Even (Time Stop)
+                                        </div>
+                                        <div className="space-y-2 text-xs text-slate-700 dark:text-slate-300">
+                                            <div className="flex items-start gap-2">
+                                                <span className="inline-block w-3 h-3 rounded-full bg-green-500 mt-0.5 shrink-0"></span>
+                                                <div><b>Fase Temprana ({"<"} {simResult.medianDuration} velas):</b> Todo normal. Deja correr el trade.</div>
+                                            </div>
+                                            <div className="flex items-start gap-2">
+                                                <span className="inline-block w-3 h-3 rounded-full bg-yellow-500 mt-0.5 shrink-0"></span>
+                                                <div><b>Fase de Decisión ({simResult.medianDuration}-{simResult.p80Duration} velas):</b> El trade tarda más de lo habitual. Considera BE si hay eventos cercanos.</div>
+                                            </div>
+                                            <div className="flex items-start gap-2">
+                                                <span className="inline-block w-3 h-3 rounded-full bg-red-500 mt-0.5 shrink-0"></span>
+                                                <div><b>Time Stop ({">"} {simResult.p80Duration} velas):</b> El 80% de los ganadores ya cerraron. Mover a BE obligatorio o evaluar cierre.</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                     <div className="max-w-6xl mx-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden transition-colors duration-300">
-                        
+
                         {/* HEADER */}
                         <div className="bg-slate-50 dark:bg-slate-950 p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center transition-colors duration-300">
                             <div>
@@ -2796,7 +3235,7 @@
                                         <Icons.CheckCircle size={12} /> Dataset Cargado ({csvData.length} velas)
                                     </div>
                                 )}
-                                <button 
+                                <button
                                     onClick={handleClearCurrentSession}
                                     className="bg-white dark:bg-slate-800 hover:bg-red-50 dark:hover:bg-red-950/30 text-slate-400 hover:text-red-500 p-2 rounded-lg border border-slate-200 dark:border-slate-700 transition-all hover:border-red-200 dark:hover:border-red-900 shadow-sm"
                                     title="Limpiar sesión actual"
@@ -2816,7 +3255,7 @@
                                 1. Laboratorio (Backtest)
                             </div>
                             <div className={tabClass('MONITOR')} onClick={() => {
-                                if(!simResult) alert("Primero ejecuta una simulación en el Laboratorio para generar datos de referencia.");
+                                if (!simResult) alert("Primero ejecuta una simulación en el Laboratorio para generar datos de referencia.");
                                 else setActiveTab('MONITOR');
                             }}>
                                 2. Monitor (Gestión)
@@ -2828,23 +3267,23 @@
 
                         {/* CONTENIDO PRINCIPAL */}
                         <div className="p-6 md:p-8 min-h-[600px]">
-                            
+
                             {/* --- PESTAÑA 1: LABORATORIO --- */}
                             {activeTab === 'LAB' && (
                                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-fade-in">
-                                    
+
                                     {/* COLUMNA IZQUIERDA: CONFIGURACION */}
                                     <div id="analysis-config" className="lg:col-span-5 space-y-6">
-                                        
+
                                         {/* 1. DATASET */}
-                                        <section 
+                                        <section
                                             className={`bg-slate-50 dark:bg-slate-800/50 p-5 rounded-xl border transition-all duration-300 ${isDragging ? 'border-blue-500 ring-2 ring-blue-500/20 bg-blue-50/50 dark:bg-slate-800' : 'border-slate-200 dark:border-slate-700/50'} shadow-sm`}
                                             onDragOver={handleDragOver}
                                             onDragLeave={handleDragLeave}
                                             onDrop={handleDrop}
                                         >
                                             <div className="flex items-center justify-between gap-3 mb-3">
-                                                <h3 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase flex items-center gap-2"><Icons.Upload size={16}/> Data Source</h3>
+                                                <h3 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase flex items-center gap-2"><Icons.Upload size={16} /> Data Source</h3>
                                                 <button
                                                     type="button"
                                                     onClick={openAutoLoad}
@@ -2853,15 +3292,15 @@
                                                     Carga automática
                                                 </button>
                                             </div>
-                                            
+
                                             {csvData.length > 0 && fileName ? (
                                                 <div className="relative group w-full animate-fade-in">
-                                                    <input 
-                                                        type="file" 
-                                                        accept=".csv" 
-                                                        onChange={handleFileUpload} 
+                                                    <input
+                                                        type="file"
+                                                        accept=".csv"
+                                                        onChange={handleFileUpload}
                                                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
-                                                        title="Clic para cambiar archivo" 
+                                                        title="Clic para cambiar archivo"
                                                     />
                                                     <div className="border border-green-200 dark:border-green-900 bg-green-50 dark:bg-green-900/20 rounded-lg p-4 flex items-center justify-between transition-colors group-hover:bg-green-100 dark:group-hover:bg-green-900/30">
                                                         <div className="flex items-center gap-3 overflow-hidden">
@@ -2871,7 +3310,7 @@
                                                             <div className="min-w-0">
                                                                 <p className="text-sm font-bold text-slate-800 dark:text-slate-200 truncate pr-2">{fileName}</p>
                                                                 <p className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
-                                                                    <Icons.CheckCircle size={12}/> Cargado correctamente
+                                                                    <Icons.CheckCircle size={12} /> Cargado correctamente
                                                                 </p>
                                                             </div>
                                                         </div>
@@ -2882,12 +3321,12 @@
                                                 </div>
                                             ) : fileError ? (
                                                 <div className="relative group w-full animate-fade-in">
-                                                    <input 
-                                                        type="file" 
-                                                        accept=".csv" 
-                                                        onChange={handleFileUpload} 
+                                                    <input
+                                                        type="file"
+                                                        accept=".csv"
+                                                        onChange={handleFileUpload}
                                                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
-                                                        title="Clic para intentar de nuevo" 
+                                                        title="Clic para intentar de nuevo"
                                                     />
                                                     <div className="border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-900/20 rounded-lg p-4 flex items-center justify-between transition-colors group-hover:bg-red-100 dark:group-hover:bg-red-900/30">
                                                         <div className="flex items-center gap-3 overflow-hidden">
@@ -2905,12 +3344,12 @@
                                                 </div>
                                             ) : (
                                                 <div className="relative group w-full">
-                                                    <input 
-                                                        type="file" 
-                                                        accept=".csv" 
-                                                        onChange={handleFileUpload} 
+                                                    <input
+                                                        type="file"
+                                                        accept=".csv"
+                                                        onChange={handleFileUpload}
                                                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
-                                                        title="" 
+                                                        title=""
                                                     />
                                                     <div className={`border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center text-center transition-all duration-300 ${isDragging ? 'border-blue-500 bg-blue-100/10' : 'border-slate-300 dark:border-slate-600 group-hover:border-blue-400 dark:group-hover:border-blue-500 bg-slate-50 dark:bg-slate-900/50'}`}>
                                                         <div className={`p-3 rounded-full bg-slate-100 dark:bg-slate-800 mb-3 transition-transform duration-300 ${isDragging ? 'scale-110 text-blue-600' : 'text-slate-400 group-hover:text-blue-500'}`}>
@@ -2976,10 +3415,10 @@
 
                                         {/* 2. ESCENARIO */}
                                         <section className="bg-slate-50 dark:bg-slate-800/50 p-5 rounded-xl border border-slate-200 dark:border-slate-700/50 shadow-sm">
-                                            <h3 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase mb-3 flex items-center gap-2"><Icons.History size={16}/> Escenario (Vela Actual)</h3>
+                                            <h3 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase mb-3 flex items-center gap-2"><Icons.History size={16} /> Escenario (Vela Actual)</h3>
                                             {csvData.length > 0 ? (
                                                 <>
-                                                    <input type="range" min="200" max={csvData.length-1} value={selectedCandleIndex} onChange={(e)=>setSelectedCandleIndex(parseInt(e.target.value))} className="w-full accent-blue-500 h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer"/>
+                                                    <input type="range" min="200" max={csvData.length - 1} value={selectedCandleIndex} onChange={(e) => setSelectedCandleIndex(parseInt(e.target.value))} className="w-full accent-blue-500 h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer" />
                                                     <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3 text-xs font-mono">
                                                         <div className="bg-white dark:bg-slate-900 p-2 rounded border border-slate-200 dark:border-slate-800">
                                                             <div className="text-[11px] text-slate-500">Índice en dataset</div>
@@ -3002,7 +3441,7 @@
                                                                     if (!d || !tf) return '—';
                                                                     const end = new Date(d.getTime() + tf * 60000);
                                                                     const fmt = (x) => x.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-                                                                    const tfLabel = tf >= 1440 ? `${Math.round(tf/1440)}D` : tf >= 60 ? `${Math.round(tf/60)}H` : `${tf}m`;
+                                                                    const tfLabel = tf >= 1440 ? `${Math.round(tf / 1440)}D` : tf >= 60 ? `${Math.round(tf / 60)}H` : `${tf}m`;
                                                                     return `${fmt(d)} → ${fmt(end)} (${tfLabel})`;
                                                                 })()}
                                                             </div>
@@ -3024,33 +3463,33 @@
 
                                         {/* 3. ESTRATEGIA */}
                                         <section className="bg-slate-50 dark:bg-slate-800/50 p-5 rounded-xl border border-slate-200 dark:border-slate-700/50 shadow-sm">
-                                            <h3 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase mb-3 flex items-center gap-2"><Icons.TrendingUp size={16}/> Estrategia de Trade</h3>
+                                            <h3 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase mb-3 flex items-center gap-2"><Icons.TrendingUp size={16} /> Estrategia de Trade</h3>
                                             <div className="flex bg-slate-200 dark:bg-slate-900 p-1 rounded-lg mb-4">
-                                                <button onClick={()=>setTradeType('LONG')} className={`flex-1 py-2 rounded text-xs font-bold transition-all ${tradeType==='LONG'?'bg-green-600 text-white shadow-md':'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>LONG</button>
-                                                <button onClick={()=>setTradeType('SHORT')} className={`flex-1 py-2 rounded text-xs font-bold transition-all ${tradeType==='SHORT'?'bg-red-600 text-white shadow-md':'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>SHORT</button>
+                                                <button onClick={() => setTradeType('LONG')} className={`flex-1 py-2 rounded text-xs font-bold transition-all ${tradeType === 'LONG' ? 'bg-green-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>LONG</button>
+                                                <button onClick={() => setTradeType('SHORT')} className={`flex-1 py-2 rounded text-xs font-bold transition-all ${tradeType === 'SHORT' ? 'bg-red-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>SHORT</button>
                                             </div>
                                             <div className="grid grid-cols-2 gap-3">
                                                 <div>
                                                     <label className="text-xs text-red-500 dark:text-red-400 font-bold">Stop Loss</label>
-                                                    <input type="number" placeholder="Precio SL" value={stopLoss} onChange={(e)=>setStopLoss(e.target.value)} className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded p-2 text-sm font-mono leading-tight mt-1 text-slate-900 dark:text-white focus:border-red-500 outline-none transition-colors"/>
+                                                    <input type="number" placeholder="Precio SL" value={stopLoss} onChange={(e) => setStopLoss(e.target.value)} className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded p-2 text-sm font-mono leading-tight mt-1 text-slate-900 dark:text-white focus:border-red-500 outline-none transition-colors" />
                                                 </div>
                                                 <div>
                                                     <label className="text-xs text-green-600 dark:text-green-400 font-bold">Take Profit</label>
-                                                    <input type="number" placeholder="Precio TP" value={takeProfit} onChange={(e)=>setTakeProfit(e.target.value)} className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded p-2 text-sm font-mono leading-tight mt-1 text-slate-900 dark:text-white focus:border-green-500 outline-none transition-colors"/>
+                                                    <input type="number" placeholder="Precio TP" value={takeProfit} onChange={(e) => setTakeProfit(e.target.value)} className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded p-2 text-sm font-mono leading-tight mt-1 text-slate-900 dark:text-white focus:border-green-500 outline-none transition-colors" />
                                                 </div>
                                             </div>
                                             <div className="mt-3">
                                                 <label className="text-xs text-slate-600 dark:text-slate-300 font-bold">Spread (puntos)</label>
-                                                <input type="number" min="0" step="0.01" placeholder="0" value={spread} onChange={(e)=>setSpread(e.target.value)} className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded p-2 text-sm font-mono leading-tight mt-1 text-slate-900 dark:text-white focus:border-blue-500 outline-none transition-colors"/>
+                                                <input type="number" min="0" step="0.01" placeholder="0" value={spread} onChange={(e) => setSpread(e.target.value)} className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded p-2 text-sm font-mono leading-tight mt-1 text-slate-900 dark:text-white focus:border-blue-500 outline-none transition-colors" />
                                             </div>
                                             <button onClick={handleAutoDetect} disabled={!csvData.length || isAutoDetecting} className="w-full mt-3 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-400 disabled:cursor-not-allowed disabled:hover:bg-slate-400 text-white font-bold py-2 rounded-lg shadow-lg flex items-center justify-center gap-2 transition-all active:scale-95 disabled:active:scale-100">
-                                                {isAutoDetecting ? <Icons.Activity size={16} className="animate-spin"/> : <Icons.Target size={16}/>} AUTO-DETECTAR SETUP
+                                                {isAutoDetecting ? <Icons.Activity size={16} className="animate-spin" /> : <Icons.Target size={16} />} AUTO-DETECTAR SETUP
                                             </button>
-                                            
+
                                             <details className="group mt-3 border border-slate-200 dark:border-slate-800 rounded overflow-hidden">
                                                 <summary className="flex items-center justify-between p-2 cursor-pointer bg-slate-50 dark:bg-slate-900 text-xs font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors select-none">
-                                                    <span className="flex items-center gap-2"><Icons.Zap size={12}/> ¿Cómo funciona la Auto-Detección?</span>
-                                                    <Icons.ChevronDown size={12} className="transition-transform group-open:rotate-180"/>
+                                                    <span className="flex items-center gap-2"><Icons.Zap size={12} /> ¿Cómo funciona la Auto-Detección?</span>
+                                                    <Icons.ChevronDown size={12} className="transition-transform group-open:rotate-180" />
                                                 </summary>
                                                 <div className="p-3 bg-white dark:bg-slate-950 text-[10px] space-y-2 border-t border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400">
                                                     <p><strong className="text-slate-700 dark:text-slate-300">1. Análisis de Volatilidad:</strong> Se calcula el ATR (14 periodos) para medir el "ruido" del mercado y adaptar el SL dinámicamente.</p>
@@ -3060,47 +3499,122 @@
                                                 </div>
                                             </details>
                                             {rrMetrics && (
-                                                <div>
-                                                    <div className="grid grid-cols-3 gap-3 mt-3">
-                                                        <div className="bg-white dark:bg-slate-900 p-3 rounded border border-slate-200 dark:border-slate-800">
-                                                            <div className="text-xs text-slate-500">Ratio R:R</div>
-                                                            <div className={`${rrMetrics.ratio < 1 ? 'text-orange-500 dark:text-orange-400' : 'text-slate-800 dark:text-white'} font-mono font-bold`}>
-                                                                1 : {rrMetrics.ratio > 0 ? rrMetrics.ratio.toFixed(2) : '—'}
+                                                <div className="mt-4 space-y-3">
+                                                    {/* Fila de Métricas Principales */}
+                                                    <div className="grid grid-cols-3 gap-3">
+                                                        {/* R:R */}
+                                                        <div className="bg-white dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+                                                            <div className="text-[10px] uppercase font-bold text-slate-400 mb-1">Ratio R:R</div>
+                                                            <div className="flex items-baseline gap-1">
+                                                                <span className="text-sm text-slate-500 font-mono">1:</span>
+                                                                <span className={`text-xl font-mono font-black ${rrMetrics.ratio < 1 ? 'text-orange-500' : 'text-slate-800 dark:text-white'}`}>
+                                                                    {rrMetrics.ratio > 0 ? rrMetrics.ratio.toFixed(2) : '—'}
+                                                                </span>
                                                             </div>
                                                         </div>
-                                                        <div className="bg-white dark:bg-slate-900 p-3 rounded border border-slate-200 dark:border-slate-800">
-                                                            <div className="text-xs text-slate-500">Win Rate Necesario</div>
-                                                            <div className="text-slate-800 dark:text-white font-mono font-bold">
-                                                                {rrMetrics.beWr != null ? `${rrMetrics.beWr.toFixed(1)}%` : '—'}
+
+                                                        {/* BE WR */}
+                                                        <div className="bg-white dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+                                                            <div className="text-[10px] uppercase font-bold text-slate-400 mb-1">Win Rate Min.</div>
+                                                            <div className="flex items-baseline gap-1">
+                                                                <span className="text-xl font-mono font-black text-slate-800 dark:text-white">
+                                                                    {rrMetrics.beWr != null ? rrMetrics.beWr.toFixed(1) : '—'}
+                                                                </span>
+                                                                <span className="text-xs text-slate-500 font-mono">%</span>
                                                             </div>
                                                         </div>
-                                                        <div className="bg-white dark:bg-slate-900 p-3 rounded border border-slate-200 dark:border-slate-800">
-                                                            <div className="text-xs text-slate-500">Evaluación</div>
-                                                            {rrMetrics.edge != null ? (
-                                                                <div className={`${rrMetrics.edge >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'} font-mono font-bold`}>
-                                                                    {rrMetrics.edge >= 0 ? `Edge Positivo (+${rrMetrics.edge.toFixed(1)}%)` : `Edge Negativo (${rrMetrics.edge.toFixed(1)}%)`}
-                                                                </div>
-                                                            ) : (
-                                                                <div className="text-slate-500 dark:text-slate-400 text-xs">Ejecuta el análisis para comparar</div>
-                                                            )}
-                                                            {rrMetrics.label && (
-                                                                <div className="text-[10px] text-slate-500 mt-1">{rrMetrics.label}</div>
-                                                            )}
+
+                                                        {/* EVALUACIÓN / EDGE */}
+                                                        <div className={`p-3 px-2 rounded-lg border shadow-sm flex flex-col justify-between transition-colors duration-300 relative overflow-hidden ${auditVariant.container}`}>
+                                                            <div className="text-[10px] uppercase font-bold opacity-80 mb-1 flex items-center gap-1 z-10 relative">
+                                                                <AuditIcon size={12} />
+                                                                {auditVariant.message}
+                                                            </div>
+                                                            
+                                                            <div className="z-10 relative">
+                                                                {rrMetrics && rrMetrics.edge != null ? (
+                                                                    <>
+                                                                        <div className="text-[11px] font-black leading-tight tracking-tight uppercase text-slate-700 dark:text-slate-100">
+                                                                            {rrMetrics.edge >= 0 ? `Edge Positivo (+${rrMetrics.edge.toFixed(1)}%)` : `Edge Negativo (${rrMetrics.edge.toFixed(1)}%)`}
+                                                                        </div>
+                                                                        {rrMetrics.label && (
+                                                                            <div className="text-[9px] opacity-80 font-medium mt-0.5">{rrMetrics.label}</div>
+                                                                        )}
+                                                                    </>
+                                                                ) : (
+                                                                    <div className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+                                                                        <Icons.Activity size={12} />
+                                                                        <span>Ejecuta una simulación para evaluar.</span>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+
+                                                            {/* Background Icon Watermark */}
+                                                            <div className="absolute -right-2 -bottom-2 opacity-10 pointer-events-none">
+                                                                <AuditIcon size={40} />
+                                                            </div>
                                                         </div>
                                                     </div>
+
+                                                    {/* Alertas de Auditoría */}
+                                                    {rrMetrics && rrMetrics.auditState === 'INSUFFICIENTE' && (
+                                                        <div className="bg-slate-100 dark:bg-slate-900/40 border border-slate-300 dark:border-slate-700 rounded-lg p-3 flex gap-3 animate-fade-in text-slate-600 dark:text-slate-300">
+                                                            <Icons.HelpCircle size={18} className="text-slate-500 dark:text-slate-400" />
+                                                            <div className="text-sm">
+                                                                <p className="font-bold">Muestra Insuficiente</p>
+                                                                <p>Muestra muy pequeña ({rrMetrics.closedTrades}). Los resultados son aleatorios. Se requieren &gt;30 trades.</p>
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    {rrMetrics && rrMetrics.auditState === 'FRAGIL' && (
+                                                        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 flex gap-3 animate-fade-in text-red-700 dark:text-red-300">
+                                                            <Icons.Activity size={18} className="text-red-600 dark:text-red-300" />
+                                                            <div className="text-sm">
+                                                                <p className="font-bold">Peligro de Barrido</p>
+                                                                <p>Peligro de Barrido: El precio retrocede un {(Math.round((rrMetrics.maeRatio || 0) * 1000) / 10).toFixed(1)}% hacia el SL en promedio. Es una estrategia cardíaca.</p>
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Mensaje de Alerta Especulativa Extendido */}
+                                                    {rrMetrics && rrMetrics.auditState === 'ESPECULATIVO' && (
+                                                        <div className="bg-orange-50 dark:bg-orange-900/10 border border-orange-100 dark:border-orange-900/30 rounded-lg p-3 flex gap-3 animate-fade-in">
+                                                            <div className="text-orange-500 shrink-0 mt-0.5">
+                                                                <Icons.ShieldAlert size={16} />
+                                                            </div>
+                                                            <div className="text-xs">
+                                                                <p className="font-bold text-orange-700 dark:text-orange-400 mb-1">Precaución: Falso Positivo Detectado</p>
+                                                                <p className="text-orange-600 dark:text-orange-300/80 leading-relaxed">
+                                                                    Tu histórico muestra ganancias, pero el <strong>Wilson Score (95%)</strong> indica que la muestra es insuficiente. 
+                                                                    Existe una alta probabilidad de que el resultado sea suerte. Aumenta la muestra o el Win Rate.
+                                                                </p>
+                                                                <div className="mt-2 flex gap-4 font-mono text-[10px] opacity-80">
+                                                                    <span>Win Rate Real: <b>{rrMetrics.hist.toFixed(1)}%</b></span>
+                                                                    <span>Wilson 95%: <b>{rrMetrics.wilson.toFixed(1)}%</b></span>
+                                                                    <span>Necesario: <b>{rrMetrics.beWr.toFixed(1)}%</b></span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
                                                     <details className="group mt-3 border border-slate-200 dark:border-slate-800 rounded overflow-hidden">
                                                         <summary className="flex items-center justify-between p-2 cursor-pointer bg-slate-50 dark:bg-slate-900 text-xs font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors select-none">
-                                                            <span className="flex items-center gap-2"><Icons.HelpCircle size={12}/> Guía de Clasificación</span>
-                                                            <Icons.ChevronDown size={12} className="transition-transform group-open:rotate-180"/>
+                                                            <span className="flex items-center gap-2"><Icons.HelpCircle size={12} /> Guía de Clasificación</span>
+                                                            <Icons.ChevronDown size={12} className="transition-transform group-open:rotate-180" />
                                                         </summary>
                                                         <div className="p-3 bg-white dark:bg-slate-950 text-[10px] space-y-1.5 border-t border-slate-200 dark:border-slate-800">
                                                             <div className="flex justify-between items-center">
-                                                                <span className="font-bold text-green-700 dark:text-green-400">Excellent Trade</span>
-                                                                <span className="text-slate-500">Edge ≥ 20%</span>
+                                                                <span className="font-bold text-green-700 dark:text-green-400 flex items-center gap-1"><Icons.ShieldCheck size={10} /> Robusto (Excelente)</span>
+                                                                <span className="text-slate-500">Wilson 95% &gt; BE</span>
                                                             </div>
                                                             <div className="flex justify-between items-center">
-                                                                <span className="font-bold text-green-600 dark:text-green-500">Buen Trade</span>
-                                                                <span className="text-slate-500">Edge ≥ 10%</span>
+                                                                <span className="font-bold text-orange-500 dark:text-orange-400">Especulativo (Trampa)</span>
+                                                                <span className="text-slate-500">Histórico OK, Wilson Mal</span>
+                                                            </div>
+                                                            <div className="p-2 bg-orange-50 dark:bg-orange-900/20 rounded border border-orange-100 dark:border-orange-900/30 text-orange-800 dark:text-orange-200 italic mb-2">
+                                                                Un Edge Especulativo significa que aunque el histórico es bueno, la muestra es muy pequeña para garantizar ganancias futuras según el Wilson Score.
                                                             </div>
                                                             <div className="flex justify-between items-center">
                                                                 <span className="font-bold text-slate-600 dark:text-slate-400">Marginal</span>
@@ -3117,8 +3631,8 @@
                                                     </details>
                                                     <details className="group mt-3 border border-slate-200 dark:border-slate-800 rounded overflow-hidden">
                                                         <summary className="flex items-center justify-between p-2 cursor-pointer bg-slate-50 dark:bg-slate-900 text-xs font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors select-none">
-                                                            <span className="flex items-center gap-2"><Icons.Target size={12}/> Min. Win Rate Referencia</span>
-                                                            <Icons.ChevronDown size={12} className="transition-transform group-open:rotate-180"/>
+                                                            <span className="flex items-center gap-2"><Icons.Target size={12} /> Min. Win Rate Referencia</span>
+                                                            <Icons.ChevronDown size={12} className="transition-transform group-open:rotate-180" />
                                                         </summary>
                                                         <div className="p-3 bg-white dark:bg-slate-950 text-[10px] space-y-1.5 border-t border-slate-200 dark:border-slate-800">
                                                             <div className="grid grid-cols-2 gap-2 pb-1 mb-1 border-b border-slate-100 dark:border-slate-800 font-bold text-slate-400">
@@ -3158,76 +3672,74 @@
                                                             </div>
                                                         </div>
                                                     </details>
-                                                </div>
-                                            )}
                                         </section>
 
                                         {/* 4. FILTROS */}
                                         <section className="bg-slate-50 dark:bg-slate-800/50 p-5 rounded-xl border border-slate-200 dark:border-slate-700/50 space-y-3 shadow-sm">
-                                            <h3 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase mb-2 flex items-center gap-2"><Icons.AlertCircle size={16}/> Filtros de Contexto</h3>
+                                            <h3 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase mb-2 flex items-center gap-2"><Icons.AlertCircle size={16} /> Filtros de Contexto</h3>
                                             <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 cursor-pointer hover:text-slate-800 dark:hover:text-slate-200">
-                                                <input type="checkbox" checked={useRsiFilter} onChange={(e)=>setUseRsiFilter(e.target.checked)} className="accent-blue-500"/>
+                                                <input type="checkbox" checked={useRsiFilter} onChange={(e) => setUseRsiFilter(e.target.checked)} className="accent-blue-500" />
                                                 Buscar RSI Similar (+/- {rsiTolerance})
                                             </label>
                                             <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 cursor-pointer hover:text-slate-800 dark:hover:text-slate-200">
-                                                <input type="checkbox" checked={useTrendFilter} onChange={(e)=>setUseTrendFilter(e.target.checked)} className="accent-blue-500"/>
+                                                <input type="checkbox" checked={useTrendFilter} onChange={(e) => setUseTrendFilter(e.target.checked)} className="accent-blue-500" />
                                                 Respetar Tendencia SMA200
                                             </label>
                                             <div className="pt-2 border-t border-slate-200 dark:border-slate-700/50"></div>
                                             <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 cursor-pointer hover:text-slate-800 dark:hover:text-slate-200">
-                                                <input type="checkbox" checked={useTimeFilter} onChange={(e)=>setUseTimeFilter(e.target.checked)} className="accent-blue-500"/>
-                                                <Icons.Sun size={14} className="text-yellow-500"/> Mismo Horario (+/- 2h)
+                                                <input type="checkbox" checked={useTimeFilter} onChange={(e) => setUseTimeFilter(e.target.checked)} className="accent-blue-500" />
+                                                <Icons.Sun size={14} className="text-yellow-500" /> Mismo Horario (+/- 2h)
                                             </label>
                                             <div className="flex gap-2 items-center">
                                                 <span className="text-xs text-slate-500 dark:text-slate-400">Horario</span>
-                                                <select value={timeMode} onChange={(e)=>setTimeMode(e.target.value)} className="flex-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded p-2 text-xs text-slate-900 dark:text-white">
+                                                <select value={timeMode} onChange={(e) => setTimeMode(e.target.value)} className="flex-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded p-2 text-xs text-slate-900 dark:text-white">
                                                     <option value="LOCAL">Local</option>
                                                     <option value="UTC">UTC</option>
                                                 </select>
                                             </div>
                                             <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 cursor-pointer hover:text-slate-800 dark:hover:text-slate-200">
-                                                <input type="checkbox" checked={useVolFilter} onChange={(e)=>setUseVolFilter(e.target.checked)} className="accent-blue-500"/>
-                                                <Icons.Zap size={14} className="text-orange-500"/> Volatilidad Similar (Vela)
+                                                <input type="checkbox" checked={useVolFilter} onChange={(e) => setUseVolFilter(e.target.checked)} className="accent-blue-500" />
+                                                <Icons.Zap size={14} className="text-orange-500" /> Volatilidad Similar (Vela)
                                             </label>
                                             <div className="pt-2 border-t border-slate-200 dark:border-slate-700/50"></div>
                                             <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 cursor-pointer hover:text-slate-800 dark:hover:text-slate-200">
-                                                <input type="checkbox" checked={useCooldownFilter} onChange={(e)=>setUseCooldownFilter(e.target.checked)} className="accent-blue-500"/>
+                                                <input type="checkbox" checked={useCooldownFilter} onChange={(e) => setUseCooldownFilter(e.target.checked)} className="accent-blue-500" />
                                                 Evitar señales solapadas (enfriamiento)
                                             </label>
                                             <div className="pt-2 border-t border-slate-200 dark:border-slate-700/50"></div>
                                             <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 cursor-pointer hover:text-slate-800 dark:hover:text-slate-200">
-                                                <input type="checkbox" checked={useHtfFilter} onChange={(e)=>setUseHtfFilter(e.target.checked)} className="accent-blue-500" disabled={!htfData.length}/>
+                                                <input type="checkbox" checked={useHtfFilter} onChange={(e) => setUseHtfFilter(e.target.checked)} className="accent-blue-500" disabled={!htfData.length} />
                                                 Filtro MTF HTF (SMA200)
                                             </label>
                                             <div className="flex gap-2 items-center">
                                                 <span className="text-xs text-slate-500 dark:text-slate-400">Modo</span>
-                                                <select value={htfMode} onChange={(e)=>setHtfMode(e.target.value)} className="flex-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded p-2 text-xs text-slate-900 dark:text-white" disabled={!useHtfFilter || !htfData.length}>
+                                                <select value={htfMode} onChange={(e) => setHtfMode(e.target.value)} className="flex-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded p-2 text-xs text-slate-900 dark:text-white" disabled={!useHtfFilter || !htfData.length}>
                                                     <option value="DISCARD">Descartar contra-tendencia</option>
                                                     <option value="MARK">Permitir y marcar alto riesgo</option>
                                                 </select>
                                             </div>
                                             <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 cursor-pointer hover:text-slate-800 dark:hover:text-slate-200">
-                                                <input type="checkbox" checked={requireHtf} onChange={(e)=>setRequireHtf(e.target.checked)} className="accent-blue-500" disabled={!useHtfFilter || !htfData.length}/>
+                                                <input type="checkbox" checked={requireHtf} onChange={(e) => setRequireHtf(e.target.checked)} className="accent-blue-500" disabled={!useHtfFilter || !htfData.length} />
                                                 Requerir HTF disponible
                                             </label>
                                             <div className="pt-2 border-t border-slate-200 dark:border-slate-700/50"></div>
                                             <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 cursor-pointer hover:text-slate-800 dark:hover:text-slate-200">
-                                                <input type="checkbox" checked={useLtfIntra} onChange={(e)=>setUseLtfIntra(e.target.checked)} className="accent-blue-500" disabled={!ltfData.length || !tfMinutes}/>
+                                                <input type="checkbox" checked={useLtfIntra} onChange={(e) => setUseLtfIntra(e.target.checked)} className="accent-blue-500" disabled={!ltfData.length || !tfMinutes} />
                                                 Resolver intra-vela con LTF (casos ambiguos)
                                             </label>
                                             <div className="pt-2 border-t border-slate-200 dark:border-slate-700/50"></div>
                                             <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 cursor-pointer hover:text-slate-800 dark:hover:text-slate-200">
-                                                <input type="checkbox" checked={useVolumeFilter} onChange={(e)=>setUseVolumeFilter(e.target.checked)} className="accent-blue-500" disabled={!hasExtended || !(csvData[selectedCandleIndex] && csvData[selectedCandleIndex].volume)}/>
+                                                <input type="checkbox" checked={useVolumeFilter} onChange={(e) => setUseVolumeFilter(e.target.checked)} className="accent-blue-500" disabled={!hasExtended || !(csvData[selectedCandleIndex] && csvData[selectedCandleIndex].volume)} />
                                                 Volumen Similar (± {volumeTolerance}%)
                                             </label>
-                                            <input type="range" min="10" max="100" value={volumeTolerance} onChange={(e)=>setVolumeTolerance(parseInt(e.target.value))} className="w-full accent-blue-500 h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer"/>
+                                            <input type="range" min="10" max="100" value={volumeTolerance} onChange={(e) => setVolumeTolerance(parseInt(e.target.value))} className="w-full accent-blue-500 h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer" />
                                             <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 cursor-pointer hover:text-slate-800 dark:hover:text-slate-200">
-                                                <input type="checkbox" checked={useBuyPressureFilter} onChange={(e)=>setUseBuyPressureFilter(e.target.checked)} className="accent-blue-500" disabled={!hasExtended || (csvData[selectedCandleIndex] ? csvData[selectedCandleIndex].buyPressurePct == null : true)}/>
+                                                <input type="checkbox" checked={useBuyPressureFilter} onChange={(e) => setUseBuyPressureFilter(e.target.checked)} className="accent-blue-500" disabled={!hasExtended || (csvData[selectedCandleIndex] ? csvData[selectedCandleIndex].buyPressurePct == null : true)} />
                                                 Presión Compradora Similar (± {bpTolerance})
                                             </label>
-                                            <input type="range" min="1" max="20" value={bpTolerance} onChange={(e)=>setBpTolerance(parseInt(e.target.value))} className="w-full accent-blue-500 h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer"/>
+                                            <input type="range" min="1" max="20" value={bpTolerance} onChange={(e) => setBpTolerance(parseInt(e.target.value))} className="w-full accent-blue-500 h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer" />
                                             <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 cursor-pointer hover:text-slate-800 dark:hover:text-slate-200">
-                                                <input type="checkbox" checked={useDeltaSignFilter} onChange={(e)=>setUseDeltaSignFilter(e.target.checked)} className="accent-blue-500" disabled={!hasExtended || (csvData[selectedCandleIndex] ? csvData[selectedCandleIndex].delta == null : true)}/>
+                                                <input type="checkbox" checked={useDeltaSignFilter} onChange={(e) => setUseDeltaSignFilter(e.target.checked)} className="accent-blue-500" disabled={!hasExtended || (csvData[selectedCandleIndex] ? csvData[selectedCandleIndex].delta == null : true)} />
                                                 Misma señal de Delta (compra/venta)
                                             </label>
 
@@ -3236,7 +3748,7 @@
                                                 <div className="flex items-center justify-between">
                                                     <div className="flex flex-col">
                                                         <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase flex items-center gap-2">
-                                                            {useMacroMode ? <Icons.Map size={14} className="text-purple-500"/> : <Icons.Zap size={14} className="text-orange-500"/>}
+                                                            {useMacroMode ? <Icons.Map size={14} className="text-purple-500" /> : <Icons.Zap size={14} className="text-orange-500" />}
                                                             {useMacroMode ? 'Modo Análisis Macro' : 'Modo Intradía Rápido'}
                                                         </span>
                                                         <span className="text-[10px] text-slate-500 mt-0.5">
@@ -3245,20 +3757,20 @@
                                                                 : 'Límite estándar de 500 velas. Optimizado para setups del día a día.'}
                                                         </span>
                                                     </div>
-                                                    
+
                                                     <label className="relative inline-flex items-center cursor-pointer">
-                                                        <input 
-                                                            type="checkbox" 
-                                                            checked={useMacroMode} 
-                                                            onChange={(e) => setUseMacroMode(e.target.checked)} 
-                                                            className="sr-only peer" 
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={useMacroMode}
+                                                            onChange={(e) => setUseMacroMode(e.target.checked)}
+                                                            className="sr-only peer"
                                                         />
                                                         <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
                                                     </label>
                                                 </div>
                                             </div>
                                             <button data-export-exclude="true" onClick={runSimulation} className="w-full mt-4 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg shadow-lg flex items-center justify-center gap-2 transition-all active:scale-95">
-                                                <Icons.Play size={18}/> EJECUTAR ANÁLISIS
+                                                <Icons.Play size={18} /> EJECUTAR ANÁLISIS
                                             </button>
                                         </section>
                                     </div>
@@ -3267,24 +3779,23 @@
                                     <div id="analysis-results" className="lg:col-span-7 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 p-6 relative transition-colors duration-300 shadow-inner">
                                         {!simResult ? (
                                             <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 dark:text-slate-600">
-                                                <Icons.BarChart3 size={48} className="mb-4 opacity-20"/>
+                                                <Icons.BarChart3 size={48} className="mb-4 opacity-20" />
                                                 <p>Configura los parámetros y ejecuta la simulación.</p>
                                             </div>
                                         ) : simResult.error ? (
-                                            <div className="text-red-500 dark:text-red-400 flex items-center gap-2 justify-center h-full"><Icons.AlertCircle/> {simResult.error}</div>
+                                            <div className="text-red-500 dark:text-red-400 flex items-center gap-2 justify-center h-full"><Icons.AlertCircle /> {simResult.error}</div>
                                         ) : (
                                             <div className="space-y-8 animate-fade-in">
-                                                
+
                                                 {/* SCORE PRINCIPAL */}
                                                 <div className="text-center relative">
                                                     <h2 className="text-sm text-slate-500 font-bold uppercase tracking-widest mb-2">Probabilidad Histórica</h2>
-                                                    <div className={`text-6xl font-black leading-[1.2] screenshot-safe-score ${
-                                                        parseFloat(simResult.winRate) >= 60 ? 'text-green-600 dark:text-green-400' :
+                                                    <div className={`text-6xl font-black leading-[1.2] screenshot-safe-score ${parseFloat(simResult.winRate) >= 60 ? 'text-green-600 dark:text-green-400' :
                                                         parseFloat(simResult.winRate) >= 50 ? 'text-orange-500 dark:text-orange-400' : 'text-red-500 dark:text-red-400'
-                                                    }`}>
+                                                        }`}>
                                                         {simResult.winRate}%
                                                     </div>
-                                                    
+
                                                     <div data-export-exclude="true" className="absolute right-0 top-0 flex items-center gap-2">
                                                         <button
                                                             onClick={handleCopyAll}
@@ -3294,7 +3805,7 @@
                                                         >
                                                             {copyAllStatus === 'copying' ? 'Copiando…' : copyAllStatus === 'success' ? 'Copiado' : copyAllStatus === 'error' ? 'Error' : 'Copiar todo'}
                                                         </button>
-                                                        <button 
+                                                        <button
                                                             onClick={handleOptimize}
                                                             disabled={isOptimizing}
                                                             className="bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-400 disabled:cursor-not-allowed text-white p-2 rounded-lg shadow-lg transition-all active:scale-95 group disabled:active:scale-100"
@@ -3332,7 +3843,7 @@
                                                     <div className="bg-indigo-50 dark:bg-slate-900/80 p-4 rounded-xl border border-indigo-200 dark:border-indigo-900/50 animate-fade-in mb-6">
                                                         <div className="flex items-center justify-between mb-3">
                                                             <h3 className="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase flex items-center gap-2">
-                                                                <Icons.Zap size={14} className="text-yellow-500"/> Mejores Configuraciones
+                                                                <Icons.Zap size={14} className="text-yellow-500" /> Mejores Configuraciones
                                                             </h3>
                                                             <button onClick={() => setOptimizationResults(null)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
                                                                 <Icons.Activity size={14} className="rotate-45" />
@@ -3340,19 +3851,18 @@
                                                         </div>
                                                         <div className="space-y-2">
                                                             {optimizationResults.map((opt, idx) => (
-                                                                <div key={idx} 
+                                                                <div key={idx}
                                                                     onClick={() => applyOptimization(opt.config)}
-                                                                    className={`p-3 rounded-lg border shadow-sm cursor-pointer transition-all flex items-center justify-between group ${
-                                                                        opt.isRobust 
-                                                                        ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 hover:border-emerald-400' 
+                                                                    className={`p-3 rounded-lg border shadow-sm cursor-pointer transition-all flex items-center justify-between group ${opt.isRobust
+                                                                        ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 hover:border-emerald-400'
                                                                         : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-indigo-400 dark:hover:border-indigo-500'
-                                                                    }`}
+                                                                        }`}
                                                                 >
                                                                     <div className="flex-1">
                                                                         <div className="flex flex-wrap gap-1 mb-1 items-center">
                                                                             {opt.isRobust && (
                                                                                 <span className="text-[9px] font-bold bg-emerald-100 dark:bg-emerald-800 text-emerald-700 dark:text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-700 mr-1 flex items-center gap-1">
-                                                                                    <Icons.ShieldAlert size={8}/> VALIDADO
+                                                                                    <Icons.ShieldAlert size={8} /> VALIDADO
                                                                                 </span>
                                                                             )}
                                                                             {opt.labels.map((l, i) => (
@@ -3367,9 +3877,8 @@
                                                                         </div>
                                                                     </div>
                                                                     <div className="text-right">
-                                                                        <div className={`text-lg font-bold font-mono ${
-                                                                            parseFloat(opt.stats.winRate) >= 60 ? 'text-green-600 dark:text-green-400' : 'text-indigo-600 dark:text-indigo-400'
-                                                                        }`}>
+                                                                        <div className={`text-lg font-bold font-mono ${parseFloat(opt.stats.winRate) >= 60 ? 'text-green-600 dark:text-green-400' : 'text-indigo-600 dark:text-indigo-400'
+                                                                            }`}>
                                                                             {opt.stats.winRate}%
                                                                         </div>
                                                                         <div className="text-[10px] text-indigo-500 dark:text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -3392,9 +3901,34 @@
                                                         </p>
                                                     </div>
                                                     <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">
-                                                        <div className="text-xs text-slate-500 uppercase mb-1">Duración Media</div>
-                                                        <div className="text-2xl font-mono text-slate-800 dark:text-white">{simResult.avgDuration} <span className="text-sm text-slate-500">velas</span></div>
-                                                        <p className="text-[10px] text-slate-500 mt-1">Tiempo estimado de espera.</p>
+                                                        <div className="flex items-center justify-between mb-2">
+                                                            <div className="text-xs text-slate-500 uppercase">Duración (Trades Ganadores)</div>
+                                                            <button
+                                                                onClick={() => setIsDurationModalOpen(true)}
+                                                                className="text-[10px] text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                                                            >
+                                                                Ver distribución
+                                                            </button>
+                                                        </div>
+                                                        <div className="grid grid-cols-3 gap-2 text-center mb-2">
+                                                            <div className="bg-slate-50 dark:bg-slate-800 p-2 rounded">
+                                                                <div className="text-[10px] text-slate-400 uppercase">Min</div>
+                                                                <div className="font-mono font-bold text-slate-700 dark:text-slate-200">{simResult.minDuration}</div>
+                                                            </div>
+                                                            <div className="bg-blue-50 dark:bg-blue-900/30 p-2 rounded border border-blue-200 dark:border-blue-800">
+                                                                <div className="text-[10px] text-blue-500 uppercase">Media</div>
+                                                                <div className="font-mono font-bold text-blue-600 dark:text-blue-400">{simResult.avgDuration}</div>
+                                                            </div>
+                                                            <div className="bg-slate-50 dark:bg-slate-800 p-2 rounded">
+                                                                <div className="text-[10px] text-slate-400 uppercase">Max</div>
+                                                                <div className="font-mono font-bold text-slate-700 dark:text-slate-200">{simResult.maxDuration}</div>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex items-center justify-between text-[10px] bg-slate-50 dark:bg-slate-800 p-2 rounded">
+                                                            <span className="text-slate-500">Mediana: <b className="text-slate-700 dark:text-slate-200">{simResult.medianDuration} velas</b></span>
+                                                            <span className="text-orange-500">P80: <b className="text-orange-600 dark:text-orange-400">{simResult.p80Duration} velas</b></span>
+                                                        </div>
+                                                        <p className="text-[10px] text-slate-500 mt-2">El 80% de los ganadores cierran antes del P80.</p>
                                                     </div>
                                                 </div>
                                                 {(simResult.weightedWinRateVolume || simResult.weightedWinRateBuyPressure) && (
@@ -3418,7 +3952,7 @@
 
                                                 {/* MAE INFO */}
                                                 <div className="bg-slate-100 dark:bg-slate-900/50 p-4 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">
-                                                    <h4 className="text-xs font-bold text-orange-500 dark:text-orange-300 uppercase mb-3 flex items-center gap-2"><Icons.Activity size={14}/> Análisis de Drawdown (MAE)</h4>
+                                                    <h4 className="text-xs font-bold text-orange-500 dark:text-orange-300 uppercase mb-3 flex items-center gap-2"><Icons.Activity size={14} /> Análisis de Drawdown (MAE)</h4>
                                                     <div className="space-y-3 text-sm">
                                                         <div className="flex justify-between">
                                                             <span className="text-slate-500 dark:text-slate-400">Retroceso Promedio en Ganadores:</span>
@@ -3462,22 +3996,22 @@
                                                     </div>
                                                 </div>
 
-                                    <div className="pt-4 border-t border-slate-200 dark:border-slate-800 text-center">
-                                        <p className="text-slate-500 dark:text-slate-400 text-sm mb-3">¿Te convence la estadística?</p>
-                                        <div className="flex justify-center gap-3 flex-wrap">
-                                            <button onClick={() => setActiveTab('MONITOR')} className="bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-blue-600 dark:text-blue-400 px-6 py-2 rounded-full text-sm font-bold border border-blue-500/30 transition-all shadow-sm">
-                                                Ir al Monitor &rarr;
-                                            </button>
-                                            <button onClick={handleSaveSimulation} className="bg-green-600 hover:bg-green-500 text-white px-6 py-2 rounded-full text-sm font-bold border border-green-500/30 transition-all shadow-sm">
-                                                Guardar simulación
-                                            </button>
-                                            <button onClick={takeScreenshot} className="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-full text-sm font-bold border border-slate-500/30 transition-all shadow-sm flex items-center gap-2" title="Capturar pantalla">
-                                                <Icons.Camera size={16}/>
-                                                <span className="hidden sm:inline">Capturar</span>
-                                            </button>
-                                        </div>
-                                    </div>
-                                            
+                                                <div className="pt-4 border-t border-slate-200 dark:border-slate-800 text-center">
+                                                    <p className="text-slate-500 dark:text-slate-400 text-sm mb-3">¿Te convence la estadística?</p>
+                                                    <div className="flex justify-center gap-3 flex-wrap">
+                                                        <button onClick={() => setActiveTab('MONITOR')} className="bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-blue-600 dark:text-blue-400 px-6 py-2 rounded-full text-sm font-bold border border-blue-500/30 transition-all shadow-sm">
+                                                            Ir al Monitor &rarr;
+                                                        </button>
+                                                        <button onClick={handleSaveSimulation} className="bg-green-600 hover:bg-green-500 text-white px-6 py-2 rounded-full text-sm font-bold border border-green-500/30 transition-all shadow-sm">
+                                                            Guardar simulación
+                                                        </button>
+                                                        <button onClick={takeScreenshot} className="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-full text-sm font-bold border border-slate-500/30 transition-all shadow-sm flex items-center gap-2" title="Capturar pantalla">
+                                                            <Icons.Camera size={16} />
+                                                            <span className="hidden sm:inline">Capturar</span>
+                                                        </button>
+                                                    </div>
+                                                </div>
+
                                             </div>
                                         )}
                                     </div>
@@ -3495,38 +4029,88 @@
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                                         {/* INPUTS ACTUALES */}
                                         <div className="bg-slate-50 dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-lg">
-                                            <h3 className="text-lg font-bold text-blue-600 dark:text-blue-400 mb-4 flex items-center gap-2"><Icons.Stethoscope /> Signos Vitales</h3>
-                                            
+                                            <div className="flex items-center justify-between mb-4">
+                                            <h3 className="text-lg font-bold text-blue-600 dark:text-blue-400 flex items-center gap-2"><Icons.Stethoscope /> Signos Vitales</h3>
+                                            <button 
+                                                id="btn-sync-live"
+                                                onClick={handleSyncLivePrice}
+                                                className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-3 py-1.5 rounded-lg border border-blue-200 dark:border-blue-800 hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors font-bold flex items-center gap-1"
+                                                title={`Sincronizar con Binance (${autoSymbol || 'Symbol'})`}
+                                            >
+                                                ⚡ Sincronizar Ahora
+                                            </button>
+                                        </div>
+
                                             <div className="space-y-4">
                                                 <div>
                                                     <label className="text-sm font-bold text-slate-600 dark:text-slate-300 block mb-1">Precio Actual de Mercado</label>
-                                                    <input type="number" value={currentPrice} onChange={(e)=>setCurrentPrice(e.target.value)} className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded p-3 text-lg font-mono text-slate-900 dark:text-white focus:border-blue-500 outline-none transition-colors" placeholder="0.0000" />
+                                                    <input type="number" value={currentPrice} onChange={(e) => setCurrentPrice(e.target.value)} className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded p-3 text-lg font-mono text-slate-900 dark:text-white focus:border-blue-500 outline-none transition-colors" placeholder="0.0000" />
                                                 </div>
                                                 <div>
                                                     <label className="text-sm font-bold text-slate-600 dark:text-slate-300 block mb-1">Velas Transcurridas</label>
-                                                    <input type="number" value={candlesSinceEntry} onChange={(e)=>setCandlesSinceEntry(parseInt(e.target.value))} className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded p-3 text-lg font-mono text-slate-900 dark:text-white focus:border-blue-500 outline-none transition-colors" placeholder="0" />
+                                                    <input type="number" value={candlesSinceEntry} onChange={(e) => setCandlesSinceEntry(parseInt(e.target.value))} className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded p-3 text-lg font-mono text-slate-900 dark:text-white focus:border-blue-500 outline-none transition-colors" placeholder="0" />
                                                 </div>
                                             </div>
                                         </div>
 
                                         {/* DIAGNOSTICO RESULTADO */}
                                         <div className="space-y-6">
-                                            {activeDiagnosis ? (
+                                            {/* --- RESULTADO FINAL (SI EL TRADE YA CERRÓ) --- */}
+                                            {liveTradeStatus && liveTradeStatus.status !== 'ACTIVE' && (
+                                                <div className={`p-8 rounded-xl border-2 shadow-xl text-center animate-fade-in ${
+                                                    liveTradeStatus.status === 'WIN' 
+                                                    ? 'bg-green-50 dark:bg-green-900/30 border-green-500' 
+                                                    : 'bg-red-50 dark:bg-red-900/30 border-red-500'
+                                                }`}>
+                                                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 shadow-sm bg-white dark:bg-slate-800">
+                                                        {liveTradeStatus.status === 'WIN' 
+                                                            ? <Icons.Target className="text-green-500" size={32} />
+                                                            : <Icons.AlertTriangle className="text-red-500" size={32} />
+                                                        }
+                                                    </div>
+                                                    
+                                                    <h3 className={`text-3xl font-black mb-2 ${
+                                                        liveTradeStatus.status === 'WIN' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                                                    }`}>
+                                                        {liveTradeStatus.status === 'WIN' ? '¡TAKE PROFIT ALCANZADO!' : 'STOP LOSS TOCADO'}
+                                                    </h3>
+                                                    
+                                                    <p className="text-slate-600 dark:text-slate-300 text-lg mb-6 max-w-md mx-auto">
+                                                        {liveTradeStatus.status === 'WIN' 
+                                                            ? 'El precio tocó tu objetivo. Este trade ya finalizó exitosamente según el historial.'
+                                                            : 'El precio tocó tu stop loss. Este trade ya se cerró en pérdida según el historial.'
+                                                        }
+                                                    </p>
+
+                                                    <div className="inline-block bg-white dark:bg-slate-800 rounded-lg p-4 border border-slate-200 dark:border-slate-700 shadow-sm">
+                                                        <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-left">
+                                                            <div className="text-xs text-slate-500 uppercase">Precio de Salida</div>
+                                                            <div className="font-mono font-bold text-slate-800 dark:text-white text-right">{formatPrice(liveTradeStatus.price)}</div>
+                                                            
+                                                            <div className="text-xs text-slate-500 uppercase">Fecha Aprox.</div>
+                                                            <div className="font-mono font-bold text-slate-800 dark:text-white text-right">
+                                                                {liveTradeStatus.date.toLocaleDateString()} {liveTradeStatus.date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* --- DIAGNOSTICO ACTIVO (SOLO SI SIGUE VIVO O NO HAY ESTADO) --- */}
+                                            {(!liveTradeStatus || liveTradeStatus.status === 'ACTIVE') && activeDiagnosis ? (
                                                 <>
                                                     {/* DIAGNOSTICO DE PRECIO */}
-                                                    <div className={`p-6 rounded-xl border shadow-lg ${
-                                                        activeDiagnosis.health === 'HEALTHY' ? 'bg-green-100/50 dark:bg-green-900/20 border-green-500/50' : 
-                                                        activeDiagnosis.health === 'WARNING' ? 'bg-yellow-100/50 dark:bg-yellow-900/20 border-yellow-500/50' : 
-                                                        'bg-red-100/50 dark:bg-red-900/20 border-red-500/50'
-                                                    }`}>
+                                                    <div className={`p-6 rounded-xl border shadow-lg ${activeDiagnosis.health === 'HEALTHY' ? 'bg-green-100/50 dark:bg-green-900/20 border-green-500/50' :
+                                                        activeDiagnosis.health === 'WARNING' ? 'bg-yellow-100/50 dark:bg-yellow-900/20 border-yellow-500/50' :
+                                                            'bg-red-100/50 dark:bg-red-900/20 border-red-500/50'
+                                                        }`}>
                                                         <div className="flex items-center justify-between mb-2">
-                                                            <h4 className={`text-lg font-bold ${
-                                                                activeDiagnosis.health === 'HEALTHY' ? 'text-green-600 dark:text-green-400' : 
-                                                                activeDiagnosis.health === 'WARNING' ? 'text-yellow-600 dark:text-yellow-400' : 
-                                                                'text-red-600 dark:text-red-400'
-                                                            }`}>
-                                                                {activeDiagnosis.health === 'HEALTHY' ? 'ESTADO SALUDABLE' : 
-                                                                 activeDiagnosis.health === 'WARNING' ? 'PRECAUCIÓN' : 'CRÍTICO'}
+                                                            <h4 className={`text-lg font-bold ${activeDiagnosis.health === 'HEALTHY' ? 'text-green-600 dark:text-green-400' :
+                                                                activeDiagnosis.health === 'WARNING' ? 'text-yellow-600 dark:text-yellow-400' :
+                                                                    'text-red-600 dark:text-red-400'
+                                                                }`}>
+                                                                {activeDiagnosis.health === 'HEALTHY' ? 'ESTADO SALUDABLE' :
+                                                                    activeDiagnosis.health === 'WARNING' ? 'PRECAUCIÓN' : 'CRÍTICO'}
                                                             </h4>
                                                             <span className="font-mono text-slate-700 dark:text-white bg-white dark:bg-slate-900/50 px-2 py-1 rounded shadow-sm border border-slate-200 dark:border-transparent">
                                                                 PnL: {activeDiagnosis.pnlPercent > 0 ? '+' : ''}{activeDiagnosis.pnlPercent.toFixed(2)}%
@@ -3551,7 +4135,7 @@
                                                                         left: (parseFloat(simResult.avgMae) / parseFloat(simResult.riskDistPercent)) * 100 + '%',
                                                                         width: (((parseFloat(simResult.maxMae) - parseFloat(simResult.avgMae)) / parseFloat(simResult.riskDistPercent)) * 100) + '%'
                                                                     }}></div>
-                                                                    
+
                                                                     {/* Indicador Actual */}
                                                                     <div className="absolute top-0 bottom-0 w-1 bg-slate-800 dark:bg-white shadow-[0_0_10px_rgba(0,0,0,0.5)] dark:shadow-[0_0_10px_white] transition-all duration-500" style={{
                                                                         left: Math.min((activeDiagnosis.drawdownPercent / parseFloat(simResult.riskDistPercent)) * 100, 100) + '%'
@@ -3562,22 +4146,65 @@
                                                         )}
                                                     </div>
 
-                                                    {/* DIAGNOSTICO DE TIEMPO */}
-                                                    <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 flex items-start gap-3 shadow-sm">
-                                                        <Icons.Clock className={activeDiagnosis.timeStatus === 'NORMAL' ? 'text-slate-400' : 'text-orange-500 dark:text-orange-400'} />
-                                                        <div>
-                                                            <h5 className="font-bold text-slate-700 dark:text-slate-200 text-sm">Diagnóstico Temporal</h5>
-                                                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                                                                {activeDiagnosis.timeStatus === 'NORMAL' 
-                                                                    ? `Dentro del tiempo esperado. Promedio histórico: ${simResult.avgDuration} velas.`
-                                                                    : `⚠️ Estancamiento detectado. Ha pasado 1.5x más tiempo del promedio (${simResult.avgDuration} velas). Considera ajustar SL a Break Even.`}
-                                                            </p>
+                                                    {/* DIAGNOSTICO DE TIEMPO - SEMÁFORO INTELIGENTE */}
+                                                    <div className={`p-4 rounded-xl border shadow-sm ${
+                                                        activeDiagnosis.timeStatus === 'EARLY' ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' :
+                                                        activeDiagnosis.timeStatus === 'DECISION' ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800' :
+                                                        'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+                                                    }`}>
+                                                        <div className="flex items-center gap-3 mb-3">
+                                                            <div className={`w-4 h-4 rounded-full shrink-0 ${
+                                                                activeDiagnosis.timeStatus === 'EARLY' ? 'bg-green-500' :
+                                                                activeDiagnosis.timeStatus === 'DECISION' ? 'bg-yellow-500' :
+                                                                'bg-red-500 animate-pulse'
+                                                            }`}></div>
+                                                            <div>
+                                                                <h5 className={`font-bold text-sm ${
+                                                                    activeDiagnosis.timeStatus === 'EARLY' ? 'text-green-700 dark:text-green-400' :
+                                                                    activeDiagnosis.timeStatus === 'DECISION' ? 'text-yellow-700 dark:text-yellow-400' :
+                                                                    'text-red-700 dark:text-red-400'
+                                                                }`}>
+                                                                    {activeDiagnosis.timeStatus === 'EARLY' ? 'FASE TEMPRANA' :
+                                                                     activeDiagnosis.timeStatus === 'DECISION' ? 'FASE DE DECISIÓN' :
+                                                                     'TIME STOP'}
+                                                                </h5>
+                                                            </div>
+                                                            <div className="ml-auto text-right">
+                                                                <div className="font-mono text-sm font-bold text-slate-700 dark:text-slate-200">{candlesSinceEntry} <span className="text-[10px] text-slate-400">velas</span></div>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <p className="text-xs text-slate-600 dark:text-slate-300 mb-3">
+                                                            {activeDiagnosis.timeMsg}
+                                                        </p>
+
+                                                        {/* BARRA VISUAL DE TIEMPO */}
+                                                        <div className="mt-3">
+                                                            <div className="flex justify-between text-[9px] text-slate-500 mb-1">
+                                                                <span>0</span>
+                                                                <span className="text-green-600">Mediana: {activeDiagnosis.median}</span>
+                                                                <span className="text-orange-600">P80: {activeDiagnosis.p80}</span>
+                                                                <span>Max: {simResult.maxDuration}</span>
+                                                            </div>
+                                                            <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded-full relative overflow-hidden flex">
+                                                                {/* Zona Verde */}
+                                                                <div className="h-full bg-green-400/50" style={{ width: (activeDiagnosis.median / simResult.maxDuration) * 100 + '%' }}></div>
+                                                                {/* Zona Amarilla */}
+                                                                <div className="h-full bg-yellow-400/50" style={{ width: ((activeDiagnosis.p80 - activeDiagnosis.median) / simResult.maxDuration) * 100 + '%' }}></div>
+                                                                {/* Zona Roja */}
+                                                                <div className="h-full bg-red-400/50 flex-1"></div>
+                                                                {/* Indicador Actual */}
+                                                                <div 
+                                                                    className="absolute top-0 bottom-0 w-1 bg-slate-900 dark:bg-white shadow-lg transition-all duration-300"
+                                                                    style={{ left: Math.min((candlesSinceEntry / simResult.maxDuration) * 100, 100) + '%' }}
+                                                                ></div>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </>
                                             ) : (
                                                 <div className="h-full flex flex-col items-center justify-center text-slate-400 dark:text-slate-600 border-2 border-dashed border-slate-300 dark:border-slate-800 rounded-xl">
-                                                    <Icons.Activity size={32} className="mb-2 opacity-50"/>
+                                                    <Icons.Activity size={32} className="mb-2 opacity-50" />
                                                     <p className="text-sm">Introduce precio y tiempo para diagnosticar.</p>
                                                 </div>
                                             )}
@@ -3599,7 +4226,7 @@
                                     </div>
                                     {(!savedSims || savedSims.length === 0) ? (
                                         <div className="h-64 flex flex-col items-center justify-center text-slate-400 dark:text-slate-600 border-2 border-dashed border-slate-300 dark:border-slate-800 rounded-xl">
-                                            <Icons.Activity size={32} className="mb-2 opacity-50"/>
+                                            <Icons.Activity size={32} className="mb-2 opacity-50" />
                                             <p className="text-sm">No hay simulaciones guardadas.</p>
                                         </div>
                                     ) : (
@@ -3618,9 +4245,9 @@
                                                     </div>
                                                     <div className="grid grid-cols-2 gap-3 text-sm">
                                                         <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded border border-slate-200 dark:border-slate-700">
-                                                        <div className="text-xs text-slate-500">Win Rate</div>
-                                                        <div className="font-mono font-bold">{item.metrics.winRate}%</div>
-                                                    </div>
+                                                            <div className="text-xs text-slate-500">Win Rate</div>
+                                                            <div className="font-mono font-bold">{item.metrics.winRate}%</div>
+                                                        </div>
                                                         <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded border border-slate-200 dark:border-slate-700">
                                                             <div className="text-xs text-slate-500">Muestras</div>
                                                             <div className="font-mono font-bold">{item.metrics.matches}</div>
@@ -3690,4 +4317,5 @@
     <!-- Script de gestión de tema centralizado -->
     <script src="../theme.js"></script>
 </body>
+
 </html>
