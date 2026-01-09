@@ -69,9 +69,17 @@
         }
 
         @keyframes fade-in {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
+
         .animate-fade-in {
             animation: fade-in 0.5s ease-out forwards;
         }
@@ -271,8 +279,25 @@
             // Para volatilidad (Cuerpo promedio últimas 5 velas)
             const bodySizes = [];
 
+            // --- ADR (Average Daily Range) ---
+            // Estructura para almacenar rangos diarios cerrados
+            const dailyRanges = []; // Array de { date: 'YYYY-MM-DD', range: high - low }
+            let currentDayKey = null;
+            let currentDayOpen = null;
+            let currentDayHigh = -Infinity;
+            let currentDayLow = Infinity;
+
+            // Pre-procesamiento: Calcular rangos diarios
+            const adrData = []; // Almacenará los datos ADR por vela
+
+            const getDayKey = (dt) => {
+                if (!dt) return null;
+                return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+            };
+
             for (let i = 0; i < data.length; i++) {
                 const c = data[i];
+                const dayKey = getDayKey(c.datetime);
 
                 // SMA
                 if (i >= 199) {
@@ -292,6 +317,65 @@
                 } else {
                     avgBodySize = bodySize; // Fallback inicial
                 }
+
+                // --- Lógica ADR: Detectar cambio de día ---
+                if (dayKey !== currentDayKey) {
+                    // Si había un día previo, guardar su rango
+                    if (currentDayKey !== null && currentDayHigh !== -Infinity && currentDayLow !== Infinity) {
+                        dailyRanges.push({
+                            date: currentDayKey,
+                            range: currentDayHigh - currentDayLow
+                        });
+                        // Mantener solo los últimos 14 días cerrados
+                        if (dailyRanges.length > 14) {
+                            dailyRanges.shift();
+                        }
+                    }
+                    // Iniciar nuevo día
+                    currentDayKey = dayKey;
+                    currentDayOpen = c.open;
+                    currentDayHigh = c.high;
+                    currentDayLow = c.low;
+                } else {
+                    // Actualizar máximos y mínimos del día actual
+                    if (c.high > currentDayHigh) currentDayHigh = c.high;
+                    if (c.low < currentDayLow) currentDayLow = c.low;
+                }
+
+                // Calcular ADR para esta vela
+                let adrValue = null;
+                let adrFilledPct = null;
+                let currentDayRange = null;
+                let adrRoomTop = null;
+                let adrRoomBottom = null;
+
+                if (dailyRanges.length >= 1 && currentDayOpen !== null) {
+                    // Calcular promedio de rangos diarios (excluyendo día actual)
+                    const rangesToUse = dailyRanges.slice(-14);
+                    if (rangesToUse.length > 0) {
+                        const sumRanges = rangesToUse.reduce((acc, dr) => acc + dr.range, 0);
+                        adrValue = sumRanges / rangesToUse.length;
+
+                        // Rango del día actual hasta ahora
+                        currentDayRange = currentDayHigh - currentDayLow;
+
+                        // Porcentaje completado del ADR
+                        adrFilledPct = adrValue > 0 ? (currentDayRange / adrValue) * 100 : 0;
+
+                        // Techos y suelos estadísticos
+                        adrRoomTop = currentDayOpen + adrValue;
+                        adrRoomBottom = currentDayOpen - adrValue;
+                    }
+                }
+
+                adrData.push({
+                    adrValue,
+                    adrFilledPct,
+                    currentDayRange,
+                    adrRoomTop,
+                    adrRoomBottom,
+                    dayOpen: currentDayOpen
+                });
 
                 // RSI
                 if (i === 0) { results.push(null); continue; }
@@ -324,7 +408,14 @@
                 hour: d.datetime ? d.datetime.getHours() : 0,
                 hourLocal: d.datetime ? d.datetime.getHours() : null,
                 hourUtc: d.datetime ? d.datetime.getUTCHours() : null,
-                bodySizePct: (Math.abs(d.close - d.open) / d.open) * 100
+                bodySizePct: (Math.abs(d.close - d.open) / d.open) * 100,
+                // --- Campos ADR ---
+                adrValue: adrData[i] ? adrData[i].adrValue : null,
+                adrFilledPct: adrData[i] ? adrData[i].adrFilledPct : null,
+                currentDayRange: adrData[i] ? adrData[i].currentDayRange : null,
+                adrRoomTop: adrData[i] ? adrData[i].adrRoomTop : null,
+                adrRoomBottom: adrData[i] ? adrData[i].adrRoomBottom : null,
+                dayOpen: adrData[i] ? adrData[i].dayOpen : null
             }));
         };
 
@@ -417,6 +508,7 @@
             const [timeMode, setTimeMode] = useState('LOCAL');
             const [useVolFilter, setUseVolFilter] = useState(false);
             const [useCooldownFilter, setUseCooldownFilter] = useState(true);
+            const [useAdrFilter, setUseAdrFilter] = useState(false);
             const [useVolumeFilter, setUseVolumeFilter] = useState(false);
             const [volumeTolerance, setVolumeTolerance] = useState(50);
             const [useBuyPressureFilter, setUseBuyPressureFilter] = useState(false);
@@ -469,6 +561,7 @@
                     timeMode,
                     useVolFilter,
                     useCooldownFilter,
+                    useAdrFilter,
                     useVolumeFilter,
                     volumeTolerance,
                     useBuyPressureFilter,
@@ -510,7 +603,7 @@
                 activeTab, selectedCandleIndex, tfMinutes, fileName,
                 tradeType, entryPrice, stopLoss, takeProfit, spread, useMacroMode,
                 useRsiFilter, targetRsi, rsiTolerance, useTrendFilter, trendCondition,
-                useTimeFilter, timeMode, useVolFilter, useCooldownFilter, useVolumeFilter,
+                useTimeFilter, timeMode, useVolFilter, useCooldownFilter, useAdrFilter, useVolumeFilter,
                 volumeTolerance, useBuyPressureFilter, bpTolerance, useDeltaSignFilter,
                 useHtfFilter, htfMode, requireHtf, useLtfIntra, ltfMaxCandles,
                 simResult, optimizationResults, csvData, htfData, ltfData,
@@ -561,6 +654,7 @@
                         if (session.timeMode) setTimeMode(session.timeMode);
                         if (session.useVolFilter !== undefined) setUseVolFilter(session.useVolFilter);
                         if (session.useCooldownFilter !== undefined) setUseCooldownFilter(session.useCooldownFilter);
+                        if (session.useAdrFilter !== undefined) setUseAdrFilter(session.useAdrFilter);
                         if (session.useVolumeFilter !== undefined) setUseVolumeFilter(session.useVolumeFilter);
                         if (session.volumeTolerance) setVolumeTolerance(session.volumeTolerance);
                         if (session.useBuyPressureFilter !== undefined) setUseBuyPressureFilter(session.useBuyPressureFilter);
@@ -654,12 +748,12 @@
 
                     let price = null;
                     const isForex = autoMarket === 'forex' || symbol.includes('/') || (symbol.length === 6 && !symbol.includes('USDT'));
-                    
+
                     // Datos para verificación histórica
                     const entryCandle = csvData[selectedCandleIndex];
                     let entryDate = new Date(entryCandle.datetime);
                     if (isNaN(entryDate.getTime()) && entryCandle.dateIso) entryDate = new Date(entryCandle.dateIso);
-                    
+
                     const slVal = parseFloat(stopLoss);
                     const tpVal = parseFloat(takeProfit);
                     const hasLevels = !isNaN(slVal) && !isNaN(tpVal);
@@ -683,7 +777,7 @@
                         // --- TWELVE DATA (FOREX) ---
                         const apiKey = localStorage.getItem('fti_twelve_api_key');
                         if (!apiKey) throw new Error('Se requiere API Key de TwelveData para sincronizar Forex.');
-                        
+
                         let tdSymbol = symbol;
                         if (!tdSymbol.includes('/') && tdSymbol.length === 6) {
                             tdSymbol = tdSymbol.slice(0, 3) + '/' + tdSymbol.slice(3);
@@ -703,7 +797,7 @@
                             const interval = '1h'; // Balance entre precisión y economía
                             // Construir fecha start para API (YYYY-MM-DD)
                             const startDateStr = entryDate.toISOString().split('T')[0];
-                            
+
                             const resHist = await fetch(`https://api.twelvedata.com/time_series?symbol=${tdSymbol}&interval=${interval}&start_date=${startDateStr}&apikey=${apiKey}&outputsize=500&order=ASC`);
                             if (resHist.ok) {
                                 const dataHist = await resHist.json();
@@ -711,11 +805,11 @@
                                     // TwelveData devuelve orden DESC por defecto si no se especifica, pero pedimos ASC
                                     // Asegurar orden cronológico
                                     const candles = dataHist.values.sort((a, b) => new Date(a.datetime) - new Date(b.datetime));
-                                    
+
                                     for (const c of candles) {
                                         const cTime = new Date(c.datetime);
                                         if (cTime < entryDate) continue; // Ignorar velas previas a entrada exacta
-                                        
+
                                         const outcome = checkCandle(parseFloat(c.high), parseFloat(c.low), cTime);
                                         if (outcome) {
                                             tradeOutcome = outcome;
@@ -729,7 +823,7 @@
                     } else {
                         // --- BINANCE (CRYPTO) ---
                         const binanceSymbol = symbol.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
-                        
+
                         // 1. Precio Actual
                         const resPrice = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${binanceSymbol}`);
                         if (!resPrice.ok) throw new Error('Error API Binance');
@@ -738,11 +832,11 @@
 
                         // 2. Verificación Histórica
                         if (hasLevels && !isNaN(entryDate.getTime())) {
-                            const interval = '1h'; 
+                            const interval = '1h';
                             const startTime = entryDate.getTime();
                             // Binance klines limit 1000
                             const resKlines = await fetch(`https://api.binance.com/api/v3/klines?symbol=${binanceSymbol}&interval=${interval}&startTime=${startTime}&limit=1000`);
-                            
+
                             if (resKlines.ok) {
                                 const klines = await resKlines.json();
                                 // klines: [openTime, open, high, low, close, ...]
@@ -791,7 +885,7 @@
                 } catch (e) {
                     console.error(e);
                     alert(`No se pudo sincronizar precio para ${symbol}.\n\nDetalle: ${e.message}`);
-                    setLiveTradeStatus(null); 
+                    setLiveTradeStatus(null);
                 } finally {
                     const btn = document.getElementById('btn-sync-live');
                     if (btn) btn.innerHTML = '⚡ Sincronizar Ahora';
@@ -1982,6 +2076,7 @@
                     useBp, bpTol,
                     useDelta,
                     useCooldown,
+                    useAdr,
                     useHtf,
                     htfMode: hm,
                     requireHtf: reqHtf,
@@ -2293,6 +2388,13 @@
                         else if (Math.sign(target.delta) !== Math.sign(c.delta)) match = false;
                     }
 
+                    // --- Filtro ADR: Evitar entradas con agotamiento estadístico (>100%) ---
+                    if (useAdr && match) {
+                        if (c.adrFilledPct != null && c.adrFilledPct > 100) {
+                            match = false;
+                        }
+                    }
+
                     if (!match) continue;
 
                     let isHighRisk = false;
@@ -2434,7 +2536,8 @@
                     { key: 'useTrend', label: 'Tendencia' },
                     { key: 'useTime', label: 'Horario' },
                     { key: 'useVolBody', label: 'Volatilidad' },
-                    { key: 'useCooldown', label: 'Enfriamiento' }
+                    { key: 'useCooldown', label: 'Enfriamiento' },
+                    { key: 'useAdr', label: 'ADR' }
                 ];
 
                 if (hasExtended) {
@@ -2455,44 +2558,58 @@
                 const combinations = [];
                 const totalCombs = 1 << toggleableFilters.length; // 2^n
 
-                for (let i = 1; i < totalCombs; i++) {
-                    const currentConfig = {
-                        useRsi: false, rsiTol: rsiTolerance,
-                        useTrend: false, trendCond: trendCondition,
-                        useTime: false, timeMode,
-                        useVolBody: false,
-                        useVol: false, volTol: volumeTolerance,
-                        useBp: false, bpTol: bpTolerance,
-                        useDelta: false,
-                        useCooldown: false,
-                        useHtf: false,
-                        htfMode,
-                        requireHtf: false,
-                        useLtfIntra: false
-                    };
+                // --- PARCHE: Optimización no-bloqueante ---
+                // Procesar en chunks para no bloquear la UI
+                const CHUNK_SIZE = 16;
 
-                    const activeLabels = [];
+                const processChunk = async (startIdx, endIdx) => {
+                    for (let i = startIdx; i < endIdx && i < totalCombs; i++) {
+                        const currentConfig = {
+                            useRsi: false, rsiTol: rsiTolerance,
+                            useTrend: false, trendCond: trendCondition,
+                            useTime: false, timeMode,
+                            useVolBody: false,
+                            useVol: false, volTol: volumeTolerance,
+                            useBp: false, bpTol: bpTolerance,
+                            useDelta: false,
+                            useCooldown: false,
+                            useAdr: false,
+                            useHtf: false,
+                            htfMode,
+                            requireHtf: false,
+                            useLtfIntra: false
+                        };
 
-                    for (let j = 0; j < toggleableFilters.length; j++) {
-                        if ((i >> j) & 1) {
-                            currentConfig[toggleableFilters[j].key] = true;
-                            activeLabels.push(toggleableFilters[j].label);
+                        const activeLabels = [];
+
+                        for (let j = 0; j < toggleableFilters.length; j++) {
+                            if ((i >> j) & 1) {
+                                currentConfig[toggleableFilters[j].key] = true;
+                                activeLabels.push(toggleableFilters[j].label);
+                            }
+                        }
+
+                        const modeVariants = (currentConfig.useHtf && htfData && htfData.length) ? ['DISCARD', 'MARK'] : [htfMode];
+                        for (let mv = 0; mv < modeVariants.length; mv++) {
+                            const cfg = { ...currentConfig, htfMode: modeVariants[mv] };
+                            const labels = cfg.useHtf ? activeLabels.concat([`HTF:${cfg.htfMode}`]) : activeLabels;
+                            const result = calculateBacktest(csvData, selectedCandleIndex, tradeParams, cfg);
+                            if (!result.error && result.matches >= 5) {
+                                combinations.push({
+                                    config: cfg,
+                                    labels,
+                                    stats: result
+                                });
+                            }
                         }
                     }
+                };
 
-                    const modeVariants = (currentConfig.useHtf && htfData && htfData.length) ? ['DISCARD', 'MARK'] : [htfMode];
-                    for (let mv = 0; mv < modeVariants.length; mv++) {
-                        const cfg = { ...currentConfig, htfMode: modeVariants[mv] };
-                        const labels = cfg.useHtf ? activeLabels.concat([`HTF:${cfg.htfMode}`]) : activeLabels;
-                        const result = calculateBacktest(csvData, selectedCandleIndex, tradeParams, cfg);
-                        if (!result.error && result.matches >= 5) {
-                            combinations.push({
-                                config: cfg,
-                                labels,
-                                stats: result
-                            });
-                        }
-                    }
+                // Procesar todas las combinaciones en chunks, cediendo al event loop
+                for (let start = 1; start < totalCombs; start += CHUNK_SIZE) {
+                    await processChunk(start, start + CHUNK_SIZE);
+                    // Ceder control al event loop para mantener UI responsiva
+                    await new Promise(r => setTimeout(r, 0));
                 }
 
                 // Ordenar: Mayor WinRate, luego Mayor Cantidad de Matches
@@ -2525,10 +2642,7 @@
                     }
                 }
 
-                // Re-ordenar la lista final para visualización: Los robustos primero o por WinRate?
-                // El usuario quiere ver las mejores opciones. Si forzamos la inclusión de robustos que tienen peor WinRate que otros,
-                // deberían aparecer quizás destacados pero ordenados por su mérito o mantener el orden de inserción.
-                // Vamos a ordenarlos finalmente por WinRate para que la lista se vea coherente, pero manteniendo los marcados.
+                // Re-ordenar la lista final para visualización
                 finalResults.sort((a, b) => b.stats.winRateNum - a.stats.winRateNum);
 
                 setOptimizationResults(finalResults);
@@ -2545,6 +2659,7 @@
                 if (config.useBp !== undefined) setUseBuyPressureFilter(config.useBp);
                 if (config.useDelta !== undefined) setUseDeltaSignFilter(config.useDelta);
                 if (config.useCooldown !== undefined) setUseCooldownFilter(config.useCooldown);
+                if (config.useAdr !== undefined) setUseAdrFilter(config.useAdr);
                 if (config.useHtf !== undefined) setUseHtfFilter(config.useHtf);
                 if (config.htfMode !== undefined) setHtfMode(config.htfMode);
                 if (config.requireHtf !== undefined) setRequireHtf(config.requireHtf);
@@ -2604,6 +2719,7 @@
                     useBp: useBuyPressureFilter, bpTol: bpTolerance,
                     useDelta: useDeltaSignFilter,
                     useCooldown: useCooldownFilter,
+                    useAdr: useAdrFilter,
                     useHtf: useHtfFilter,
                     htfMode,
                     requireHtf,
@@ -3457,7 +3573,63 @@
                                                             <div className={targetRsi > 70 ? 'text-red-500 dark:text-red-400' : targetRsi < 30 ? 'text-green-600 dark:text-green-400' : 'text-slate-700 dark:text-slate-300'}>{targetRsi}</div>
                                                         </div>
                                                     </div>
+
+                                                    {/* --- Indicador ADR (Average Daily Range) --- */}
+                                                    {(() => {
+                                                        const candle = csvData[selectedCandleIndex];
+                                                        if (!candle || candle.adrValue == null) return null;
+                                                        const adrPct = candle.adrFilledPct || 0;
+                                                        const isExhausted = adrPct > 100;
+                                                        const barWidth = Math.min(adrPct, 150); // Cap visual al 150%
+                                                        return (
+                                                            <div className={`mt-4 p-3 rounded-lg border shadow-sm ${isExhausted ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800'}`}>
+                                                                <div className="flex items-center justify-between mb-2">
+                                                                    <div className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase flex items-center gap-2">
+                                                                        <Icons.Activity size={12} /> ADR Diario (14D)
+                                                                    </div>
+                                                                    {isExhausted && (
+                                                                        <span className="text-[10px] font-bold text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30 px-2 py-0.5 rounded animate-pulse">
+                                                                            ⚠️ AGOTAMIENTO ESTADÍSTICO
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                <div className="grid grid-cols-2 gap-3 text-xs font-mono mb-2">
+                                                                    <div>
+                                                                        <div className="text-[10px] text-slate-500">Rango Hoy</div>
+                                                                        <div className="text-slate-800 dark:text-white font-bold">{candle.currentDayRange != null ? candle.currentDayRange.toFixed(2) : '—'}</div>
+                                                                    </div>
+                                                                    <div>
+                                                                        <div className="text-[10px] text-slate-500">ADR Promedio</div>
+                                                                        <div className="text-blue-600 dark:text-blue-300 font-bold">{candle.adrValue != null ? candle.adrValue.toFixed(2) : '—'}</div>
+                                                                    </div>
+                                                                </div>
+                                                                {/* Barra de Progreso ADR */}
+                                                                <div className="relative h-3 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                                                                    <div
+                                                                        className={`h-full transition-all duration-300 ${isExhausted ? 'bg-red-500' : adrPct > 80 ? 'bg-orange-500' : 'bg-green-500'}`}
+                                                                        style={{ width: `${Math.min(barWidth, 100)}%` }}
+                                                                    ></div>
+                                                                    {adrPct > 100 && (
+                                                                        <div
+                                                                            className="absolute top-0 h-full bg-red-600/50"
+                                                                            style={{ left: '100%', width: `${Math.min(adrPct - 100, 50)}%` }}
+                                                                        ></div>
+                                                                    )}
+                                                                    {/* Marcador del 100% */}
+                                                                    <div className="absolute top-0 bottom-0 w-0.5 bg-slate-400 dark:bg-slate-500" style={{ left: '100%' }}></div>
+                                                                </div>
+                                                                <div className="flex justify-between text-[10px] text-slate-500 mt-1">
+                                                                    <span>0%</span>
+                                                                    <span className={`font-bold ${isExhausted ? 'text-red-600 dark:text-red-400' : 'text-slate-700 dark:text-slate-300'}`}>
+                                                                        {adrPct.toFixed(1)}% Completado
+                                                                    </span>
+                                                                    <span>100%</span>
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })()}
                                                 </>
+
                                             ) : <div className="text-slate-500 dark:text-slate-600 text-sm italic">Carga un archivo CSV primero...</div>}
                                         </section>
 
@@ -3530,7 +3702,7 @@
                                                                 <AuditIcon size={12} />
                                                                 {auditVariant.message}
                                                             </div>
-                                                            
+
                                                             <div className="z-10 relative">
                                                                 {rrMetrics && rrMetrics.edge != null ? (
                                                                     <>
@@ -3586,7 +3758,7 @@
                                                             <div className="text-xs">
                                                                 <p className="font-bold text-orange-700 dark:text-orange-400 mb-1">Precaución: Falso Positivo Detectado</p>
                                                                 <p className="text-orange-600 dark:text-orange-300/80 leading-relaxed">
-                                                                    Tu histórico muestra ganancias, pero el <strong>Wilson Score (95%)</strong> indica que la muestra es insuficiente. 
+                                                                    Tu histórico muestra ganancias, pero el <strong>Wilson Score (95%)</strong> indica que la muestra es insuficiente.
                                                                     Existe una alta probabilidad de que el resultado sea suerte. Aumenta la muestra o el Win Rate.
                                                                 </p>
                                                                 <div className="mt-2 flex gap-4 font-mono text-[10px] opacity-80">
@@ -3599,79 +3771,79 @@
                                                     )}
                                                 </div>
                                             )}
-                                                    <details className="group mt-3 border border-slate-200 dark:border-slate-800 rounded overflow-hidden">
-                                                        <summary className="flex items-center justify-between p-2 cursor-pointer bg-slate-50 dark:bg-slate-900 text-xs font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors select-none">
-                                                            <span className="flex items-center gap-2"><Icons.HelpCircle size={12} /> Guía de Clasificación</span>
-                                                            <Icons.ChevronDown size={12} className="transition-transform group-open:rotate-180" />
-                                                        </summary>
-                                                        <div className="p-3 bg-white dark:bg-slate-950 text-[10px] space-y-1.5 border-t border-slate-200 dark:border-slate-800">
-                                                            <div className="flex justify-between items-center">
-                                                                <span className="font-bold text-green-700 dark:text-green-400 flex items-center gap-1"><Icons.ShieldCheck size={10} /> Robusto (Excelente)</span>
-                                                                <span className="text-slate-500">Wilson 95% &gt; BE</span>
-                                                            </div>
-                                                            <div className="flex justify-between items-center">
-                                                                <span className="font-bold text-orange-500 dark:text-orange-400">Especulativo (Trampa)</span>
-                                                                <span className="text-slate-500">Histórico OK, Wilson Mal</span>
-                                                            </div>
-                                                            <div className="p-2 bg-orange-50 dark:bg-orange-900/20 rounded border border-orange-100 dark:border-orange-900/30 text-orange-800 dark:text-orange-200 italic mb-2">
-                                                                Un Edge Especulativo significa que aunque el histórico es bueno, la muestra es muy pequeña para garantizar ganancias futuras según el Wilson Score.
-                                                            </div>
-                                                            <div className="flex justify-between items-center">
-                                                                <span className="font-bold text-slate-600 dark:text-slate-400">Marginal</span>
-                                                                <span className="text-slate-500">Edge ≥ 0%</span>
-                                                            </div>
-                                                            <div className="flex justify-between items-center">
-                                                                <span className="font-bold text-red-500 dark:text-red-400">Esperanza Negativa</span>
-                                                                <span className="text-slate-500">Edge &lt; 0%</span>
-                                                            </div>
-                                                            <div className="pt-2 mt-1 border-t border-slate-100 dark:border-slate-800 text-slate-400 italic">
-                                                                *Edge = WinRate Histórico - WinRate Break-Even
-                                                            </div>
-                                                        </div>
-                                                    </details>
-                                                    <details className="group mt-3 border border-slate-200 dark:border-slate-800 rounded overflow-hidden">
-                                                        <summary className="flex items-center justify-between p-2 cursor-pointer bg-slate-50 dark:bg-slate-900 text-xs font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors select-none">
-                                                            <span className="flex items-center gap-2"><Icons.Target size={12} /> Min. Win Rate Referencia</span>
-                                                            <Icons.ChevronDown size={12} className="transition-transform group-open:rotate-180" />
-                                                        </summary>
-                                                        <div className="p-3 bg-white dark:bg-slate-950 text-[10px] space-y-1.5 border-t border-slate-200 dark:border-slate-800">
-                                                            <div className="grid grid-cols-2 gap-2 pb-1 mb-1 border-b border-slate-100 dark:border-slate-800 font-bold text-slate-400">
-                                                                <span>Ratio R:R</span>
-                                                                <span className="text-right">Min. Win Rate</span>
-                                                            </div>
-                                                            <div className="flex justify-between items-center">
-                                                                <span className="font-mono text-slate-600 dark:text-slate-400">1:1</span>
-                                                                <span className="font-mono font-bold text-slate-700 dark:text-slate-300">50.0%</span>
-                                                            </div>
-                                                            <div className="flex justify-between items-center">
-                                                                <span className="font-mono text-slate-600 dark:text-slate-400">1:1.5</span>
-                                                                <span className="font-mono font-bold text-slate-700 dark:text-slate-300">40.0%</span>
-                                                            </div>
-                                                            <div className="flex justify-between items-center">
-                                                                <span className="font-mono text-slate-600 dark:text-slate-400">1:2</span>
-                                                                <span className="font-mono font-bold text-slate-700 dark:text-slate-300">33.3%</span>
-                                                            </div>
-                                                            <div className="flex justify-between items-center">
-                                                                <span className="font-mono text-slate-600 dark:text-slate-400">1:2.5</span>
-                                                                <span className="font-mono font-bold text-slate-700 dark:text-slate-300">28.6%</span>
-                                                            </div>
-                                                            <div className="flex justify-between items-center">
-                                                                <span className="font-mono text-slate-600 dark:text-slate-400">1:3</span>
-                                                                <span className="font-mono font-bold text-slate-700 dark:text-slate-300">25.0%</span>
-                                                            </div>
-                                                            <div className="flex justify-between items-center">
-                                                                <span className="font-mono text-slate-600 dark:text-slate-400">1:4</span>
-                                                                <span className="font-mono font-bold text-slate-700 dark:text-slate-300">20.0%</span>
-                                                            </div>
-                                                            <div className="flex justify-between items-center">
-                                                                <span className="font-mono text-slate-600 dark:text-slate-400">1:5</span>
-                                                                <span className="font-mono font-bold text-slate-700 dark:text-slate-300">16.7%</span>
-                                                            </div>
-                                                            <div className="pt-2 mt-1 border-t border-slate-100 dark:border-slate-800 text-slate-400 italic">
-                                                                *Mínimo para no perder dinero (Break-Even)
-                                                            </div>
-                                                        </div>
-                                                    </details>
+                                            <details className="group mt-3 border border-slate-200 dark:border-slate-800 rounded overflow-hidden">
+                                                <summary className="flex items-center justify-between p-2 cursor-pointer bg-slate-50 dark:bg-slate-900 text-xs font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors select-none">
+                                                    <span className="flex items-center gap-2"><Icons.HelpCircle size={12} /> Guía de Clasificación</span>
+                                                    <Icons.ChevronDown size={12} className="transition-transform group-open:rotate-180" />
+                                                </summary>
+                                                <div className="p-3 bg-white dark:bg-slate-950 text-[10px] space-y-1.5 border-t border-slate-200 dark:border-slate-800">
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="font-bold text-green-700 dark:text-green-400 flex items-center gap-1"><Icons.ShieldCheck size={10} /> Robusto (Excelente)</span>
+                                                        <span className="text-slate-500">Wilson 95% &gt; BE</span>
+                                                    </div>
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="font-bold text-orange-500 dark:text-orange-400">Especulativo (Trampa)</span>
+                                                        <span className="text-slate-500">Histórico OK, Wilson Mal</span>
+                                                    </div>
+                                                    <div className="p-2 bg-orange-50 dark:bg-orange-900/20 rounded border border-orange-100 dark:border-orange-900/30 text-orange-800 dark:text-orange-200 italic mb-2">
+                                                        Un Edge Especulativo significa que aunque el histórico es bueno, la muestra es muy pequeña para garantizar ganancias futuras según el Wilson Score.
+                                                    </div>
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="font-bold text-slate-600 dark:text-slate-400">Marginal</span>
+                                                        <span className="text-slate-500">Edge ≥ 0%</span>
+                                                    </div>
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="font-bold text-red-500 dark:text-red-400">Esperanza Negativa</span>
+                                                        <span className="text-slate-500">Edge &lt; 0%</span>
+                                                    </div>
+                                                    <div className="pt-2 mt-1 border-t border-slate-100 dark:border-slate-800 text-slate-400 italic">
+                                                        *Edge = WinRate Histórico - WinRate Break-Even
+                                                    </div>
+                                                </div>
+                                            </details>
+                                            <details className="group mt-3 border border-slate-200 dark:border-slate-800 rounded overflow-hidden">
+                                                <summary className="flex items-center justify-between p-2 cursor-pointer bg-slate-50 dark:bg-slate-900 text-xs font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors select-none">
+                                                    <span className="flex items-center gap-2"><Icons.Target size={12} /> Min. Win Rate Referencia</span>
+                                                    <Icons.ChevronDown size={12} className="transition-transform group-open:rotate-180" />
+                                                </summary>
+                                                <div className="p-3 bg-white dark:bg-slate-950 text-[10px] space-y-1.5 border-t border-slate-200 dark:border-slate-800">
+                                                    <div className="grid grid-cols-2 gap-2 pb-1 mb-1 border-b border-slate-100 dark:border-slate-800 font-bold text-slate-400">
+                                                        <span>Ratio R:R</span>
+                                                        <span className="text-right">Min. Win Rate</span>
+                                                    </div>
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="font-mono text-slate-600 dark:text-slate-400">1:1</span>
+                                                        <span className="font-mono font-bold text-slate-700 dark:text-slate-300">50.0%</span>
+                                                    </div>
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="font-mono text-slate-600 dark:text-slate-400">1:1.5</span>
+                                                        <span className="font-mono font-bold text-slate-700 dark:text-slate-300">40.0%</span>
+                                                    </div>
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="font-mono text-slate-600 dark:text-slate-400">1:2</span>
+                                                        <span className="font-mono font-bold text-slate-700 dark:text-slate-300">33.3%</span>
+                                                    </div>
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="font-mono text-slate-600 dark:text-slate-400">1:2.5</span>
+                                                        <span className="font-mono font-bold text-slate-700 dark:text-slate-300">28.6%</span>
+                                                    </div>
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="font-mono text-slate-600 dark:text-slate-400">1:3</span>
+                                                        <span className="font-mono font-bold text-slate-700 dark:text-slate-300">25.0%</span>
+                                                    </div>
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="font-mono text-slate-600 dark:text-slate-400">1:4</span>
+                                                        <span className="font-mono font-bold text-slate-700 dark:text-slate-300">20.0%</span>
+                                                    </div>
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="font-mono text-slate-600 dark:text-slate-400">1:5</span>
+                                                        <span className="font-mono font-bold text-slate-700 dark:text-slate-300">16.7%</span>
+                                                    </div>
+                                                    <div className="pt-2 mt-1 border-t border-slate-100 dark:border-slate-800 text-slate-400 italic">
+                                                        *Mínimo para no perder dinero (Break-Even)
+                                                    </div>
+                                                </div>
+                                            </details>
                                         </section>
 
                                         {/* 4. FILTROS */}
@@ -3705,6 +3877,10 @@
                                             <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 cursor-pointer hover:text-slate-800 dark:hover:text-slate-200">
                                                 <input type="checkbox" checked={useCooldownFilter} onChange={(e) => setUseCooldownFilter(e.target.checked)} className="accent-blue-500" />
                                                 Evitar señales solapadas (enfriamiento)
+                                            </label>
+                                            <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 cursor-pointer hover:text-slate-800 dark:hover:text-slate-200">
+                                                <input type="checkbox" checked={useAdrFilter} onChange={(e) => setUseAdrFilter(e.target.checked)} className="accent-blue-500" />
+                                                <Icons.Activity size={14} className="text-red-500" /> Evitar Agotamiento ADR (&gt;100%)
                                             </label>
                                             <div className="pt-2 border-t border-slate-200 dark:border-slate-700/50"></div>
                                             <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 cursor-pointer hover:text-slate-800 dark:hover:text-slate-200">
@@ -4030,16 +4206,16 @@
                                         {/* INPUTS ACTUALES */}
                                         <div className="bg-slate-50 dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-lg">
                                             <div className="flex items-center justify-between mb-4">
-                                            <h3 className="text-lg font-bold text-blue-600 dark:text-blue-400 flex items-center gap-2"><Icons.Stethoscope /> Signos Vitales</h3>
-                                            <button 
-                                                id="btn-sync-live"
-                                                onClick={handleSyncLivePrice}
-                                                className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-3 py-1.5 rounded-lg border border-blue-200 dark:border-blue-800 hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors font-bold flex items-center gap-1"
-                                                title={`Sincronizar con Binance (${autoSymbol || 'Symbol'})`}
-                                            >
-                                                ⚡ Sincronizar Ahora
-                                            </button>
-                                        </div>
+                                                <h3 className="text-lg font-bold text-blue-600 dark:text-blue-400 flex items-center gap-2"><Icons.Stethoscope /> Signos Vitales</h3>
+                                                <button
+                                                    id="btn-sync-live"
+                                                    onClick={handleSyncLivePrice}
+                                                    className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-3 py-1.5 rounded-lg border border-blue-200 dark:border-blue-800 hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors font-bold flex items-center gap-1"
+                                                    title={`Sincronizar con Binance (${autoSymbol || 'Symbol'})`}
+                                                >
+                                                    ⚡ Sincronizar Ahora
+                                                </button>
+                                            </div>
 
                                             <div className="space-y-4">
                                                 <div>
@@ -4051,32 +4227,133 @@
                                                     <input type="number" value={candlesSinceEntry} onChange={(e) => setCandlesSinceEntry(parseInt(e.target.value))} className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded p-3 text-lg font-mono text-slate-900 dark:text-white focus:border-blue-500 outline-none transition-colors" placeholder="0" />
                                                 </div>
                                             </div>
+
+                                            {/* --- Combustible Diario (ADR) --- */}
+                                            {(() => {
+                                                const candle = csvData[selectedCandleIndex];
+                                                if (!candle || candle.adrValue == null) return null;
+
+                                                const adrPct = candle.adrFilledPct || 0;
+                                                const isExhausted = adrPct > 100;
+                                                const currentPriceNum = parseFloat(currentPrice) || 0;
+
+                                                // Calcular espacio restante hacia TP
+                                                let roomWarning = null;
+                                                const tpVal = parseFloat(takeProfit) || 0;
+                                                const slVal = parseFloat(stopLoss) || 0;
+
+                                                if (currentPriceNum > 0 && candle.adrRoomTop && candle.adrRoomBottom) {
+                                                    if (tradeType === 'LONG') {
+                                                        // Para LONG, el techo estadístico es adrRoomTop
+                                                        const distanceToTop = candle.adrRoomTop - currentPriceNum;
+                                                        const distanceToTP = tpVal > 0 ? tpVal - currentPriceNum : null;
+                                                        if (distanceToTop <= 0 || (distanceToTP && distanceToTop < distanceToTP * 0.3)) {
+                                                            roomWarning = {
+                                                                type: 'warning',
+                                                                msg: `Poco espacio para LONG. Techo ADR: ${candle.adrRoomTop.toFixed(2)}`
+                                                            };
+                                                        }
+                                                    } else {
+                                                        // Para SHORT, el suelo estadístico es adrRoomBottom
+                                                        const distanceToBottom = currentPriceNum - candle.adrRoomBottom;
+                                                        const distanceToTP = tpVal > 0 ? currentPriceNum - tpVal : null;
+                                                        if (distanceToBottom <= 0 || (distanceToTP && distanceToBottom < distanceToTP * 0.3)) {
+                                                            roomWarning = {
+                                                                type: 'warning',
+                                                                msg: `Poco espacio para SHORT. Suelo ADR: ${candle.adrRoomBottom.toFixed(2)}`
+                                                            };
+                                                        }
+                                                    }
+                                                }
+
+                                                return (
+                                                    <div className={`mt-4 p-4 rounded-lg border shadow-sm ${isExhausted ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800'}`}>
+                                                        <div className="flex items-center justify-between mb-3">
+                                                            <h4 className="text-sm font-bold text-slate-600 dark:text-slate-300 flex items-center gap-2">
+                                                                <Icons.Zap size={14} className={isExhausted ? 'text-red-500' : 'text-orange-500'} />
+                                                                Combustible Diario (ADR)
+                                                            </h4>
+                                                            {isExhausted && (
+                                                                <span className="text-[10px] font-bold text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30 px-2 py-0.5 rounded animate-pulse">
+                                                                    🔥 AGOTADO
+                                                                </span>
+                                                            )}
+                                                        </div>
+
+                                                        {/* Barra de progreso ADR */}
+                                                        <div className="relative h-4 bg-slate-200 dark:bg-slate-700 rounded-full overflow-visible mb-2">
+                                                            <div
+                                                                className={`h-full rounded-full transition-all duration-500 ${isExhausted ? 'bg-red-500' : adrPct > 80 ? 'bg-orange-500' : 'bg-green-500'}`}
+                                                                style={{ width: `${Math.min(adrPct, 100)}%` }}
+                                                            ></div>
+                                                            {/* Marcador del 100% */}
+                                                            <div className="absolute top-0 bottom-0 w-1 bg-slate-500 dark:bg-slate-400 rounded" style={{ left: 'calc(100% - 2px)' }}></div>
+                                                        </div>
+
+                                                        <div className="grid grid-cols-3 gap-2 text-xs font-mono mb-2">
+                                                            <div className="text-center">
+                                                                <div className="text-[10px] text-slate-500">Rango Hoy</div>
+                                                                <div className="font-bold text-slate-700 dark:text-slate-200">{candle.currentDayRange != null ? candle.currentDayRange.toFixed(2) : '—'}</div>
+                                                            </div>
+                                                            <div className="text-center">
+                                                                <div className="text-[10px] text-slate-500">ADR Prom.</div>
+                                                                <div className="font-bold text-blue-600 dark:text-blue-400">{candle.adrValue != null ? candle.adrValue.toFixed(2) : '—'}</div>
+                                                            </div>
+                                                            <div className="text-center">
+                                                                <div className="text-[10px] text-slate-500">% Usado</div>
+                                                                <div className={`font-bold ${isExhausted ? 'text-red-600 dark:text-red-400' : 'text-slate-700 dark:text-slate-200'}`}>{adrPct.toFixed(1)}%</div>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Niveles ADR */}
+                                                        <div className="grid grid-cols-2 gap-2 text-xs font-mono border-t border-slate-200 dark:border-slate-700 pt-2 mt-2">
+                                                            <div className="flex items-center gap-1">
+                                                                <span className="text-green-500">▲</span>
+                                                                <span className="text-slate-500">Techo:</span>
+                                                                <span className="font-bold text-slate-700 dark:text-slate-200">{candle.adrRoomTop != null ? candle.adrRoomTop.toFixed(2) : '—'}</span>
+                                                            </div>
+                                                            <div className="flex items-center gap-1">
+                                                                <span className="text-red-500">▼</span>
+                                                                <span className="text-slate-500">Suelo:</span>
+                                                                <span className="font-bold text-slate-700 dark:text-slate-200">{candle.adrRoomBottom != null ? candle.adrRoomBottom.toFixed(2) : '—'}</span>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Advertencia de espacio limitado */}
+                                                        {roomWarning && (
+                                                            <div className="mt-3 p-2 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded text-xs text-orange-700 dark:text-orange-300 flex items-center gap-2">
+                                                                <Icons.AlertTriangle size={14} />
+                                                                {roomWarning.msg}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })()}
                                         </div>
+
 
                                         {/* DIAGNOSTICO RESULTADO */}
                                         <div className="space-y-6">
                                             {/* --- RESULTADO FINAL (SI EL TRADE YA CERRÓ) --- */}
                                             {liveTradeStatus && liveTradeStatus.status !== 'ACTIVE' && (
-                                                <div className={`p-8 rounded-xl border-2 shadow-xl text-center animate-fade-in ${
-                                                    liveTradeStatus.status === 'WIN' 
-                                                    ? 'bg-green-50 dark:bg-green-900/30 border-green-500' 
+                                                <div className={`p-8 rounded-xl border-2 shadow-xl text-center animate-fade-in ${liveTradeStatus.status === 'WIN'
+                                                    ? 'bg-green-50 dark:bg-green-900/30 border-green-500'
                                                     : 'bg-red-50 dark:bg-red-900/30 border-red-500'
-                                                }`}>
+                                                    }`}>
                                                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 shadow-sm bg-white dark:bg-slate-800">
-                                                        {liveTradeStatus.status === 'WIN' 
+                                                        {liveTradeStatus.status === 'WIN'
                                                             ? <Icons.Target className="text-green-500" size={32} />
                                                             : <Icons.AlertTriangle className="text-red-500" size={32} />
                                                         }
                                                     </div>
-                                                    
-                                                    <h3 className={`text-3xl font-black mb-2 ${
-                                                        liveTradeStatus.status === 'WIN' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
-                                                    }`}>
+
+                                                    <h3 className={`text-3xl font-black mb-2 ${liveTradeStatus.status === 'WIN' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                                                        }`}>
                                                         {liveTradeStatus.status === 'WIN' ? '¡TAKE PROFIT ALCANZADO!' : 'STOP LOSS TOCADO'}
                                                     </h3>
-                                                    
+
                                                     <p className="text-slate-600 dark:text-slate-300 text-lg mb-6 max-w-md mx-auto">
-                                                        {liveTradeStatus.status === 'WIN' 
+                                                        {liveTradeStatus.status === 'WIN'
                                                             ? 'El precio tocó tu objetivo. Este trade ya finalizó exitosamente según el historial.'
                                                             : 'El precio tocó tu stop loss. Este trade ya se cerró en pérdida según el historial.'
                                                         }
@@ -4086,10 +4363,10 @@
                                                         <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-left">
                                                             <div className="text-xs text-slate-500 uppercase">Precio de Salida</div>
                                                             <div className="font-mono font-bold text-slate-800 dark:text-white text-right">{formatPrice(liveTradeStatus.price)}</div>
-                                                            
+
                                                             <div className="text-xs text-slate-500 uppercase">Fecha Aprox.</div>
                                                             <div className="font-mono font-bold text-slate-800 dark:text-white text-right">
-                                                                {liveTradeStatus.date.toLocaleDateString()} {liveTradeStatus.date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                                                {liveTradeStatus.date.toLocaleDateString()} {liveTradeStatus.date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                             </div>
                                                         </div>
                                                     </div>
@@ -4147,33 +4424,30 @@
                                                     </div>
 
                                                     {/* DIAGNOSTICO DE TIEMPO - SEMÁFORO INTELIGENTE */}
-                                                    <div className={`p-4 rounded-xl border shadow-sm ${
-                                                        activeDiagnosis.timeStatus === 'EARLY' ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' :
+                                                    <div className={`p-4 rounded-xl border shadow-sm ${activeDiagnosis.timeStatus === 'EARLY' ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' :
                                                         activeDiagnosis.timeStatus === 'DECISION' ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800' :
-                                                        'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
-                                                    }`}>
+                                                            'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+                                                        }`}>
                                                         <div className="flex items-center gap-3 mb-3">
-                                                            <div className={`w-4 h-4 rounded-full shrink-0 ${
-                                                                activeDiagnosis.timeStatus === 'EARLY' ? 'bg-green-500' :
+                                                            <div className={`w-4 h-4 rounded-full shrink-0 ${activeDiagnosis.timeStatus === 'EARLY' ? 'bg-green-500' :
                                                                 activeDiagnosis.timeStatus === 'DECISION' ? 'bg-yellow-500' :
-                                                                'bg-red-500 animate-pulse'
-                                                            }`}></div>
+                                                                    'bg-red-500 animate-pulse'
+                                                                }`}></div>
                                                             <div>
-                                                                <h5 className={`font-bold text-sm ${
-                                                                    activeDiagnosis.timeStatus === 'EARLY' ? 'text-green-700 dark:text-green-400' :
+                                                                <h5 className={`font-bold text-sm ${activeDiagnosis.timeStatus === 'EARLY' ? 'text-green-700 dark:text-green-400' :
                                                                     activeDiagnosis.timeStatus === 'DECISION' ? 'text-yellow-700 dark:text-yellow-400' :
-                                                                    'text-red-700 dark:text-red-400'
-                                                                }`}>
+                                                                        'text-red-700 dark:text-red-400'
+                                                                    }`}>
                                                                     {activeDiagnosis.timeStatus === 'EARLY' ? 'FASE TEMPRANA' :
-                                                                     activeDiagnosis.timeStatus === 'DECISION' ? 'FASE DE DECISIÓN' :
-                                                                     'TIME STOP'}
+                                                                        activeDiagnosis.timeStatus === 'DECISION' ? 'FASE DE DECISIÓN' :
+                                                                            'TIME STOP'}
                                                                 </h5>
                                                             </div>
                                                             <div className="ml-auto text-right">
                                                                 <div className="font-mono text-sm font-bold text-slate-700 dark:text-slate-200">{candlesSinceEntry} <span className="text-[10px] text-slate-400">velas</span></div>
                                                             </div>
                                                         </div>
-                                                        
+
                                                         <p className="text-xs text-slate-600 dark:text-slate-300 mb-3">
                                                             {activeDiagnosis.timeMsg}
                                                         </p>
@@ -4194,7 +4468,7 @@
                                                                 {/* Zona Roja */}
                                                                 <div className="h-full bg-red-400/50 flex-1"></div>
                                                                 {/* Indicador Actual */}
-                                                                <div 
+                                                                <div
                                                                     className="absolute top-0 bottom-0 w-1 bg-slate-900 dark:bg-white shadow-lg transition-all duration-300"
                                                                     style={{ left: Math.min((candlesSinceEntry / simResult.maxDuration) * 100, 100) + '%' }}
                                                                 ></div>
