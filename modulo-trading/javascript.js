@@ -3213,6 +3213,53 @@ function renderStats() {
     } else {
       winRateElement.className = 'text-2xl font-black text-red-500';
     }
+
+    // --- NUEVO: Cálculo de Win Rate Mínimo (Breakeven) ---
+    const minWinRateDisplay = document.getElementById('minWinRateDisplay');
+    const winRateMargin = document.getElementById('winRateMargin');
+    const breakevenLine = document.getElementById('breakevenLine');
+    
+    if (minWinRateDisplay) {
+      const aWin = parseFloat(avgWin);
+      const aLoss = Math.abs(parseFloat(avgLoss));
+      
+      if (aLoss > 0 && aWin > 0) {
+        const rr = aWin / aLoss;
+        const minWR = (1 / (1 + rr)) * 100;
+        minWinRateDisplay.textContent = `Min Req: ${minWR.toFixed(2)}%`;
+        
+        // Calcular margen de seguridad
+        if (winRateMargin) {
+          const margin = winRateVal - minWR;
+          winRateMargin.textContent = `${margin >= 0 ? '+' : ''}${margin.toFixed(2)}%`;
+          winRateMargin.classList.remove('hidden');
+          
+          if (margin >= 0) {
+            winRateMargin.className = 'text-[10px] font-black px-1.5 py-0.5 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
+          } else {
+            winRateMargin.className = 'text-[10px] font-black px-1.5 py-0.5 rounded-full bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
+          }
+        }
+        
+        // Estilo basado en comparativa
+        if (winRateVal >= minWR) {
+          minWinRateDisplay.className = 'text-xs font-bold text-gray-400 dark:text-gray-500';
+        } else {
+          minWinRateDisplay.className = 'text-xs font-bold text-orange-500 dark:text-orange-400 animate-pulse';
+        }
+
+        // Actualizar línea en la barra de progreso
+        if (breakevenLine) {
+          breakevenLine.style.left = `${minWR}%`;
+          breakevenLine.classList.remove('hidden');
+        }
+      } else {
+        minWinRateDisplay.textContent = 'Min Req: -';
+        minWinRateDisplay.className = 'text-xs font-bold text-gray-400 dark:text-gray-500';
+        if (winRateMargin) winRateMargin.classList.add('hidden');
+        if (breakevenLine) breakevenLine.classList.add('hidden');
+      }
+    }
   }
 
   // Actualizar estadísticas de rendimiento
@@ -3295,6 +3342,11 @@ function renderStats() {
   if (avgProfitElement) avgProfitElement.textContent = avgWinningProfit === null ? '-' : `$${avgWinningProfit.toFixed(2)}`;
 
   renderCapitalEvolutionChart(getStatsTimeFilterRange());
+
+  // Inyectar llamada al módulo Monte Carlo con los trades filtrados actuales
+  if (typeof updateMonteCarloInputs === 'function') {
+    updateMonteCarloInputs(trades);
+  }
 
   const robustProfitFactorEl = document.getElementById('robustProfitFactor');
   const robustProfitFactorHintEl = document.getElementById('robustProfitFactorHint');
@@ -3396,29 +3448,42 @@ function renderStats() {
     }
   }
 
-  // 2. Risk of Ruin
-  // Formula: ((1 - WR) / (1 + WR)) ^ Units
-  // Asumimos 30 unidades de riesgo como solicitado
+  // 2. Risk of Ruin (Cálculo robusto para Fintech)
+  // Formula: ((1 - WR) / (WR * PayoffRatio)) ^ Units
+  // Basado en 30 unidades de riesgo como estándar institucional
   let riskOfRuin = null;
   const totalTradesCount = trades.length;
   if (totalTradesCount > 0) {
-    const winningTradesCount = trades.filter(t => parseFloat(t.resultMxn) > 0).length;
-    const winRateDecimal = winningTradesCount / totalTradesCount;
+    const winningTradesArr = trades.filter(t => parseFloat(t.resultMxn) > 0);
+    const losingTradesArr = trades.filter(t => parseFloat(t.resultMxn) < 0);
+    
+    const winRateDecimal = winningTradesArr.length / totalTradesCount;
+    const avgWin = winningTradesArr.length > 0 
+      ? winningTradesArr.reduce((sum, t) => sum + parseFloat(t.resultMxn), 0) / winningTradesArr.length 
+      : 0;
+    const avgLoss = losingTradesArr.length > 0 
+      ? Math.abs(losingTradesArr.reduce((sum, t) => sum + parseFloat(t.resultMxn), 0) / losingTradesArr.length)
+      : 0;
 
-    // Evitar división por cero implícita y casos extremos
-    const numerator = 1 - winRateDecimal;
-    const denominator = 1 + winRateDecimal;
+    // Validación de Esperanza Matemática y Payoff
+    if (avgLoss === 0) {
+      riskOfRuin = 0; // Sin pérdidas, el riesgo es nulo
+    } else {
+      const payoffRatio = avgWin / avgLoss;
+      const expectancy = (winRateDecimal * payoffRatio) - (1 - winRateDecimal);
 
-    if (denominator > 0) {
-      // Risk of Ruin con 30 unidades
-      const unitsOfRisk = 30;
-      const roRValue = Math.pow(numerator / denominator, unitsOfRisk);
+      if (expectancy <= 0) {
+        riskOfRuin = 100; // Estrategia no rentable a largo plazo = Ruina inevitable
+      } else {
+        const unitsOfRisk = 30;
+        const numerator = 1 - winRateDecimal;
+        const denominator = winRateDecimal * payoffRatio;
 
-      // Convertir a porcentaje
-      riskOfRuin = roRValue * 100;
-
-      // Capar a 100% y 0% por si acaso
-      riskOfRuin = Math.min(100, Math.max(0, riskOfRuin));
+        if (denominator > 0) {
+          const roRValue = Math.pow(numerator / denominator, unitsOfRisk);
+          riskOfRuin = Math.min(100, Math.max(0, roRValue * 100));
+        }
+      }
     }
   }
 
@@ -4975,6 +5040,10 @@ const themeObserver = new MutationObserver((mutations) => {
       if (typeof pfGaugeChartInstance !== 'undefined' && pfGaugeChartInstance) {
         pfGaugeChartInstance.update('none');
       }
+      if (typeof mcChartInstance !== 'undefined' && mcChartInstance) {
+        // Para Monte Carlo, necesitamos re-renderizar para actualizar colores de ejes y paths
+        runMonteCarlo();
+      }
     }
   });
 });
@@ -5790,3 +5859,317 @@ Fin del reporte.
     alert('Hubo un error al intentar copiar los datos.');
   });
 }
+
+// --- MÓDULO MONTE CARLO ---
+
+/**
+ * Calcula los parámetros base para la simulación Monte Carlo
+ * basados en los trades filtrados actualmente.
+ */
+function updateMonteCarloInputs(trades) {
+  if (!Array.isArray(trades) || trades.length === 0) return;
+
+  const winningTrades = trades.filter(t => parseFloat(t.resultMxn) > 0);
+  const losingTrades = trades.filter(t => parseFloat(t.resultMxn) < 0);
+  
+  const total = trades.length;
+  const winRate = (winningTrades.length / total) * 100;
+  
+  // Obtener capital actual para normalizar los ratios
+  const currentBalance = typeof getCurrentBalance === 'function' ? getCurrentBalance() : 10000;
+  
+  // Calcular promedios en porcentaje relativo al capital actual
+  const avgWinPct = winningTrades.length 
+    ? (winningTrades.reduce((sum, t) => sum + parseFloat(t.resultMxn), 0) / winningTrades.length / currentBalance) * 100 
+    : 0;
+  const avgLossPct = losingTrades.length 
+    ? (losingTrades.reduce((sum, t) => sum + parseFloat(t.resultMxn), 0) / losingTrades.length / currentBalance) * 100 
+    : 0;
+
+  // Actualizar inputs del DOM
+  const inputs = {
+    'mcWinRate': winRate.toFixed(2),
+    'mcAvgWin': avgWinPct.toFixed(2),
+    'mcAvgLoss': Math.abs(avgLossPct).toFixed(2),
+    'mcCapital': currentBalance.toFixed(2)
+  };
+
+  for (const [id, val] of Object.entries(inputs)) {
+    const el = document.getElementById(id);
+    if (el) el.value = val;
+  }
+}
+
+let mcChartInstance = null;
+
+/**
+ * Ejecuta la simulación Monte Carlo
+ */
+function runMonteCarlo() {
+  // 1. Leer valores de inputs
+  const capitalInicial = parseFloat(document.getElementById('mcCapital').value) || 10000;
+  const numTrades = parseInt(document.getElementById('mcTrades').value) || 100;
+  const numSims = parseInt(document.getElementById('mcSimulations').value) || 1000;
+  const winRate = parseFloat(document.getElementById('mcWinRate').value) / 100;
+  const avgWinPct = parseFloat(document.getElementById('mcAvgWin').value) / 100;
+  const avgLossPct = parseFloat(document.getElementById('mcAvgLoss').value) / 100;
+
+  // 2. Preparar estructuras de datos optimizadas
+  // Guardamos todos los resultados para calcular percentiles paso a paso
+  const allResults = new Float32Array(numSims * (numTrades + 1));
+  const samplePaths = 50; 
+  const paths = [];
+  
+  let totalRuined = 0;
+  const ruinThreshold = capitalInicial * 0.5;
+
+  // 3. Simulación
+  for (let s = 0; s < numSims; s++) {
+    let currentCapital = capitalInicial;
+    allResults[s * (numTrades + 1)] = currentCapital;
+    
+    const isSample = s < samplePaths;
+    const path = isSample ? new Float32Array(numTrades + 1) : null;
+    if (path) path[0] = currentCapital;
+
+    for (let t = 1; t <= numTrades; t++) {
+      const isWin = Math.random() < winRate;
+      const change = isWin ? (1 + avgWinPct) : (1 - avgLossPct);
+      currentCapital *= change;
+      
+      allResults[s * (numTrades + 1) + t] = currentCapital;
+      if (path) path[t] = currentCapital;
+    }
+
+    if (currentCapital < ruinThreshold) totalRuined++;
+    if (path) paths.push(path);
+  }
+
+  // 4. Calcular Percentiles Paso a Paso (Efecto Cono)
+  const medianSeries = new Float32Array(numTrades + 1);
+  const p5Series = new Float32Array(numTrades + 1);
+  const p95Series = new Float32Array(numTrades + 1);
+  
+  const stepCapitals = new Float32Array(numSims);
+  for (let t = 0; t <= numTrades; t++) {
+    for (let s = 0; s < numSims; s++) {
+      stepCapitals[s] = allResults[s * (numTrades + 1) + t];
+    }
+    stepCapitals.sort();
+    medianSeries[t] = stepCapitals[Math.floor(numSims * 0.5)];
+    p5Series[t] = stepCapitals[Math.floor(numSims * 0.05)];
+    p95Series[t] = stepCapitals[Math.floor(numSims * 0.95)];
+  }
+
+  const ruinRisk = (totalRuined / numSims) * 100;
+
+  // 5. Actualizar UI
+  const formatCompact = (val) => {
+    if (val >= 1e12) return (val / 1e12).toFixed(2) + 'T';
+    if (val >= 1e9) return (val / 1e9).toFixed(2) + 'B';
+    if (val >= 1e6) return (val / 1e6).toFixed(2) + 'M';
+    if (val >= 1e3) return (val / 1e3).toFixed(2) + 'K';
+    return val.toFixed(2);
+  };
+
+  const format = (val) => {
+    if (val > 1e12) return val.toExponential(2) + ' MXN';
+    return val.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' MXN';
+  };
+
+  const formatRoi = (final, initial, elementId) => {
+    const roi = ((final - initial) / initial) * 100;
+    const el = document.getElementById(elementId);
+    if (el) {
+      let roiText = (roi >= 0 ? '+' : '');
+      if (Math.abs(roi) >= 1e9) {
+        roiText += (roi).toExponential(2) + '%';
+      } else {
+        roiText += roi.toLocaleString('es-MX', { maximumFractionDigits: 2 }) + '%';
+      }
+      el.textContent = roiText;
+      
+      // Estilo dinámico basado en el ROI
+      if (roi > 0) {
+        el.className = 'text-xs font-bold px-2 py-0.5 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400';
+      } else if (roi < 0) {
+        el.className = 'text-xs font-bold px-2 py-0.5 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400';
+      } else {
+        el.className = 'text-xs font-bold px-2 py-0.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400';
+      }
+    }
+  };
+
+  document.getElementById('mcMedian').textContent = format(medianSeries[numTrades]);
+  document.getElementById('mcBest').textContent = format(p95Series[numTrades]);
+  document.getElementById('mcWorst').textContent = format(p5Series[numTrades]);
+
+  formatRoi(medianSeries[numTrades], capitalInicial, 'mcMedianRoi');
+  formatRoi(p95Series[numTrades], capitalInicial, 'mcBestRoi');
+  formatRoi(p5Series[numTrades], capitalInicial, 'mcWorstRoi');
+
+  document.getElementById('mcRuined').textContent = ruinRisk.toFixed(2) + '%';
+  document.getElementById('mcRuined').className = `text-lg font-bold ${ruinRisk > 10 ? 'text-red-500' : 'text-orange-500'}`;
+
+  // 6. Renderizar Gráfico
+  renderMonteCarloChart(paths, numTrades, medianSeries, p5Series, p95Series);
+}
+
+function renderMonteCarloChart(paths, numTrades, medianSeries, p5Series, p95Series) {
+  const ctx = document.getElementById('monteCarloChart');
+  if (!ctx) return;
+
+  if (mcChartInstance) {
+    mcChartInstance.destroy();
+  }
+
+  // Detectar tema actual
+  const isDark = document.documentElement.classList.contains('dark');
+  const textColor = isDark ? '#94a3b8' : '#64748b';
+  const gridColor = isDark ? 'rgba(71, 85, 105, 0.2)' : 'rgba(226, 232, 240, 0.8)';
+  const samplePathColor = isDark ? 'rgba(148, 163, 184, 0.1)' : 'rgba(100, 116, 139, 0.1)';
+
+  // Optimización: Si hay muchos trades, submuestreamos los datos para el gráfico
+  const maxPoints = 500;
+  const step = Math.ceil((numTrades + 1) / maxPoints);
+  
+  const downsample = (arr) => {
+    if (step <= 1) return Array.from(arr);
+    const sampled = [];
+    for (let i = 0; i < arr.length; i += step) {
+      sampled.push(arr[i]);
+    }
+    // Asegurar que el último punto siempre esté incluido
+    if ((arr.length - 1) % step !== 0) {
+      sampled.push(arr[arr.length - 1]);
+    }
+    return sampled;
+  };
+
+  const sampledLabels = downsample(Array.from({ length: numTrades + 1 }, (_, i) => `T-${i}`));
+  
+  const datasets = paths.map((path, i) => ({
+    label: i === 0 ? 'Simulaciones' : '',
+    data: downsample(path),
+    borderColor: samplePathColor,
+    borderWidth: 1,
+    pointRadius: 0,
+    fill: false,
+    tension: 0.1
+  }));
+
+  // Agregar líneas de percentiles destacadas (Ahora como series dinámicas)
+  datasets.push({
+    label: 'Media (P50)',
+    data: downsample(medianSeries),
+    borderColor: isDark ? '#3b82f6' : '#2563eb',
+    borderWidth: 3,
+    borderDash: [5, 5],
+    pointRadius: 0,
+    fill: false
+  });
+
+  datasets.push({
+    label: 'Mejor Caso (P95)',
+    data: downsample(p95Series),
+    borderColor: isDark ? '#10b981' : '#059669',
+    borderWidth: 2,
+    pointRadius: 0,
+    fill: false
+  });
+
+  datasets.push({
+    label: 'Peor Caso (P5)',
+    data: downsample(p5Series),
+    borderColor: isDark ? '#ef4444' : '#dc2626',
+    borderWidth: 2,
+    pointRadius: 0,
+    fill: false
+  });
+
+  // Formateador compacto para el eje Y
+  const formatY = (val) => {
+    if (val === 0) return '$0';
+    if (val >= 1e12) return '$' + (val / 1e12).toFixed(1) + 'T';
+    if (val >= 1e9) return '$' + (val / 1e9).toFixed(1) + 'B';
+    if (val >= 1e6) return '$' + (val / 1e6).toFixed(1) + 'M';
+    if (val >= 1e3) return '$' + (val / 1e3).toFixed(1) + 'K';
+    return '$' + val.toFixed(0);
+  };
+
+  mcChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: { labels: sampledLabels, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { intersect: false, mode: 'index' },
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top',
+          labels: { 
+            color: textColor, 
+            boxWidth: 12, 
+            padding: 15,
+            filter: item => item.label !== '' 
+          }
+        },
+        tooltip: {
+          backgroundColor: isDark ? '#1e293b' : '#ffffff',
+          titleColor: isDark ? '#f8fafc' : '#1e293b',
+          bodyColor: isDark ? '#cbd5e1' : '#475569',
+          borderColor: isDark ? '#334155' : '#e2e8f0',
+          borderWidth: 1,
+          callbacks: {
+            label: (context) => {
+              let label = context.dataset.label || '';
+              if (label) label += ': ';
+              if (context.parsed.y !== null) {
+                label += new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(context.parsed.y);
+              }
+              return label;
+            }
+          }
+        }
+      },
+      scales: {
+        x: { 
+          display: true, 
+          grid: { display: false }, 
+          ticks: { 
+            color: textColor, 
+            maxRotation: 0,
+            autoSkip: true,
+            maxTicksLimit: 10
+          } 
+        },
+        y: { 
+          type: 'logarithmic', // Escala logarítmica para manejar crecimientos extremos
+          display: true, 
+          grid: { color: gridColor },
+          ticks: { 
+            color: textColor,
+            callback: function(value) {
+              // En escala logarítmica, Chart.js devuelve valores en potencias de 10
+              // Filtramos para mostrar solo etiquetas principales y evitar ruido visual
+              const remain = value / (Math.pow(10, Math.floor(Math.log10(value))));
+              if (remain === 1 || remain === 2 || remain === 5) {
+                return formatY(value);
+              }
+              return null;
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+// Inicializar listeners del módulo Monte Carlo
+document.addEventListener('DOMContentLoaded', () => {
+  const btn = document.getElementById('runMonteCarloBtn');
+  if (btn) {
+    btn.addEventListener('click', runMonteCarlo);
+  }
+});
