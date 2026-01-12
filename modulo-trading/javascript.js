@@ -13,6 +13,8 @@ let durationPnlScatterInstance = null;
 let pnlHistogramChartInstance = null;
 let lossReasonDonutInstance = null;
 let gainReasonDonutInstance = null;
+let sqnGaugeChartInstance = null;
+let pfGaugeChartInstance = null;
 const CAPITAL_MONTH_NAMES_ES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 const MS_PER_YEAR = 365 * 24 * 60 * 60 * 1000;
 const STRATEGY_STORAGE_KEY = 'strategies';
@@ -954,6 +956,7 @@ function addTrade() {
   const resultReasonEl = document.getElementById('resultReason');
   const resultReasonValue = resultReasonEl ? resultReasonEl.value : '';
   const trade = {
+    id: 'trade-' + Date.now() + '-' + Math.floor(Math.random() * 1000000),
     asset: document.getElementById('asset').value,
     margin: marginValue,
     leverage: leverageValue,
@@ -968,7 +971,9 @@ function addTrade() {
     strategy: document.getElementById('strategy').value,
     notes: document.getElementById('notes').value,
     pips: document.getElementById('pips').value,
-    resultMetricType: document.getElementById('resultMetricType') ? document.getElementById('resultMetricType').value || 'pips' : 'pips'
+    resultMetricType: document.getElementById('resultMetricType') ? document.getElementById('resultMetricType').value || 'pips' : 'pips',
+    mae: null,
+    mfe: null
   };
 
   if (!trade.asset || !trade.resultMxn || !trade.lots || !trade.direction ||
@@ -996,6 +1001,11 @@ function addTrade() {
   const trades = JSON.parse(localStorage.getItem('trades')) || [];
   trades.push(trade);
   localStorage.setItem('trades', JSON.stringify(trades));
+
+  // Disparar cálculo de MAE/MFE en segundo plano (solo para cripto)
+  if (typeof triggerMAEMFECalculation === 'function') {
+    triggerMAEMFECalculation(trade);
+  }
 
   document.getElementById('resultMxn').value = '';
   if (resultReasonEl) {
@@ -2573,16 +2583,16 @@ function renderWeekdayPnlChart(trades) {
   // Para visualización financiera suele ser L-D. Ajustemos a L-D.
   // JS getDay(): 0=Dom, 1=Lun, ..., 6=Sáb
   // Queremos: 0=Lun, 1=Mar, ..., 5=Sáb, 6=Dom
-  
+
   const displayLabels = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
   const displaySums = [
-      sums[1], // Lun
-      sums[2], // Mar
-      sums[3], // Mié
-      sums[4], // Jue
-      sums[5], // Vie
-      sums[6], // Sáb
-      sums[0]  // Dom
+    sums[1], // Lun
+    sums[2], // Mar
+    sums[3], // Mié
+    sums[4], // Jue
+    sums[5], // Vie
+    sums[6], // Sáb
+    sums[0]  // Dom
   ];
 
   const data = displaySums.map(value => Number(value.toFixed(2)));
@@ -2634,6 +2644,143 @@ function renderWeekdayPnlChart(trades) {
             }
           }
         }
+      }
+    }
+  });
+}
+
+/**
+ * Renderiza un gráfico de tipo Velocímetro (Gauge) usando Chart.js
+ * @param {string} canvasId - ID del canvas
+ * @param {number|null} value - Valor actual
+ * @param {Array} segments - Arreglo de objetos { limit, color }
+ * @param {number} maxValue - Valor máximo del eje
+ * @param {Chart} instance - Instancia del gráfico para reutilizar
+ * @returns {Chart} - Nueva o actualizada instancia del gráfico
+ */
+function renderGaugeChart(canvasId, value, segments, maxValue, instance) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas || typeof Chart === 'undefined') return instance;
+
+  const safeValue = value === null ? 0 : Math.min(Math.max(value, 0), maxValue);
+
+  // Plugin personalizado para dibujar la aguja (flecha)
+  const gaugeNeedle = {
+    id: 'gaugeNeedle',
+    afterDatasetsDraw(chart) {
+      const { ctx, data, chartArea } = chart;
+      ctx.save();
+
+      const centerX = (chartArea.left + chartArea.right) / 2;
+      const centerY = chartArea.bottom;
+      const outerRadius = chart.getDatasetMeta(0).data[0].outerRadius;
+
+      // Calcular ángulo (usar el valor guardado en las opciones para la aguja)
+      const currentNeedleValue = chart.options.plugins.gaugeNeedleValue ?? safeValue;
+      const angle = Math.PI + (currentNeedleValue / maxValue) * Math.PI;
+
+      const isDarkMode = document.documentElement.classList.contains('dark');
+      const needleColor = isDarkMode ? '#ffffff' : '#1f2937';
+
+      // Dibujar base de la aguja (círculo central)
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, 4, 0, Math.PI * 2);
+      ctx.fillStyle = needleColor;
+      ctx.fill();
+
+      // Dibujar la aguja (flecha) más delgada y elegante
+      ctx.translate(centerX, centerY);
+      ctx.rotate(angle);
+      ctx.beginPath();
+      ctx.moveTo(0, -1.5);
+      ctx.lineTo(outerRadius - 8, 0);
+      ctx.lineTo(0, 1.5);
+      ctx.fillStyle = needleColor;
+      ctx.fill();
+
+      ctx.restore();
+    }
+  };
+
+  // Datos para los segmentos de fondo
+  const segmentValues = [];
+  const segmentColors = [];
+  const segmentLabels = [];
+  const segmentRanges = [];
+  let lastLimit = 0;
+
+  segments.forEach(s => {
+    segmentValues.push(s.limit - lastLimit);
+    segmentColors.push(s.color);
+    segmentLabels.push(s.label || '');
+    segmentRanges.push(`${lastLimit.toFixed(1)} - ${s.limit.toFixed(1)}`);
+    lastLimit = s.limit;
+  });
+
+  if (lastLimit < maxValue) {
+    segmentValues.push(maxValue - lastLimit);
+    segmentColors.push('rgba(200, 200, 200, 0.2)');
+    segmentLabels.push('Fuera de rango');
+    segmentRanges.push(`> ${lastLimit.toFixed(1)}`);
+  }
+
+  const data = {
+    labels: segmentLabels,
+    datasets: [
+      {
+        data: segmentValues,
+        backgroundColor: segmentColors,
+        borderWidth: 0,
+        circumference: 180,
+        rotation: 270,
+        cutout: '80%',
+        ranges: segmentRanges // Guardar rangos para el tooltip
+      }
+    ]
+  };
+
+  if (instance) {
+    instance.data.labels = segmentLabels; // Actualizar etiquetas explícitamente
+    instance.data.datasets[0].data = segmentValues;
+    instance.data.datasets[0].backgroundColor = segmentColors;
+    instance.data.datasets[0].ranges = segmentRanges;
+    instance.options.plugins.gaugeNeedleValue = safeValue;
+    instance.update('none');
+    return instance;
+  }
+
+  return new Chart(canvas.getContext('2d'), {
+    type: 'doughnut',
+    data: data,
+    plugins: [gaugeNeedle],
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      layout: {
+        padding: { bottom: 20, left: 10, right: 10 }
+      },
+      // Configuración para mejor soporte touch e interacción
+      interaction: {
+        mode: 'nearest',
+        intersect: true
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          enabled: true,
+          position: 'average',
+          callbacks: {
+            title: (tooltipItems) => {
+              const item = tooltipItems[0];
+              return item.chart.data.labels[item.dataIndex];
+            },
+            label: (tooltipItem) => {
+              const range = tooltipItem.dataset.ranges[tooltipItem.dataIndex];
+              return `Rango: ${range}`;
+            }
+          }
+        },
+        gaugeNeedleValue: safeValue
       }
     }
   });
@@ -3004,8 +3151,18 @@ function renderStats() {
   const winningTradesElement = document.getElementById('winningTrades');
   const losingTradesElement = document.getElementById('losingTrades');
   const winRateElement = document.getElementById('winRate');
+  const winPercentElement = document.getElementById('winPercent');
+  const lossPercentElement = document.getElementById('lossPercent');
+  const bePercentElement = document.getElementById('bePercent');
+  const winSegment = document.getElementById('winSegment');
+  const lossSegment = document.getElementById('lossSegment');
+  const beSegment = document.getElementById('beSegment');
+  const winRateIcon = document.getElementById('winRateIcon');
   const totalProfitElement = document.getElementById('totalProfit');
+  const totalProfitPercentElement = document.getElementById('totalProfitPercent');
+  const avgProfitPercentElement = document.getElementById('avgProfitPercent');
   const totalVolumeElement = document.getElementById('totalVolume');
+  const worstLossElement = document.getElementById('worstLoss');
   const maxDrawdownElement = document.getElementById('maxDrawdown');
   const profitRiskRatioElement = document.getElementById('profitRiskRatio');
   const breakevenTradesElement = document.getElementById('breakevenTrades');
@@ -3015,15 +3172,46 @@ function renderStats() {
   if (losingTradesElement) losingTradesElement.textContent = losingTrades;
   if (breakevenTradesElement) breakevenTradesElement.textContent = breakevenTrades;
   if (winRateElement) {
+    const winRateVal = parseFloat(winRate);
     winRateElement.textContent = `${winRate}%`;
-    if (parseFloat(winRate) >= 80) {
-      winRateElement.className = 'stat-value winrate-excellent';
-    } else if (parseFloat(winRate) >= 51) {
-      winRateElement.className = 'stat-value winrate-good';
-    } else if (parseFloat(winRate) >= 30) {
-      winRateElement.className = 'stat-value winrate-poor';
+
+    // Actualizar segmentos de la barra y porcentajes
+    if (total > 0) {
+      const winP = (winningTrades / total) * 100;
+      const lossP = (losingTrades / total) * 100;
+      const beP = (breakevenTrades / total) * 100;
+
+      if (winSegment) winSegment.style.width = `${winP}%`;
+      if (lossSegment) lossSegment.style.width = `${lossP}%`;
+      if (beSegment) beSegment.style.width = `${beP}%`;
+
+      if (winPercentElement) winPercentElement.textContent = `(${winP.toFixed(1)}%)`;
+      if (lossPercentElement) lossPercentElement.textContent = `(${lossP.toFixed(1)}%)`;
+      if (bePercentElement) bePercentElement.textContent = `(${beP.toFixed(1)}%)`;
     } else {
-      winRateElement.className = 'stat-value winrate-bad';
+      if (winSegment) winSegment.style.width = '0%';
+      if (lossSegment) lossSegment.style.width = '0%';
+      if (beSegment) beSegment.style.width = '0%';
+
+      if (winPercentElement) winPercentElement.textContent = '(0%)';
+      if (lossPercentElement) lossPercentElement.textContent = '(0%)';
+      if (bePercentElement) bePercentElement.textContent = '(0%)';
+    }
+
+    // Actualizar icono de tendencia
+    if (winRateIcon) {
+      winRateIcon.textContent = winRateVal >= 50 ? '📈' : '📉';
+      winRateIcon.className = winRateVal >= 50 ? 'text-green-500' : 'text-red-500';
+    }
+
+    if (winRateVal >= 80) {
+      winRateElement.className = 'text-2xl font-black text-green-500';
+    } else if (winRateVal >= 51) {
+      winRateElement.className = 'text-2xl font-black text-blue-500';
+    } else if (winRateVal >= 30) {
+      winRateElement.className = 'text-2xl font-black text-orange-500';
+    } else {
+      winRateElement.className = 'text-2xl font-black text-red-500';
     }
   }
 
@@ -3035,13 +3223,13 @@ function renderStats() {
   if (totalVolumeElement) {
     totalVolumeElement.textContent = `$${volume.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   }
-  if (maxDrawdownElement) {
-    maxDrawdownElement.textContent = `${maxDrawdown.toFixed(2)} MXN`;
-    maxDrawdownElement.className = `stat-value ${maxDrawdown >= 0 ? 'positive' : 'negative'}`;
+  if (worstLossElement) {
+    worstLossElement.textContent = formatSignedMoney(worst);
+    worstLossElement.className = `stat-value ${worst >= 0 ? 'positive' : 'negative'}`;
   }
-  if (profitRiskRatioElement) {
-    profitRiskRatioElement.textContent = profitFactor;
-    profitRiskRatioElement.className = `stat-value ${profitFactor >= 1 ? 'positive' : 'negative'}`;
+  if (maxDrawdownElement) {
+    maxDrawdownElement.textContent = formatSignedMoney(maxDrawdown);
+    maxDrawdownElement.className = `stat-value ${maxDrawdown >= 0 ? 'positive' : 'negative'}`;
   }
 
   // Actualizar estadísticas de estrategias
@@ -3073,6 +3261,21 @@ function renderStats() {
   const tradesWithPips = trades.filter(t => t.pips !== undefined && t.pips !== null && t.pips !== '' && t.resultMetricType !== 'percent');
   const totalPips = tradesWithPips.reduce((sum, t) => sum + parseFloat(t.pips), 0);
   const avgPips = tradesWithPips.length ? (totalPips / tradesWithPips.length) : 0;
+
+  // Cálculo de PNL Porcentaje y Promedio Porcentaje por Trade
+  const tradesWithPercent = trades.filter(t => t.resultMetricType === 'percent' && t.pips !== undefined && t.pips !== null && t.pips !== '');
+  const totalPercent = tradesWithPercent.reduce((sum, t) => sum + parseFloat(t.pips), 0);
+  const avgPercent = tradesWithPercent.length ? (totalPercent / tradesWithPercent.length) : 0;
+
+  // Actualizar tarjetas de porcentajes
+  if (totalProfitPercentElement) {
+    totalProfitPercentElement.textContent = `${totalPercent.toFixed(2)}%`;
+    totalProfitPercentElement.className = `text-2xl font-bold ${totalPercent >= 0 ? 'text-green-500' : 'text-red-500'}`;
+  }
+  if (avgProfitPercentElement) {
+    avgProfitPercentElement.textContent = `${avgPercent.toFixed(2)}%`;
+    avgProfitPercentElement.className = `text-2xl font-bold ${avgPercent >= 0 ? 'text-green-500' : 'text-red-500'}`;
+  }
 
   // Actualizar tarjetas de pips
   const totalPipsElement = document.getElementById('totalPips');
@@ -3114,17 +3317,46 @@ function renderStats() {
   const pfValue = Number.isFinite(gains) && Number.isFinite(losses) && Math.abs(losses) > 0
     ? gains / Math.abs(losses)
     : null;
+
+  const pfSegments = [
+    { limit: 1.0, color: 'rgba(231, 76, 60, 0.6)', label: 'Negativo' },
+    { limit: 1.5, color: 'rgba(243, 156, 18, 0.6)', label: 'Break-even+' },
+    { limit: 2.0, color: 'rgba(46, 204, 113, 0.6)', label: 'Bueno' },
+    { limit: 4.0, color: 'rgba(39, 174, 96, 0.8)', label: 'Excelente' }
+  ];
+
+  // Actualizar Ratio B/R (Profit Factor) con color inteligente
+  if (profitRiskRatioElement) {
+    profitRiskRatioElement.textContent = pfValue === null ? '-' : pfValue.toFixed(2);
+    let pfColor = 'inherit';
+    if (pfValue !== null) {
+      const segment = pfSegments.find(s => pfValue <= s.limit) || pfSegments[pfSegments.length - 1];
+      pfColor = segment.color.replace('0.6', '1').replace('0.8', '1');
+    }
+    profitRiskRatioElement.style.color = pfColor;
+    profitRiskRatioElement.className = 'text-2xl font-bold';
+  }
+
   if (robustProfitFactorEl) {
     robustProfitFactorEl.textContent = pfValue === null ? '-' : pfValue.toFixed(2);
-    robustProfitFactorEl.className = `text-2xl font-bold ${pfValue !== null && pfValue >= 1 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`;
+    // Color inteligente basado en el rango
+    let pfColor = 'inherit';
+    if (pfValue !== null) {
+      const segment = pfSegments.find(s => pfValue <= s.limit) || pfSegments[pfSegments.length - 1];
+      pfColor = segment.color.replace('0.6', '1').replace('0.8', '1'); // Hacerlo opaco para el texto
+    }
+    robustProfitFactorEl.style.color = pfColor;
+    robustProfitFactorEl.className = 'text-xl font-bold';
   }
+
+  // Renderizar Gauge de Profit Factor
+  pfGaugeChartInstance = renderGaugeChart('pfGaugeChart', pfValue, pfSegments, 4.0, pfGaugeChartInstance);
+
   if (robustProfitFactorHintEl) {
     let hint = '-';
     if (pfValue !== null) {
-      if (pfValue >= 2.0) hint = 'Excelente';
-      else if (pfValue >= 1.5) hint = 'Bueno';
-      else if (pfValue >= 1.0) hint = 'Break-even+';
-      else hint = 'Negativo';
+      const segment = pfSegments.find(s => pfValue <= s.limit) || pfSegments[pfSegments.length - 1];
+      hint = segment.label;
     }
     robustProfitFactorHintEl.textContent = hint;
   }
@@ -3132,22 +3364,116 @@ function renderStats() {
   const expectancy = total ? pnl / total : null;
   if (robustExpectancyEl) {
     robustExpectancyEl.textContent = expectancy === null ? '-' : `${formatSignedMoney(expectancy)} / trade`;
-    robustExpectancyEl.className = `text-2xl font-bold ${expectancy !== null && expectancy >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`;
+    robustExpectancyEl.className = `text-xl font-bold ${expectancy !== null && expectancy >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`;
+  }
+
+  // --- NUEVAS MÉTRICAS INSTITUCIONALES (Sharpe & Risk of Ruin) ---
+  const robustSharpeEl = document.getElementById('robustSharpe');
+  const riskOfRuinEl = document.getElementById('riskOfRuin');
+
+  // 1. Ratio de Sharpe (Simplificado: Trade-based, Rf=0)
+  // Sharpe = Promedio Retornos / Desviación Estándar Retornos
+  let sharpeRatio = null;
+  if (returns.length > 1) {
+    const mean = returns.reduce((a, b) => a + b, 0) / returns.length;
+    const variance = returns.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / returns.length;
+    const stdDev = Math.sqrt(variance);
+
+    if (stdDev > 0) {
+      sharpeRatio = mean / stdDev;
+    }
+  }
+
+  if (robustSharpeEl) {
+    robustSharpeEl.textContent = sharpeRatio === null ? '-' : sharpeRatio.toFixed(2);
+    // Color: > 1.0 bueno (verde), > 0.0 ok (gris/verde), < 0 malo (rojo)
+    if (sharpeRatio !== null) {
+      if (sharpeRatio >= 1.0) robustSharpeEl.className = 'text-xl font-bold text-green-600 dark:text-green-400';
+      else if (sharpeRatio >= 0) robustSharpeEl.className = 'text-xl font-bold text-gray-700 dark:text-gray-300';
+      else robustSharpeEl.className = 'text-xl font-bold text-red-600 dark:text-red-400';
+    } else {
+      robustSharpeEl.className = 'text-xl font-bold';
+    }
+  }
+
+  // 2. Risk of Ruin
+  // Formula: ((1 - WR) / (1 + WR)) ^ Units
+  // Asumimos 30 unidades de riesgo como solicitado
+  let riskOfRuin = null;
+  const totalTradesCount = trades.length;
+  if (totalTradesCount > 0) {
+    const winningTradesCount = trades.filter(t => parseFloat(t.resultMxn) > 0).length;
+    const winRateDecimal = winningTradesCount / totalTradesCount;
+
+    // Evitar división por cero implícita y casos extremos
+    const numerator = 1 - winRateDecimal;
+    const denominator = 1 + winRateDecimal;
+
+    if (denominator > 0) {
+      // Risk of Ruin con 30 unidades
+      const unitsOfRisk = 30;
+      const roRValue = Math.pow(numerator / denominator, unitsOfRisk);
+
+      // Convertir a porcentaje
+      riskOfRuin = roRValue * 100;
+
+      // Capar a 100% y 0% por si acaso
+      riskOfRuin = Math.min(100, Math.max(0, riskOfRuin));
+    }
+  }
+
+  if (riskOfRuinEl) {
+    if (riskOfRuin !== null) {
+      // Mostrar < 0.01% como "< 0.01%" para limpieza visual
+      if (riskOfRuin < 0.01 && riskOfRuin > 0) {
+        riskOfRuinEl.textContent = '< 0.01%';
+      } else {
+        riskOfRuinEl.textContent = riskOfRuin.toFixed(2) + '%';
+      }
+
+      // Lógica de colores: < 1% verde, > 5% rojo, intermedio amarillo/gris
+      if (riskOfRuin < 1) {
+        riskOfRuinEl.className = 'text-xl font-bold text-green-600 dark:text-green-400';
+      } else if (riskOfRuin > 5) {
+        riskOfRuinEl.className = 'text-xl font-bold text-red-600 dark:text-red-400';
+      } else {
+        riskOfRuinEl.className = 'text-xl font-bold text-yellow-600 dark:text-yellow-400';
+      }
+    } else {
+      riskOfRuinEl.textContent = '-';
+      riskOfRuinEl.className = 'text-xl font-bold';
+    }
   }
 
   const sqn = calculateSqnFromReturns(returns);
+  const sqnSegments = [
+    { limit: 1.6, color: 'rgba(231, 76, 60, 0.6)', label: 'Pobre' },
+    { limit: 2.0, color: 'rgba(243, 156, 18, 0.6)', label: 'Promedio' },
+    { limit: 2.5, color: 'rgba(46, 204, 113, 0.6)', label: 'Bueno' },
+    { limit: 3.0, color: 'rgba(39, 174, 96, 0.8)', label: 'Muy bueno' },
+    { limit: 5.0, color: 'rgba(52, 152, 219, 0.8)', label: 'Excelente' }
+  ];
+
   if (robustSqnEl) {
     robustSqnEl.textContent = sqn === null ? '-' : sqn.toFixed(2);
-    robustSqnEl.className = `text-2xl font-bold ${sqn !== null && sqn >= 2 ? 'text-green-600 dark:text-green-400' : 'text-gray-900 dark:text-white'}`;
+    // Color inteligente basado en el rango
+    let sqnColor = 'inherit';
+    if (sqn !== null) {
+      const segment = sqnSegments.find(s => sqn <= s.limit) || sqnSegments[sqnSegments.length - 1];
+      sqnColor = segment.color.replace('0.6', '1').replace('0.8', '1'); // Hacerlo opaco para el texto
+    }
+    robustSqnEl.style.color = sqnColor;
+    robustSqnEl.className = 'text-xl font-bold';
   }
+
+  // Renderizar Gauge de SQN
+  sqnGaugeChartInstance = renderGaugeChart('sqnGaugeChart', sqn, sqnSegments, 5.0, sqnGaugeChartInstance);
+
   if (robustSqnHintEl) {
     let hint = '-';
     if (sqn !== null) {
-      if (sqn >= 3) hint = 'Excelente';
-      else if (sqn >= 2.5) hint = 'Muy bueno';
-      else if (sqn >= 2.0) hint = 'Bueno';
-      else if (sqn >= 1.6) hint = 'Promedio';
-      else hint = 'Pobre';
+      const segment = sqnSegments.find(s => sqn <= s.limit) || sqnSegments[sqnSegments.length - 1];
+      hint = segment.label;
     }
     robustSqnHintEl.textContent = hint;
   }
@@ -3207,6 +3533,9 @@ function renderStats() {
   // === Cálculo de Holding Promedio ===
   const tradesWithTimes = trades.filter(t => t.openTime && t.closeTime);
   let avgHoldingMs = 0;
+  let avgHoldingWinMs = 0;
+  let avgHoldingLossMs = 0;
+
   if (tradesWithTimes.length > 0) {
     const totalHoldingMs = tradesWithTimes.reduce((sum, t) => {
       const open = new Date(t.openTime);
@@ -3214,7 +3543,28 @@ function renderStats() {
       return sum + (close - open);
     }, 0);
     avgHoldingMs = totalHoldingMs / tradesWithTimes.length;
+
+    const winningWithTimes = tradesWithTimes.filter(t => parseFloat(t.resultMxn) > 0);
+    if (winningWithTimes.length > 0) {
+      const totalWinHoldingMs = winningWithTimes.reduce((sum, t) => {
+        const open = new Date(t.openTime);
+        const close = new Date(t.closeTime);
+        return sum + (close - open);
+      }, 0);
+      avgHoldingWinMs = totalWinHoldingMs / winningWithTimes.length;
+    }
+
+    const losingWithTimes = tradesWithTimes.filter(t => parseFloat(t.resultMxn) < 0);
+    if (losingWithTimes.length > 0) {
+      const totalLossHoldingMs = losingWithTimes.reduce((sum, t) => {
+        const open = new Date(t.openTime);
+        const close = new Date(t.closeTime);
+        return sum + (close - open);
+      }, 0);
+      avgHoldingLossMs = totalLossHoldingMs / losingWithTimes.length;
+    }
   }
+
   // Convertir a formato legible (horas, minutos)
   function formatDuration(ms) {
     if (!ms || ms <= 0) return '-';
@@ -3227,10 +3577,16 @@ function renderStats() {
       return `${minutes}min`;
     }
   }
-  const avgHoldingElement = document.getElementById('avgHolding');
-  if (avgHoldingElement) avgHoldingElement.textContent = formatDuration(avgHoldingMs);
 
-  // === Cálculo de Horario Favorito (franjas de 4 horas) ===
+  const avgHoldingElement = document.getElementById('avgHolding');
+  const avgHoldingWinElement = document.getElementById('avgHoldingWin');
+  const avgHoldingLossElement = document.getElementById('avgHoldingLoss');
+
+  if (avgHoldingElement) avgHoldingElement.textContent = formatDuration(avgHoldingMs);
+  if (avgHoldingWinElement) avgHoldingWinElement.textContent = formatDuration(avgHoldingWinMs);
+  if (avgHoldingLossElement) avgHoldingLossElement.textContent = formatDuration(avgHoldingLossMs);
+
+  // === Cálculo de Horario Favorito (franjas de 4 horas) y Heatmap 24h ===
   const hourRanges = [
     { label: '00:00-03:59', start: 0, end: 3 },
     { label: '04:00-07:59', start: 4, end: 7 },
@@ -3240,16 +3596,26 @@ function renderStats() {
     { label: '20:00-23:59', start: 20, end: 23 }
   ];
   const hourCounts = Array(hourRanges.length).fill(0);
+  const hourly24Data = Array(24).fill(null).map(() => ({ count: 0, pnl: 0 }));
+
   tradesWithTimes.forEach(t => {
     const open = new Date(t.openTime);
     const hour = open.getHours();
+    const pnl = parseFloat(t.resultMxn) || 0;
+
+    // Para franjas de 4h
     for (let i = 0; i < hourRanges.length; i++) {
       if (hour >= hourRanges[i].start && hour <= hourRanges[i].end) {
         hourCounts[i]++;
         break;
       }
     }
+
+    // Para heatmap de 24h
+    hourly24Data[hour].count++;
+    hourly24Data[hour].pnl += pnl;
   });
+
   let maxCount = Math.max(...hourCounts);
   let favoriteRange = '-';
   if (maxCount > 0) {
@@ -3258,6 +3624,67 @@ function renderStats() {
   }
   const favoriteHourElement = document.getElementById('favoriteHour');
   if (favoriteHourElement) favoriteHourElement.textContent = favoriteRange;
+
+  // Renderizar Heatmap de 24h
+  const heatmapContainer = document.getElementById('hourHeatmapContainer');
+  const heatmapTotalEl = document.getElementById('hourHeatmapTotal');
+  const heatmapDetailEl = document.getElementById('hourHeatmapDetail');
+
+  if (heatmapContainer) {
+    heatmapContainer.innerHTML = '';
+    const counts = hourly24Data.map(d => d.count);
+    const maxHourly = Math.max(...counts);
+    if (heatmapTotalEl) heatmapTotalEl.textContent = `${tradesWithTimes.length} ops`;
+
+    hourly24Data.forEach((data, hour) => {
+      const { count, pnl } = data;
+      const block = document.createElement('div');
+      const timeStr = `${hour.toString().padStart(2, '0')}:00`;
+      const pnlStr = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(pnl);
+      const detailText = `${timeStr} — ${count} ops | PnL: ${pnlStr}`;
+
+      block.className = 'h-4 rounded-sm transition-all duration-300 hover:scale-110 cursor-pointer active:scale-95';
+      block.title = detailText; // Para desktop (hover)
+
+      if (count === 0) {
+        block.classList.add('bg-gray-100', 'dark:bg-gray-700', 'opacity-30');
+      } else {
+        // Escala de colores según PnL (Verde si > 0, Rojo si <= 0)
+        // Intensidad según volumen (count)
+        const intensity = maxHourly > 0 ? (count / maxHourly) : 0;
+
+        if (pnl > 0) {
+          // Verdes
+          if (intensity <= 0.25) block.classList.add('bg-green-200', 'dark:bg-green-900/40');
+          else if (intensity <= 0.5) block.classList.add('bg-green-400', 'dark:bg-green-700/60');
+          else if (intensity <= 0.75) block.classList.add('bg-green-500', 'dark:bg-green-600');
+          else block.classList.add('bg-green-600', 'dark:bg-green-400');
+        } else {
+          // Rojos
+          if (intensity <= 0.25) block.classList.add('bg-red-200', 'dark:bg-red-900/40');
+          else if (intensity <= 0.5) block.classList.add('bg-red-400', 'dark:bg-red-700/60');
+          else if (intensity <= 0.75) block.classList.add('bg-red-500', 'dark:bg-red-600');
+          else block.classList.add('bg-red-600', 'dark:bg-red-400');
+        }
+      }
+
+      // Evento para touch/click
+      block.addEventListener('click', () => {
+        if (heatmapDetailEl) {
+          heatmapDetailEl.textContent = detailText;
+          // Color dinámico según PnL
+          heatmapDetailEl.className = `mt-2 text-[10px] text-center font-medium min-h-[15px] ${pnl > 0 ? 'text-green-500' : pnl < 0 ? 'text-red-500' : 'text-gray-500'}`;
+
+          // Pequeña animación de feedback
+          heatmapDetailEl.classList.remove('animate-pulse');
+          void heatmapDetailEl.offsetWidth; // Trigger reflow
+          heatmapDetailEl.classList.add('animate-pulse');
+        }
+      });
+
+      heatmapContainer.appendChild(block);
+    });
+  }
 
   const sampleSizeCriterionValue = document.querySelector('#criterion-samplesize .criterion-value');
   const winrateCriterionValue = document.querySelector('#criterion-winrate .criterion-value');
@@ -3726,34 +4153,34 @@ function showEditTradeModal(index) {
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Estrategia</label>
               <select name="strategy" required class="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-900 dark:text-white">
                 ${(() => {
-                  let strategies = [];
-                  try {
-                    strategies = JSON.parse(localStorage.getItem('strategies')) || [];
-                  } catch (e) {
-                    console.error('Error loading strategies', e);
-                  }
-                  
-                  if (!Array.isArray(strategies) || strategies.length === 0) {
-                     strategies = [
-                        {name: "Script CCI"}, {name: "Script RSI"}, {name: "Script MACD"}, 
-                        {name: "Script AO"}, {name: "Script TII"}, {name: "Script DeMarker"}, 
-                        {name: "Script Estocastico"}, {name: "Script Cruce de MMs"}, 
-                        {name: "Script SAR"}, {name: "Script BMSB"}, {name: "Script CDM-RSI"}, 
-                        {name: "Script EMA Grupos"}, {name: "Script FCT"}, 
-                        {name: "Señales app"}, {name: "Análisis técnico"}
-                     ];
-                  }
-                  
-                  let options = strategies.map(s => 
-                    `<option value="${s.name}" ${trade.strategy === s.name ? 'selected' : ''}>${s.name}</option>`
-                  ).join('');
+      let strategies = [];
+      try {
+        strategies = JSON.parse(localStorage.getItem('strategies')) || [];
+      } catch (e) {
+        console.error('Error loading strategies', e);
+      }
 
-                  const exists = strategies.some(s => s.name === trade.strategy);
-                  if (trade.strategy && !exists) {
-                    options += `<option value="${trade.strategy}" selected>${trade.strategy} (Archivada)</option>`;
-                  }
-                  return options;
-                })()}
+      if (!Array.isArray(strategies) || strategies.length === 0) {
+        strategies = [
+          { name: "Script CCI" }, { name: "Script RSI" }, { name: "Script MACD" },
+          { name: "Script AO" }, { name: "Script TII" }, { name: "Script DeMarker" },
+          { name: "Script Estocastico" }, { name: "Script Cruce de MMs" },
+          { name: "Script SAR" }, { name: "Script BMSB" }, { name: "Script CDM-RSI" },
+          { name: "Script EMA Grupos" }, { name: "Script FCT" },
+          { name: "Señales app" }, { name: "Análisis técnico" }
+        ];
+      }
+
+      let options = strategies.map(s =>
+        `<option value="${s.name}" ${trade.strategy === s.name ? 'selected' : ''}>${s.name}</option>`
+      ).join('');
+
+      const exists = strategies.some(s => s.name === trade.strategy);
+      if (trade.strategy && !exists) {
+        options += `<option value="${trade.strategy}" selected>${trade.strategy} (Archivada)</option>`;
+      }
+      return options;
+    })()}
               </select>
             </div>
             <div class="col-span-1 md:col-span-2">
@@ -3856,8 +4283,35 @@ function showEditTradeModal(index) {
     let trades = JSON.parse(localStorage.getItem('trades')) || [];
     // Usar el índice pasado a la función
     if (index >= 0 && index < trades.length) {
+      // Verificar si cambiaron campos que afectan MAE/MFE
+      const originalTrade = trades[index];
+      const priceOrTimeChanged =
+        originalTrade.openTime !== updatedTrade.openTime ||
+        originalTrade.closeTime !== updatedTrade.closeTime ||
+        originalTrade.openPrice !== updatedTrade.openPrice ||
+        originalTrade.closePrice !== updatedTrade.closePrice ||
+        originalTrade.asset !== updatedTrade.asset ||
+        originalTrade.direction !== updatedTrade.direction;
+
+      // Asegurar que el trade tenga un ID
+      if (!updatedTrade.id) {
+        updatedTrade.id = 'trade-' + Date.now() + '-' + Math.floor(Math.random() * 1000000);
+      }
+
+      // Si cambiaron datos relevantes, invalidar MAE/MFE para recálculo
+      if (priceOrTimeChanged) {
+        updatedTrade.mae = null;
+        updatedTrade.mfe = null;
+      }
+
       trades[index] = updatedTrade;
       localStorage.setItem('trades', JSON.stringify(trades));
+
+      // Disparar recálculo de MAE/MFE en segundo plano (solo para cripto si cambió algo)
+      if (priceOrTimeChanged && typeof triggerMAEMFECalculation === 'function') {
+        triggerMAEMFECalculation(updatedTrade);
+      }
+
       modal.remove();
       renderDiary();
       if (document.getElementById('statsContainer')) renderStats();
@@ -4471,7 +4925,18 @@ function renderDiary() {
            <button onclick='showTradeDetails(${realIndex})' class="text-sm font-medium text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 transition-colors">
              Ver detalles
            </button>
-           <div class="flex gap-2">
+           <div class="flex gap-2 items-center">
+             ${(() => {
+        // Mostrar botón de sincronización si es cripto y no tiene MAE/MFE
+        const isCrypto = typeof isCryptoAsset === 'function' && isCryptoAsset(trade.asset);
+        const needsSync = isCrypto && (trade.mae === null || trade.mae === undefined || trade.mfe === null || trade.mfe === undefined);
+        if (needsSync) {
+          return `<button onclick="syncTradeMAEMFE(${realIndex})" class="p-1.5 text-yellow-500 hover:text-yellow-600 dark:text-yellow-400 dark:hover:text-yellow-300 transition-colors" title="Sincronizar MAE/MFE">
+                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+                 </button>`;
+        }
+        return '';
+      })()}
              <button onclick='showEditTradeModal(${realIndex})' class="p-1.5 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors" title="Editar">
                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
              </button>
@@ -4499,3 +4964,829 @@ document.addEventListener('DOMContentLoaded', function () {
     syncResultReasonControls(resultMxnInput, group, label, select, hint);
   });
 });
+
+// Observador para detectar cambios en el tema (clase 'dark') y actualizar los gráficos de velocímetro
+const themeObserver = new MutationObserver((mutations) => {
+  mutations.forEach((mutation) => {
+    if (mutation.attributeName === 'class') {
+      if (typeof sqnGaugeChartInstance !== 'undefined' && sqnGaugeChartInstance) {
+        sqnGaugeChartInstance.update('none');
+      }
+      if (typeof pfGaugeChartInstance !== 'undefined' && pfGaugeChartInstance) {
+        pfGaugeChartInstance.update('none');
+      }
+    }
+  });
+});
+
+themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+
+// ============================================================================
+// MAE/MFE (Maximum Adverse/Favorable Excursion) - API Binance
+// ============================================================================
+
+/**
+ * Lista de símbolos de criptomonedas soportados (deben coincidir con data-market="crypto" en el HTML).
+ * Se usa para detectar si un activo es cripto.
+ */
+const CRYPTO_SYMBOLS = new Set([
+  'BTCUSD', 'ETHUSD', 'BNBUSDT', 'SOLUSD', 'XRPUSD', 'ADAUSDT', 'AVAXUSDT', 'DOGEUSDT',
+  'DOTUSDT', 'LINKUSDT', 'TRXUSD', 'POLUSD', 'LTCUSD', 'DASHUSD', 'BCHUSDT', 'NOTUSD',
+  'QTUMUSD', 'ZECUSD', 'AUSD', 'SHIBUSDT', 'UNIUSDT', 'ATOMUSDT', 'XLMUSDT', 'ETCUSD',
+  'NEARUSDT', 'FILUSDT', 'ICPUSDT', 'LDOUSDT', 'APTUSDT', 'ARBUSDT', 'OPUSDT', 'SUIUSDT',
+  'TONUSDT', 'PEPEUSDT', 'WIFUSDT', 'FETUSDT', 'RNDRUSDT', 'INJUSDT', 'TIAUSDT', 'SEIUSDT',
+  'FTMUSDT', 'RUNEUSDT', 'ALGOUSDT', 'KASUSDT', 'STXUSDT', 'IMXUSDT', 'TAOUSDT', 'PYTHUSDT',
+  'JUPUSDT', 'ENAUSDT', 'STRKUSDT'
+]);
+
+/**
+ * Mapeo de símbolos internos a símbolos de Binance.
+ * Binance usa principalmente pares contra USDT.
+ */
+const SYMBOL_TO_BINANCE = {
+  'BTCUSD': 'BTCUSDT',
+  'ETHUSD': 'ETHUSDT',
+  'SOLUSD': 'SOLUSDT',
+  'XRPUSD': 'XRPUSDT',
+  'TRXUSD': 'TRXUSDT',
+  'POLUSD': 'MATICUSDT', // Polygon antes era MATIC
+  'LTCUSD': 'LTCUSDT',
+  'DASHUSD': 'DASHUSDT',
+  'NOTUSD': 'NOTUSDT',
+  'QTUMUSD': 'QTUMUSDT',
+  'ZECUSD': 'ZECUSDT',
+  'AUSD': 'EOSUSDT', // Vaulta es EOS rebrandeado
+  'ETCUSD': 'ETCUSDT'
+};
+
+/**
+ * Detecta si un símbolo de activo es una criptomoneda.
+ * Soporta múltiples formatos: "BTCUSD", "BTCUSDT", "BTC/USD", "BTC/USDT"
+ * @param {string} assetSymbol - Símbolo del activo.
+ * @returns {boolean}
+ */
+function isCryptoAsset(assetSymbol) {
+  if (!assetSymbol || typeof assetSymbol !== 'string') return false;
+
+  // Normalizar: quitar barras, espacios, y convertir a mayúsculas
+  let normalized = assetSymbol.toUpperCase().trim().replace(/[\/\-\s]/g, '');
+
+  // Si ya está en la lista, retornar true
+  if (CRYPTO_SYMBOLS.has(normalized)) return true;
+
+  // Intentar variaciones comunes
+  // Si termina en USDT, probar con USD
+  if (normalized.endsWith('USDT')) {
+    const withUSD = normalized.slice(0, -1); // BTCUSDT -> BTCUSD
+    if (CRYPTO_SYMBOLS.has(withUSD)) return true;
+  }
+
+  // Si termina en USD, probar con USDT
+  if (normalized.endsWith('USD') && !normalized.endsWith('USDT')) {
+    const withUSDT = normalized + 'T'; // BTCUSD -> BTCUSDT
+    if (CRYPTO_SYMBOLS.has(withUSDT)) return true;
+  }
+
+  // Extraer el símbolo base (ej: BTC de BTCUSD o BTCUSDT)
+  const cryptoBases = ['BTC', 'ETH', 'BNB', 'SOL', 'XRP', 'ADA', 'AVAX', 'DOGE', 'DOT', 'LINK',
+    'TRX', 'POL', 'LTC', 'DASH', 'BCH', 'NOT', 'QTUM', 'ZEC', 'SHIB', 'UNI', 'ATOM', 'XLM',
+    'ETC', 'NEAR', 'FIL', 'ICP', 'LDO', 'APT', 'ARB', 'OP', 'SUI', 'TON', 'PEPE', 'WIF',
+    'FET', 'RNDR', 'INJ', 'TIA', 'SEI', 'FTM', 'RUNE', 'ALGO', 'KAS', 'STX', 'IMX', 'TAO',
+    'PYTH', 'JUP', 'ENA', 'STRK', 'MATIC'];
+
+  for (const base of cryptoBases) {
+    if (normalized.startsWith(base) &&
+      (normalized.endsWith('USD') || normalized.endsWith('USDT') || normalized === base)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/**
+ * Convierte un símbolo interno al formato de Binance.
+ * Soporta múltiples formatos: "BTCUSD", "BTCUSDT", "BTC/USD", "BTC/USDT"
+ * @param {string} assetSymbol - Símbolo del activo.
+ * @returns {string|null} - Símbolo de Binance (ej. "BTCUSDT") o null si no es cripto.
+ */
+function getBinanceSymbol(assetSymbol) {
+  if (!assetSymbol || typeof assetSymbol !== 'string') return null;
+
+  // Normalizar: quitar barras, espacios
+  let normalized = assetSymbol.toUpperCase().trim().replace(/[\/\-\s]/g, '');
+
+  // Verificar si es cripto
+  if (!isCryptoAsset(assetSymbol)) return null;
+
+  // Si hay un mapeo específico, usarlo
+  if (SYMBOL_TO_BINANCE[normalized]) {
+    return SYMBOL_TO_BINANCE[normalized];
+  }
+
+  // Si termina en USD (no USDT), convertir a USDT para Binance
+  if (normalized.endsWith('USD') && !normalized.endsWith('USDT')) {
+    return normalized + 'T'; // BTCUSD -> BTCUSDT
+  }
+
+  // Si ya termina en USDT, usarlo directamente
+  if (normalized.endsWith('USDT')) {
+    return normalized;
+  }
+
+  // Caso default: agregar USDT
+  return normalized + 'USDT';
+}
+
+/**
+ * Selecciona el intervalo de vela óptimo basado en la duración del trade.
+ * Maximiza la precisión sin exceder el límite de 1000 velas por petición de Binance.
+ * @param {number} durationMs - Duración del trade en milisegundos.
+ * @returns {string} - Intervalo de vela (ej. "1m", "5m", "1h").
+ */
+function selectCandleInterval(durationMs) {
+  const ONE_HOUR = 60 * 60 * 1000;
+  const ONE_DAY = 24 * ONE_HOUR;
+
+  if (durationMs <= ONE_HOUR) return '1m';           // ≤1h → 1m (máx 60 velas)
+  if (durationMs <= 4 * ONE_HOUR) return '5m';       // 1-4h → 5m (máx 48 velas)
+  if (durationMs <= ONE_DAY) return '15m';           // 4-24h → 15m (máx 96 velas)
+  if (durationMs <= 7 * ONE_DAY) return '1h';        // 1-7d → 1h (máx 168 velas)
+  return '4h';                                        // >7d → 4h
+}
+
+/**
+ * Obtiene velas históricas de la API de Binance.
+ * @param {string} symbol - Símbolo de Binance (ej. "BTCUSDT").
+ * @param {string} interval - Intervalo de vela (ej. "1m", "1h").
+ * @param {number} startTime - Timestamp de inicio (ms).
+ * @param {number} endTime - Timestamp de fin (ms).
+ * @returns {Promise<Array>} - Array de velas [openTime, open, high, low, close, ...].
+ */
+async function fetchBinanceKlines(symbol, interval, startTime, endTime) {
+  const url = `https://api.binance.com/api/v3/klines?symbol=${encodeURIComponent(symbol)}&interval=${encodeURIComponent(interval)}&startTime=${startTime}&endTime=${endTime}&limit=1000`;
+
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Binance API error: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * Calcula MAE y MFE para un trade de criptomoneda.
+ * @param {Object} trade - Objeto del trade con openTime, closeTime, openPrice, closePrice, asset, direction.
+ * @returns {Promise<{mae: number|null, mfe: number|null}>} - MAE y MFE como PORCENTAJE del precio de entrada.
+ */
+async function calculateMAEAndMFE(trade) {
+  if (!trade) return { mae: null, mfe: null };
+
+  const asset = trade.asset || trade.symbol;
+  if (!isCryptoAsset(asset)) return { mae: null, mfe: null };
+
+  const binanceSymbol = getBinanceSymbol(asset);
+  if (!binanceSymbol) return { mae: null, mfe: null };
+
+  // Parsear fechas de apertura y cierre
+  const openTime = trade.openTime ? new Date(trade.openTime).getTime() : null;
+  const closeTime = trade.closeTime ? new Date(trade.closeTime).getTime() : null;
+
+  if (!openTime || !closeTime || !Number.isFinite(openTime) || !Number.isFinite(closeTime)) {
+    return { mae: null, mfe: null };
+  }
+
+  if (closeTime <= openTime) return { mae: null, mfe: null };
+
+  // Parsear precios (openPrice = precio de entrada, closePrice = precio de salida)
+  const entryPrice = parseFloat(trade.openPrice);
+  const exitPrice = parseFloat(trade.closePrice);
+
+  if (!Number.isFinite(entryPrice) || !Number.isFinite(exitPrice) || entryPrice <= 0) {
+    return { mae: null, mfe: null };
+  }
+
+  // Determinar dirección del trade (long/short)
+  // Si no está explícito, inferir del resultado
+  let isLong = true;
+  if (trade.direction) {
+    isLong = trade.direction.toLowerCase() === 'long' || trade.direction.toLowerCase() === 'compra';
+  } else {
+    // Inferir: si el precio de salida es mayor que el de entrada y hubo ganancia, es long
+    const pnl = parseFloat(trade.resultMxn);
+    if (Number.isFinite(pnl)) {
+      isLong = (exitPrice > entryPrice && pnl > 0) || (exitPrice < entryPrice && pnl < 0);
+    }
+  }
+
+  const durationMs = closeTime - openTime;
+  const interval = selectCandleInterval(durationMs);
+
+  try {
+    const klines = await fetchBinanceKlines(binanceSymbol, interval, openTime, closeTime);
+
+    if (!Array.isArray(klines) || klines.length === 0) {
+      return { mae: null, mfe: null };
+    }
+
+    // Encontrar el máximo y mínimo durante el trade
+    let highestHigh = -Infinity;
+    let lowestLow = Infinity;
+
+    for (const kline of klines) {
+      const high = parseFloat(kline[2]);
+      const low = parseFloat(kline[3]);
+
+      if (Number.isFinite(high) && high > highestHigh) highestHigh = high;
+      if (Number.isFinite(low) && low < lowestLow) lowestLow = low;
+    }
+
+    if (highestHigh === -Infinity || lowestLow === Infinity) {
+      return { mae: null, mfe: null };
+    }
+
+    let maeAbs, mfeAbs;
+
+    if (isLong) {
+      // Para LONG: MFE = máximo alcanzado - precio entrada, MAE = precio entrada - mínimo alcanzado
+      mfeAbs = highestHigh - entryPrice;
+      maeAbs = entryPrice - lowestLow;
+    } else {
+      // Para SHORT: MFE = precio entrada - mínimo alcanzado, MAE = máximo alcanzado - precio entrada
+      mfeAbs = entryPrice - lowestLow;
+      maeAbs = highestHigh - entryPrice;
+    }
+
+    // Asegurar que MAE/MFE sean positivos
+    maeAbs = Math.max(0, maeAbs);
+    mfeAbs = Math.max(0, mfeAbs);
+
+    // Convertir a PORCENTAJE respecto al precio de entrada
+    const mae = Number(((maeAbs / entryPrice) * 100).toFixed(4));
+    const mfe = Number(((mfeAbs / entryPrice) * 100).toFixed(4));
+
+    return { mae, mfe };
+
+  } catch (error) {
+    console.warn('Error calculando MAE/MFE:', error);
+    return { mae: null, mfe: null };
+  }
+}
+
+/**
+ * Actualiza los campos MAE/MFE de un trade existente en LocalStorage.
+ * @param {string} tradeId - ID del trade a actualizar.
+ * @param {number|null} mae - Valor de MAE.
+ * @param {number|null} mfe - Valor de MFE.
+ * @returns {boolean} - true si se actualizó correctamente.
+ */
+function updateTradeMAEMFE(tradeId, mae, mfe) {
+  if (!tradeId) return false;
+
+  const trades = JSON.parse(localStorage.getItem('trades')) || [];
+  const tradeIndex = trades.findIndex(t => t && t.id === tradeId);
+
+  if (tradeIndex === -1) return false;
+
+  trades[tradeIndex].mae = mae;
+  trades[tradeIndex].mfe = mfe;
+
+  localStorage.setItem('trades', JSON.stringify(trades));
+  return true;
+}
+
+/**
+ * Dispara el cálculo de MAE/MFE en segundo plano para un trade.
+ * No bloquea la ejecución y silencia errores.
+ * @param {Object} trade - Objeto del trade.
+ */
+function triggerMAEMFECalculation(trade) {
+  if (!trade || !trade.id) return;
+  if (!isCryptoAsset(trade.asset || trade.symbol)) return;
+
+  // Ejecutar en segundo plano
+  setTimeout(() => {
+    calculateMAEAndMFE(trade)
+      .then(result => {
+        if (result.mae !== null || result.mfe !== null) {
+          updateTradeMAEMFE(trade.id, result.mae, result.mfe);
+          console.log(`MAE/MFE calculado para trade ${trade.id}:`, result);
+        }
+      })
+      .catch(err => {
+        console.warn(`Error en cálculo MAE/MFE para trade ${trade.id}:`, err);
+      });
+  }, 100);
+}
+
+/**
+ * Renderiza las métricas MAE/MFE en la página de estadísticas.
+ * Respeta los filtros de vista (cuenta activa / todas) y período de tiempo.
+ */
+function renderMAEMFEStats() {
+  const maeAvgEl = document.getElementById('maeAverage');
+  const mfeAvgEl = document.getElementById('mfeAverage');
+  const ratioEl = document.getElementById('mfeMaeRatio');
+  const sampleEl = document.getElementById('maeMfeSampleSize');
+  const pendingHintEl = document.getElementById('maeMfePendingHint');
+
+  // Si no estamos en la página de estadísticas, salir
+  if (!maeAvgEl || !mfeAvgEl || !ratioEl || !sampleEl) return;
+
+  // Obtener trades según el modo de vista (cuenta activa o todas)
+  let trades = [];
+  const viewModeSelect = document.getElementById('view-mode-select');
+  const viewMode = viewModeSelect ? viewModeSelect.value : 'active';
+
+  if (viewMode === 'all' && typeof getTradingViewSnapshot === 'function') {
+    const snapshot = getTradingViewSnapshot();
+    trades = snapshot && Array.isArray(snapshot.trades) ? snapshot.trades : [];
+  } else {
+    trades = JSON.parse(localStorage.getItem('trades')) || [];
+  }
+
+  // Aplicar filtro de período temporal si existe
+  if (typeof applyStatsTimeFilterToTrades === 'function') {
+    trades = applyStatsTimeFilterToTrades(trades);
+  }
+
+  // Filtrar solo trades de cripto con MAE/MFE calculados
+  const cryptoTradesWithData = trades.filter(t => {
+    if (!t) return false;
+    if (!isCryptoAsset(t.asset || t.symbol)) return false;
+    return t.mae !== null && t.mae !== undefined && t.mfe !== null && t.mfe !== undefined;
+  });
+
+  // Contar trades de cripto pendientes de cálculo
+  const cryptoTradesPending = trades.filter(t => {
+    if (!t) return false;
+    if (!isCryptoAsset(t.asset || t.symbol)) return false;
+    return t.mae === null || t.mae === undefined || t.mfe === null || t.mfe === undefined;
+  }).length;
+
+  const sampleSize = cryptoTradesWithData.length;
+
+  if (sampleSize === 0) {
+    maeAvgEl.textContent = '-';
+    mfeAvgEl.textContent = '-';
+    ratioEl.textContent = '-';
+    sampleEl.textContent = '0';
+    if (pendingHintEl) {
+      pendingHintEl.textContent = cryptoTradesPending > 0
+        ? `${cryptoTradesPending} pendiente(s) de cálculo`
+        : 'Sin trades de crypto';
+    }
+    return;
+  }
+
+  // Calcular promedios
+  let totalMae = 0;
+  let totalMfe = 0;
+
+  cryptoTradesWithData.forEach(t => {
+    totalMae += parseFloat(t.mae) || 0;
+    totalMfe += parseFloat(t.mfe) || 0;
+  });
+
+  const avgMae = totalMae / sampleSize;
+  const avgMfe = totalMfe / sampleSize;
+  const ratio = avgMae > 0 ? avgMfe / avgMae : (avgMfe > 0 ? Infinity : 0);
+
+  // Formatear y mostrar (valores ya son porcentajes)
+  maeAvgEl.textContent = avgMae.toFixed(2) + '%';
+  mfeAvgEl.textContent = avgMfe.toFixed(2) + '%';
+  ratioEl.textContent = Number.isFinite(ratio) ? ratio.toFixed(2) + 'x' : '∞';
+  sampleEl.textContent = String(sampleSize);
+
+  if (pendingHintEl) {
+    pendingHintEl.textContent = cryptoTradesPending > 0
+      ? `${cryptoTradesPending} pendiente(s)`
+      : '';
+  }
+}
+
+// Llamar a renderMAEMFEStats automáticamente cuando se llame a renderStats (si existe)
+const originalRenderStats = typeof window.renderStats === 'function' ? window.renderStats : null;
+if (originalRenderStats) {
+  window.renderStats = function (...args) {
+    const result = originalRenderStats.apply(this, args);
+    renderMAEMFEStats();
+    return result;
+  };
+}
+
+// También llamar en DOMContentLoaded si estamos en la página de estadísticas
+document.addEventListener('DOMContentLoaded', function () {
+  if (document.getElementById('maeAverage')) {
+    renderMAEMFEStats();
+  }
+});
+
+/**
+ * Sincroniza MAE/MFE para un trade específico (llamado desde el botón en el diario).
+ * @param {number} tradeIndex - Índice del trade en el array de trades.
+ */
+function syncTradeMAEMFE(tradeIndex) {
+  const trades = JSON.parse(localStorage.getItem('trades')) || [];
+  if (tradeIndex < 0 || tradeIndex >= trades.length) {
+    alert('No se encontró el trade.');
+    return;
+  }
+
+  const trade = trades[tradeIndex];
+
+  if (!trade) {
+    alert('Trade no válido.');
+    return;
+  }
+
+  // Verificar que sea cripto
+  if (!isCryptoAsset(trade.asset)) {
+    alert('Este trade no es de criptomonedas.');
+    return;
+  }
+
+  // Asegurar que tenga un ID
+  if (!trade.id) {
+    trade.id = 'trade-' + Date.now() + '-' + Math.floor(Math.random() * 1000000);
+    trades[tradeIndex] = trade;
+    localStorage.setItem('trades', JSON.stringify(trades));
+  }
+
+  // Mostrar indicador de carga
+  const buttons = document.querySelectorAll(`button[onclick="syncTradeMAEMFE(${tradeIndex})"]`);
+  buttons.forEach(btn => {
+    btn.disabled = true;
+    btn.innerHTML = `<svg class="animate-spin" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" stroke-dasharray="60" stroke-dashoffset="20"></circle></svg>`;
+  });
+
+  // Calcular MAE/MFE
+  calculateMAEAndMFE(trade)
+    .then(result => {
+      if (result.mae !== null || result.mfe !== null) {
+        // Actualizar trade en localStorage
+        const updatedTrades = JSON.parse(localStorage.getItem('trades')) || [];
+        if (tradeIndex < updatedTrades.length) {
+          updatedTrades[tradeIndex].mae = result.mae;
+          updatedTrades[tradeIndex].mfe = result.mfe;
+          localStorage.setItem('trades', JSON.stringify(updatedTrades));
+        }
+
+        // Re-renderizar diario
+        if (typeof renderDiary === 'function') {
+          renderDiary();
+        }
+
+        console.log(`MAE/MFE sincronizado para trade ${trade.id}:`, result);
+      } else {
+        alert('No se pudieron obtener datos de Binance para este trade. Verifica que el símbolo y las fechas sean correctos.');
+        // Restaurar botón
+        buttons.forEach(btn => {
+          btn.disabled = false;
+          btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>`;
+        });
+      }
+    })
+    .catch(err => {
+      console.error('Error al sincronizar MAE/MFE:', err);
+      alert('Error al conectar con Binance. Intenta de nuevo.');
+      // Restaurar botón
+      buttons.forEach(btn => {
+        btn.disabled = false;
+        btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>`;
+      });
+    });
+}
+
+/**
+ * Cuenta los trades cripto que necesitan sincronización de MAE/MFE.
+ * @returns {number}
+ */
+function countCryptoTradesNeedingSync() {
+  const trades = JSON.parse(localStorage.getItem('trades')) || [];
+  return trades.filter(t => {
+    if (!t) return false;
+    if (!isCryptoAsset(t.asset)) return false;
+    return t.mae === null || t.mae === undefined || t.mfe === null || t.mfe === undefined;
+  }).length;
+}
+
+/**
+ * Actualiza la visibilidad del botón global de sincronización MAE/MFE.
+ */
+function updateSyncAllMAEMFEButtonVisibility() {
+  const btn = document.getElementById('syncAllMAEMFEBtn');
+  const label = document.getElementById('syncAllMAEMFELabel');
+  if (!btn) return;
+
+  const count = countCryptoTradesNeedingSync();
+  if (count > 0) {
+    btn.style.display = 'flex';
+    if (label) label.textContent = `Sincronizar MAE/MFE (${count})`;
+  } else {
+    btn.style.display = 'none';
+  }
+}
+
+/**
+ * Sincroniza MAE/MFE para todos los trades cripto pendientes.
+ */
+async function syncAllCryptoTradesMAEMFE() {
+  const trades = JSON.parse(localStorage.getItem('trades')) || [];
+  const tradesNeedingSync = [];
+
+  trades.forEach((trade, index) => {
+    if (!trade) return;
+    if (!isCryptoAsset(trade.asset)) return;
+    if (trade.mae === null || trade.mae === undefined || trade.mfe === null || trade.mfe === undefined) {
+      tradesNeedingSync.push({ trade, index });
+    }
+  });
+
+  if (tradesNeedingSync.length === 0) {
+    alert('No hay trades de cripto pendientes de sincronizar.');
+    return;
+  }
+
+  const btn = document.getElementById('syncAllMAEMFEBtn');
+  const label = document.getElementById('syncAllMAEMFELabel');
+
+  if (btn) btn.disabled = true;
+  if (label) label.textContent = `Sincronizando 0/${tradesNeedingSync.length}...`;
+
+  let successCount = 0;
+  let errorCount = 0;
+
+  for (let i = 0; i < tradesNeedingSync.length; i++) {
+    const { trade, index } = tradesNeedingSync[i];
+
+    if (label) label.textContent = `Sincronizando ${i + 1}/${tradesNeedingSync.length}...`;
+
+    try {
+      // Asegurar que el trade tenga un ID
+      if (!trade.id) {
+        trade.id = 'trade-' + Date.now() + '-' + Math.floor(Math.random() * 1000000);
+        const currentTrades = JSON.parse(localStorage.getItem('trades')) || [];
+        if (index < currentTrades.length) {
+          currentTrades[index].id = trade.id;
+          localStorage.setItem('trades', JSON.stringify(currentTrades));
+        }
+      }
+
+      const result = await calculateMAEAndMFE(trade);
+
+      if (result.mae !== null || result.mfe !== null) {
+        const currentTrades = JSON.parse(localStorage.getItem('trades')) || [];
+        if (index < currentTrades.length) {
+          currentTrades[index].mae = result.mae;
+          currentTrades[index].mfe = result.mfe;
+          localStorage.setItem('trades', JSON.stringify(currentTrades));
+        }
+        successCount++;
+      } else {
+        errorCount++;
+      }
+
+      // Pequeña pausa para evitar rate limiting de Binance
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+    } catch (err) {
+      console.error(`Error sincronizando trade ${index}:`, err);
+      errorCount++;
+    }
+  }
+
+  // Re-renderizar diario
+  if (typeof renderDiary === 'function') {
+    renderDiary();
+  }
+
+  // Actualizar visibilidad del botón
+  updateSyncAllMAEMFEButtonVisibility();
+
+  if (btn) btn.disabled = false;
+
+  alert(`Sincronización completada:\n✅ ${successCount} trades actualizados\n❌ ${errorCount} errores`);
+}
+
+// Actualizar visibilidad del botón al cargar el diario
+const originalRenderDiary = typeof window.renderDiary === 'function' ? window.renderDiary : null;
+if (originalRenderDiary) {
+  window.renderDiary = function (...args) {
+    const result = originalRenderDiary.apply(this, args);
+    updateSyncAllMAEMFEButtonVisibility();
+    return result;
+  };
+}
+
+// También actualizar al cargar la página
+document.addEventListener('DOMContentLoaded', function () {
+  if (document.getElementById('diaryContainer')) {
+    setTimeout(updateSyncAllMAEMFEButtonVisibility, 500);
+  }
+});
+
+/**
+ * Exporta las estadísticas actuales al portapapeles en formato optimizado para prompts de IA.
+ * Incluye exhaustivamente todos los KPIs, tablas y secciones visibles.
+ */
+function exportStatsForAI() {
+  const getVal = (id) => {
+    const el = document.getElementById(id);
+    return el ? el.innerText.trim() : 'N/A';
+  };
+
+  const getListContent = (id) => {
+    const el = document.getElementById(id);
+    if (!el) return 'N/A';
+    // Si tiene hijos, iterar
+    if (el.children.length > 0) {
+      return Array.from(el.children).map(c => c.innerText.trim().replace(/\n/g, ' ')).join('; ');
+    }
+    return el.innerText.trim();
+  };
+
+  // --- 1. Header & Filtros ---
+  const periodText = document.getElementById('time-filter-btn-label')
+    ? document.getElementById('time-filter-btn-label').innerText
+    : 'Periodo Desconocido';
+  const accountName = document.getElementById('active-account-name')
+    ? document.getElementById('active-account-name').innerText
+    : 'Cuenta Desconocida';
+  const timestamp = new Date().toLocaleString();
+
+  // --- 2. Calificación de Rendimiento ---
+  const perfRating = getVal('performanceRatingSummary');
+  const perfScore = getVal('currentProgressLabel'); // Progreso actual
+
+  // --- 3. Criterios de Calificación ---
+  const criteria = [
+    'criterion-samplesize', 'criterion-winrate', 'criterion-expectancy',
+    'criterion-profitfactor', 'criterion-recovery', 'criterion-lossstreak'
+  ].map(id => {
+    const el = document.getElementById(id);
+    if (!el) return '';
+    const name = el.querySelector('span')?.innerText || id;
+    const val = el.querySelector('.criterion-value')?.innerText || 'N/A';
+    const score = el.querySelector('.criterion-score')?.innerText || '';
+    return `- ${name}: ${val} ${score}`;
+  }).join('\n');
+
+  // --- 4. KPIs Principales (Financial) ---
+  const totalTrades = getVal('totalTrades');
+  const winningTrades = getVal('winningTrades');
+  const winPercent = getVal('winPercent');
+  const winRate = getVal('winRate');
+  const lossPercent = getVal('lossPercent');
+  const losingTrades = getVal('losingTrades');
+  const breakevenTrades = getVal('breakevenTrades');
+  const bePercent = getVal('bePercent');
+
+  const totalProfit = getVal('totalProfit');
+  const totalVolume = getVal('totalVolume');
+  const totalProfitPercent = getVal('totalProfitPercent');
+  const avgTradePercent = getVal('avgTradePercent');
+
+  // --- 5. Métricas de Robustez (Advanced KPIs) ---
+  const maxDrawdown = getVal('maxDrawdown');
+  const maxWinStreak = getVal('maxWinStreak');
+  const maxLossStreak = getVal('maxLossStreak');
+  const robustSqn = getVal('robustSqn');
+  const robustSqnHint = getVal('robustSqnHint');
+  const robustProfitFactor = getVal('robustProfitFactor');
+  const robustProfitFactorHint = getVal('robustProfitFactorHint');
+  const robustExpectancy = getVal('robustExpectancy');
+  const robustSharpe = getVal('robustSharpe');
+  const riskOfRuin = getVal('riskOfRuin');
+
+  // --- 6. Análisis Direccional (Long vs Short) ---
+  const longStats = `Trades: ${getVal('dirLongTrades')} | WinRate: ${getVal('dirLongWinRate')} | PNL: ${getVal('dirLongPnl')}`;
+  const shortStats = `Trades: ${getVal('dirShortTrades')} | WinRate: ${getVal('dirShortWinRate')} | PNL: ${getVal('dirShortPnl')}`;
+
+  // --- 7. Eficiencia (Crypto only) ---
+  const maeAvg = getVal('maeAverage');
+  const mfeAvg = getVal('mfeAverage');
+  const mfeMaeRatio = getVal('mfeMaeRatio');
+  const maeSample = getVal('maeMfeSampleSize');
+
+  // --- 8. Insights por Motivo ---
+  const lossReasonMeta = getVal('lossReasonMeta');
+  const gainReasonMeta = getVal('gainReasonMeta');
+  // Extraer texto de listas de motivos (intentando limpiar saltos de linea)
+  const lossReasons = getListContent('lossReasonList');
+  const gainReasons = getListContent('gainReasonList');
+
+  // --- 9. Evolución Capital ---
+  const periodPnl = getVal('capitalEvolutionPnl');
+  const periodRoi = getVal('capitalEvolutionRoi');
+
+  // --- 10. Estrategias ---
+  const mostProfitableStrat = getVal('mostProfitableStrategy');
+  const mostUsedStrat = getVal('mostUsedStrategy');
+  const mostReliableStrat = getVal('mostReliableStrategy');
+
+  // --- 11. Análisis de Tiempo ---
+  const avgHolding = getVal('avgHolding');
+  const avgHoldingWin = getVal('avgHoldingWin');
+  const avgHoldingLoss = getVal('avgHoldingLoss');
+  const favoriteHour = getVal('favoriteHour');
+  const heatmapTotalOps = getVal('hourHeatmapTotal');
+
+  // --- 12. Auditoría de Rendimiento (Tabla Ranking) ---
+  // Intentar leer la tabla si tiene filas
+  let rankingTableData = 'Sin datos en tabla';
+  const rankingBody = document.getElementById('performanceRankingBody');
+  if (rankingBody && rankingBody.children.length > 0) {
+    rankingTableData = Array.from(rankingBody.querySelectorAll('tr')).map(tr => {
+      const cells = Array.from(tr.querySelectorAll('td')).map(td => td.innerText.trim());
+      return cells.join(' | ');
+    }).join('\n');
+  }
+
+  // --- MUESTRA EN FORMATO TEXTO ---
+  const promptText = `
+=== REPORTE COMPLETO DE ESTADÍSTICAS DE TRADING ===
+Fecha reporte: ${timestamp}
+Cuenta: ${accountName}
+Filtro Temporal: ${periodText}
+
+1. CALIFICACIÓN Y CRITERIOS
+---------------------------
+Estado: ${perfRating} (Score: ${perfScore})
+Criterios:
+${criteria}
+
+2. RESULTADOS FINANCIEROS (GENERAL)
+-----------------------------------
+PNL Total: ${totalProfit} (${totalProfitPercent})
+Volumen Total: ${totalVolume}
+Avg Trade %: ${avgTradePercent}
+
+Trades Totales: ${totalTrades}
+- Ganadores: ${winningTrades} (${winPercent} / WinRate Real: ${winRate})
+- Perdedores: ${losingTrades} (${lossPercent})
+- Break-even: ${breakevenTrades} (${bePercent})
+
+3. ROBUSTEZ Y RIESGO (KPIs INSTITUCIONALES)
+-------------------------------------------
+SQN: ${robustSqn} (${robustSqnHint})
+Profit Factor: ${robustProfitFactor} (${robustProfitFactorHint})
+Sharpe Ratio: ${robustSharpe}
+Risk of Ruin: ${riskOfRuin}
+Expectancy: ${robustExpectancy}
+Max Drawdown: ${maxDrawdown}
+Rachas: Max Win ${maxWinStreak} | Max Loss ${maxLossStreak}
+
+4. ANÁLISIS DIRECCIONAL
+-----------------------
+Longs: ${longStats}
+Shorts: ${shortStats}
+
+5. EFICIENCIA DE ENTRADA (MFE/MAE)
+----------------------------------
+Muestra: ${maeSample} trades
+MAE Promedio (Pain): ${maeAvg}
+MFE Promedio (Gain): ${mfeAvg}
+Ratio Eficiencia: ${mfeMaeRatio}
+
+6. INSIGHTS POR MOTIVO (Etiquetas)
+----------------------------------
+Pérdidas (${lossReasonMeta}):
+${lossReasons}
+
+Ganancias (${gainReasonMeta}):
+${gainReasons}
+
+7. ESTRATEGIAS Y TIEMPO
+-----------------------
+Top Estrategias:
+- Más Rentable: ${mostProfitableStrat}
+- Más Usada: ${mostUsedStrat}
+- Más Fiable: ${mostReliableStrat}
+
+Tiempos:
+- Holding Promedio: ${avgHolding} (Wins: ${avgHoldingWin} | Loss: ${avgHoldingLoss})
+- Hora Favorita: ${favoriteHour} (Volumen horario: ${heatmapTotalOps})
+
+8. EVOLUCIÓN PERIODO
+--------------------
+PNL Periodo: ${periodPnl}
+ROI Periodo: ${periodRoi}
+
+9. TABLA DE RENDIMIENTO (DETALLE)
+---------------------------------
+(Nombre | Trades | WinRate | PF | PNL)
+${rankingTableData}
+
+=====================================================
+Fin del reporte.
+`.trim();
+
+  // Copiar al portapapeles
+  navigator.clipboard.writeText(promptText).then(() => {
+    alert('✅ Reporte completo de estadísticas copiado al portapapeles.');
+  }).catch(err => {
+    console.error('Error al copiar: ', err);
+    alert('Hubo un error al intentar copiar los datos.');
+  });
+}

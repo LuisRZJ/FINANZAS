@@ -186,7 +186,8 @@
             HelpCircle: (p) => <IconBase {...p}><circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /><line x1="12" x2="12.01" y1="17" y2="17" /></IconBase>,
             Map: (p) => <IconBase {...p}><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21 3 6" /><line x1="9" x2="9" y1="3" y2="18" /><line x1="15" x2="15" y1="6" y2="21" /></IconBase>,
             ChevronDown: (p) => <IconBase {...p}><polyline points="6 9 12 15 18 9" /></IconBase>,
-            Trash2: (p) => <IconBase {...p}><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></IconBase>
+            Trash2: (p) => <IconBase {...p}><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></IconBase>,
+            Split: (p) => <IconBase {...p}><path d="M12 3v18" /><path d="M4 7h5" /><path d="M15 7h5" /><path d="M4 17h5" /><path d="M15 17h5" /><path d="M4 12h16" /></IconBase>
         };
 
         const AUDIT_VARIANTS = {
@@ -275,6 +276,11 @@
             let gains = 0, losses = 0;
             const results = [];
             const sma200 = [];
+
+            // === ADX (Average Directional Index) for Regime Detection ===
+            const adxPeriod = 14;
+            const adxValues = [];
+            let prevPlusDM = 0, prevMinusDM = 0, prevTR = 0, prevDX = 0;
 
             // Para volatilidad (Cuerpo promedio últimas 5 velas)
             const bodySizes = [];
@@ -399,6 +405,62 @@
                 const rs = avgLoss === 0 ? 100 : avgGain / avgLoss;
                 const rsi = 100 - (100 / (1 + rs));
                 results.push({ val: rsi, avgGain, avgLoss });
+
+                // === ADX Calculation ===
+                let adx = null;
+                if (i >= 1) {
+                    const high = data[i].high;
+                    const low = data[i].low;
+                    const prevHigh = data[i - 1].high;
+                    const prevLow = data[i - 1].low;
+                    const prevClose = data[i - 1].close;
+
+                    // True Range
+                    const tr = Math.max(
+                        high - low,
+                        Math.abs(high - prevClose),
+                        Math.abs(low - prevClose)
+                    );
+
+                    // Directional Movement
+                    const upMove = high - prevHigh;
+                    const downMove = prevLow - low;
+                    const plusDM = upMove > downMove && upMove > 0 ? upMove : 0;
+                    const minusDM = downMove > upMove && downMove > 0 ? downMove : 0;
+
+                    if (i < adxPeriod) {
+                        prevTR += tr;
+                        prevPlusDM += plusDM;
+                        prevMinusDM += minusDM;
+                    } else if (i === adxPeriod) {
+                        // First smoothed values
+                        prevTR = prevTR;
+                        prevPlusDM = prevPlusDM;
+                        prevMinusDM = prevMinusDM;
+                    } else {
+                        // Wilder's smoothing
+                        prevTR = prevTR - (prevTR / adxPeriod) + tr;
+                        prevPlusDM = prevPlusDM - (prevPlusDM / adxPeriod) + plusDM;
+                        prevMinusDM = prevMinusDM - (prevMinusDM / adxPeriod) + minusDM;
+                    }
+
+                    if (i >= adxPeriod && prevTR > 0) {
+                        const plusDI = (prevPlusDM / prevTR) * 100;
+                        const minusDI = (prevMinusDM / prevTR) * 100;
+                        const diSum = plusDI + minusDI;
+                        const dx = diSum > 0 ? (Math.abs(plusDI - minusDI) / diSum) * 100 : 0;
+
+                        if (i === adxPeriod) {
+                            prevDX = dx;
+                            adx = dx;
+                        } else {
+                            // Smooth ADX with Wilder's method
+                            adx = ((prevDX * (adxPeriod - 1)) + dx) / adxPeriod;
+                            prevDX = adx;
+                        }
+                    }
+                }
+                adxValues.push(adx);
             }
 
             return data.map((d, i) => ({
@@ -415,7 +477,9 @@
                 currentDayRange: adrData[i] ? adrData[i].currentDayRange : null,
                 adrRoomTop: adrData[i] ? adrData[i].adrRoomTop : null,
                 adrRoomBottom: adrData[i] ? adrData[i].adrRoomBottom : null,
-                dayOpen: adrData[i] ? adrData[i].dayOpen : null
+                dayOpen: adrData[i] ? adrData[i].dayOpen : null,
+                // --- ADX (Regime Detection) ---
+                adx: adxValues[i] || null
             }));
         };
 
@@ -521,6 +585,22 @@
 
             const [useLtfIntra, setUseLtfIntra] = useState(false);
             const [ltfMaxCandles, setLtfMaxCandles] = useState(20000);
+
+            // === WALK-FORWARD ANALYSIS ===
+            const [useWalkForward, setUseWalkForward] = useState(false);
+            const [walkForwardSplit, setWalkForwardSplit] = useState(70); // 70% in-sample, 30% out-of-sample
+            const [walkForwardResult, setWalkForwardResult] = useState(null); // { inSample: {...}, outOfSample: {...}, degradation: number }
+
+            // === MONTE CARLO SIMULATION ===
+            const [monteCarloSimulations, setMonteCarloSimulations] = useState(1000);
+            const [isRunningMonteCarlo, setIsRunningMonteCarlo] = useState(false);
+            const [monteCarloResult, setMonteCarloResult] = useState(null);
+            // Result: { worstDrawdown, avgDrawdown, ruinProbability, percentiles: {p5,p25,p50,p75,p95}, equityCurves: [] }
+
+            // === MARKET REGIME FILTER ===
+            const [useRegimeFilter, setUseRegimeFilter] = useState(false);
+            const [regimeMode, setRegimeMode] = useState('TREND'); // 'TREND' or 'RANGE'
+            const [adxThreshold, setAdxThreshold] = useState(25); // ADX > 25 = trending
 
             // RESULTADOS & ESTADOS ADICIONALES
             const [simResult, setSimResult] = useState(null);
@@ -2062,10 +2142,12 @@
                 const target = data[targetIdx];
                 if (!target) return { error: 'Vela objetivo inválida' };
 
-                const maxIndexExclusive = targetIdx;
-                const iStart = 200;
+                // Walk-Forward Analysis: Support for custom index ranges
+                const maxIndexExclusive = filters.maxIndexExclusive != null ? filters.maxIndexExclusive : targetIdx;
+                const minIndexInclusive = filters.minIndexInclusive != null ? Math.max(200, filters.minIndexInclusive) : 200;
+                const iStart = minIndexInclusive;
                 const iEndExclusive = Math.min(maxIndexExclusive, data.length - 1);
-                if (iEndExclusive <= iStart) return { error: 'No hay suficiente histórico antes de la vela objetivo.' };
+                if (iEndExclusive <= iStart) return { error: 'No hay suficiente histórico en el rango especificado.' };
 
                 const {
                     useRsi, rsiTol,
@@ -2081,7 +2163,9 @@
                     htfMode: hm,
                     requireHtf: reqHtf,
                     useLtfIntra: useIntra,
-                    maxDurationLimit = 500
+                    maxDurationLimit = 500,
+                    // Regime Filter
+                    useRegime, regimeMode, adxThreshold: adxThresh = 25
                 } = filters;
 
                 const epBase = Number(tradeParams.entryPrice);
@@ -2316,6 +2400,7 @@
                 let minDuration = Infinity;
                 let maxDurationWin = 0;
                 const durationList = [];
+                const pnlList = []; // NEW: Track P&L per trade for SQN calculation
                 let totalMae = 0;
                 let maxMae = 0;
                 let totalVolAll = 0;
@@ -2395,6 +2480,19 @@
                         }
                     }
 
+                    // --- Market Regime Filter (ADX-based) ---
+                    if (useRegime && match) {
+                        if (c.adx != null && isFinite(c.adx)) {
+                            if (regimeMode === 'TREND' && c.adx < adxThresh) {
+                                // Want trending market but ADX is low (ranging)
+                                match = false;
+                            } else if (regimeMode === 'RANGE' && c.adx >= adxThresh) {
+                                // Want ranging market but ADX is high (trending)
+                                match = false;
+                            }
+                        }
+                    }
+
                     if (!match) continue;
 
                     let isHighRisk = false;
@@ -2438,6 +2536,7 @@
                     if (sim.intraResolved) ltfResolved++;
                     if (sim.outcome === 'WIN') {
                         wins++;
+                        pnlList.push(tpDist); // Record profit as % distance
                         totalDuration += sim.duration;
                         durationList.push(sim.duration);
                         if (sim.duration < minDuration) minDuration = sim.duration;
@@ -2450,6 +2549,7 @@
                         if (bp != null && isFinite(bp)) totalBpWins += bp;
                     } else if (sim.outcome === 'LOSS') {
                         losses++;
+                        pnlList.push(-riskDist); // Record loss as negative % distance
                     }
 
                     if (useCooldown && sim.exitIdx != null && sim.exitIdx > i) {
@@ -2484,6 +2584,42 @@
                     durationDistribution[dur] = (durationDistribution[dur] || 0) + 1;
                 }
 
+                // === NEW: Expectancy & SQN Calculation ===
+                let expectancy = null;
+                let sqn = null;
+                let sqnNormalized = null;
+                let sqnClassification = null;
+
+                if (pnlList.length >= 5) {
+                    // Calculate mean P&L (Expectancy)
+                    const sumPnl = pnlList.reduce((acc, v) => acc + v, 0);
+                    const meanPnl = sumPnl / pnlList.length;
+                    expectancy = meanPnl * 100; // Convert to percentage
+
+                    // Calculate standard deviation
+                    const squaredDiffs = pnlList.map(v => Math.pow(v - meanPnl, 2));
+                    const avgSquaredDiff = squaredDiffs.reduce((acc, v) => acc + v, 0) / pnlList.length;
+                    const stdDev = Math.sqrt(avgSquaredDiff);
+
+                    if (stdDev > 0) {
+                        // SQN = (Mean / StdDev) × √N
+                        // Standard SQN uses actual trade count
+                        sqn = (meanPnl / stdDev) * Math.sqrt(pnlList.length);
+
+                        // Normalized SQN: benchmarked to √100 to prevent HFT inflation
+                        // This allows fair comparison between systems with different trade counts
+                        sqnNormalized = (meanPnl / stdDev) * Math.sqrt(100);
+
+                        // Classification based on Van Tharp's scale
+                        if (sqn < 1.6) sqnClassification = 'POOR';
+                        else if (sqn < 2.0) sqnClassification = 'AVERAGE';
+                        else if (sqn < 2.5) sqnClassification = 'GOOD';
+                        else if (sqn < 3.0) sqnClassification = 'EXCELLENT';
+                        else sqnClassification = 'SUPERB';
+                    }
+                }
+
+
                 return {
                     matches,
                     closedTrades,
@@ -2492,12 +2628,21 @@
                     wilsonLower95,
                     wins,
                     losses,
+                    // === NEW: SQN & Expectancy ===
+                    expectancy: expectancy != null ? expectancy.toFixed(3) : null,
+                    sqn: sqn != null ? sqn.toFixed(2) : null,
+                    sqnNormalized: sqnNormalized != null ? sqnNormalized.toFixed(2) : null,
+                    sqnClassification,
                     avgDuration: wins > 0 ? Math.round(totalDuration / wins) : 0,
                     minDuration: wins > 0 ? minDuration : 0,
                     maxDuration: wins > 0 ? maxDurationWin : 0,
                     medianDuration,
                     p80Duration,
                     durationDistribution,
+                    // === Temporal Efficiency (ROI per candle) ===
+                    temporalEfficiency: expectancy != null && wins > 0 && totalDuration > 0
+                        ? (expectancy / (totalDuration / wins)).toFixed(4)
+                        : null,
                     avgMae: wins > 0 ? ((totalMae / wins) * 100).toFixed(2) : 0,
                     maxMae: (maxMae * 100).toFixed(2),
                     painRatio: painRatio != null ? painRatio.toFixed(1) : null,
@@ -2518,8 +2663,8 @@
                 if (!csvData.length || !stopLoss || !takeProfit) return;
                 setIsOptimizing(true);
 
-                // Dar tiempo al UI para renderizar el loader
-                await new Promise(r => setTimeout(r, 100));
+                // Mínimo delay para renderizar loader
+                await new Promise(r => setTimeout(r, 50));
 
                 const tradeParams = {
                     tradeType,
@@ -2529,8 +2674,20 @@
                     spread: Math.max(0, parseFloat(spread || '0') || 0)
                 };
 
+                // === OPTIMIZACIÓN: Solo 2 tiers para mayor velocidad ===
+                const SENSITIVITY_TIERS = [
+                    { key: 'NORMAL', label: '[BASE]', factor: 1.0 },
+                    { key: 'LOOSE', label: '[LAXO]', factor: 1.4 }
+                ];
+
+                // Función para calcular valores numéricos según tier
+                const computeTieredValues = (tierFactor) => ({
+                    rsiTol: Math.max(1, Math.round(rsiTolerance * tierFactor)),
+                    volTol: Math.max(5, Math.round(volumeTolerance * tierFactor)),
+                    bpTol: Math.max(1, Math.round(bpTolerance * tierFactor))
+                });
+
                 // Definir qué filtros vamos a permutar (solo los booleanos)
-                // Estructura: [keyName, label, requiresExtended]
                 const toggleableFilters = [
                     { key: 'useRsi', label: 'RSI' },
                     { key: 'useTrend', label: 'Tendencia' },
@@ -2555,101 +2712,203 @@
                     toggleableFilters.push({ key: 'useLtfIntra', label: 'LTF Intra' });
                 }
 
+                // === NUEVO: Integrar Filtro de Régimen ===
+                toggleableFilters.push({ key: 'useRegime', label: 'Régimen' });
+
                 const combinations = [];
                 const totalCombs = 1 << toggleableFilters.length; // 2^n
+                const signatureGroups = new Map();
+                let robustCount = 0;
 
-                // --- PARCHE: Optimización no-bloqueante ---
-                // Procesar en chunks para no bloquear la UI
-                const CHUNK_SIZE = 16;
+                // === OPTIMIZACIÓN: Chunk grande + procesamiento síncrono ===
+                const CHUNK_SIZE = 256;
+                let yieldCounter = 0;
 
-                const processChunk = async (startIdx, endIdx) => {
-                    for (let i = startIdx; i < endIdx && i < totalCombs; i++) {
+                for (let i = 1; i < totalCombs; i++) {
+                    // === OPTIMIZACIÓN: Yield cada 512 iteraciones para no congelar ===
+                    yieldCounter++;
+                    if (yieldCounter >= 512) {
+                        yieldCounter = 0;
+                        await new Promise(r => setTimeout(r, 0));
+                        // Early termination si ya tenemos suficientes robustos
+                        if (robustCount >= 8) break;
+                    }
+
+                    // Iterar sobre los 2 tiers
+                    for (let t = 0; t < SENSITIVITY_TIERS.length; t++) {
+                        const tier = SENSITIVITY_TIERS[t];
+                        const tieredValues = computeTieredValues(tier.factor);
+
                         const currentConfig = {
-                            useRsi: false, rsiTol: rsiTolerance,
+                            useRsi: false, rsiTol: tieredValues.rsiTol,
                             useTrend: false, trendCond: trendCondition,
                             useTime: false, timeMode,
                             useVolBody: false,
-                            useVol: false, volTol: volumeTolerance,
-                            useBp: false, bpTol: bpTolerance,
+                            useVol: false, volTol: tieredValues.volTol,
+                            useBp: false, bpTol: tieredValues.bpTol,
                             useDelta: false,
                             useCooldown: false,
                             useAdr: false,
                             useHtf: false,
                             htfMode,
                             requireHtf: false,
-                            useLtfIntra: false
+                            useLtfIntra: false,
+                            useRegime: false, regimeMode, adxThreshold, // Default values
+                            tier: tier.key,
+                            tierLabel: tier.label
                         };
 
                         const activeLabels = [];
+                        let activeCount = 0;
 
                         for (let j = 0; j < toggleableFilters.length; j++) {
                             if ((i >> j) & 1) {
                                 currentConfig[toggleableFilters[j].key] = true;
                                 activeLabels.push(toggleableFilters[j].label);
+                                activeCount++;
                             }
                         }
 
+                        // === OPTIMIZACIÓN: Skip si no hay filtros activos ===
+                        if (activeCount === 0) continue;
+
+                        // Generar firma booleana
+                        const boolSignature = toggleableFilters
+                            .map(f => currentConfig[f.key] ? '1' : '0')
+                            .join('');
+
+                        // === OPTIMIZACIÓN: Logica anidada para HTF y REGIME variants ===
                         const modeVariants = (currentConfig.useHtf && htfData && htfData.length) ? ['DISCARD', 'MARK'] : [htfMode];
+                        const regimeVariants = (currentConfig.useRegime) ? ['TREND', 'RANGE'] : [regimeMode];
+
                         for (let mv = 0; mv < modeVariants.length; mv++) {
-                            const cfg = { ...currentConfig, htfMode: modeVariants[mv] };
-                            const labels = cfg.useHtf ? activeLabels.concat([`HTF:${cfg.htfMode}`]) : activeLabels;
-                            const result = calculateBacktest(csvData, selectedCandleIndex, tradeParams, cfg);
-                            if (!result.error && result.matches >= 5) {
-                                combinations.push({
-                                    config: cfg,
-                                    labels,
-                                    stats: result
-                                });
+                            for (let rv = 0; rv < regimeVariants.length; rv++) {
+
+                                const cfg = {
+                                    ...currentConfig,
+                                    htfMode: modeVariants[mv],
+                                    regimeMode: regimeVariants[rv]
+                                };
+
+                                const labels = [...activeLabels];
+                                if (cfg.useHtf) labels.push(`HTF:${cfg.htfMode}`);
+                                if (cfg.useRegime) labels.push(`REG:${cfg.regimeMode}`);
+
+                                const result = calculateBacktest(csvData, selectedCandleIndex, tradeParams, cfg);
+
+                                if (!result.error && result.matches >= 5) {
+                                    const sig = boolSignature + '_' + cfg.htfMode + '_' + cfg.regimeMode;
+                                    const comb = {
+                                        config: cfg,
+                                        labels,
+                                        stats: result,
+                                        tier: tier.key,
+                                        tierLabel: tier.label,
+                                        boolSignature: sig
+                                    };
+                                    combinations.push(comb);
+
+                                    // === OPTIMIZACIÓN: Detección de robustez en línea ===
+                                    if (!signatureGroups.has(sig)) {
+                                        signatureGroups.set(sig, []);
+                                    }
+                                    signatureGroups.get(sig).push(comb);
+
+                                    // Verificar robustez inmediatamente
+                                    const group = signatureGroups.get(sig);
+                                    if (group.length === 2) {
+                                        const tiers = new Set(group.map(g => g.tier));
+                                        if (tiers.size === 2 && group.every(g => g.stats.winRateNum >= 50)) {
+                                            const normalResult = group.find(g => g.tier === 'NORMAL');
+                                            if (normalResult && !normalResult.isRobust) {
+                                                normalResult.isRobust = true;
+                                                normalResult.robustnessScore = group.reduce((acc, g) => acc + g.stats.winRateNum, 0) / 2;
+                                                robustCount++;
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
-                };
-
-                // Procesar todas las combinaciones en chunks, cediendo al event loop
-                for (let start = 1; start < totalCombs; start += CHUNK_SIZE) {
-                    await processChunk(start, start + CHUNK_SIZE);
-                    // Ceder control al event loop para mantener UI responsiva
-                    await new Promise(r => setTimeout(r, 0));
                 }
 
-                // Ordenar: Mayor WinRate, luego Mayor Cantidad de Matches
+                // Marcar especulativos (solo aparecen en 1 tier)
+                for (const [sig, group] of signatureGroups) {
+                    const tiers = new Set(group.map(g => g.tier));
+                    if (tiers.size === 1 && !group[0].isRobust) {
+                        const onlyTier = [...tiers][0];
+                        for (const item of group) {
+                            item.isSpeculative = true;
+                            item.speculativeType = onlyTier;
+                        }
+                    }
+                }
+
+                // Ordenar: Robustos primero, luego por WinRate
                 combinations.sort((a, b) => {
+                    if (a.isRobust && !b.isRobust) return -1;
+                    if (!a.isRobust && b.isRobust) return 1;
+                    if (a.isSpeculative && a.speculativeType === 'LOOSE' && !(b.isSpeculative && b.speculativeType === 'LOOSE')) return 1;
+                    if (b.isSpeculative && b.speculativeType === 'LOOSE' && !(a.isSpeculative && a.speculativeType === 'LOOSE')) return -1;
                     if (b.stats.winRateNum !== a.stats.winRateNum) return b.stats.winRateNum - a.stats.winRateNum;
                     return b.stats.matches - a.stats.matches;
                 });
 
-                // Lógica de selección "Alta Validez"
-                // Requerimiento: Mostrar 6 resultados en total.
-                // Prioridad: Incluir al menos 2 resultados con >= 500 matches si existen.
-                const highSampleThreshold = 500;
-                const highSampleConfigs = combinations.filter(c => c.stats.matches >= highSampleThreshold);
-                const finalResults = [];
-
-                // 1. Intentar tomar los 2 mejores de "Alta Muestra"
-                const robustPicks = highSampleConfigs.slice(0, 2);
-                robustPicks.forEach(p => p.isRobust = true); // Marcar para UI
-                finalResults.push(...robustPicks);
-
-                // 2. Rellenar hasta 6 con los mejores restantes (por WinRate)
-                // Usamos un Set para evitar duplicados
-                const usedIndices = new Set(robustPicks.map(p => combinations.indexOf(p)));
+                // Filtrar duplicados por firma
+                const seenSignatures = new Set();
+                const uniqueResults = [];
 
                 for (const comb of combinations) {
-                    if (finalResults.length >= 6) break;
-                    if (!usedIndices.has(combinations.indexOf(comb))) {
-                        finalResults.push(comb);
-                        usedIndices.add(combinations.indexOf(comb));
+                    if (comb.isRobust && !seenSignatures.has(comb.boolSignature)) {
+                        uniqueResults.push(comb);
+                        seenSignatures.add(comb.boolSignature);
                     }
                 }
 
-                // Re-ordenar la lista final para visualización
-                finalResults.sort((a, b) => b.stats.winRateNum - a.stats.winRateNum);
+                for (const comb of combinations) {
+                    if (!seenSignatures.has(comb.boolSignature)) {
+                        uniqueResults.push(comb);
+                        seenSignatures.add(comb.boolSignature);
+                    }
+                }
+
+                // === SELECCIÓN FINAL DE RESULTADOS CON GARANTÍA DE MUESTRA GRANDE ===
+                const finalResults = uniqueResults.slice(0, 8);
+
+                // Buscar el candidato con mayor validez estadística (más trades) que sea rentable
+                const bestSample = uniqueResults.reduce((best, current) => {
+                    // Solo considerar rentables (>50% WinRate) para evitar basura estadística
+                    if (current.stats.winRateNum > 50) {
+                        if (!best || current.stats.matches > best.stats.matches) {
+                            return current;
+                        }
+                    }
+                    return best;
+                }, null);
+
+                // Si existe un candidato de alta muestra y NO está en el Top 8 actual
+                if (bestSample && !finalResults.some(r => r.boolSignature === bestSample.boolSignature)) {
+                    // Forzar su entrada en la última posición (slot 8)
+                    if (finalResults.length === 8) {
+                        // Reemplazamos el último (el menos bueno de los mejores)
+                        finalResults[7] = bestSample;
+                    } else {
+                        finalResults.push(bestSample);
+                    }
+
+                    // Asegurar que se visualiza correctamente: Lo marcamos visualmente si es necesario, 
+                    // o simplemente confiamos en que el usuario verá el alto número de matches.
+                    // Podríamos añadir una etiqueta especial en applyOptimization si quisiéramos, 
+                    // pero la solicitud solo pedía incluirlo en la tabla.
+                }
 
                 setOptimizationResults(finalResults);
                 setIsOptimizing(false);
             };
 
             const applyOptimization = (config) => {
+                // Aplicar estados booleanos
                 if (config.useRsi !== undefined) setUseRsiFilter(config.useRsi);
                 if (config.useTrend !== undefined) setUseTrendFilter(config.useTrend);
                 if (config.useTime !== undefined) setUseTimeFilter(config.useTime);
@@ -2665,17 +2924,22 @@
                 if (config.requireHtf !== undefined) setRequireHtf(config.requireHtf);
                 if (config.useLtfIntra !== undefined) setUseLtfIntra(config.useLtfIntra);
 
-                // Ejecutar simulacion con los nuevos parametros
+                // === NUEVO: Aplicar Filtro de Régimen ===
+                if (config.useRegime !== undefined) setUseRegimeFilter(config.useRegime);
+                if (config.regimeMode !== undefined) setRegimeMode(config.regimeMode);
+                if (config.adxThreshold !== undefined) setAdxThreshold(config.adxThreshold);
+
+                // === NUEVO: Aplicar valores numéricos del tier ganador ===
+                if (config.rsiTol !== undefined) setRsiTolerance(config.rsiTol);
+                if (config.volTol !== undefined) setVolumeTolerance(config.volTol);
+                if (config.bpTol !== undefined) setBpTolerance(config.bpTol);
+
+                // Auto-ejecutar simulación después de aplicar
                 setTimeout(() => {
-                    // Actualizamos manualmente para asegurar que el runSimulation tome los nuevos valores
-                    // Nota: En React esto requiere un useEffect o pasar params directos.
-                    // Para simplificar, llamaremos a una versión modificada de runSimulation o forzaremos el click.
-                    // Pero como runSimulation usa el estado actual, necesitamos esperar el re-render.
-                    // Una mejor opción es llamar a runSimulation pasando los overrides, pero runSimulation lee del estado.
-                    // Solución: Alertar al usuario que ejecute o auto-ejecutar via un efecto si quisieramos.
-                    // Por ahora, solo seteamos los estados y mostramos feedback.
-                }, 100);
+                    runSimulation();
+                }, 150);
             };
+
 
             const runSimulation = () => {
                 if (!csvData.length || !stopLoss || !takeProfit) return;
@@ -2724,13 +2988,196 @@
                     htfMode,
                     requireHtf,
                     useLtfIntra: useLtfIntra,
-                    maxDurationLimit: useMacroMode ? 5000 : 500
+                    maxDurationLimit: useMacroMode ? 5000 : 500,
+                    // === REGIME FILTER ===
+                    useRegime: useRegimeFilter,
+                    regimeMode,
+                    adxThreshold
                 };
 
                 const tradeParams = { tradeType, entryPrice, stopLoss, takeProfit, spread: spreadVal };
-                const res = calculateBacktest(csvData, selectedCandleIndex, tradeParams, filters);
-                setSimResult(res.error ? { error: res.error } : res);
+
+                // === WALK-FORWARD ANALYSIS ===
+                if (useWalkForward && csvData.length > 400) {
+                    // Calculate split point
+                    const splitIdx = Math.floor(csvData.length * (walkForwardSplit / 100));
+
+                    // Ensure enough data in both sets (min 200 candles for indicators)
+                    if (splitIdx >= 400 && (csvData.length - splitIdx) >= 100) {
+                        // In-Sample: Train on first X%
+                        const inSampleTarget = Math.min(splitIdx - 1, selectedCandleIndex);
+                        const inSampleRes = calculateBacktest(csvData, inSampleTarget, tradeParams, { ...filters, maxIndexExclusive: splitIdx });
+
+                        // Out-of-Sample: Test on remaining data
+                        // Use last candle of dataset as target for out-of-sample
+                        const outSampleTarget = csvData.length - 1;
+                        // Create modified filters that skip the in-sample period
+                        const outSampleRes = calculateBacktest(csvData, outSampleTarget, tradeParams, { ...filters, minIndexInclusive: splitIdx });
+
+                        // Calculate degradation
+                        let degradation = null;
+                        if (!inSampleRes.error && !outSampleRes.error && inSampleRes.sqn && outSampleRes.sqn) {
+                            const inSqn = parseFloat(inSampleRes.sqn);
+                            const outSqn = parseFloat(outSampleRes.sqn);
+                            if (inSqn > 0) {
+                                degradation = ((inSqn - outSqn) / inSqn) * 100;
+                            }
+                        }
+
+                        setWalkForwardResult({
+                            inSample: inSampleRes,
+                            outOfSample: outSampleRes,
+                            degradation,
+                            splitIndex: splitIdx,
+                            splitDate: csvData[splitIdx]?.datetime?.toLocaleDateString('es-ES') || null
+                        });
+
+                        // Show in-sample result as main result
+                        setSimResult(inSampleRes.error ? { error: inSampleRes.error } : inSampleRes);
+                    } else {
+                        setWalkForwardResult(null);
+                        setSimResult({ error: 'Datos insuficientes para Walk-Forward (min. 400 in-sample + 100 out-of-sample)' });
+                    }
+                } else {
+                    setWalkForwardResult(null);
+                    const res = calculateBacktest(csvData, selectedCandleIndex, tradeParams, filters);
+                    setSimResult(res.error ? { error: res.error } : res);
+                }
+
                 setOptimizationResults(null); // Limpiar optimizacion anterior al correr nuevo manual
+            };
+
+            // === MONTE CARLO SIMULATION (Inline Web Worker) ===
+            const runMonteCarlo = () => {
+                if (!simResult || simResult.error || !simResult.closedTrades || simResult.closedTrades < 10) {
+                    alert('Ejecuta primero una simulación con al menos 10 trades cerrados.');
+                    return;
+                }
+
+                setIsRunningMonteCarlo(true);
+                setMonteCarloResult(null);
+
+                // Build trade results array from simResult
+                const winRate = simResult.winRateNum / 100;
+                const riskPercent = parseFloat(simResult.riskDistPercent) || 1;
+                const rrRatio = parseFloat(takeProfit) && parseFloat(stopLoss) && entryPrice
+                    ? Math.abs((parseFloat(takeProfit) - entryPrice) / (entryPrice - parseFloat(stopLoss)))
+                    : 2;
+
+                // Create trade array: +R for wins, -1 for losses
+                const trades = [];
+                for (let i = 0; i < simResult.wins; i++) trades.push(rrRatio);
+                for (let i = 0; i < simResult.losses; i++) trades.push(-1);
+
+                // Web Worker code as string
+                const workerCode = `
+                    self.onmessage = function(e) {
+                        const { trades, simCount, riskPercent } = e.data;
+                        
+                        // Fisher-Yates shuffle
+                        function shuffle(arr) {
+                            const a = arr.slice();
+                            for (let i = a.length - 1; i > 0; i--) {
+                                const j = Math.floor(Math.random() * (i + 1));
+                                [a[i], a[j]] = [a[j], a[i]];
+                            }
+                            return a;
+                        }
+
+                        const drawdowns = [];
+                        const finalEquities = [];
+                        const sampleCurves = [];
+                        let ruinCount = 0;
+                        const ruinThreshold = -50; // 50% drawdown = ruin
+
+                        for (let sim = 0; sim < simCount; sim++) {
+                            const shuffled = shuffle(trades);
+                            let equity = 100;
+                            let peak = 100;
+                            let maxDrawdown = 0;
+                            const curve = sim < 50 ? [100] : null; // Store first 50 curves for visualization
+                            
+                            for (let t = 0; t < shuffled.length; t++) {
+                                const pnl = shuffled[t] * riskPercent;
+                                equity += pnl;
+                                if (curve) curve.push(equity);
+                                
+                                if (equity > peak) peak = equity;
+                                const dd = ((equity - peak) / peak) * 100;
+                                if (dd < maxDrawdown) maxDrawdown = dd;
+                                
+                                // Check for ruin
+                                if (equity <= 50) {
+                                    ruinCount++;
+                                    break;
+                                }
+                            }
+                            
+                            drawdowns.push(maxDrawdown);
+                            finalEquities.push(equity);
+                            if (curve) sampleCurves.push(curve);
+                        }
+
+                        // Sort for percentiles
+                        drawdowns.sort((a, b) => a - b);
+                        finalEquities.sort((a, b) => a - b);
+
+                        const percentile = (arr, p) => {
+                            const idx = Math.floor(arr.length * p);
+                            return arr[Math.min(idx, arr.length - 1)];
+                        };
+
+                        const result = {
+                            worstDrawdown: drawdowns[0],
+                            avgDrawdown: drawdowns.reduce((a, b) => a + b, 0) / drawdowns.length,
+                            ruinProbability: (ruinCount / simCount) * 100,
+                            percentiles: {
+                                p5: percentile(drawdowns, 0.05),
+                                p25: percentile(drawdowns, 0.25),
+                                p50: percentile(drawdowns, 0.50),
+                                p75: percentile(drawdowns, 0.75),
+                                p95: percentile(drawdowns, 0.95)
+                            },
+                            equityPercentiles: {
+                                p5: percentile(finalEquities, 0.05),
+                                p25: percentile(finalEquities, 0.25),
+                                p50: percentile(finalEquities, 0.50),
+                                p75: percentile(finalEquities, 0.75),
+                                p95: percentile(finalEquities, 0.95)
+                            },
+                            sampleCurves: sampleCurves.slice(0, 20), // Only send 20 for visualization
+                            simCount
+                        };
+
+                        self.postMessage(result);
+                    };
+                `;
+
+                // Create inline worker
+                const blob = new Blob([workerCode], { type: 'application/javascript' });
+                const workerUrl = URL.createObjectURL(blob);
+                const worker = new Worker(workerUrl);
+
+                worker.onmessage = (e) => {
+                    setMonteCarloResult(e.data);
+                    setIsRunningMonteCarlo(false);
+                    worker.terminate();
+                    URL.revokeObjectURL(workerUrl);
+                };
+
+                worker.onerror = (err) => {
+                    console.error('Monte Carlo Worker Error:', err);
+                    setIsRunningMonteCarlo(false);
+                    worker.terminate();
+                    URL.revokeObjectURL(workerUrl);
+                };
+
+                // Send data to worker
+                worker.postMessage({
+                    trades,
+                    simCount: monteCarloSimulations,
+                    riskPercent
+                });
             };
 
             const computeATR = (data, endIdx, period) => {
@@ -3882,6 +4329,45 @@
                                                 <input type="checkbox" checked={useAdrFilter} onChange={(e) => setUseAdrFilter(e.target.checked)} className="accent-blue-500" />
                                                 <Icons.Activity size={14} className="text-red-500" /> Evitar Agotamiento ADR (&gt;100%)
                                             </label>
+
+                                            {/* === MARKET REGIME FILTER === */}
+                                            <div className={`p-3 rounded-lg border transition-all ${useRegimeFilter ? 'bg-cyan-50 dark:bg-cyan-900/20 border-cyan-300 dark:border-cyan-700' : 'bg-slate-100 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700/50'}`}>
+                                                <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 cursor-pointer">
+                                                    <input type="checkbox" checked={useRegimeFilter} onChange={(e) => setUseRegimeFilter(e.target.checked)} className="accent-cyan-500" />
+                                                    <Icons.TrendingUp size={14} className={useRegimeFilter ? 'text-cyan-500' : 'text-slate-400'} />
+                                                    <span className="font-bold">Filtro de Régimen (ADX)</span>
+                                                </label>
+                                                {useRegimeFilter && (
+                                                    <div className="mt-2 animate-fade-in space-y-2">
+                                                        <div className="flex gap-2 items-center">
+                                                            <span className="text-xs text-slate-500">Solo operar en:</span>
+                                                            <select
+                                                                value={regimeMode}
+                                                                onChange={(e) => setRegimeMode(e.target.value)}
+                                                                className="flex-1 bg-white dark:bg-slate-900 border border-cyan-300 dark:border-cyan-700 rounded p-1.5 text-xs font-bold"
+                                                            >
+                                                                <option value="TREND">📈 Mercado en TENDENCIA (ADX ≥ {adxThreshold})</option>
+                                                                <option value="RANGE">📊 Mercado en RANGO (ADX &lt; {adxThreshold})</option>
+                                                            </select>
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-[10px] text-slate-500">Umbral ADX:</span>
+                                                            <input
+                                                                type="range"
+                                                                min="15"
+                                                                max="40"
+                                                                value={adxThreshold}
+                                                                onChange={(e) => setAdxThreshold(parseInt(e.target.value))}
+                                                                className="flex-1 accent-cyan-500 h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer"
+                                                            />
+                                                            <span className="text-xs font-mono font-bold text-cyan-600 dark:text-cyan-400 w-8">{adxThreshold}</span>
+                                                        </div>
+                                                        <p className="text-[9px] text-slate-400">
+                                                            ADX &gt; {adxThreshold} = Tendencia fuerte | ADX &lt; {adxThreshold} = Mercado lateral
+                                                        </p>
+                                                    </div>
+                                                )}
+                                            </div>
                                             <div className="pt-2 border-t border-slate-200 dark:border-slate-700/50"></div>
                                             <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 cursor-pointer hover:text-slate-800 dark:hover:text-slate-200">
                                                 <input type="checkbox" checked={useHtfFilter} onChange={(e) => setUseHtfFilter(e.target.checked)} className="accent-blue-500" disabled={!htfData.length} />
@@ -3944,6 +4430,62 @@
                                                         <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
                                                     </label>
                                                 </div>
+                                            </div>
+
+                                            {/* === WALK-FORWARD ANALYSIS TOGGLE === */}
+                                            <div className={`p-3 rounded-lg border shadow-sm transition-all ${useWalkForward ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-700' : 'bg-slate-100 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700/50'}`}>
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex flex-col">
+                                                        <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase flex items-center gap-2">
+                                                            <Icons.Split size={14} className={useWalkForward ? 'text-indigo-500' : 'text-slate-400'} />
+                                                            Walk-Forward Analysis
+                                                        </span>
+                                                        <span className="text-[10px] text-slate-500 mt-0.5">
+                                                            {useWalkForward
+                                                                ? `${walkForwardSplit}% entrenamiento / ${100 - walkForwardSplit}% validación`
+                                                                : 'Divide datos para validar overfitting'}
+                                                        </span>
+                                                    </div>
+
+                                                    <label className="relative inline-flex items-center cursor-pointer">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={useWalkForward}
+                                                            onChange={(e) => setUseWalkForward(e.target.checked)}
+                                                            className="sr-only peer"
+                                                            disabled={csvData.length < 500}
+                                                        />
+                                                        <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                                                    </label>
+                                                </div>
+                                                {useWalkForward && (
+                                                    <div className="mt-3 animate-fade-in">
+                                                        <div className="flex justify-between text-[10px] mb-1">
+                                                            <span className="text-indigo-600 dark:text-indigo-400 font-bold">In-Sample ({walkForwardSplit}%)</span>
+                                                            <span className="text-orange-600 dark:text-orange-400 font-bold">Out-Sample ({100 - walkForwardSplit}%)</span>
+                                                        </div>
+                                                        <div className="relative h-3 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                                                            <div
+                                                                className="h-full bg-indigo-500 transition-all duration-200"
+                                                                style={{ width: `${walkForwardSplit}%` }}
+                                                            ></div>
+                                                            {/* Vertical split line */}
+                                                            <div
+                                                                className="absolute top-0 bottom-0 w-1 bg-slate-800 dark:bg-white shadow-lg"
+                                                                style={{ left: `calc(${walkForwardSplit}% - 2px)` }}
+                                                            ></div>
+                                                        </div>
+                                                        <input
+                                                            type="range"
+                                                            min="50"
+                                                            max="90"
+                                                            step="5"
+                                                            value={walkForwardSplit}
+                                                            onChange={(e) => setWalkForwardSplit(parseInt(e.target.value))}
+                                                            className="w-full accent-indigo-500 h-2 bg-transparent appearance-none cursor-pointer mt-2"
+                                                        />
+                                                    </div>
+                                                )}
                                             </div>
                                             <button data-export-exclude="true" onClick={runSimulation} className="w-full mt-4 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg shadow-lg flex items-center justify-center gap-2 transition-all active:scale-95">
                                                 <Icons.Play size={18} /> EJECUTAR ANÁLISIS
@@ -4031,14 +4573,37 @@
                                                                     onClick={() => applyOptimization(opt.config)}
                                                                     className={`p-3 rounded-lg border shadow-sm cursor-pointer transition-all flex items-center justify-between group ${opt.isRobust
                                                                         ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 hover:border-emerald-400'
-                                                                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-indigo-400 dark:hover:border-indigo-500'
+                                                                        : opt.isSpeculative && opt.speculativeType === 'LOOSE'
+                                                                            ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 hover:border-red-400'
+                                                                            : opt.isSpeculative && opt.speculativeType === 'STRICT'
+                                                                                ? 'bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800 hover:border-purple-400'
+                                                                                : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-indigo-400 dark:hover:border-indigo-500'
                                                                         }`}
                                                                 >
                                                                     <div className="flex-1">
                                                                         <div className="flex flex-wrap gap-1 mb-1 items-center">
+                                                                            {/* Badge de Robustez (nuevo) */}
                                                                             {opt.isRobust && (
                                                                                 <span className="text-[9px] font-bold bg-emerald-100 dark:bg-emerald-800 text-emerald-700 dark:text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-700 mr-1 flex items-center gap-1">
-                                                                                    <Icons.ShieldAlert size={8} /> VALIDADO
+                                                                                    <Icons.ShieldCheck size={8} /> ★ ROBUSTO
+                                                                                </span>
+                                                                            )}
+                                                                            {/* Badge de Especulativo LOOSE = FRÁGIL (nuevo) */}
+                                                                            {opt.isSpeculative && opt.speculativeType === 'LOOSE' && (
+                                                                                <span className="text-[9px] font-bold bg-red-100 dark:bg-red-800 text-red-700 dark:text-red-300 px-1.5 py-0.5 rounded border border-red-200 dark:border-red-700 mr-1 flex items-center gap-1">
+                                                                                    <Icons.AlertTriangle size={8} /> ⛔ FRÁGIL
+                                                                                </span>
+                                                                            )}
+                                                                            {/* Badge de Especulativo STRICT = PRECISO (nuevo) */}
+                                                                            {opt.isSpeculative && opt.speculativeType === 'STRICT' && (
+                                                                                <span className="text-[9px] font-bold bg-purple-100 dark:bg-purple-800 text-purple-700 dark:text-purple-300 px-1.5 py-0.5 rounded border border-purple-200 dark:border-purple-700 mr-1 flex items-center gap-1">
+                                                                                    <Icons.Target size={8} /> 🎯 PRECISO
+                                                                                </span>
+                                                                            )}
+                                                                            {/* Badge del Tier usado (nuevo) */}
+                                                                            {opt.tierLabel && (
+                                                                                <span className="text-[9px] font-mono bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-1.5 py-0.5 rounded mr-1">
+                                                                                    {opt.tierLabel}
                                                                                 </span>
                                                                             )}
                                                                             {opt.labels.map((l, i) => (
@@ -4048,8 +4613,12 @@
                                                                             ))}
                                                                             {opt.labels.length === 0 && <span className="text-[10px] text-slate-400 italic">Sin Filtros</span>}
                                                                         </div>
-                                                                        <div className="text-xs text-slate-500 flex gap-2">
+                                                                        <div className="text-xs text-slate-500 flex gap-2 flex-wrap">
                                                                             <span className={opt.isRobust ? "font-bold text-emerald-600 dark:text-emerald-400" : ""}>{opt.stats.matches} coincidencias</span>
+                                                                            {/* Mostrar valores numéricos usados (nuevo) */}
+                                                                            {opt.config.useRsi && <span className="text-slate-400">RSI±{opt.config.rsiTol}</span>}
+                                                                            {opt.config.useVol && <span className="text-slate-400">Vol±{opt.config.volTol}%</span>}
+                                                                            {opt.config.useBp && <span className="text-slate-400">BP±{opt.config.bpTol}</span>}
                                                                         </div>
                                                                     </div>
                                                                     <div className="text-right">
@@ -4069,6 +4638,47 @@
 
                                                 {/* METRICAS SECUNDARIAS */}
                                                 <div className="grid grid-cols-2 gap-4">
+                                                    {/* SQN CARD - NEW */}
+                                                    <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">
+                                                        <div className="text-xs text-slate-500 uppercase mb-1 flex items-center gap-2">
+                                                            SQN (System Quality)
+                                                            {simResult.sqnClassification && (
+                                                                <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${simResult.sqnClassification === 'SUPERB' ? 'bg-emerald-100 dark:bg-emerald-900 text-emerald-600 dark:text-emerald-300' :
+                                                                    simResult.sqnClassification === 'EXCELLENT' ? 'bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-300' :
+                                                                        simResult.sqnClassification === 'GOOD' ? 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300' :
+                                                                            simResult.sqnClassification === 'AVERAGE' ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-600 dark:text-yellow-300' :
+                                                                                'bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300'
+                                                                    }`}>
+                                                                    {simResult.sqnClassification}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        {simResult.sqn ? (
+                                                            <>
+                                                                <div className={`text-2xl font-mono font-bold ${parseFloat(simResult.sqn) >= 2.5 ? 'text-green-600 dark:text-green-400' :
+                                                                    parseFloat(simResult.sqn) >= 1.6 ? 'text-blue-600 dark:text-blue-400' :
+                                                                        'text-red-600 dark:text-red-400'
+                                                                    }`}>{simResult.sqn}</div>
+                                                                <div className="grid grid-cols-2 gap-2 mt-2 text-[10px]">
+                                                                    <div>
+                                                                        <span className="text-slate-500">Expectancy:</span>
+                                                                        <span className={`ml-1 font-mono font-bold ${parseFloat(simResult.expectancy) >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                                                                            {simResult.expectancy}%
+                                                                        </span>
+                                                                    </div>
+                                                                    <div>
+                                                                        <span className="text-slate-500">SQN₁₀₀:</span>
+                                                                        <span className="ml-1 font-mono font-bold text-slate-700 dark:text-slate-200">{simResult.sqnNormalized}</span>
+                                                                    </div>
+                                                                </div>
+                                                                <p className="text-[10px] text-slate-500 mt-2">
+                                                                    SQN mide calidad del sistema. SQN₁₀₀ normaliza a 100 trades para comparar.
+                                                                </p>
+                                                            </>
+                                                        ) : (
+                                                            <div className="text-slate-400 text-sm">Insuficientes datos (min. 5 trades)</div>
+                                                        )}
+                                                    </div>
                                                     <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">
                                                         <div className="text-xs text-slate-500 uppercase mb-1">Ratio de Dolor (Pain)</div>
                                                         <div className={`text-2xl font-mono font-bold ${parseFloat(simResult.painRatio) < 50 ? 'text-green-600 dark:text-green-400' : 'text-yellow-500 dark:text-yellow-400'}`}>{simResult.painRatio}%</div>
@@ -4076,7 +4686,7 @@
                                                             {parseFloat(simResult.painRatio) < 50 ? "El precio suele ir directo al TP." : "Prepárate para sufrir antes de ganar."}
                                                         </p>
                                                     </div>
-                                                    <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">
+                                                    <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
                                                         <div className="flex items-center justify-between mb-2">
                                                             <div className="text-xs text-slate-500 uppercase">Duración (Trades Ganadores)</div>
                                                             <button
@@ -4100,11 +4710,18 @@
                                                                 <div className="font-mono font-bold text-slate-700 dark:text-slate-200">{simResult.maxDuration}</div>
                                                             </div>
                                                         </div>
-                                                        <div className="flex items-center justify-between text-[10px] bg-slate-50 dark:bg-slate-800 p-2 rounded">
+                                                        <div className="flex items-center justify-between text-[10px] bg-slate-50 dark:bg-slate-800 p-2 rounded mb-2">
                                                             <span className="text-slate-500">Mediana: <b className="text-slate-700 dark:text-slate-200">{simResult.medianDuration} velas</b></span>
                                                             <span className="text-orange-500">P80: <b className="text-orange-600 dark:text-orange-400">{simResult.p80Duration} velas</b></span>
                                                         </div>
-                                                        <p className="text-[10px] text-slate-500 mt-2">El 80% de los ganadores cierran antes del P80.</p>
+                                                        {simResult.temporalEfficiency && (
+                                                            <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center text-[10px]">
+                                                                <span className="text-slate-500 font-bold uppercase flex items-center gap-1"><Icons.Zap size={10} className="text-emerald-500" /> Eficiencia Temporal</span>
+                                                                <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded border border-emerald-100 dark:border-emerald-800">
+                                                                    {simResult.temporalEfficiency}% ROI / vela
+                                                                </span>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
                                                 {(simResult.weightedWinRateVolume || simResult.weightedWinRateBuyPressure) && (
@@ -4125,6 +4742,289 @@
                                                         )}
                                                     </div>
                                                 )}
+
+                                                {/* === WALK-FORWARD ANALYSIS RESULTS === */}
+                                                {walkForwardResult && (
+                                                    <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-xl border border-indigo-200 dark:border-indigo-800 shadow-sm animate-fade-in">
+                                                        <div className="flex items-center justify-between mb-3">
+                                                            <h3 className="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase flex items-center gap-2">
+                                                                <Icons.Split size={14} /> Walk-Forward Analysis
+                                                            </h3>
+                                                            <span className="text-[10px] text-slate-500">
+                                                                Split: {walkForwardResult.splitDate || `Idx ${walkForwardResult.splitIndex}`}
+                                                            </span>
+                                                        </div>
+
+                                                        {/* Visual Split Bar */}
+                                                        <div className="relative h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-visible mb-4">
+                                                            <div
+                                                                className="h-full bg-indigo-500 rounded-l-full"
+                                                                style={{ width: `${walkForwardSplit}%` }}
+                                                            ></div>
+                                                            <div
+                                                                className="h-full bg-orange-500 absolute top-0 right-0 rounded-r-full"
+                                                                style={{ width: `${100 - walkForwardSplit}%` }}
+                                                            ></div>
+                                                            {/* Vertical split line indicator */}
+                                                            <div
+                                                                className="absolute -top-1 -bottom-1 w-1 bg-slate-800 dark:bg-white rounded shadow-lg"
+                                                                style={{ left: `calc(${walkForwardSplit}% - 2px)` }}
+                                                            ></div>
+                                                        </div>
+
+                                                        <div className="grid grid-cols-2 gap-4">
+                                                            {/* In-Sample */}
+                                                            <div className="bg-white dark:bg-slate-900 p-3 rounded-lg border border-indigo-200 dark:border-indigo-800">
+                                                                <div className="text-[10px] text-indigo-500 uppercase font-bold mb-2 flex items-center gap-1">
+                                                                    📊 In-Sample ({walkForwardSplit}%)
+                                                                </div>
+                                                                {walkForwardResult.inSample.error ? (
+                                                                    <div className="text-xs text-red-500">{walkForwardResult.inSample.error}</div>
+                                                                ) : (
+                                                                    <div className="space-y-1 text-xs">
+                                                                        <div className="flex justify-between">
+                                                                            <span className="text-slate-500">Win Rate:</span>
+                                                                            <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400">{walkForwardResult.inSample.winRate}%</span>
+                                                                        </div>
+                                                                        <div className="flex justify-between">
+                                                                            <span className="text-slate-500">SQN:</span>
+                                                                            <span className="font-mono font-bold">{walkForwardResult.inSample.sqn || '—'}</span>
+                                                                        </div>
+                                                                        <div className="flex justify-between">
+                                                                            <span className="text-slate-500">Trades:</span>
+                                                                            <span className="font-mono">{walkForwardResult.inSample.closedTrades}</span>
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+
+                                                            {/* Out-of-Sample */}
+                                                            <div className="bg-white dark:bg-slate-900 p-3 rounded-lg border border-orange-200 dark:border-orange-800">
+                                                                <div className="text-[10px] text-orange-500 uppercase font-bold mb-2 flex items-center gap-1">
+                                                                    🔮 Out-of-Sample ({100 - walkForwardSplit}%)
+                                                                </div>
+                                                                {walkForwardResult.outOfSample.error ? (
+                                                                    <div className="text-xs text-red-500">{walkForwardResult.outOfSample.error}</div>
+                                                                ) : (
+                                                                    <div className="space-y-1 text-xs">
+                                                                        <div className="flex justify-between">
+                                                                            <span className="text-slate-500">Win Rate:</span>
+                                                                            <span className="font-mono font-bold text-orange-600 dark:text-orange-400">{walkForwardResult.outOfSample.winRate}%</span>
+                                                                        </div>
+                                                                        <div className="flex justify-between">
+                                                                            <span className="text-slate-500">SQN:</span>
+                                                                            <span className="font-mono font-bold">{walkForwardResult.outOfSample.sqn || '—'}</span>
+                                                                        </div>
+                                                                        <div className="flex justify-between">
+                                                                            <span className="text-slate-500">Trades:</span>
+                                                                            <span className="font-mono">{walkForwardResult.outOfSample.closedTrades}</span>
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Degradation Indicator */}
+                                                        {walkForwardResult.degradation != null && (
+                                                            <div className={`mt-3 p-3 rounded-lg border ${walkForwardResult.degradation < 20
+                                                                ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+                                                                : walkForwardResult.degradation < 50
+                                                                    ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800'
+                                                                    : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+                                                                }`}>
+                                                                <div className="flex items-center justify-between">
+                                                                    <div className="flex items-center gap-2">
+                                                                        {walkForwardResult.degradation < 20 ? (
+                                                                            <Icons.ShieldCheck className="text-green-500" size={16} />
+                                                                        ) : walkForwardResult.degradation < 50 ? (
+                                                                            <Icons.AlertTriangle className="text-yellow-500" size={16} />
+                                                                        ) : (
+                                                                            <Icons.AlertCircle className="text-red-500" size={16} />
+                                                                        )}
+                                                                        <span className="text-xs font-bold">
+                                                                            {walkForwardResult.degradation < 20
+                                                                                ? 'Estrategia Robusta'
+                                                                                : walkForwardResult.degradation < 50
+                                                                                    ? 'Posible Overfitting'
+                                                                                    : 'Alto Riesgo de Overfitting'}
+                                                                        </span>
+                                                                    </div>
+                                                                    <span className={`font-mono font-bold ${walkForwardResult.degradation < 20
+                                                                        ? 'text-green-600'
+                                                                        : walkForwardResult.degradation < 50
+                                                                            ? 'text-yellow-600'
+                                                                            : 'text-red-600'
+                                                                        }`}>
+                                                                        {walkForwardResult.degradation > 0 ? '-' : '+'}{Math.abs(walkForwardResult.degradation).toFixed(1)}%
+                                                                    </span>
+                                                                </div>
+                                                                <p className="text-[10px] text-slate-500 mt-1">
+                                                                    Degradación SQN = diferencia entre In-Sample y Out-of-Sample. &lt;20% es ideal.
+                                                                </p>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+
+                                                {/* === MONTE CARLO SIMULATION === */}
+                                                <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-xl border border-purple-200 dark:border-purple-800 shadow-sm">
+                                                    <div className="flex items-center justify-between mb-3">
+                                                        <h3 className="text-xs font-bold text-purple-600 dark:text-purple-400 uppercase flex items-center gap-2">
+                                                            🎲 Simulación Monte Carlo
+                                                        </h3>
+                                                        <div className="flex items-center gap-2">
+                                                            <select
+                                                                value={monteCarloSimulations}
+                                                                onChange={(e) => setMonteCarloSimulations(parseInt(e.target.value))}
+                                                                className="text-xs bg-white dark:bg-slate-900 border border-purple-300 dark:border-purple-700 rounded px-2 py-1"
+                                                                disabled={isRunningMonteCarlo}
+                                                            >
+                                                                <option value="500">500 sims</option>
+                                                                <option value="1000">1,000 sims</option>
+                                                                <option value="5000">5,000 sims</option>
+                                                                <option value="10000">10,000 sims</option>
+                                                            </select>
+                                                            <button
+                                                                onClick={runMonteCarlo}
+                                                                disabled={isRunningMonteCarlo || !simResult || simResult.error || simResult.closedTrades < 10}
+                                                                className="text-xs bg-purple-600 hover:bg-purple-500 disabled:bg-slate-400 text-white font-bold px-3 py-1.5 rounded-lg shadow transition-all flex items-center gap-1"
+                                                            >
+                                                                {isRunningMonteCarlo ? (
+                                                                    <><Icons.Activity size={12} className="animate-spin" /> Calculando...</>
+                                                                ) : (
+                                                                    <>🎲 Ejecutar</>
+                                                                )}
+                                                            </button>
+                                                        </div>
+                                                    </div>
+
+                                                    <p className="text-[10px] text-slate-500 mb-3">
+                                                        Reordena tus {simResult?.closedTrades || 0} trades aleatoriamente para calcular el riesgo de ruina por mala suerte.
+                                                    </p>
+
+                                                    {monteCarloResult && (
+                                                        <div className="animate-fade-in space-y-3">
+                                                            {/* Main Stats Grid */}
+                                                            <div className="grid grid-cols-3 gap-3">
+                                                                {/* Ruin Probability */}
+                                                                <div className={`p-3 rounded-lg border ${monteCarloResult.ruinProbability < 1
+                                                                    ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+                                                                    : monteCarloResult.ruinProbability < 5
+                                                                        ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800'
+                                                                        : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+                                                                    }`}>
+                                                                    <div className="text-[9px] uppercase font-bold opacity-60">Prob. Ruina</div>
+                                                                    <div className={`text-xl font-mono font-black ${monteCarloResult.ruinProbability < 1 ? 'text-green-600' :
+                                                                        monteCarloResult.ruinProbability < 5 ? 'text-yellow-600' : 'text-red-600'
+                                                                        }`}>
+                                                                        {monteCarloResult.ruinProbability.toFixed(1)}%
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* Worst Drawdown */}
+                                                                <div className="bg-white dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-slate-800">
+                                                                    <div className="text-[9px] uppercase font-bold text-slate-400">Peor DD</div>
+                                                                    <div className="text-xl font-mono font-black text-red-600 dark:text-red-400">
+                                                                        {monteCarloResult.worstDrawdown.toFixed(1)}%
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* Median Equity */}
+                                                                <div className="bg-white dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-slate-800">
+                                                                    <div className="text-[9px] uppercase font-bold text-slate-400">Equity Mediana</div>
+                                                                    <div className={`text-xl font-mono font-black ${monteCarloResult.equityPercentiles.p50 >= 100 ? 'text-green-600' : 'text-red-600'
+                                                                        }`}>
+                                                                        {monteCarloResult.equityPercentiles.p50.toFixed(0)}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Drawdown Distribution */}
+                                                            <div className="bg-white dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-slate-800">
+                                                                <div className="text-[10px] font-bold text-slate-500 uppercase mb-2">Distribución de Drawdowns</div>
+                                                                <div className="grid grid-cols-5 gap-1 text-center text-[10px]">
+                                                                    <div>
+                                                                        <div className="text-slate-400">P5</div>
+                                                                        <div className="font-mono font-bold text-green-600">{monteCarloResult.percentiles.p5.toFixed(1)}%</div>
+                                                                    </div>
+                                                                    <div>
+                                                                        <div className="text-slate-400">P25</div>
+                                                                        <div className="font-mono font-bold">{monteCarloResult.percentiles.p25.toFixed(1)}%</div>
+                                                                    </div>
+                                                                    <div className="bg-purple-50 dark:bg-purple-900/30 rounded">
+                                                                        <div className="text-purple-500 font-bold">P50</div>
+                                                                        <div className="font-mono font-bold text-purple-600">{monteCarloResult.percentiles.p50.toFixed(1)}%</div>
+                                                                    </div>
+                                                                    <div>
+                                                                        <div className="text-slate-400">P75</div>
+                                                                        <div className="font-mono font-bold">{monteCarloResult.percentiles.p75.toFixed(1)}%</div>
+                                                                    </div>
+                                                                    <div>
+                                                                        <div className="text-slate-400">P95</div>
+                                                                        <div className="font-mono font-bold text-red-600">{monteCarloResult.percentiles.p95.toFixed(1)}%</div>
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* Visual DD Bar */}
+                                                                <div className="mt-2 relative h-3 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                                                                    <div
+                                                                        className="absolute h-full bg-green-400"
+                                                                        style={{ left: 0, width: `${Math.min(100, Math.abs(monteCarloResult.percentiles.p5))}%` }}
+                                                                    ></div>
+                                                                    <div
+                                                                        className="absolute h-full bg-yellow-400"
+                                                                        style={{ left: `${Math.abs(monteCarloResult.percentiles.p5)}%`, width: `${Math.abs(monteCarloResult.percentiles.p50 - monteCarloResult.percentiles.p5)}%` }}
+                                                                    ></div>
+                                                                    <div
+                                                                        className="absolute h-full bg-red-400"
+                                                                        style={{ left: `${Math.abs(monteCarloResult.percentiles.p50)}%`, width: `${Math.abs(monteCarloResult.percentiles.p95 - monteCarloResult.percentiles.p50)}%` }}
+                                                                    ></div>
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Equity Distribution */}
+                                                            <div className="bg-white dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-slate-800">
+                                                                <div className="text-[10px] font-bold text-slate-500 uppercase mb-2">Distribución de Equity Final</div>
+                                                                <div className="grid grid-cols-5 gap-1 text-center text-[10px]">
+                                                                    <div>
+                                                                        <div className="text-slate-400">P5</div>
+                                                                        <div className={`font-mono font-bold ${monteCarloResult.equityPercentiles.p5 >= 100 ? 'text-green-600' : 'text-red-600'}`}>
+                                                                            {monteCarloResult.equityPercentiles.p5.toFixed(0)}
+                                                                        </div>
+                                                                    </div>
+                                                                    <div>
+                                                                        <div className="text-slate-400">P25</div>
+                                                                        <div className="font-mono font-bold">{monteCarloResult.equityPercentiles.p25.toFixed(0)}</div>
+                                                                    </div>
+                                                                    <div className="bg-purple-50 dark:bg-purple-900/30 rounded">
+                                                                        <div className="text-purple-500 font-bold">P50</div>
+                                                                        <div className="font-mono font-bold text-purple-600">{monteCarloResult.equityPercentiles.p50.toFixed(0)}</div>
+                                                                    </div>
+                                                                    <div>
+                                                                        <div className="text-slate-400">P75</div>
+                                                                        <div className="font-mono font-bold">{monteCarloResult.equityPercentiles.p75.toFixed(0)}</div>
+                                                                    </div>
+                                                                    <div>
+                                                                        <div className="text-slate-400">P95</div>
+                                                                        <div className={`font-mono font-bold ${monteCarloResult.equityPercentiles.p95 >= 100 ? 'text-green-600' : 'text-red-600'}`}>
+                                                                            {monteCarloResult.equityPercentiles.p95.toFixed(0)}
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            <p className="text-[9px] text-slate-400 text-center">
+                                                                {monteCarloResult.simCount.toLocaleString()} simulaciones · Punto de ruina: -50% capital
+                                                            </p>
+                                                        </div>
+                                                    )}
+
+                                                    {!monteCarloResult && !isRunningMonteCarlo && (
+                                                        <div className="text-center text-slate-400 text-xs py-4">
+                                                            Ejecuta la simulación para ver el análisis de riesgo probabilístico.
+                                                        </div>
+                                                    )}
+                                                </div>
 
                                                 {/* MAE INFO */}
                                                 <div className="bg-slate-100 dark:bg-slate-900/50 p-4 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">
