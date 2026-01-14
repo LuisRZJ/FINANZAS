@@ -187,7 +187,11 @@
             Map: (p) => <IconBase {...p}><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21 3 6" /><line x1="9" x2="9" y1="3" y2="18" /><line x1="15" x2="15" y1="6" y2="21" /></IconBase>,
             ChevronDown: (p) => <IconBase {...p}><polyline points="6 9 12 15 18 9" /></IconBase>,
             Trash2: (p) => <IconBase {...p}><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></IconBase>,
-            Split: (p) => <IconBase {...p}><path d="M12 3v18" /><path d="M4 7h5" /><path d="M15 7h5" /><path d="M4 17h5" /><path d="M15 17h5" /><path d="M4 12h16" /></IconBase>
+            Split: (p) => <IconBase {...p}><path d="M12 3v18" /><path d="M4 7h5" /><path d="M15 7h5" /><path d="M4 17h5" /><path d="M15 17h5" /><path d="M4 12h16" /></IconBase>,
+            Calendar: (p) => <IconBase {...p}><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></IconBase>,
+            Edit2: (p) => <IconBase {...p}><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" /></IconBase>,
+            Shield: (p) => <IconBase {...p}><path d="M12 22s8-4 8-10V5L12 2 4 5v7c0 6 8 10 8 10" /></IconBase>,
+            Eye: (p) => <IconBase {...p}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></IconBase>
         };
 
         const AUDIT_VARIANTS = {
@@ -244,7 +248,7 @@
             const hh = parseInt(tp.slice(0, 2) || '0', 10);
             const mm = parseInt(tp.slice(2, 4) || '0', 10);
             const ss = parseInt(tp.slice(4, 6) || '0', 10);
-            return new Date(year, month - 1, day, hh, mm, ss);
+            return new Date(Date.UTC(year, month - 1, day, hh, mm, ss));
         };
 
         const parseFlexibleDateTime = (value) => {
@@ -263,7 +267,7 @@
                 const hh = Number(m[4] || 0);
                 const mm = Number(m[5] || 0);
                 const ss = Number(m[6] || 0);
-                const d = new Date(year, month - 1, day, hh, mm, ss);
+                const d = new Date(Date.UTC(year, month - 1, day, hh, mm, ss));
                 if (!isNaN(d.getTime())) return d;
             }
 
@@ -325,7 +329,8 @@
                 }
 
                 // --- Lógica ADR: Detectar cambio de día ---
-                if (dayKey !== currentDayKey) {
+                const isNewDay = (dayKey !== currentDayKey);
+                if (isNewDay) {
                     // Si había un día previo, guardar su rango
                     if (currentDayKey !== null && currentDayHigh !== -Infinity && currentDayLow !== Infinity) {
                         dailyRanges.push({
@@ -337,6 +342,38 @@
                             dailyRanges.shift();
                         }
                     }
+                }
+
+                // --- CALCULAR ADR PARA ESTA VELA (Basado en el estado PREVIO a la vela actual) ---
+                let adrValue = null;
+                let adrFilledPct = null;
+                let currentDayRange = null;
+                let adrRoomTop = null;
+                let adrRoomBottom = null;
+
+                if (dailyRanges.length >= 1 && (isNewDay || currentDayOpen !== null)) {
+                    // Calcular promedio de rangos diarios (excluyendo día actual)
+                    const rangesToUse = dailyRanges.slice(-14);
+                    if (rangesToUse.length > 0) {
+                        const sumRanges = rangesToUse.reduce((acc, dr) => acc + dr.range, 0);
+                        adrValue = sumRanges / rangesToUse.length;
+
+                        // Rango del día actual hasta la vela anterior
+                        // Si es nuevo día, el rango acumulado es 0
+                        currentDayRange = isNewDay ? 0 : (currentDayHigh - currentDayLow);
+
+                        // Porcentaje completado del ADR
+                        adrFilledPct = adrValue > 0 ? (currentDayRange / adrValue) * 100 : 0;
+
+                        // Techos y suelos estadísticos (Basados en el Open del día actual)
+                        const effectiveDayOpen = isNewDay ? c.open : currentDayOpen;
+                        adrRoomTop = effectiveDayOpen + adrValue;
+                        adrRoomBottom = effectiveDayOpen - adrValue;
+                    }
+                }
+
+                // --- ACTUALIZAR MÁXIMOS/MÍNIMOS PARA LA PRÓXIMA VELA ---
+                if (isNewDay) {
                     // Iniciar nuevo día
                     currentDayKey = dayKey;
                     currentDayOpen = c.open;
@@ -346,32 +383,6 @@
                     // Actualizar máximos y mínimos del día actual
                     if (c.high > currentDayHigh) currentDayHigh = c.high;
                     if (c.low < currentDayLow) currentDayLow = c.low;
-                }
-
-                // Calcular ADR para esta vela
-                let adrValue = null;
-                let adrFilledPct = null;
-                let currentDayRange = null;
-                let adrRoomTop = null;
-                let adrRoomBottom = null;
-
-                if (dailyRanges.length >= 1 && currentDayOpen !== null) {
-                    // Calcular promedio de rangos diarios (excluyendo día actual)
-                    const rangesToUse = dailyRanges.slice(-14);
-                    if (rangesToUse.length > 0) {
-                        const sumRanges = rangesToUse.reduce((acc, dr) => acc + dr.range, 0);
-                        adrValue = sumRanges / rangesToUse.length;
-
-                        // Rango del día actual hasta ahora
-                        currentDayRange = currentDayHigh - currentDayLow;
-
-                        // Porcentaje completado del ADR
-                        adrFilledPct = adrValue > 0 ? (currentDayRange / adrValue) * 100 : 0;
-
-                        // Techos y suelos estadísticos
-                        adrRoomTop = currentDayOpen + adrValue;
-                        adrRoomBottom = currentDayOpen - adrValue;
-                    }
                 }
 
                 adrData.push({
@@ -1016,6 +1027,7 @@
                     name,
                     createdAt: new Date().toISOString(),
                     metrics: { ...simResult },
+                    walkForwardMetrics: walkForwardResult ? { ...walkForwardResult } : null,
                     params,
                     targetCandle: snapshot,
                     dataset: { length: csvData.length, hasExtended, htfLength: htfData.length, ltfLength: ltfData.length }
@@ -1276,6 +1288,7 @@
                     candle: snapshot,
                     params,
                     result: simResult,
+                    walkForwardResult, // Añadir datos de validación Walk-Forward
                     optimizationResults: optimizationResults ? optimizationResults.map((x) => ({
                         isRobust: x.isRobust,
                         stats: x.stats,
@@ -2649,6 +2662,7 @@
                     riskDistPercent: (riskDist * 100).toFixed(2),
                     weightedWinRateVolume: totalVolAll > 0 ? ((totalVolWins / totalVolAll) * 100).toFixed(1) : null,
                     weightedWinRateBuyPressure: totalBpAll > 0 ? ((totalBpWins / totalBpAll) * 100).toFixed(1) : null,
+                    pnlList, // Devolver el array de PnL real (en unidades R)
                     htfAligned,
                     htfOpposed,
                     htfUnknown,
@@ -2677,7 +2691,7 @@
                 // === OPTIMIZACIÓN: Solo 2 tiers para mayor velocidad ===
                 const SENSITIVITY_TIERS = [
                     { key: 'NORMAL', label: '[BASE]', factor: 1.0 },
-                    { key: 'LOOSE', label: '[LAXO]', factor: 1.4 }
+                    { key: 'LOOSE', label: '[LAXO]', factor: 1.2 }
                 ];
 
                 // Función para calcular valores numéricos según tier
@@ -2847,10 +2861,21 @@
 
                 // Ordenar: Robustos primero, luego por WinRate
                 combinations.sort((a, b) => {
+                    // 1. Prioridad: Robustez
                     if (a.isRobust && !b.isRobust) return -1;
                     if (!a.isRobust && b.isRobust) return 1;
+
+                    // 2. Prioridad: Tipo de Especulación
                     if (a.isSpeculative && a.speculativeType === 'LOOSE' && !(b.isSpeculative && b.speculativeType === 'LOOSE')) return 1;
                     if (b.isSpeculative && b.speculativeType === 'LOOSE' && !(a.isSpeculative && a.speculativeType === 'LOOSE')) return -1;
+
+                    // 3. NUEVO CRITERIO: Volumen de muestras
+                    // Si la diferencia de matches es > 50, gana el que tenga más trades, independientemente de pequeñas diferencias en WR.
+                    if (Math.abs(b.stats.matches - a.stats.matches) > 50) {
+                        return b.stats.matches - a.stats.matches;
+                    }
+
+                    // Si la cantidad es similar, desempata por WinRate
                     if (b.stats.winRateNum !== a.stats.winRateNum) return b.stats.winRateNum - a.stats.winRateNum;
                     return b.stats.matches - a.stats.matches;
                 });
@@ -2876,10 +2901,9 @@
                 // === SELECCIÓN FINAL DE RESULTADOS CON GARANTÍA DE MUESTRA GRANDE ===
                 const finalResults = uniqueResults.slice(0, 8);
 
-                // Buscar el candidato con mayor validez estadística (más trades) que sea rentable
-                const bestSample = uniqueResults.reduce((best, current) => {
-                    // Solo considerar rentables (>50% WinRate) para evitar basura estadística
-                    if (current.stats.winRateNum > 50) {
+                // Buscar explícitamente la configuración ROBUSTA con mayor número de matches
+                const bestHighSampleRobust = uniqueResults.reduce((best, current) => {
+                    if (current.isRobust) {
                         if (!best || current.stats.matches > best.stats.matches) {
                             return current;
                         }
@@ -2887,20 +2911,13 @@
                     return best;
                 }, null);
 
-                // Si existe un candidato de alta muestra y NO está en el Top 8 actual
-                if (bestSample && !finalResults.some(r => r.boolSignature === bestSample.boolSignature)) {
-                    // Forzar su entrada en la última posición (slot 8)
+                // Si existe un gigante robusto y no está en el top 8, inyectarlo forzosamente
+                if (bestHighSampleRobust && !finalResults.some(r => r.boolSignature === bestHighSampleRobust.boolSignature)) {
                     if (finalResults.length === 8) {
-                        // Reemplazamos el último (el menos bueno de los mejores)
-                        finalResults[7] = bestSample;
+                        finalResults[7] = bestHighSampleRobust; // Reemplazar el último
                     } else {
-                        finalResults.push(bestSample);
+                        finalResults.push(bestHighSampleRobust);
                     }
-
-                    // Asegurar que se visualiza correctamente: Lo marcamos visualmente si es necesario, 
-                    // o simplemente confiamos en que el usuario verá el alto número de matches.
-                    // Podríamos añadir una etiqueta especial en applyOptimization si quisiéramos, 
-                    // pero la solicitud solo pedía incluirlo en la tabla.
                 }
 
                 setOptimizationResults(finalResults);
@@ -3009,8 +3026,8 @@
                         const inSampleRes = calculateBacktest(csvData, inSampleTarget, tradeParams, { ...filters, maxIndexExclusive: splitIdx });
 
                         // Out-of-Sample: Test on remaining data
-                        // Use last candle of dataset as target for out-of-sample
-                        const outSampleTarget = csvData.length - 1;
+                        // Use selectedCandleIndex as target for out-of-sample to ensure pattern consistency
+                        const outSampleTarget = selectedCandleIndex;
                         // Create modified filters that skip the in-sample period
                         const outSampleRes = calculateBacktest(csvData, outSampleTarget, tradeParams, { ...filters, minIndexInclusive: splitIdx });
 
@@ -3057,17 +3074,9 @@
                 setIsRunningMonteCarlo(true);
                 setMonteCarloResult(null);
 
-                // Build trade results array from simResult
-                const winRate = simResult.winRateNum / 100;
-                const riskPercent = parseFloat(simResult.riskDistPercent) || 1;
-                const rrRatio = parseFloat(takeProfit) && parseFloat(stopLoss) && entryPrice
-                    ? Math.abs((parseFloat(takeProfit) - entryPrice) / (entryPrice - parseFloat(stopLoss)))
-                    : 2;
-
-                // Create trade array: +R for wins, -1 for losses
-                const trades = [];
-                for (let i = 0; i < simResult.wins; i++) trades.push(rrRatio);
-                for (let i = 0; i < simResult.losses; i++) trades.push(-1);
+                // Usar pnlList real del backtest para que la simulación refleje la volatilidad real
+                const trades = simResult.pnlList || [];
+                const riskPercent = 1; // El pnlList ya está en unidades R (1R = riskPercent)
 
                 // Web Worker code as string
                 const workerCode = `
@@ -5406,70 +5415,139 @@
                                     ) : (
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             {savedSims.map(item => (
-                                                <div key={item.id} className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                                                    <div className="flex items-center justify-between mb-2">
+                                                <div key={item.id} className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col transition-all hover:shadow-md">
+                                                    {/* Cabecera */}
+                                                    <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/30">
                                                         <div>
-                                                            <div className="text-lg font-bold text-slate-800 dark:text-white">{item.name}</div>
-                                                            <div className="text-xs text-slate-500 dark:text-slate-400">{new Date(item.createdAt).toLocaleString()}</div>
+                                                            <div className="text-lg font-bold text-slate-800 dark:text-white leading-tight">{item.name}</div>
+                                                            <div className="text-[10px] uppercase tracking-wider font-semibold text-slate-400 dark:text-slate-500 mt-1 flex items-center gap-1">
+                                                                <Icons.Calendar size={10} />
+                                                                {new Date(item.createdAt).toLocaleString()}
+                                                            </div>
                                                         </div>
                                                         <div className="flex items-center gap-2">
-                                                            <button onClick={() => editSavedSimName(item.id)} className="px-3 py-1.5 text-xs bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg">Editar</button>
-                                                            <button onClick={() => deleteSavedSim(item.id)} className="px-3 py-1.5 text-xs bg-red-600 hover:bg-red-500 text-white rounded-lg">Eliminar</button>
+                                                            <button onClick={() => editSavedSimName(item.id)} className="p-2 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors" title="Editar nombre">
+                                                                <Icons.Edit2 size={16} />
+                                                            </button>
+                                                            <button onClick={() => deleteSavedSim(item.id)} className="p-2 text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors" title="Eliminar">
+                                                                <Icons.Trash2 size={16} />
+                                                            </button>
                                                         </div>
                                                     </div>
-                                                    <div className="grid grid-cols-2 gap-3 text-sm">
-                                                        <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded border border-slate-200 dark:border-slate-700">
-                                                            <div className="text-xs text-slate-500">Win Rate</div>
-                                                            <div className="font-mono font-bold">{item.metrics.winRate}%</div>
+
+                                                    <div className="p-5 space-y-5 flex-1">
+                                                        {/* Métricas Principales */}
+                                                        <div className="flex items-end justify-between gap-4">
+                                                            <div className="flex-1">
+                                                                <div className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 mb-1">Rendimiento Principal</div>
+                                                                <div className="flex items-baseline gap-2">
+                                                                    <span className="text-3xl font-black text-slate-800 dark:text-white">{item.metrics.winRate}%</span>
+                                                                    <span className="text-sm font-bold text-slate-400 dark:text-slate-500">WR</span>
+                                                                </div>
+                                                            </div>
+                                                            <div className="text-right">
+                                                                <div className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 mb-1">Muestras</div>
+                                                                <div className="text-xl font-bold text-slate-700 dark:text-slate-300">{item.metrics.matches} <span className="text-xs font-normal text-slate-400">trades</span></div>
+                                                            </div>
                                                         </div>
-                                                        <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded border border-slate-200 dark:border-slate-700">
-                                                            <div className="text-xs text-slate-500">Muestras</div>
-                                                            <div className="font-mono font-bold">{item.metrics.matches}</div>
-                                                        </div>
-                                                        <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded border border-slate-200 dark:border-slate-700">
-                                                            <div className="text-xs text-slate-500">Wins</div>
-                                                            <div className="font-mono font-bold">{item.metrics.wins}</div>
-                                                        </div>
-                                                        <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded border border-slate-200 dark:border-slate-700">
-                                                            <div className="text-xs text-slate-500">Losses</div>
-                                                            <div className="font-mono font-bold">{item.metrics.losses}</div>
-                                                        </div>
-                                                        <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded border border-slate-200 dark:border-slate-700">
-                                                            <div className="text-xs text-slate-500">Duración</div>
-                                                            <div className="font-mono font-bold">{item.metrics.avgDuration} velas</div>
-                                                        </div>
-                                                        <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded border border-slate-200 dark:border-slate-700">
-                                                            <div className="text-xs text-slate-500">Pain</div>
-                                                            <div className="font-mono font-bold">{item.metrics.painRatio}%</div>
-                                                        </div>
-                                                        <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded border border-slate-200 dark:border-slate-700">
-                                                            <div className="text-xs text-slate-500">Avg MAE</div>
-                                                            <div className="font-mono font-bold">{item.metrics.avgMae}%</div>
-                                                        </div>
-                                                        <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded border border-slate-200 dark:border-slate-700">
-                                                            <div className="text-xs text-slate-500">Max MAE</div>
-                                                            <div className="font-mono font-bold">{item.metrics.maxMae}%</div>
-                                                        </div>
-                                                        <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded border border-slate-200 dark:border-slate-700">
-                                                            <div className="text-xs text-slate-500">Distancia SL</div>
-                                                            <div className="font-mono font-bold">{item.metrics.riskDistPercent}%</div>
-                                                        </div>
-                                                        {item.metrics.weightedWinRateVolume && (
-                                                            <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded border border-slate-200 dark:border-slate-700 col-span-2">
-                                                                <div className="text-xs text-slate-500">Win Rate Volumen</div>
-                                                                <div className="font-mono font-bold">{item.metrics.weightedWinRateVolume}%</div>
+
+                                                        {/* Bloque de Validación Walk-Forward */}
+                                                        {item.walkForwardMetrics && (
+                                                            <div className="p-3 rounded-lg bg-indigo-50/50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-900/30">
+                                                                <div className="flex items-center justify-between mb-2">
+                                                                    <div className="text-[10px] uppercase font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-1">
+                                                                        <Icons.Shield size={10} /> Validación Walk-Forward
+                                                                    </div>
+                                                                    <div className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                                                                        item.walkForwardMetrics.degradation < 20 ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                                                                        item.walkForwardMetrics.degradation < 50 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' :
+                                                                        'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                                                                    }`}>
+                                                                        {item.walkForwardMetrics.degradation}% DEGRADACIÓN
+                                                                    </div>
+                                                                </div>
+                                                                <div className="grid grid-cols-2 gap-4">
+                                                                    <div>
+                                                                        <div className="text-[9px] text-slate-500 uppercase font-semibold">In-Sample (IS)</div>
+                                                                        <div className="text-xs font-bold text-slate-700 dark:text-slate-300">WR: {item.walkForwardMetrics.inSample?.winRate}% · SQN: {item.walkForwardMetrics.inSample?.sqn}</div>
+                                                                    </div>
+                                                                    <div className="text-right">
+                                                                        <div className="text-[9px] text-slate-500 uppercase font-semibold">Out-of-Sample (OOS)</div>
+                                                                        <div className="text-xs font-bold text-slate-700 dark:text-slate-300">WR: {item.walkForwardMetrics.outOfSample?.winRate}% · SQN: {item.walkForwardMetrics.outOfSample?.sqn}</div>
+                                                                    </div>
+                                                                </div>
                                                             </div>
                                                         )}
-                                                        {item.metrics.weightedWinRateBuyPressure && (
-                                                            <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded border border-slate-200 dark:border-slate-700 col-span-2">
-                                                                <div className="text-xs text-slate-500">Win Rate Presión</div>
-                                                                <div className="font-mono font-bold">{item.metrics.weightedWinRateBuyPressure}%</div>
+
+                                                        {/* Rejilla de Métricas Secundarias */}
+                                                        <div className="grid grid-cols-3 gap-3">
+                                                            <div className="space-y-1">
+                                                                <div className="text-[9px] uppercase font-bold text-slate-400 dark:text-slate-500">Riesgo (MAE)</div>
+                                                                <div className="text-xs font-bold text-slate-700 dark:text-slate-300">Max: {item.metrics.maxMae}%</div>
+                                                                <div className="text-[10px] text-slate-500">Avg: {item.metrics.avgMae}%</div>
                                                             </div>
+                                                            <div className="space-y-1">
+                                                                <div className="text-[9px] uppercase font-bold text-slate-400 dark:text-slate-500">Esfuerzo</div>
+                                                                <div className="text-xs font-bold text-slate-700 dark:text-slate-300">Pain: {item.metrics.painRatio}%</div>
+                                                                <div className="text-[10px] text-slate-500">Dist: {item.metrics.riskDistPercent}%</div>
+                                                            </div>
+                                                            <div className="space-y-1 text-right">
+                                                                <div className="text-[9px] uppercase font-bold text-slate-400 dark:text-slate-500">Tiempo</div>
+                                                                <div className="text-xs font-bold text-slate-700 dark:text-slate-300">{item.metrics.avgDuration} velas</div>
+                                                                <div className="text-[10px] text-slate-500">promedio</div>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Contexto de Mercado (Snapshot) */}
+                                                        {item.targetCandle && (
+                                                            <details className="group border border-slate-100 dark:border-slate-800 rounded-lg overflow-hidden">
+                                                                <summary className="list-none p-2 bg-slate-50 dark:bg-slate-800/50 text-[10px] font-bold text-slate-500 dark:text-slate-400 cursor-pointer flex items-center justify-between hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                                                                    <span className="flex items-center gap-1.5"><Icons.Eye size={12} /> CONTEXTO DE MERCADO</span>
+                                                                    <Icons.ChevronDown size={12} className="group-open:rotate-180 transition-transform" />
+                                                                </summary>
+                                                                <div className="p-3 grid grid-cols-2 gap-y-2 text-[11px] border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900/50">
+                                                                    <div className="col-span-2 text-slate-400 mb-1 border-b border-slate-50 dark:border-slate-800 pb-1">
+                                                                        Vela: <span className="font-mono text-slate-600 dark:text-slate-300">{item.targetCandle.datetime}</span>
+                                                                    </div>
+                                                                    <div className="flex justify-between px-1">
+                                                                        <span className="text-slate-400">Precio:</span>
+                                                                        <span className="font-bold text-slate-700 dark:text-slate-200">{item.targetCandle.close}</span>
+                                                                    </div>
+                                                                    <div className="flex justify-between px-1">
+                                                                        <span className="text-slate-400">RSI:</span>
+                                                                        <span className="font-bold text-slate-700 dark:text-slate-200">{item.targetCandle.rsi?.toFixed(1) || '—'}</span>
+                                                                    </div>
+                                                                    <div className="flex justify-between px-1">
+                                                                        <span className="text-slate-400">SMA200:</span>
+                                                                        <span className={`font-bold ${item.targetCandle.close > item.targetCandle.sma200 ? 'text-green-500' : 'text-red-500'}`}>
+                                                                            {item.targetCandle.close > item.targetCandle.sma200 ? 'Encima' : 'Debajo'}
+                                                                        </span>
+                                                                    </div>
+                                                                    <div className="flex justify-between px-1">
+                                                                        <span className="text-slate-400">Volatilidad:</span>
+                                                                        <span className="font-bold text-slate-700 dark:text-slate-200">{item.targetCandle.bodySizePct?.toFixed(2)}%</span>
+                                                                    </div>
+                                                                </div>
+                                                            </details>
                                                         )}
-                                                    </div>
-                                                    <div className="mt-3 text-xs text-slate-500 dark:text-slate-400">
-                                                        <div>Tipo: <b>{item.params && item.params.tradeType}</b> · SL: <b>{item.params && item.params.stopLoss}</b> · TP: <b>{item.params && item.params.takeProfit}</b> · Spread: <b>{item.params && item.params.spread}</b></div>
-                                                        <div>Filtros: RSI {(item.params && item.params.rsi && item.params.rsi.useRsiFilter) ? 'ON' : 'OFF'} · Tendencia {(item.params && item.params.trend && item.params.trend.useTrendFilter) ? 'ON' : 'OFF'} · Horario {(item.params && item.params.time && item.params.time.useTimeFilter) ? `ON (${item.params.time.timeMode || 'LOCAL'})` : 'OFF'} · VolVela {(item.params && item.params.volBody && item.params.volBody.useVolFilter) ? 'ON' : 'OFF'} · Enfriamiento {(item.params && item.params.cooldown && item.params.cooldown.useCooldownFilter) ? 'ON' : 'OFF'} · HTF {(item.params && item.params.mtf && item.params.mtf.useHtfFilter) ? `ON (${item.params.mtf.htfMode || 'DISCARD'})` : 'OFF'} · LTF {(item.params && item.params.mtf && item.params.mtf.useLtfIntra) ? 'ON' : 'OFF'} · Ext: Vol {(item.params && item.params.extended && item.params.extended.useVolumeFilter) ? 'ON' : 'OFF'}, Presión {(item.params && item.params.extended && item.params.extended.useBuyPressureFilter) ? 'ON' : 'OFF'}, Delta {(item.params && item.params.extended && item.params.extended.useDeltaSignFilter) ? 'ON' : 'OFF'}</div>
+
+                                                        {/* Badges de Filtros (Footer de Tarjeta) */}
+                                                        <div className="flex flex-wrap gap-1.5 pt-2">
+                                                            {item.params && (
+                                                                <>
+                                                                    <span className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[9px] font-bold text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+                                                                        {item.params.tradeType}
+                                                                    </span>
+                                                                    {/* Badges de Filtros Activos */}
+                                                                    {item.params.rsi?.useRsiFilter && <span className="px-1.5 py-0.5 rounded bg-purple-50 dark:bg-purple-900/20 text-[9px] font-medium text-purple-600 dark:text-purple-400 border border-purple-100 dark:border-purple-800/50">RSI</span>}
+                                                                    {item.params.trend?.useTrendFilter && <span className="px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-900/20 text-[9px] font-medium text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800/50">Trend</span>}
+                                                                    {item.params.time?.useTimeFilter && <span className="px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-900/20 text-[9px] font-medium text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-800/50">Time</span>}
+                                                                    {item.params.volBody?.useVolFilter && <span className="px-1.5 py-0.5 rounded bg-rose-50 dark:bg-rose-900/20 text-[9px] font-medium text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-800/50">Vol</span>}
+                                                                    {item.params.mtf?.useHtfFilter && <span className="px-1.5 py-0.5 rounded bg-cyan-50 dark:bg-cyan-900/20 text-[9px] font-medium text-cyan-600 dark:text-cyan-400 border border-cyan-100 dark:border-cyan-800/50">HTF</span>}
+                                                                    {item.params.mtf?.useLtfIntra && <span className="px-1.5 py-0.5 rounded bg-teal-50 dark:bg-teal-900/20 text-[9px] font-medium text-teal-600 dark:text-teal-400 border border-teal-100 dark:border-teal-800/50">LTF</span>}
+                                                                </>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 </div>
                                             ))}

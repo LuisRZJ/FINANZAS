@@ -1905,6 +1905,38 @@ async function handleAccountFormSubmit(event) {
     renderAccountsUI();
 }
 
+function resetAccountCategoriesOrder() {
+    if (!confirm('¿Estás seguro de que quieres restablecer el orden de las categorías? Se ordenarán por balance total.')) return;
+    
+    // Marcar que queremos reindexar basándonos en el balance
+    const totalsByCategory = calculateAccountTotalsByCategory();
+    
+    // Crear una copia para ordenar
+    const sorted = [...accountCategories].sort((a, b) => {
+        if (a.id === FALLBACK_ACCOUNT_CATEGORY_ID) return 1;
+        if (b.id === FALLBACK_ACCOUNT_CATEGORY_ID) return -1;
+        const totalA = totalsByCategory.get(a.id)?.total ?? 0;
+        const totalB = totalsByCategory.get(b.id)?.total ?? 0;
+        return totalB - totalA;
+    });
+
+    // Asignar nuevos índices de orden
+    sorted.forEach((cat, index) => {
+        const originalCat = accountCategories.find(c => c.id === cat.id);
+        if (originalCat) {
+            originalCat.order = index;
+        }
+    });
+
+    // Desactivar modo reordenar si estaba activo
+    accountCategoriesReorderMode = false;
+    
+    // Guardar y renderizar
+    saveAccountCategoriesToStorage().then(() => {
+        renderAccountsUI();
+    });
+}
+
 function attachAccountsEventListeners() {
     ensureGlobalMenuListener();
 
@@ -2001,37 +2033,7 @@ function attachAccountsEventListeners() {
         });
     }
 
-function resetAccountCategoriesOrder() {
-    if (!confirm('¿Estás seguro de que quieres restablecer el orden de las categorías? Se ordenarán por balance total.')) return;
-    
-    // Marcar que queremos reindexar basándonos en el balance
-    const totalsByCategory = calculateAccountTotalsByCategory();
-    
-    // Crear una copia para ordenar
-    const sorted = [...accountCategories].sort((a, b) => {
-        if (a.id === FALLBACK_ACCOUNT_CATEGORY_ID) return 1;
-        if (b.id === FALLBACK_ACCOUNT_CATEGORY_ID) return -1;
-        const totalA = totalsByCategory.get(a.id)?.total ?? 0;
-        const totalB = totalsByCategory.get(b.id)?.total ?? 0;
-        return totalB - totalA;
-    });
 
-    // Asignar nuevos índices de orden
-    sorted.forEach((cat, index) => {
-        const originalCat = accountCategories.find(c => c.id === cat.id);
-        if (originalCat) {
-            originalCat.order = index;
-        }
-    });
-
-    // Desactivar modo reordenar si estaba activo
-    accountCategoriesReorderMode = false;
-    
-    // Guardar y renderizar
-    saveAccountCategoriesToStorage().then(() => {
-        renderAccountsUI();
-    });
-}
 
 
     document.querySelectorAll('.balance-toggle').forEach(btn => {
@@ -2228,9 +2230,9 @@ function renderCategories() {
                                                 <li class="mb-4" data-id="${cat.id}" role="listitem">
                                                     <div role="button" aria-grabbed="false" class="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 shadow-sm relative draggable-cat" draggable="true" data-id="${cat.id}">
                                         <span class="inline-flex items-center justify-center w-8 h-8 rounded-full" style="background:${cat.color}">
-                                            ${cat.icon ? `<i class="${cat.icon} text-white text-lg"></i>` : ''}
+                                            ${cat.icon ? `<i class="${escapeHtml(cat.icon)} text-white text-lg"></i>` : ''}
                                         </span>
-                                        <span class="font-semibold text-gray-800 text-base">${cat.name}</span>
+                                        <span class="font-semibold text-gray-800 text-base">${escapeHtml(cat.name)}</span>
                                         <div class="flex-1"></div>
                                         <button class="move-up p-1.5 rounded-full hover:bg-gray-100 text-gray-500 mr-1" title="Mover arriba" data-id="${cat.id}">
                                             <i class="fa-solid fa-chevron-up"></i>
@@ -2252,9 +2254,9 @@ function renderCategories() {
                                                     <div class="flex items-center gap-2 flex-1">
                                                         <div class="flex items-center gap-1.5">
                                                             <span class="inline-block w-2 h-2 rounded-full opacity-70" style="background:${sub.color}"></span>
-                                                            ${sub.icon ? `<i class="${sub.icon} text-gray-400 text-xs"></i>` : ''}
+                                                            ${sub.icon ? `<i class="${escapeHtml(sub.icon)} text-gray-400 text-xs"></i>` : ''}
                                                         </div>
-                                                        <span class="text-gray-600 text-sm">${sub.name}</span>
+                                                        <span class="text-gray-600 text-sm">${escapeHtml(sub.name)}</span>
                                                     </div>
                                                     <div class="flex items-center gap-1">
                                                         <button class="move-up p-1 rounded hover:bg-gray-100 text-gray-400" title="Mover arriba" data-id="${sub.id}">
@@ -2669,6 +2671,10 @@ function getFilteredOperations(monthOperations, filterType) {
     // Filter by type or schedule status
     if (filterType === 'scheduled') {
         return monthOperations.filter(op => op.status === 'scheduled');
+    }
+
+    if (filterType === 'all') {
+        return monthOperations;
     }
     
     // For other filters, we typically only show executed operations unless we want to show everything
@@ -3295,7 +3301,7 @@ async function handleOperationsFormSubmit(event) {
     const nowISO = now.toISOString();
     
     // Check if date is in the future (ignore seconds/milliseconds for usability)
-    const isFuture = datetime > now;
+    const isFuture = datetime.getTime() > (now.getTime() + 60000);
     let status = 'executed';
     
     if (isFuture) {
