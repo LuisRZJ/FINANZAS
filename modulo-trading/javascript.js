@@ -1650,7 +1650,23 @@ function setupMonthlyHeatmapNavigationUI() {
 }
 
 function getStatsTimeFilterRange() {
-  if (!statsTimeFilterState || statsTimeFilterState.mode !== 'last') return null;
+  if (!statsTimeFilterState) return null;
+
+  if (statsTimeFilterState.mode === 'range') {
+     const start = statsTimeFilterState.start ? new Date(statsTimeFilterState.start) : null;
+     const end = statsTimeFilterState.end ? new Date(statsTimeFilterState.end) : null;
+     if (!start || !end || Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return null;
+     
+     const endOfDay = new Date(end);
+     endOfDay.setHours(23, 59, 59, 999);
+     
+     const startOfDay = new Date(start);
+     startOfDay.setHours(0, 0, 0, 0);
+     
+     return { start: startOfDay, end: endOfDay };
+  }
+
+  if (statsTimeFilterState.mode !== 'last') return null;
   const value = Math.floor(Number(statsTimeFilterState.value));
   if (!Number.isFinite(value) || value <= 0) return null;
   const unit = statsTimeFilterState.unit;
@@ -1820,12 +1836,50 @@ function applyStatsTimeFilterToTrades(trades) {
 }
 
 function formatStatsTimeFilterLabel() {
-  if (!statsTimeFilterState || statsTimeFilterState.mode !== 'last') return 'Todo el periodo';
-  const value = Number(statsTimeFilterState.value);
-  const unit = statsTimeFilterState.unit;
-  if (!Number.isFinite(value) || value <= 0) return 'Todo el periodo';
-  const unitLabel = unit === 'days' ? 'días' : (unit === 'months' ? 'meses' : 'años');
-  return `Últimos ${value} ${unitLabel}`;
+  if (!statsTimeFilterState) return 'Todo el periodo';
+
+  if (statsTimeFilterState.mode === 'last') {
+    const value = Number(statsTimeFilterState.value);
+    const unit = statsTimeFilterState.unit;
+    if (!Number.isFinite(value) || value <= 0) return 'Todo el periodo';
+    const unitLabel = unit === 'days' ? 'días' : (unit === 'months' ? 'meses' : 'años');
+    return `Últimos ${value} ${unitLabel}`;
+  }
+
+  if (statsTimeFilterState.mode === 'range') {
+     const start = statsTimeFilterState.start ? new Date(statsTimeFilterState.start) : null;
+     const end = statsTimeFilterState.end ? new Date(statsTimeFilterState.end) : null;
+     if (!start || !end) return 'Rango personalizado';
+     
+     // Asegurar fechas válidas, asumiendo start/end strings ISO YYYY-MM-DD
+     // Sumamos la zona horaria para evitar desfases si se interpreta como UTC al mostrar solo fecha
+     const formatDate = (d) => {
+        if (!d || Number.isNaN(d.getTime())) return '';
+        // Usar UTC methods para formatear exactamente la fecha seleccionada sin shift horario
+        // O simplemente extraer los componentes, ya que el input date da YYYY-MM-DD
+        const day = d.getUTCDate();
+        const monthNames = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+        const month = monthNames[d.getUTCMonth()];
+        const year = d.getUTCFullYear();
+        return `${day} ${month} ${year}`;
+     };
+     
+     // Si usamos strings directos YYYY-MM-DD del input, mejor parsearlos manualmente para display
+     // Para evitar problemas de timezone con new Date("YYYY-MM-DD") que es UTC
+     const formatStringDate = (s) => {
+         if (!s) return '';
+         const parts = s.split('-');
+         if (parts.length !== 3) return s;
+         const year = parts[0];
+         const month = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"][parseInt(parts[1], 10) - 1];
+         const day = parseInt(parts[2], 10);
+         return `${day} ${month} ${year}`;
+     };
+
+     return `Del ${formatStringDate(statsTimeFilterState.start)} al ${formatStringDate(statsTimeFilterState.end)}`;
+  }
+
+  return 'Todo el periodo';
 }
 
 function setupStatsTimeFilterUI() {
@@ -1839,9 +1893,13 @@ function setupStatsTimeFilterUI() {
   const resetButton = document.getElementById('time-filter-reset');
   const modeSelect = document.getElementById('time-filter-mode');
   const lastFields = document.getElementById('time-filter-last-fields');
+  const rangeFields = document.getElementById('time-filter-range-fields');
   const valueInput = document.getElementById('time-filter-value');
   const unitSelect = document.getElementById('time-filter-unit');
-  if (!button || !label || !modal || !overlay || !closeButton || !cancelButton || !applyButton || !resetButton || !modeSelect || !lastFields || !valueInput || !unitSelect) {
+  const startInput = document.getElementById('time-filter-start');
+  const endInput = document.getElementById('time-filter-end');
+
+  if (!button || !label || !modal || !overlay || !closeButton || !cancelButton || !applyButton || !resetButton || !modeSelect || !lastFields || !valueInput || !unitSelect || !rangeFields || !startInput || !endInput) {
     return;
   }
 
@@ -1852,14 +1910,37 @@ function setupStatsTimeFilterUI() {
   button.dataset.bound = 'true';
 
   function syncModeVisibility() {
-    const isLast = modeSelect.value === 'last';
-    lastFields.classList.toggle('hidden', !isLast);
+    const mode = modeSelect.value;
+    lastFields.classList.toggle('hidden', mode !== 'last');
+    rangeFields.classList.toggle('hidden', mode !== 'range');
   }
 
   function openModal() {
-    modeSelect.value = statsTimeFilterState.mode === 'last' ? 'last' : 'all';
+    modeSelect.value = statsTimeFilterState.mode;
+    
+    // Configurar campos 'last'
     valueInput.value = statsTimeFilterState.value === null || statsTimeFilterState.value === undefined ? '' : String(statsTimeFilterState.value);
     unitSelect.value = statsTimeFilterState.unit === 'months' ? 'months' : (statsTimeFilterState.unit === 'years' ? 'years' : 'days');
+    
+    // Configurar campos 'range'
+    if (statsTimeFilterState.start) {
+        const d = new Date(statsTimeFilterState.start);
+        if (!Number.isNaN(d.getTime())) {
+            startInput.value = statsTimeFilterState.start;
+        }
+    } else {
+        startInput.value = '';
+    }
+    
+    if (statsTimeFilterState.end) {
+        const d = new Date(statsTimeFilterState.end);
+        if (!Number.isNaN(d.getTime())) {
+            endInput.value = statsTimeFilterState.end;
+        }
+    } else {
+        endInput.value = '';
+    }
+
     syncModeVisibility();
     modal.classList.remove('hidden');
     modeSelect.focus();
@@ -1871,7 +1952,8 @@ function setupStatsTimeFilterUI() {
   }
 
   function applyFilter() {
-    const mode = modeSelect.value === 'last' ? 'last' : 'all';
+    const mode = modeSelect.value;
+    
     if (mode === 'all') {
       statsTimeFilterState = { mode: 'all', value: null, unit: 'days' };
       label.textContent = formatStatsTimeFilterLabel();
@@ -1879,20 +1961,59 @@ function setupStatsTimeFilterUI() {
       if (typeof renderStats === 'function') renderStats();
       return;
     }
-
-    const rawValue = valueInput.value;
-    const parsed = Number(rawValue);
-    const value = Number.isFinite(parsed) ? Math.floor(parsed) : NaN;
-    if (!Number.isFinite(value) || value <= 0) {
-      alert('Ingresa un número válido mayor a 0.');
-      valueInput.focus();
-      return;
+    
+    if (mode === 'last') {
+        const rawValue = valueInput.value;
+        const parsed = Number(rawValue);
+        const value = Number.isFinite(parsed) ? Math.floor(parsed) : NaN;
+        if (!Number.isFinite(value) || value <= 0) {
+          alert('Ingresa un número válido mayor a 0.');
+          valueInput.focus();
+          return;
+        }
+        const unit = unitSelect.value === 'months' ? 'months' : (unitSelect.value === 'years' ? 'years' : 'days');
+        statsTimeFilterState = { mode: 'last', value, unit };
+        label.textContent = formatStatsTimeFilterLabel();
+        closeModal();
+        if (typeof renderStats === 'function') renderStats();
+        return;
     }
-    const unit = unitSelect.value === 'months' ? 'months' : (unitSelect.value === 'years' ? 'years' : 'days');
-    statsTimeFilterState = { mode: 'last', value, unit };
-    label.textContent = formatStatsTimeFilterLabel();
-    closeModal();
-    if (typeof renderStats === 'function') renderStats();
+    
+    if (mode === 'range') {
+        const startRaw = startInput.value;
+        const endRaw = endInput.value;
+        
+        if (!startRaw || !endRaw) {
+            alert('Por favor selecciona ambas fechas.');
+            return;
+        }
+        
+        const start = new Date(startRaw);
+        const end = new Date(endRaw);
+        
+        if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+             alert('Fechas inválidas.');
+             return;
+        }
+        
+        if (start > end) {
+            alert('La fecha de inicio no puede ser posterior a la fecha de fin.');
+            return;
+        }
+        
+        statsTimeFilterState = { 
+            mode: 'range', 
+            start: startRaw,
+            end: endRaw,
+            value: null,
+            unit: 'days'
+        };
+        
+        label.textContent = formatStatsTimeFilterLabel();
+        closeModal();
+        if (typeof renderStats === 'function') renderStats();
+        return;
+    }
   }
 
   function resetFilter() {

@@ -1048,6 +1048,7 @@ async function hydrateAccountsFromStorage() {
             if (Array.isArray(parsed)) {
                 accounts = parsed.map(acc => ({
                     ...acc,
+                    groupId: typeof acc?.groupId === 'string' && acc.groupId ? acc.groupId : FALLBACK_ACCOUNT_CATEGORY_ID,
                     history: Array.isArray(acc?.history) ? acc.history : []
                 }));
                 reindexAllGroups();
@@ -6235,6 +6236,13 @@ if (document.readyState === 'loading') {
     initStatisticsModule().catch(console.error);
 }
 
+window.addEventListener('beforeunload', async () => {
+    try {
+        await saveAccountsToStorage();
+        await saveAccountCategoriesToStorage();
+    } catch (e) {}
+});
+
 async function getDatabaseSnapshot(force = false) {
     const now = Date.now();
     if (!force && cachedDBSnapshot && now - cachedDBSnapshotTimestamp < DB_CACHE_TTL_MS) {
@@ -6433,10 +6441,16 @@ async function readAllData() {
     // 2. Leer LocalStorage relevante (configuraciones, webhook, tema, etc.)
     const keysToExport = [
         DATA_WEBHOOK_URL_STORAGE_KEY,
-        'fti-theme-preference',
-        'fti-accent-preference',
-        'fti-default-currency'
-        // Agregar aquí otras claves de localStorage si existen
+        THEME_STORAGE_KEY,
+        ACCENT_STORAGE_KEY,
+        DEFAULT_CURRENCY_KEY,
+        SECONDARY_CURRENCY_KEY,
+        ACCOUNTS_STORAGE_KEY,
+        ACCOUNT_CATEGORIES_STORAGE_KEY,
+        CATEGORIES_STORAGE_KEY,
+        OPERATIONS_STORAGE_KEY,
+        BUDGET_PLAN_STORAGE_KEY,
+        BUDGET_USAGE_STORAGE_KEY
     ];
 
     keysToExport.forEach(key => {
@@ -6504,6 +6518,27 @@ async function restoreDataFromSnapshot(snapshot) {
         if (theme) {
             applyTheme(theme);
             markActiveButton(theme);
+        }
+
+        await preferencesDB.ensureReady();
+        const keysToSync = [
+            ACCOUNTS_STORAGE_KEY,
+            ACCOUNT_CATEGORIES_STORAGE_KEY,
+            CATEGORIES_STORAGE_KEY,
+            OPERATIONS_STORAGE_KEY,
+            BUDGET_PLAN_STORAGE_KEY,
+            BUDGET_USAGE_STORAGE_KEY,
+            DEFAULT_CURRENCY_KEY,
+            SECONDARY_CURRENCY_KEY,
+            DATA_WEBHOOK_URL_STORAGE_KEY,
+            THEME_STORAGE_KEY,
+            ACCENT_STORAGE_KEY
+        ];
+        for (const key of keysToSync) {
+            const val = localStorage.getItem(key);
+            if (val !== null) {
+                await preferencesDB.setItem(key, val);
+            }
         }
     }
 }

@@ -1329,30 +1329,44 @@
 
                     <div class="mt-6 space-y-4">
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-center">
-                            <label for="time-filter-mode" class="text-sm font-medium">Modo</label>
-                            <div class="sm:col-span-2">
-                                <select id="time-filter-mode"
-                                    class="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
-                                    <option value="all">Todo el periodo</option>
-                                    <option value="last">Últimos...</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div id="time-filter-last-fields" class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-center">
-                            <label for="time-filter-value" class="text-sm font-medium">Últimos</label>
-                            <div class="sm:col-span-2 flex gap-2">
-                                <input id="time-filter-value" type="number" inputmode="numeric" min="1" step="1"
-                                    placeholder="30"
-                                    class="w-28 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500" />
-                                <select id="time-filter-unit"
-                                    class="flex-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
-                                    <option value="days">Días</option>
-                                    <option value="months">Meses</option>
-                                    <option value="years">Años</option>
-                                </select>
-                            </div>
-                        </div>
+                    <label for="time-filter-mode" class="text-sm font-medium">Modo</label>
+                    <div class="sm:col-span-2">
+                      <select id="time-filter-mode"
+                        class="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                        <option value="all">Todo el periodo</option>
+                        <option value="last">Últimos...</option>
+                        <option value="range">Rango de fechas</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div id="time-filter-last-fields" class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-center">
+                    <label for="time-filter-value" class="text-sm font-medium">Últimos</label>
+                    <div class="sm:col-span-2 flex gap-2">
+                      <input id="time-filter-value" type="number" inputmode="numeric" min="1" step="1"
+                        placeholder="30"
+                        class="w-28 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500" />
+                      <select id="time-filter-unit"
+                        class="flex-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                        <option value="days">Días</option>
+                        <option value="months">Meses</option>
+                        <option value="years">Años</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div id="time-filter-range-fields" class="hidden space-y-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-center">
+                      <label for="time-filter-start" class="text-sm font-medium">Desde</label>
+                      <div class="sm:col-span-2">
+                         <input type="date" id="time-filter-start" class="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500" />
+                      </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-center">
+                      <label for="time-filter-end" class="text-sm font-medium">Hasta</label>
+                      <div class="sm:col-span-2">
+                         <input type="date" id="time-filter-end" class="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500" />
+                      </div>
+                    </div>
+                  </div>
                     </div>
                 </div>
 
