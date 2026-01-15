@@ -6,12 +6,9 @@ const BUDGET_USAGE_STORAGE_KEY = 'fti-budget-usage-v1';
 async function fetchCategoriesFromStorage() {
     let stored = null;
     try {
-        stored = await preferencesDB.getItem(CATEGORIES_STORAGE_KEY);
+        stored = await smartLoad(CATEGORIES_STORAGE_KEY);
     } catch {
         stored = null;
-    }
-    if (!stored) {
-        stored = getLocalStorageFallback(CATEGORIES_STORAGE_KEY);
     }
     let parsed = [];
     try {
@@ -99,7 +96,7 @@ async function hydrateOperationCategoriesOptions() {
         income: incomeData.ordered,
         expense: expenseData.ordered
     };
-    
+
     // 3. Enriquecer el mapa con la info jerárquica (displayName indentado) donde sea posible
     incomeData.map.forEach((val, key) => fullMap.set(key, val));
     expenseData.map.forEach((val, key) => fullMap.set(key, val));
@@ -168,12 +165,9 @@ async function hydrateBudgetUsageFromStorage() {
     await preferencesDB.initPromise;
     let stored = null;
     try {
-        stored = await preferencesDB.getItem(BUDGET_USAGE_STORAGE_KEY);
+        stored = await smartLoad(BUDGET_USAGE_STORAGE_KEY);
     } catch {
         stored = null;
-    }
-    if (!stored) {
-        stored = getLocalStorageFallback(BUDGET_USAGE_STORAGE_KEY);
     }
     let parsed = {};
     try {
@@ -721,7 +715,7 @@ function updateOperationsPeriodControls() {
 
     const balanceTitle = document.getElementById('opsBalanceTitle');
     const historyTitle = document.getElementById('opsHistoryTitle');
-    
+
     let periodText = 'Mes';
     if (operationsPeriodMode === 'quarterly') periodText = 'Trimestre';
     if (operationsPeriodMode === 'annual') periodText = 'Año';
@@ -834,16 +828,13 @@ function getAccountCategoriesOrdered() {
         // La categoría fallback (General) siempre va al final
         if (a.id === FALLBACK_ACCOUNT_CATEGORY_ID) return 1;
         if (b.id === FALLBACK_ACCOUNT_CATEGORY_ID) return -1;
-        
+
         return (a.order ?? 0) - (b.order ?? 0);
     });
 }
 
 async function hydrateAccountCategoriesFromStorage() {
-    let stored = await preferencesDB.getItem(ACCOUNT_CATEGORIES_STORAGE_KEY);
-    if (!stored) {
-        stored = getLocalStorageFallback(ACCOUNT_CATEGORIES_STORAGE_KEY);
-    }
+    let stored = await smartLoad(ACCOUNT_CATEGORIES_STORAGE_KEY);
 
     if (stored) {
         try {
@@ -1028,6 +1019,76 @@ function setLocalStorageFallback(key, value) {
     }
 }
 
+/**
+ * Parche de Seguridad: Carga Inteligente (Smart Load)
+ * Compara IndexedDB y LocalStorage y devuelve la versión más reciente de los datos.
+ * Resuelve problemas de sincronización cuando IndexedDB falla pero LocalStorage tiene éxito.
+ * @param {string} storageKey - Clave de almacenamiento a consultar
+ * @returns {Promise<string|null>} - Datos más recientes como string JSON, o null si no hay datos
+ */
+async function smartLoad(storageKey) {
+    // Obtener datos de ambas fuentes en paralelo
+    const idbPromise = preferencesDB.getItem(storageKey).catch(() => null);
+    const lsData = getLocalStorageFallback(storageKey);
+    const idbData = await idbPromise;
+
+    // Si ninguna fuente tiene datos, retornar null
+    if (!idbData && !lsData) return null;
+
+    // Si solo una fuente tiene datos, usar esa
+    if (!idbData) {
+        console.log(`[SmartLoad] Solo LocalStorage disponible para: ${storageKey}`);
+        return lsData;
+    }
+    if (!lsData) {
+        console.log(`[SmartLoad] Solo IndexedDB disponible para: ${storageKey}`);
+        return idbData;
+    }
+
+    // Ambas fuentes tienen datos, comparar por timestamp
+    try {
+        const parsedIdb = JSON.parse(idbData);
+        const parsedLs = JSON.parse(lsData);
+
+        // Si no son arrays, preferir LocalStorage como fallback seguro
+        if (!Array.isArray(parsedIdb) || !Array.isArray(parsedLs)) {
+            return lsData;
+        }
+
+        // Función para obtener el timestamp más reciente de un array de objetos
+        const getLastUpdate = (arr) => {
+            if (arr.length === 0) return 0;
+            return arr.reduce((max, item) => {
+                // Buscar cualquier campo de timestamp común
+                const timestamp = item?.updatedAt || item?.createdAt || item?.datetime || item?.date || 0;
+                const t = new Date(timestamp).getTime();
+                return Number.isFinite(t) && t > max ? t : max;
+            }, 0);
+        };
+
+        const timeIdb = getLastUpdate(parsedIdb);
+        const timeLs = getLastUpdate(parsedLs);
+
+        // Si LocalStorage es más nuevo o igual, usarlo y reparar IndexedDB en segundo plano
+        if (timeLs >= timeIdb) {
+            console.log(`[SmartLoad] Usando LocalStorage (más reciente) para: ${storageKey}`);
+            // Reparar IndexedDB en segundo plano sin bloquear
+            preferencesDB.setItem(storageKey, lsData).catch((err) => {
+                console.warn(`[SmartLoad] No se pudo sincronizar IndexedDB para ${storageKey}:`, err);
+            });
+            return lsData;
+        }
+
+        // IndexedDB es más reciente
+        console.log(`[SmartLoad] Usando IndexedDB (más reciente) para: ${storageKey}`);
+        return idbData;
+    } catch (error) {
+        // Error de parseo, usar LocalStorage como fallback seguro
+        console.warn(`[SmartLoad] Error comparando fuentes para ${storageKey}, usando LocalStorage:`, error);
+        return lsData;
+    }
+}
+
 function determineAccountsCurrency(defaultCurrency = 'MXN') {
     const select = document.getElementById('defaultCurrencySelect');
     if (select && select.value) {
@@ -1037,10 +1098,12 @@ function determineAccountsCurrency(defaultCurrency = 'MXN') {
 }
 
 async function hydrateAccountsFromStorage() {
-    let stored = await preferencesDB.getItem(ACCOUNTS_STORAGE_KEY);
-    if (!stored) {
-        stored = getLocalStorageFallback(ACCOUNTS_STORAGE_KEY);
+    // Verificación de seguridad: asegurar que las categorías de cuentas estén cargadas
+    if (!accountCategories || accountCategories.length === 0) {
+        await hydrateAccountCategoriesFromStorage();
     }
+
+    let stored = await smartLoad(ACCOUNTS_STORAGE_KEY);
 
     if (stored) {
         try {
@@ -1144,7 +1207,7 @@ function renderAccountsList() {
 
     orderedCategories.forEach(category => {
         const accountsInGroup = grouped.get(category.id) || [];
-        
+
         // Mostrar siempre la categoría, incluso si no tiene cuentas
         const groupTotal = totals.byCategory.get(category.id)?.total || 0;
         const formattedTotal = formatAccountAmount(groupTotal);
@@ -1280,8 +1343,12 @@ function pushAccountHistoryEntry(account, entry) {
     const type = typeof entry?.type === 'string' ? entry.type : 'adjustment';
     const description = typeof entry?.description === 'string' ? entry.description : 'Actividad';
     const details = typeof entry?.details === 'string' ? entry.details : '';
+    const rawAmount = typeof entry?.rawAmount === 'number' ? entry.rawAmount : null;
 
-    account.history.unshift({ date, type, description, details });
+    const historyItem = { date, type, description, details };
+    if (rawAmount !== null) historyItem.rawAmount = rawAmount;
+
+    account.history.unshift(historyItem);
     if (account.history.length > 200) {
         account.history = account.history.slice(0, 200);
     }
@@ -1786,20 +1853,21 @@ function closeAccountModal() {
 async function deleteAccount(accountId) {
     const accountIndex = accounts.findIndex(acc => acc.id === accountId);
     if (accountIndex === -1) return;
-    
+
     const accountToDelete = accounts[accountIndex];
     if (!confirm(`¿Eliminar la cuenta "${accountToDelete.name}"?\n\nLa cuenta desaparecerá de la lista, pero su historial se conservará para mantener la coherencia de tus gráficos pasados.`)) return;
 
     // Soft Delete: Marcar como eliminada y guardar fecha y saldo final
     const now = new Date();
-    
+
     // Registrar evento de "Cierre" en el historial antes de "borrarla"
     // Esto sirve como punto final para la gráfica: ese día el saldo cayó a 0 (o dejó de contar)
     pushAccountHistoryEntry(accounts[accountIndex], {
         type: 'deleted',
         description: 'Cuenta eliminada',
         details: `Saldo final al cierre: ${formatAccountAmount(accountToDelete.balance)}`,
-        date: now.toISOString()
+        date: now.toISOString(),
+        rawAmount: accountToDelete.balance
     });
 
     accounts[accountIndex] = {
@@ -1886,7 +1954,7 @@ async function handleAccountFormSubmit(event) {
             order: accounts.filter(acc => acc.groupId === groupId).length,
             history: []
         };
-        
+
         // Registrar historial inicial si hay saldo
         if (Math.abs(normalizedBalance) > 0) {
             newAccount.history.push({
@@ -1896,7 +1964,7 @@ async function handleAccountFormSubmit(event) {
                 details: `${formatAccountAmount(normalizedBalance)}`
             });
         }
-        
+
         accounts.push(newAccount);
         reindexGroupOrders(groupId);
     }
@@ -1908,10 +1976,10 @@ async function handleAccountFormSubmit(event) {
 
 function resetAccountCategoriesOrder() {
     if (!confirm('¿Estás seguro de que quieres restablecer el orden de las categorías? Se ordenarán por balance total.')) return;
-    
+
     // Marcar que queremos reindexar basándonos en el balance
     const totalsByCategory = calculateAccountTotalsByCategory();
-    
+
     // Crear una copia para ordenar
     const sorted = [...accountCategories].sort((a, b) => {
         if (a.id === FALLBACK_ACCOUNT_CATEGORY_ID) return 1;
@@ -1931,7 +1999,7 @@ function resetAccountCategoriesOrder() {
 
     // Desactivar modo reordenar si estaba activo
     accountCategoriesReorderMode = false;
-    
+
     // Guardar y renderizar
     saveAccountCategoriesToStorage().then(() => {
         renderAccountsUI();
@@ -2121,113 +2189,113 @@ function resetCategoryForm() {
 }
 
 function renderCategories() {
-        const incomeList = document.getElementById('incomeCategoriesList');
-        const expenseList = document.getElementById('expenseCategoriesList');
-        incomeList.innerHTML = '';
-        expenseList.innerHTML = '';
+    const incomeList = document.getElementById('incomeCategoriesList');
+    const expenseList = document.getElementById('expenseCategoriesList');
+    incomeList.innerHTML = '';
+    expenseList.innerHTML = '';
 
-        // Helper: reordenar dentro de un conjunto de hermanos (mismo type y mismo parentId)
-        function reorderAmongSiblings(itemId, targetBeforeId, type, parentId) {
-                const siblings = categories.filter(c => c.type === type && (c.parentId || '') === (parentId || ''));
-                const moving = siblings.find(s => s.id === itemId);
-                if (!moving) return;
-                const others = siblings.filter(s => s.id !== itemId);
-                const newSiblings = [];
-                if (!targetBeforeId) {
-                        // append at end
-                        newSiblings.push(...others, moving);
-                } else {
-                        for (const s of others) {
-                                if (s.id === targetBeforeId) newSiblings.push(moving);
-                                newSiblings.push(s);
-                        }
-                }
-                // Now rebuild categories preserving non-sibling items
-                const newCategories = [];
-                // iterate original categories and replace siblings block in order of newSiblings when encountering first sibling
-                const added = new Set();
-                for (const c of categories) {
-                        if (c.type === type && (c.parentId || '') === (parentId || '')) {
-                                if (!added.size) {
-                                        // insert all newSiblings now
-                                        for (const ns of newSiblings) {
-                                                newCategories.push(ns);
-                                                added.add(ns.id);
-                                        }
-                                }
-                                // skip original sibling
-                                continue;
-                        }
-                        newCategories.push(c);
-                }
-                // Edge: if no sibling encountered (maybe empty), append newSiblings
-                if (newCategories.length === 0 || ![...newCategories].some(c => c.type === type && (c.parentId || '') === (parentId || ''))) {
-                        // place at end
-                        categories = [...newCategories, ...newSiblings];
-                } else {
-                        categories = newCategories;
-                }
+    // Helper: reordenar dentro de un conjunto de hermanos (mismo type y mismo parentId)
+    function reorderAmongSiblings(itemId, targetBeforeId, type, parentId) {
+        const siblings = categories.filter(c => c.type === type && (c.parentId || '') === (parentId || ''));
+        const moving = siblings.find(s => s.id === itemId);
+        if (!moving) return;
+        const others = siblings.filter(s => s.id !== itemId);
+        const newSiblings = [];
+        if (!targetBeforeId) {
+            // append at end
+            newSiblings.push(...others, moving);
+        } else {
+            for (const s of others) {
+                if (s.id === targetBeforeId) newSiblings.push(moving);
+                newSiblings.push(s);
+            }
         }
+        // Now rebuild categories preserving non-sibling items
+        const newCategories = [];
+        // iterate original categories and replace siblings block in order of newSiblings when encountering first sibling
+        const added = new Set();
+        for (const c of categories) {
+            if (c.type === type && (c.parentId || '') === (parentId || '')) {
+                if (!added.size) {
+                    // insert all newSiblings now
+                    for (const ns of newSiblings) {
+                        newCategories.push(ns);
+                        added.add(ns.id);
+                    }
+                }
+                // skip original sibling
+                continue;
+            }
+            newCategories.push(c);
+        }
+        // Edge: if no sibling encountered (maybe empty), append newSiblings
+        if (newCategories.length === 0 || ![...newCategories].some(c => c.type === type && (c.parentId || '') === (parentId || ''))) {
+            // place at end
+            categories = [...newCategories, ...newSiblings];
+        } else {
+            categories = newCategories;
+        }
+    }
 
-        // Mover hacia arriba/abajo para móviles (u alternativa a drag)
-        function moveItemUp(id) {
-                const item = categories.find(c => c.id === id);
-                if (!item) return;
-                const type = item.type;
-                const parentId = item.parentId || '';
-                const siblings = categories.filter(c => c.type === type && (c.parentId || '') === parentId);
-                const idx = siblings.findIndex(s => s.id === id);
-                if (idx > 0) {
-                        const beforeId = siblings[idx - 1].id;
-                        reorderAmongSiblings(id, siblings[idx - 1].id, type, parentId);
-                        saveCategories();
-                }
+    // Mover hacia arriba/abajo para móviles (u alternativa a drag)
+    function moveItemUp(id) {
+        const item = categories.find(c => c.id === id);
+        if (!item) return;
+        const type = item.type;
+        const parentId = item.parentId || '';
+        const siblings = categories.filter(c => c.type === type && (c.parentId || '') === parentId);
+        const idx = siblings.findIndex(s => s.id === id);
+        if (idx > 0) {
+            const beforeId = siblings[idx - 1].id;
+            reorderAmongSiblings(id, siblings[idx - 1].id, type, parentId);
+            saveCategories();
         }
-        function moveItemDown(id) {
-                const item = categories.find(c => c.id === id);
-                if (!item) return;
-                const type = item.type;
-                const parentId = item.parentId || '';
-                const siblings = categories.filter(c => c.type === type && (c.parentId || '') === parentId);
-                const idx = siblings.findIndex(s => s.id === id);
-                if (idx !== -1 && idx < siblings.length - 1) {
-                        const afterId = siblings[idx + 1].id;
-                        // To move down, we place moving before the item after the next (i.e., before afterId's next). Simpler: remove and insert after.
-                        // We'll construct new order manually
-                        const moving = siblings[idx];
-                        const others = siblings.filter(s => s.id !== id);
-                        const newSiblings = [];
-                        for (let i = 0; i < others.length; i++) {
-                                newSiblings.push(others[i]);
-                                if (others[i].id === afterId) {
-                                        newSiblings.push(moving);
-                                }
-                        }
-                        // rebuild categories preserving order
-                        const newCategories = [];
-                        let inserted = false;
-                        for (const c of categories) {
-                                if (c.type === type && (c.parentId || '') === parentId) {
-                                        if (!inserted) {
-                                                for (const ns of newSiblings) newCategories.push(ns);
-                                                inserted = true;
-                                        }
-                                        continue;
-                                }
-                                newCategories.push(c);
-                        }
-                        categories = newCategories;
-                        saveCategories();
+    }
+    function moveItemDown(id) {
+        const item = categories.find(c => c.id === id);
+        if (!item) return;
+        const type = item.type;
+        const parentId = item.parentId || '';
+        const siblings = categories.filter(c => c.type === type && (c.parentId || '') === parentId);
+        const idx = siblings.findIndex(s => s.id === id);
+        if (idx !== -1 && idx < siblings.length - 1) {
+            const afterId = siblings[idx + 1].id;
+            // To move down, we place moving before the item after the next (i.e., before afterId's next). Simpler: remove and insert after.
+            // We'll construct new order manually
+            const moving = siblings[idx];
+            const others = siblings.filter(s => s.id !== id);
+            const newSiblings = [];
+            for (let i = 0; i < others.length; i++) {
+                newSiblings.push(others[i]);
+                if (others[i].id === afterId) {
+                    newSiblings.push(moving);
                 }
+            }
+            // rebuild categories preserving order
+            const newCategories = [];
+            let inserted = false;
+            for (const c of categories) {
+                if (c.type === type && (c.parentId || '') === parentId) {
+                    if (!inserted) {
+                        for (const ns of newSiblings) newCategories.push(ns);
+                        inserted = true;
+                    }
+                    continue;
+                }
+                newCategories.push(c);
+            }
+            categories = newCategories;
+            saveCategories();
         }
+    }
 
-        // Renderizado moderno de categorías y subcategorías (con atributos para reorder)
-        function renderCategoryCards(type) {
-                return categories
-                        .filter(cat => cat.type === type && !cat.parentId)
-                        .map(cat => {
-                                const subs = categories.filter(sub => sub.parentId === cat.id);
-                                                return `
+    // Renderizado moderno de categorías y subcategorías (con atributos para reorder)
+    function renderCategoryCards(type) {
+        return categories
+            .filter(cat => cat.type === type && !cat.parentId)
+            .map(cat => {
+                const subs = categories.filter(sub => sub.parentId === cat.id);
+                return `
                                                 <li class="mb-4" data-id="${cat.id}" role="listitem">
                                                     <div role="button" aria-grabbed="false" class="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 shadow-sm relative draggable-cat" draggable="true" data-id="${cat.id}">
                                         <span class="inline-flex items-center justify-center w-8 h-8 rounded-full" style="background:${cat.color}">
@@ -2279,102 +2347,102 @@ function renderCategories() {
                                     ` : ''}
                                 </li>
                                 `;
-                        }).join('');
-        }
+            }).join('');
+    }
 
-        incomeList.innerHTML = renderCategoryCards('income');
-        expenseList.innerHTML = renderCategoryCards('expense');
+    incomeList.innerHTML = renderCategoryCards('income');
+    expenseList.innerHTML = renderCategoryCards('expense');
 
-        // Después del render, adjuntar listeners para mover y drag/drop
-        // Move up/down
-        document.querySelectorAll('.move-up').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                        const id = btn.dataset.id;
-                        moveItemUp(id);
-                });
+    // Después del render, adjuntar listeners para mover y drag/drop
+    // Move up/down
+    document.querySelectorAll('.move-up').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const id = btn.dataset.id;
+            moveItemUp(id);
         });
-        document.querySelectorAll('.move-down').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                        const id = btn.dataset.id;
-                        moveItemDown(id);
-                });
+    });
+    document.querySelectorAll('.move-down').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const id = btn.dataset.id;
+            moveItemDown(id);
         });
+    });
 
-        // Drag & drop (escritorio)
-        let draggedId = null;
-        let draggedType = null; // 'cat' or 'sub'
+    // Drag & drop (escritorio)
+    let draggedId = null;
+    let draggedType = null; // 'cat' or 'sub'
 
-        document.querySelectorAll('.draggable-cat, .draggable-sub').forEach(el => {
-            // make keyboard-focusable
-            el.setAttribute('tabindex', '0');
-            el.addEventListener('dragstart', (e) => {
-                draggedId = el.dataset.id;
-                draggedType = el.classList.contains('draggable-cat') ? 'cat' : 'sub';
-                e.dataTransfer.effectAllowed = 'move';
-                try { e.dataTransfer.setData('text/plain', draggedId); } catch (err) {}
-                el.classList.add('opacity-50');
-                el.setAttribute('aria-grabbed', 'true');
-            });
-            el.addEventListener('dragend', (e) => {
-                draggedId = null;
-                draggedType = null;
-                el.classList.remove('opacity-50');
-                el.setAttribute('aria-grabbed', 'false');
-            });
+    document.querySelectorAll('.draggable-cat, .draggable-sub').forEach(el => {
+        // make keyboard-focusable
+        el.setAttribute('tabindex', '0');
+        el.addEventListener('dragstart', (e) => {
+            draggedId = el.dataset.id;
+            draggedType = el.classList.contains('draggable-cat') ? 'cat' : 'sub';
+            e.dataTransfer.effectAllowed = 'move';
+            try { e.dataTransfer.setData('text/plain', draggedId); } catch (err) { }
+            el.classList.add('opacity-50');
+            el.setAttribute('aria-grabbed', 'true');
         });
-
-        // Allow drop on category list items and sub containers
-        document.querySelectorAll('#incomeCategoriesList > li, #expenseCategoriesList > li, .subs-container').forEach(target => {
-                target.addEventListener('dragover', (e) => {
-                        e.preventDefault();
-                        e.dataTransfer.dropEffect = 'move';
-                        target.classList.add('drag-over');
-                });
-                target.addEventListener('dragleave', (e) => {
-                        target.classList.remove('drag-over');
-                });
-                target.addEventListener('drop', (e) => {
-                        e.preventDefault();
-                        target.classList.remove('drag-over');
-                        const targetParentId = target.dataset.parentId || null;
-                        // If drop on a li (category), get its id and type
-                        const targetLi = target.closest('li[data-id]');
-                        let beforeId = null;
-                        let targetType = null;
-                        if (targetLi && targetLi.dataset.id) {
-                                // Dropping on a category li -> if dragged is cat and types match, place before this category
-                                beforeId = targetLi.dataset.id;
-                                // Determine type by seeing which list contains this li
-                                const list = targetLi.closest('#incomeCategoriesList') ? 'income' : 'expense';
-                                targetType = list;
-                        } else if (target.classList.contains('subs-container')) {
-                                // Dropping into a sub container -> append to that parent's subs
-                                targetType = categories.find(c => c.id === target.dataset.parentId)?.type;
-                        }
-
-                        if (!draggedId) return;
-                        const moving = categories.find(c => c.id === draggedId);
-                        if (!moving) return;
-
-                        // If moving a main category
-                        if (draggedType === 'cat') {
-                                // Ensure same type
-                                if (targetType && moving.type === targetType) {
-                                        reorderAmongSiblings(draggedId, beforeId, moving.type, '');
-                                        saveCategories();
-                                }
-                        } else if (draggedType === 'sub') {
-                                // Only allow dropping within same parent container
-                                const parentIdOfTarget = target.dataset.parentId || (targetLi ? (targetLi.dataset.id ? targetLi.dataset.id : null) : null);
-                                if (parentIdOfTarget && moving.parentId === parentIdOfTarget) {
-                                        // When dropping on a sub-container, beforeId null -> append
-                                        const beforeSubId = targetLi && targetLi.dataset.id && targetLi.dataset.parentId === parentIdOfTarget ? targetLi.dataset.id : null;
-                                        reorderAmongSiblings(draggedId, beforeSubId, moving.type, parentIdOfTarget);
-                                        saveCategories();
-                                }
-                        }
-                });
+        el.addEventListener('dragend', (e) => {
+            draggedId = null;
+            draggedType = null;
+            el.classList.remove('opacity-50');
+            el.setAttribute('aria-grabbed', 'false');
         });
+    });
+
+    // Allow drop on category list items and sub containers
+    document.querySelectorAll('#incomeCategoriesList > li, #expenseCategoriesList > li, .subs-container').forEach(target => {
+        target.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            target.classList.add('drag-over');
+        });
+        target.addEventListener('dragleave', (e) => {
+            target.classList.remove('drag-over');
+        });
+        target.addEventListener('drop', (e) => {
+            e.preventDefault();
+            target.classList.remove('drag-over');
+            const targetParentId = target.dataset.parentId || null;
+            // If drop on a li (category), get its id and type
+            const targetLi = target.closest('li[data-id]');
+            let beforeId = null;
+            let targetType = null;
+            if (targetLi && targetLi.dataset.id) {
+                // Dropping on a category li -> if dragged is cat and types match, place before this category
+                beforeId = targetLi.dataset.id;
+                // Determine type by seeing which list contains this li
+                const list = targetLi.closest('#incomeCategoriesList') ? 'income' : 'expense';
+                targetType = list;
+            } else if (target.classList.contains('subs-container')) {
+                // Dropping into a sub container -> append to that parent's subs
+                targetType = categories.find(c => c.id === target.dataset.parentId)?.type;
+            }
+
+            if (!draggedId) return;
+            const moving = categories.find(c => c.id === draggedId);
+            if (!moving) return;
+
+            // If moving a main category
+            if (draggedType === 'cat') {
+                // Ensure same type
+                if (targetType && moving.type === targetType) {
+                    reorderAmongSiblings(draggedId, beforeId, moving.type, '');
+                    saveCategories();
+                }
+            } else if (draggedType === 'sub') {
+                // Only allow dropping within same parent container
+                const parentIdOfTarget = target.dataset.parentId || (targetLi ? (targetLi.dataset.id ? targetLi.dataset.id : null) : null);
+                if (parentIdOfTarget && moving.parentId === parentIdOfTarget) {
+                    // When dropping on a sub-container, beforeId null -> append
+                    const beforeSubId = targetLi && targetLi.dataset.id && targetLi.dataset.parentId === parentIdOfTarget ? targetLi.dataset.id : null;
+                    reorderAmongSiblings(draggedId, beforeSubId, moving.type, parentIdOfTarget);
+                    saveCategories();
+                }
+            }
+        });
+    });
 
     // Actualizar opciones de subcategoría (parent)
     const parentSelect = document.getElementById('parentCategory');
@@ -2410,7 +2478,9 @@ async function loadCategories() {
 }
 
 async function saveCategories() {
-    await preferencesDB.setItem(CATEGORIES_STORAGE_KEY, JSON.stringify(categories));
+    const payload = JSON.stringify(categories);
+    await preferencesDB.setItem(CATEGORIES_STORAGE_KEY, payload);
+    setLocalStorageFallback(CATEGORIES_STORAGE_KEY, payload);
     renderCategories();
 }
 
@@ -2439,7 +2509,7 @@ async function deleteCategory(id) {
     // Verificar si es una categoría padre con subcategorías
     const hasChildren = categories.some(c => c.parentId === id);
     let message = `¿Estás seguro de que deseas eliminar la categoría "${cat.name}"?`;
-    
+
     if (hasChildren) {
         message += `\n\nADVERTENCIA: Esta categoría tiene subcategorías que también serán eliminadas permanentemente.`;
     }
@@ -2472,7 +2542,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const openCreateCatBtn = document.getElementById('openCreateCategoryModal');
     const closeCreateCatBtn = document.getElementById('closeCategoryFormModal');
     const createCatModal = document.getElementById('categoryFormModal');
-    
+
     if (openCreateCatBtn) {
         openCreateCatBtn.addEventListener('click', openCategoryFormModal);
     }
@@ -2618,10 +2688,7 @@ function normalizeOperationRecord(raw) {
 }
 
 async function hydrateOperationsFromStorage() {
-    let stored = await preferencesDB.getItem(OPERATIONS_STORAGE_KEY);
-    if (!stored) {
-        stored = getLocalStorageFallback(OPERATIONS_STORAGE_KEY);
-    }
+    let stored = await smartLoad(OPERATIONS_STORAGE_KEY);
 
     if (!stored) {
         operations = [];
@@ -2668,7 +2735,7 @@ function getOperationsForCurrentPeriod() {
 
 function getFilteredOperations(monthOperations, filterType) {
     if (!Array.isArray(monthOperations)) return [];
-    
+
     // Filter by type or schedule status
     if (filterType === 'scheduled') {
         return monthOperations.filter(op => op.status === 'scheduled');
@@ -2677,13 +2744,13 @@ function getFilteredOperations(monthOperations, filterType) {
     if (filterType === 'all') {
         return monthOperations;
     }
-    
+
     // For other filters, we typically only show executed operations unless we want to show everything
     // But usually 'Ingresos' implies executed incomes. 
     // Let's decide: 'Todos', 'Ingresos', 'Gastos' show executed operations. 
     // 'Programadas' shows scheduled operations (any type).
     // Or 'Todos' shows executed (any type).
-    
+
     // Let's filter out scheduled operations from normal views to avoid confusion
     const executedOps = monthOperations.filter(op => op.status !== 'scheduled');
 
@@ -2703,7 +2770,7 @@ function calculateOperationsTotals(monthOperations) {
     // Only count executed operations for totals
     monthOperations.forEach(op => {
         if (op.status === 'scheduled') return;
-        
+
         if (op.type === 'income') {
             income += op.amount;
         } else if (op.type === 'expense') {
@@ -2739,7 +2806,7 @@ function renderOperationsSummary() {
     const expenseEl = document.getElementById('opsMonthExpenseValue');
     const percentEl = document.getElementById('opsMonthExpensePercent');
     const arcEl = document.getElementById('opsMonthExpenseArc');
-    
+
     // Only show period ops, excluding scheduled unless specific view requested? 
     // Usually Summary is "What happened", so executed only.
     // getOperationsForCurrentPeriod gets all based on date.
@@ -2821,12 +2888,12 @@ function buildOperationHistoryItem(operation) {
         : '';
     const accountLabel = getOperationAccountsLabel(operation);
     const description = operation.description ? `<p class="text-xs text-gray-500 mt-0.5">${escapeHtml(operation.description)}</p>` : '';
-    
+
     const categoryMeta = getOperationCategoryMeta(operation.categoryId);
     const categoryLabel = categoryMeta?.displayName || categoryMeta?.rawName || '';
     const hasCategory = Boolean(categoryLabel);
     const baseColor = categoryMeta?.color || '#6b7280';
-    
+
     const categoryBadge = hasCategory
         ? `<span class="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border" style="background-color: ${baseColor}20; color: ${baseColor}; border-color: ${baseColor}40;">
                 <span class="w-1.5 h-1.5 rounded-full" style="background-color: ${baseColor};"></span>${escapeHtml(categoryLabel)}
@@ -2920,7 +2987,7 @@ function renderOperationsHistory() {
         } else {
             dayDate = items.length ? new Date(items[0].datetime) : new Date();
         }
-        
+
         const label = capitalizeLabel(dayDate.toLocaleDateString('es-ES', { weekday: 'long', day: '2-digit', month: 'long' }));
         let incomeTotal = 0;
         let expenseTotal = 0;
@@ -3161,18 +3228,18 @@ function openOperationsDetailsModal(operationId) {
     if (categoryEl) {
         const catMeta = getOperationCategoryMeta(operation.categoryId);
         const label = catMeta?.displayName || catMeta?.rawName || 'Sin categoría';
-        
+
         if (catMeta) {
-             const baseColor = catMeta.color || '#6b7280';
-             // Usamos innerHTML para insertar el badge coloreado
-             categoryEl.innerHTML = `
+            const baseColor = catMeta.color || '#6b7280';
+            // Usamos innerHTML para insertar el badge coloreado
+            categoryEl.innerHTML = `
                 <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border text-xs" style="background-color: ${baseColor}20; color: ${baseColor}; border-color: ${baseColor}40;">
                     <span class="w-1.5 h-1.5 rounded-full" style="background-color: ${baseColor};"></span>
                     ${escapeHtml(label)}
                 </span>
              `;
         } else {
-             categoryEl.textContent = label;
+            categoryEl.textContent = label;
         }
     }
 
@@ -3300,11 +3367,11 @@ async function handleOperationsFormSubmit(event) {
     const datetimeISO = new Date(datetime.getTime()).toISOString();
     const now = new Date();
     const nowISO = now.toISOString();
-    
+
     // Check if date is in the future (ignore seconds/milliseconds for usability)
     const isFuture = datetime.getTime() > (now.getTime() + 60000);
     let status = 'executed';
-    
+
     if (isFuture) {
         const confirmed = confirm('La fecha seleccionada es futura. ¿Deseas registrar esta operación como programada?\n\nNo afectará el saldo hasta que llegue la fecha.');
         if (confirmed) {
@@ -3618,7 +3685,7 @@ async function initOperationsModule() {
 async function processScheduledOperations() {
     let changed = false;
     const now = new Date();
-    
+
     for (const op of operations) {
         if (op.status === 'scheduled') {
             const opDate = new Date(op.datetime);
@@ -3677,22 +3744,22 @@ class PreferencesDB {
     async init() {
         return new Promise((resolve, reject) => {
             const request = indexedDB.open(DB_NAME, DB_VERSION);
-            
+
             request.onerror = () => {
                 console.error('Error opening IndexedDB:', request.error);
                 reject(request.error);
             };
-            
+
             request.onsuccess = () => {
                 this.db = request.result;
                 this.isReady = true;
                 resolve(this.db);
             };
-            
+
             request.onupgradeneeded = (event) => {
                 const db = event.target.result;
                 console.log(`Upgrading IndexedDB from ${event.oldVersion} to ${event.newVersion}`);
-                
+
                 // Create object store for user preferences
                 if (!db.objectStoreNames.contains(STORE_NAME)) {
                     const store = db.createObjectStore(STORE_NAME, { keyPath: 'key' });
@@ -3716,12 +3783,12 @@ class PreferencesDB {
     async setItem(key, value) {
         try {
             await this.ensureReady();
-            
+
             return new Promise((resolve, reject) => {
                 const transaction = this.db.transaction([STORE_NAME], 'readwrite');
                 const store = transaction.objectStore(STORE_NAME);
                 const request = store.put({ key, value });
-                
+
                 request.onsuccess = () => resolve(request.result);
                 request.onerror = () => reject(request.error);
             });
@@ -3735,12 +3802,12 @@ class PreferencesDB {
     async getItem(key) {
         try {
             await this.ensureReady();
-            
+
             return new Promise((resolve, reject) => {
                 const transaction = this.db.transaction([STORE_NAME], 'readonly');
                 const store = transaction.objectStore(STORE_NAME);
                 const request = store.get(key);
-                
+
                 request.onsuccess = () => {
                     const result = request.result;
                     resolve(result ? result.value : null);
@@ -3757,12 +3824,12 @@ class PreferencesDB {
     async removeItem(key) {
         try {
             await this.ensureReady();
-            
+
             return new Promise((resolve, reject) => {
                 const transaction = this.db.transaction([STORE_NAME], 'readwrite');
                 const store = transaction.objectStore(STORE_NAME);
                 const request = store.delete(key);
-                
+
                 request.onsuccess = () => resolve(request.result);
                 request.onerror = () => reject(request.error);
             });
@@ -4060,9 +4127,9 @@ async function handleCurrencyChange(event) {
     } catch (err) {
         console.error('Error saving currency preferences', err);
         // fallback to localStorage
-        try { 
-            localStorage.setItem(defaultKey, defaultSelect.value); 
-            localStorage.setItem(secondaryKey, secondarySelect.value); 
+        try {
+            localStorage.setItem(defaultKey, defaultSelect.value);
+            localStorage.setItem(secondaryKey, secondarySelect.value);
         } catch (e) { /* ignore */ }
     }
 }
@@ -4086,7 +4153,7 @@ function handleSystemThemeChange(event) {
 async function initThemeToggle() {
     // Wait for IndexedDB to be ready
     await preferencesDB.initPromise;
-    
+
     // Load saved preferences
     await hydrateThemePreference();
     await hydrateAccentPreference();
@@ -4149,7 +4216,7 @@ function getCurrentMonthKey() {
 
 function parseMoney(value) {
     if (typeof value === 'number') return Number.isFinite(value) && value >= 0 ? value : 0;
-    
+
     // Normalize string: remove non-numeric chars except dot and comma
     // If we have commas and dots, we need to guess which is which or enforce a format.
     // Given the previous issue, "1,000" became 1.
@@ -4157,25 +4224,25 @@ function parseMoney(value) {
     // Or if it has both, usually the last one is the decimal separator.
     // However, input[type="number"] in standard browsers usually returns values with dot as decimal or empty string if invalid.
     // But if the user provides a string from another source (e.g. storage), we need to be careful.
-    
+
     const str = String(value ?? '').trim();
     if (!str) return 0;
 
     // Remove all whitespace
     const cleanStr = str.replace(/\s/g, '');
-    
+
     // Simple heuristic: 
     // If it contains both ',' and '.', the last one is the decimal.
     // If it contains only ',', it might be decimal (EU) or thousands (US/MX). 
     // But usually in JS context, dot is decimal.
-    
+
     // Let's stick to a robust parsing that handles common "1,000.00" (US/MX) format.
     // We will remove all commas.
     const usFormat = cleanStr.replace(/,/g, '');
     const parsedUs = parseFloat(usFormat);
-    
+
     if (Number.isFinite(parsedUs) && parsedUs >= 0) return parsedUs;
-    
+
     return 0;
 }
 
@@ -4254,12 +4321,12 @@ function normalizeBudgetPlan(rawPlan, currencyCode) {
     const effectiveFromRaw = rawPlan && typeof rawPlan.effectiveFrom === 'string' ? rawPlan.effectiveFrom : '';
     const effectiveFrom = /^\d{4}-\d{2}$/.test(effectiveFromRaw) ? effectiveFromRaw : getCurrentMonthKey();
     let totalAmount = parseMoney(rawPlan?.totalAmount);
-    
+
     // Safety check: if totalAmount is 0 but rawPlan had a value, it might be a parsing error or actual 0.
     // If it's a general budget, it usually shouldn't be 0 unless explicitly set.
     // But we can't easily distinguish "invalid" from "0".
     // However, we should ensure it's a number. parseMoney guarantees that.
-    
+
     const subBudgets = Array.isArray(rawPlan?.subBudgets)
         ? rawPlan.subBudgets
             .map((entry) => {
@@ -4287,13 +4354,9 @@ function normalizeBudgetPlan(rawPlan, currencyCode) {
 async function loadBudgetPlan(currencyCode) {
     let stored = null;
     try {
-        stored = await preferencesDB.getItem(BUDGET_PLAN_STORAGE_KEY);
+        stored = await smartLoad(BUDGET_PLAN_STORAGE_KEY);
     } catch {
         stored = null;
-    }
-
-    if (!stored) {
-        stored = getLocalStorageFallback(BUDGET_PLAN_STORAGE_KEY);
     }
 
     let raw = null;
@@ -4324,11 +4387,11 @@ async function calculateMonthlyBudgetUsage(targetCurrencyCode, period) {
     const effectiveMonthKey = typeof period === 'string' && /^\d{4}-\d{2}$/.test(period) ? period : getCurrentMonthKey();
     const monthKeySet = explicitMonthKeys?.length ? new Set(explicitMonthKeys) : new Set([effectiveMonthKey]);
     const accountIdSet = period?.accountIdSet instanceof Set ? period.accountIdSet : null;
-    
+
     // Ensure we have the latest operations
     await hydrateOperationsFromStorage();
-    const allOps = operations; 
-    
+    const allOps = operations;
+
     // Normalize target currency
     if (!targetCurrencyCode) {
         targetCurrencyCode = await getPreferredCurrencyCodeForBudgets();
@@ -4340,7 +4403,7 @@ async function calculateMonthlyBudgetUsage(targetCurrencyCode, period) {
     for (const op of allOps) {
         // Filter: Expense only, match month
         if (op.type !== 'expense') continue;
-        
+
         const opMonthKey = op?.monthKey || getMonthKeyFromDate(new Date(op.datetime));
         if (!monthKeySet.has(opMonthKey)) continue;
         if (accountIdSet && (!op?.accountId || !accountIdSet.has(op.accountId))) continue;
@@ -4349,12 +4412,12 @@ async function calculateMonthlyBudgetUsage(targetCurrencyCode, period) {
         // ideally we check accounts currency vs budget currency. 
         // For this implementation we assume amounts are compatible or user manages single currency mainly.
         const amount = Number(op.amount) || 0;
-        
+
         if (op.categoryId) {
             const current = usageMap.get(op.categoryId) || 0;
             usageMap.set(op.categoryId, current + amount);
         } else {
-             // Expenses without category? Maybe track them as 'uncategorized'
+            // Expenses without category? Maybe track them as 'uncategorized'
         }
         totalSpent += amount;
     }
@@ -4386,7 +4449,7 @@ async function renderFeaturedBudgetsPanel(monthKey, mode) {
         effectiveMode
     );
     const monthKeys = getPeriodMonthKeys(baseKey, effectiveMode);
-    
+
     const effectiveAccountIds = getEffectiveResumenAccountIds();
     // Usage data
     const { usageMap, totalSpent } = await calculateMonthlyBudgetUsage(currencyCode, { monthKeys, accountIdSet: effectiveAccountIds });
@@ -4401,17 +4464,17 @@ async function renderFeaturedBudgetsPanel(monthKey, mode) {
     // Usually "Available" in a budget context means "How much I can still spend".
     // But in the header "Total | Asignado | Disponible", "Disponible" usually refers to "Unallocated".
     // Let's keep the header as "Planning Status" but maybe add a "Spent" indicator or just focus on the list.
-    
+
     // The user specifically asked to see how money decreases in relation to the budget.
     // Let's update the header to show "Gasto Total" vs "Presupuesto Total" maybe?
     // User: "El presupuesto general no se debe de tocar... distribución... la hace el usuario"
     // User: "revisar los presupuestos debo de ver como efectivamente me queda menos dinero disponible"
-    
+
     // Let's stick to modifying the list items to show consumption, and maybe leave the header as Planning Summary,
     // OR change the header to be "Monthly Overview".
     // Let's keep the header as Planning (Total Budget, Assigned to Categories, Unassigned).
     // And the list shows the status of those categories.
-    
+
     currencyEl.textContent = currencyCode;
     totalEl.textContent = formatMoney(totalAmount, currencyCode);
     assignedEl.textContent = formatMoney(assignedAmount, currencyCode);
@@ -4425,19 +4488,19 @@ async function renderFeaturedBudgetsPanel(monthKey, mode) {
     } else {
         let segmentsHtml = '';
         subBudgets.forEach((entry) => {
-             const amount = parseMoney(entry.amount) * monthsMultiplier;
-             if (amount <= 0) return;
-             
-             const category = categoryMap.get(entry.categoryId);
-             const color = sanitizeHexColor(category?.color, '#6366f1');
-             const widthPercent = (amount / totalAmount) * 100;
-             
-             segmentsHtml += `<div style="width: ${widthPercent}%; background-color: ${color}" title="${escapeHtml(category?.displayName || 'Categoría')} (${formatMoney(amount, currencyCode)})"></div>`;
+            const amount = parseMoney(entry.amount) * monthsMultiplier;
+            if (amount <= 0) return;
+
+            const category = categoryMap.get(entry.categoryId);
+            const color = sanitizeHexColor(category?.color, '#6366f1');
+            const widthPercent = (amount / totalAmount) * 100;
+
+            segmentsHtml += `<div style="width: ${widthPercent}%; background-color: ${color}" title="${escapeHtml(category?.displayName || 'Categoría')} (${formatMoney(amount, currencyCode)})"></div>`;
         });
-        
+
         barEl.innerHTML = segmentsHtml;
         // Clean up previous styles applied to the container itself if any
-        barEl.style.width = ''; 
+        barEl.style.width = '';
         barEl.classList.remove('bg-red-600', 'bg-indigo-600');
     }
 
@@ -4479,14 +4542,14 @@ async function renderFeaturedBudgetsPanel(monthKey, mode) {
             const display = category?.displayName || name;
             const color = sanitizeHexColor(category?.color, '#6366f1');
             const bg = `${color}1A`;
-            
+
             const spent = usageMap.get(entry.categoryId) || 0;
             const assigned = entry.amount;
             const remaining = assigned - spent;
-            
+
             // Percent of Budget Consumed
             const percentConsumed = assigned > 0 ? Math.min(100, Math.round((spent / assigned) * 100)) : 0;
-            
+
             const spentLabel = formatMoney(spent, currencyCode);
             const assignedLabel = formatMoney(assigned, currencyCode);
             const remainingLabel = formatMoney(remaining, currencyCode);
@@ -4494,11 +4557,11 @@ async function renderFeaturedBudgetsPanel(monthKey, mode) {
             // Bar Color Logic
             let barColorClass = '';
             if (remaining < 0) {
-                 barColorClass = 'bg-red-600'; // Over budget
+                barColorClass = 'bg-red-600'; // Over budget
             } else if (percentConsumed > 85) {
-                 barColorClass = 'bg-amber-500'; // Warning
+                barColorClass = 'bg-amber-500'; // Warning
             } else {
-                 barColorClass = 'bg-emerald-500'; // Healthy
+                barColorClass = 'bg-emerald-500'; // Healthy
             }
             // Override with category color if preferred, but status colors are better for budgets.
             // Or use category color but turn red if over?
@@ -4579,14 +4642,14 @@ async function renderResumenPeriodSummary(monthKey, mode) {
     titleEl.textContent = `Resumen de ${formatPeriodLabel(selectedBase, effectiveMode)}`;
 
     const allOps = Array.isArray(operations) ? operations : [];
-    
+
     const effectiveAccountIds = getEffectiveResumenAccountIds();
-    const filteredOps = effectiveAccountIds 
+    const filteredOps = effectiveAccountIds
         ? allOps.filter(op => {
-             if (op.type === 'transfer') {
-                 return effectiveAccountIds.has(op.fromAccountId) || effectiveAccountIds.has(op.toAccountId);
-             }
-             return effectiveAccountIds.has(op.accountId);
+            if (op.type === 'transfer') {
+                return effectiveAccountIds.has(op.fromAccountId) || effectiveAccountIds.has(op.toAccountId);
+            }
+            return effectiveAccountIds.has(op.accountId);
         })
         : allOps;
 
@@ -4719,12 +4782,12 @@ async function renderResumenExtremesAndFeatured(monthKey, mode) {
     const allOps = Array.isArray(operations) ? operations : [];
 
     const effectiveAccountIds = getEffectiveResumenAccountIds();
-    const filteredOps = effectiveAccountIds 
+    const filteredOps = effectiveAccountIds
         ? allOps.filter(op => {
-             if (op.type === 'transfer') {
-                 return effectiveAccountIds.has(op.fromAccountId) || effectiveAccountIds.has(op.toAccountId);
-             }
-             return effectiveAccountIds.has(op.accountId);
+            if (op.type === 'transfer') {
+                return effectiveAccountIds.has(op.fromAccountId) || effectiveAccountIds.has(op.toAccountId);
+            }
+            return effectiveAccountIds.has(op.accountId);
         })
         : allOps;
 
@@ -4732,18 +4795,18 @@ async function renderResumenExtremesAndFeatured(monthKey, mode) {
     const monthOps = filteredOps.filter(op => monthLookup.has(op?.monthKey || getMonthKeyFromDate(op?.datetime)));
 
     if (monthOps.length === 0) {
-         extremeExpenseMin.classList.add('hidden');
-         extremeExpenseMax.classList.add('hidden');
-         extremeIncomeMin.classList.add('hidden');
-         extremeIncomeMax.classList.add('hidden');
-         
-         featuredIncomesList.innerHTML = '<div class="text-center py-4"><p class="text-xs text-gray-400 italic">No hay ingresos registrados.</p></div>';
-         featuredExpensesList.innerHTML = '<div class="text-center py-4"><p class="text-xs text-gray-400 italic">No hay gastos registrados.</p></div>';
-         return;
+        extremeExpenseMin.classList.add('hidden');
+        extremeExpenseMax.classList.add('hidden');
+        extremeIncomeMin.classList.add('hidden');
+        extremeIncomeMax.classList.add('hidden');
+
+        featuredIncomesList.innerHTML = '<div class="text-center py-4"><p class="text-xs text-gray-400 italic">No hay ingresos registrados.</p></div>';
+        featuredExpensesList.innerHTML = '<div class="text-center py-4"><p class="text-xs text-gray-400 italic">No hay gastos registrados.</p></div>';
+        return;
     }
 
-    const expenses = monthOps.filter(op => op.type === 'expense').map(op => ({...op, amount: Number(op.amount)}));
-    const incomes = monthOps.filter(op => op.type === 'income').map(op => ({...op, amount: Number(op.amount)}));
+    const expenses = monthOps.filter(op => op.type === 'expense').map(op => ({ ...op, amount: Number(op.amount) }));
+    const incomes = monthOps.filter(op => op.type === 'income').map(op => ({ ...op, amount: Number(op.amount) }));
 
     const renderExtremeCard = (element, op, type) => {
         if (!op) {
@@ -4753,28 +4816,28 @@ async function renderResumenExtremesAndFeatured(monthKey, mode) {
         element.classList.remove('hidden');
         const nameEl = element.querySelector('.name');
         const amountEl = element.querySelector('.amount');
-        
+
         if (nameEl) nameEl.textContent = op.title || op.description || 'Sin descripción';
-        
+
         if (amountEl) {
-             const sign = type === 'expense' ? '-' : '+';
-             const colorClass = type === 'expense' ? 'text-red-600' : 'text-green-600';
-             
-             const dateObj = new Date(op.datetime);
-             const isValidDate = !isNaN(dateObj.getTime());
-             const formattedDate = isValidDate ? dateObj.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
-             
-             amountEl.className = `text-sm font-bold ${colorClass} amount`;
-             amountEl.innerHTML = `${sign}${formatMoney(op.amount, currencyCode)} <span class="font-normal text-gray-500 text-xs date">· ${formattedDate}</span>`;
+            const sign = type === 'expense' ? '-' : '+';
+            const colorClass = type === 'expense' ? 'text-red-600' : 'text-green-600';
+
+            const dateObj = new Date(op.datetime);
+            const isValidDate = !isNaN(dateObj.getTime());
+            const formattedDate = isValidDate ? dateObj.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
+
+            amountEl.className = `text-sm font-bold ${colorClass} amount`;
+            amountEl.innerHTML = `${sign}${formatMoney(op.amount, currencyCode)} <span class="font-normal text-gray-500 text-xs date">· ${formattedDate}</span>`;
         }
     };
 
     // Extremes
     if (expenses.length > 0) {
         const sortedExpenses = [...expenses].sort((a, b) => a.amount - b.amount);
-        const minExpense = sortedExpenses[0]; 
+        const minExpense = sortedExpenses[0];
         const maxExpense = sortedExpenses[sortedExpenses.length - 1];
-        
+
         renderExtremeCard(extremeExpenseMin, minExpense, 'expense');
         renderExtremeCard(extremeExpenseMax, maxExpense, 'expense');
     } else {
@@ -4783,12 +4846,12 @@ async function renderResumenExtremesAndFeatured(monthKey, mode) {
     }
 
     if (incomes.length > 0) {
-         const sortedIncomes = [...incomes].sort((a, b) => a.amount - b.amount);
-         const minIncome = sortedIncomes[0];
-         const maxIncome = sortedIncomes[sortedIncomes.length - 1];
+        const sortedIncomes = [...incomes].sort((a, b) => a.amount - b.amount);
+        const minIncome = sortedIncomes[0];
+        const maxIncome = sortedIncomes[sortedIncomes.length - 1];
 
-         renderExtremeCard(extremeIncomeMin, minIncome, 'income');
-         renderExtremeCard(extremeIncomeMax, maxIncome, 'income');
+        renderExtremeCard(extremeIncomeMin, minIncome, 'income');
+        renderExtremeCard(extremeIncomeMax, maxIncome, 'income');
     } else {
         extremeIncomeMin.classList.add('hidden');
         extremeIncomeMax.classList.add('hidden');
@@ -4803,14 +4866,14 @@ async function renderResumenExtremesAndFeatured(monthKey, mode) {
         const colorClass = isExpense ? 'text-red-600' : 'text-green-600';
         const iconColor = isExpense ? 'text-red-700' : 'text-green-700';
         const iconBg = isExpense ? 'bg-red-200' : 'bg-green-200';
-        
+
         const dateObj = new Date(op.datetime);
         const dateStr = !isNaN(dateObj.getTime()) ? dateObj.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
         const sign = isExpense ? '-' : '+';
-        
+
         const expensePath = '<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>';
         const incomePath = '<rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>';
-        
+
         return `
             <div class="flex items-center p-3 bg-white rounded-xl border border-gray-200 hover:shadow-sm transition">
                 <div class="p-2 ${iconBg} rounded-full mr-4">
@@ -4914,7 +4977,7 @@ async function renderResumenTotalBalance() {
             return opMonth === currentMonthKey && op.status === 'scheduled';
         });
 
-        const relevantScheduled = effectiveAccountIds 
+        const relevantScheduled = effectiveAccountIds
             ? scheduledOps.filter(op => effectiveAccountIds.has(op.accountId))
             : scheduledOps;
 
@@ -4928,9 +4991,9 @@ async function renderResumenTotalBalance() {
         });
 
         const projectedBalance = currentBalance + scheduledNet;
-        
+
         forecastEl.classList.remove('hidden');
-        
+
         // Actualizar etiqueta para ser explícitos sobre el mes actual
         const [cY, cM] = currentMonthKey.split('-');
         const currentMonthName = new Date(Number(cY), Number(cM) - 1, 1).toLocaleDateString('es-ES', { month: 'long' });
@@ -4946,7 +5009,7 @@ async function renderResumenTotalBalance() {
         if (span) {
             span.textContent = formatMoney(projectedBalance, currencyCode);
             span.classList.remove('text-amber-600', 'text-green-600', 'text-gray-700');
-            
+
             if (projectedBalance < currentBalance) {
                 span.classList.add('text-amber-600');
             } else if (projectedBalance > currentBalance) {
@@ -5124,7 +5187,7 @@ function toggleResumenAccountsMenu() {
     const menu = document.getElementById('resumenAccountsMenu');
     const toggleBtn = document.getElementById('resumenAccountsToggle');
     if (!menu || !toggleBtn) return;
-    
+
     const isHidden = menu.classList.contains('hidden');
     if (isHidden) {
         menu.classList.remove('hidden');
@@ -5149,10 +5212,10 @@ function closeResumenAccountsMenu() {
 function updateResumenAccountsSelection() {
     const checkboxes = document.querySelectorAll('#resumenAccountsList input[type="checkbox"]');
     const selectedIds = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
-    
+
     resumenAccountsMode = 'specific';
     resumenSelectedAccountIds = selectedIds;
-    
+
     saveResumenAccountsSelection();
     updateResumenAccountsLabel();
     refreshResumenDashboard();
@@ -5324,24 +5387,24 @@ async function setupBudgetsManagement() {
 
         const list = Array.isArray(plan?.subBudgets) ? plan.subBudgets : [];
         let segmentsHtml = '';
-        
+
         list.forEach((entry) => {
-             const amount = parseMoney(entry.amount);
-             if (amount <= 0) return;
-             
-             const category = expenseCategoryMap.get(entry.categoryId);
-             const color = sanitizeHexColor(category?.color, '#6366f1');
-             const widthPercent = (amount / totalAmount) * 100;
-             
-             // We won't round percent here to allow precise stacking, 
-             // but CSS width works fine with decimals.
-             
-             segmentsHtml += `<div style="width: ${widthPercent}%; background-color: ${color}" title="${escapeHtml(category?.displayName || 'Categoría')} (${formatMoney(amount, currencyCode)})"></div>`;
+            const amount = parseMoney(entry.amount);
+            if (amount <= 0) return;
+
+            const category = expenseCategoryMap.get(entry.categoryId);
+            const color = sanitizeHexColor(category?.color, '#6366f1');
+            const widthPercent = (amount / totalAmount) * 100;
+
+            // We won't round percent here to allow precise stacking, 
+            // but CSS width works fine with decimals.
+
+            segmentsHtml += `<div style="width: ${widthPercent}%; background-color: ${color}" title="${escapeHtml(category?.displayName || 'Categoría')} (${formatMoney(amount, currencyCode)})"></div>`;
         });
-        
+
         assignedBarEl.innerHTML = segmentsHtml;
         // Clean up previous styles applied to the container itself if any
-        assignedBarEl.style.width = ''; 
+        assignedBarEl.style.width = '';
         assignedBarEl.classList.remove('bg-red-600', 'bg-indigo-600');
     }
 
@@ -5377,14 +5440,14 @@ async function setupBudgetsManagement() {
                 const badge = category?.displayName || name;
                 const color = category?.color || '#e5e7eb';
                 const assigned = parseMoney(entry.amount);
-                
+
                 // Usage Calculation
                 const spent = usageMap.get(entry.categoryId) || 0;
                 const remaining = assigned - spent;
                 const percentConsumed = assigned > 0 ? Math.min(100, Math.round((spent / assigned) * 100)) : 0;
-                
+
                 const iconMarkup = category?.icon ? `<i class="${escapeHtml(category.icon)} text-gray-500"></i>` : '';
-                
+
                 // Status color for text
                 const statusColorClass = remaining < 0 ? 'text-red-600' : 'text-gray-500';
                 const barColor = remaining < 0 ? '#dc2626' : color;
@@ -5457,7 +5520,7 @@ async function setupBudgetsManagement() {
         orderedExpenseCategories = categoriesData.ordered;
         expenseCategoryMap = categoriesData.categoryMap;
         plan = await loadBudgetPlan(currencyCode);
-        
+
         const usageData = await calculateMonthlyBudgetUsage(currencyCode);
         usageMap = usageData.usageMap;
 
@@ -5616,7 +5679,7 @@ async function setupWebhookModal() {
         toggleWebhookVisibilityBtn.addEventListener('click', () => {
             const isPassword = discordWebhookInput.type === 'password';
             discordWebhookInput.type = isPassword ? 'text' : 'password';
-            toggleWebhookVisibilityBtn.innerHTML = isPassword 
+            toggleWebhookVisibilityBtn.innerHTML = isPassword
                 ? '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path><path d="M6.61 6.61A13.52 13.52 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path><line x1="2" y1="2" x2="22" y2="22"></line></svg>'
                 : '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
         });
@@ -5777,10 +5840,10 @@ async function setupSavingsManagement() {
     async function renderSavingsGoals() {
         const goals = await preferencesDB.getAllSavings();
         const containers = [savingsGoalsList, featuredSavingsList].filter(c => c !== null);
-        
+
         containers.forEach(container => {
             container.innerHTML = '';
-            
+
             if (goals.length === 0) {
                 container.innerHTML = `
                     <div class="text-center py-8 w-full">
@@ -5803,10 +5866,10 @@ async function setupSavingsManagement() {
                     : `Faltan <span class="font-semibold ${textClass}">${formatCurrency(remainingAmount)}</span> para llegar`;
 
                 const goalEl = document.createElement('div');
-                goalEl.className = container === featuredSavingsList 
+                goalEl.className = container === featuredSavingsList
                     ? 'bg-white border border-gray-100 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow w-full'
                     : 'bg-white border border-gray-100 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow flex-shrink-0 w-[280px] snap-center';
-                
+
                 goalEl.innerHTML = `
                     <div class="flex justify-between items-start mb-2">
                         <div class="flex items-center gap-3">
@@ -5900,7 +5963,7 @@ async function setupSavingsManagement() {
             document.getElementById('goalTarget').value = goal.target;
             document.getElementById('goalCurrent').value = goal.current;
             document.getElementById('goalFormTitle').textContent = 'Editar Meta';
-            
+
             // Seleccionar color
             const colorOpts = document.querySelectorAll('.color-opt');
             colorOpts.forEach(o => {
@@ -6240,7 +6303,7 @@ window.addEventListener('beforeunload', async () => {
     try {
         await saveAccountsToStorage();
         await saveAccountCategoriesToStorage();
-    } catch (e) {}
+    } catch (e) { }
 });
 
 async function getDatabaseSnapshot(force = false) {
@@ -6419,7 +6482,20 @@ async function readAllData() {
                 const getAllRequest = store.getAll();
 
                 getAllRequest.onsuccess = () => {
-                    data.stores[name] = getAllRequest.result || [];
+                    const rawItems = getAllRequest.result || [];
+                    // Transformar ítems: parsear `value` si es string JSON para exportación legible
+                    const transformedItems = rawItems.map(item => {
+                        if (item && typeof item.value === 'string') {
+                            try {
+                                return { ...item, value: JSON.parse(item.value) };
+                            } catch {
+                                // Si no es JSON válido, mantener el string original
+                                return item;
+                            }
+                        }
+                        return item;
+                    });
+                    data.stores[name] = transformedItems;
                     pending -= 1;
                     if (!pending) {
                         db.close();
@@ -6456,7 +6532,13 @@ async function readAllData() {
     keysToExport.forEach(key => {
         const val = localStorage.getItem(key);
         if (val !== null) {
-            data.localStorage[key] = val;
+            // Intentar parsear valores JSON para formato legible en exportación
+            try {
+                data.localStorage[key] = JSON.parse(val);
+            } catch {
+                // Si no es JSON válido, guardar como string
+                data.localStorage[key] = val;
+            }
         }
     });
 
@@ -6469,8 +6551,8 @@ async function restoreDataFromSnapshot(snapshot) {
     }
 
     // Soporte legacy (si el snapshot era directo de stores sin la estructura nueva)
-    const storesData = snapshot.stores || snapshot; 
-    
+    const storesData = snapshot.stores || snapshot;
+
     await preferencesDB.ensureReady();
     const openRequest = indexedDB.open(DB_NAME, DB_VERSION);
 
@@ -6483,7 +6565,18 @@ async function restoreDataFromSnapshot(snapshot) {
             const operations = storeNames.map((name) => {
                 // Si no hay datos para este store en el snapshot, lo limpiamos o lo ignoramos?
                 // Mejor limpiar para evitar mezclar datos viejos con restauración parcial
-                const values = Array.isArray(storesData[name]) ? storesData[name] : [];
+                const rawValues = Array.isArray(storesData[name]) ? storesData[name] : [];
+
+                // Transformar ítems: serializar `value` si es objeto para compatibilidad con hydrate
+                const values = rawValues.map(item => {
+                    if (item && item.value !== undefined && item.value !== null && typeof item.value !== 'string') {
+                        // Si `value` es un objeto/array, serializarlo a string
+                        return { ...item, value: JSON.stringify(item.value) };
+                    }
+                    // Si ya es string o no tiene `value`, mantener tal cual (compatibilidad legacy)
+                    return item;
+                });
+
                 const transaction = db.transaction(name, 'readwrite');
                 const store = transaction.objectStore(name);
                 store.clear(); // Limpiar antes de restaurar
@@ -6510,9 +6603,12 @@ async function restoreDataFromSnapshot(snapshot) {
     // Restaurar LocalStorage
     if (snapshot.localStorage && typeof snapshot.localStorage === 'object') {
         Object.entries(snapshot.localStorage).forEach(([key, value]) => {
-            localStorage.setItem(key, value);
+            // Serializar objetos/arrays a JSON, strings se guardan directamente
+            // Esto soporta tanto el formato nuevo (objetos parseados) como el viejo (strings)
+            const serialized = typeof value === 'string' ? value : JSON.stringify(value);
+            localStorage.setItem(key, serialized);
         });
-        
+
         // Refrescar UI basada en preferencias restauradas
         const theme = localStorage.getItem('fti-theme-preference');
         if (theme) {
@@ -6595,7 +6691,7 @@ const DATA_WEBHOOK_URL_STORAGE_KEY = 'fti-discord-webhook-url';
 async function handleExportData() {
     try {
         const webhookUrl = await preferencesDB.getItem(DATA_WEBHOOK_URL_STORAGE_KEY) || getLocalStorageFallback(DATA_WEBHOOK_URL_STORAGE_KEY);
-        
+
         if (!webhookUrl) {
             alert('Por favor, configura la URL del Webhook de Discord en los ajustes antes de respaldar.');
             return;
@@ -6665,7 +6761,7 @@ function setupDataManagement() {
     if (deleteDataButton) deleteDataButton.addEventListener('click', handleDeleteData);
     if (importDataButton) importDataButton.addEventListener('click', handleImportData);
     if (exportDataButton) exportDataButton.addEventListener('click', handleExportData);
-    
+
     if (downloadDataButton) {
         downloadDataButton.addEventListener('click', handleDownloadData);
     }
@@ -6697,7 +6793,7 @@ async function refreshDataPanel(force = false) {
         // Calcular tamaño y conteo
         // data.stores tiene los datos de IDB
         // data.localStorage tiene lo de LS
-        
+
         let totalRecords = 0;
         let totalBytes = 0;
 
@@ -6721,7 +6817,7 @@ async function refreshDataPanel(force = false) {
         const snapshot = { totalRecords, totalBytes };
         cachedDBSnapshot = snapshot;
         cachedDBSnapshotTimestamp = now;
-        
+
         updateDataPanelUI(snapshot);
     } catch (error) {
         console.error('Error refreshing data panel:', error);
@@ -6765,7 +6861,7 @@ function updateDataPanelUI(snapshot) {
                 // Actualizar barra con datos reales si es posible
                 const realPercentage = (estimate.usage / estimate.quota) * 100;
                 // Si es muy pequeño, mostrar al menos un pixel
-                dataUsageBar.style.width = `${Math.max(realPercentage, percentage > 0 ? 1 : 0)}%`; 
+                dataUsageBar.style.width = `${Math.max(realPercentage, percentage > 0 ? 1 : 0)}%`;
             } else {
                 dataAvailableValue.textContent = 'Amplio';
             }
@@ -6807,7 +6903,7 @@ function updateStatsPeriodControls() {
     const { label, menu } = getStatsPeriodControls();
     const meta = OPERATIONS_PERIOD_META[statsPeriodMode] || OPERATIONS_PERIOD_META.monthly;
     if (label) label.textContent = meta.label;
-    
+
     if (menu) {
         menu.querySelectorAll('[data-stats-period-mode]').forEach(btn => {
             const mode = btn.dataset.statsPeriodMode;
@@ -6824,7 +6920,7 @@ function setStatsPeriodMode(mode) {
     statsPeriodMode = mode;
     // Alinear el mes seleccionado al inicio del nuevo periodo
     statsSelectedMonthKey = clampMonthKeyToPeriod(statsSelectedMonthKey || getCurrentMonthKey(), statsPeriodMode);
-    
+
     closeStatsPeriodMenu();
     updateStatsPeriodControls();
     updateStatisticsUI();
@@ -6869,14 +6965,14 @@ async function initStatisticsModule() {
     // Listeners de navegación
     const prevBtn = document.getElementById('statsPrevMonthBtn');
     const nextBtn = document.getElementById('statsNextMonthBtn');
-    
+
     if (prevBtn) {
         prevBtn.onclick = () => {
             statsSelectedMonthKey = shiftPeriodKey(statsSelectedMonthKey, statsPeriodMode, -1);
             updateStatisticsUI();
         };
     }
-    
+
     if (nextBtn) {
         nextBtn.onclick = () => {
             const candidate = shiftPeriodKey(statsSelectedMonthKey, statsPeriodMode, 1);
@@ -6896,7 +6992,7 @@ async function initStatisticsModule() {
 async function updateStatisticsUI() {
     const baseKey = statsSelectedMonthKey;
     const currentPeriodStart = getCurrentPeriodStartKey(statsPeriodMode);
-    
+
     // Obtener ahorros para cálculos de balance
     const savingsGoals = await preferencesDB.getAllSavings();
 
@@ -6935,7 +7031,7 @@ async function updateStatisticsUI() {
     // Filtrar operaciones del periodo seleccionado
     const allOps = operations || [];
     const periodMonthKeys = new Set(getPeriodMonthKeys(baseKey, statsPeriodMode));
-    
+
     const periodOps = allOps.filter(op => {
         const opMonth = op.monthKey || getMonthKeyFromDate(op.datetime);
         return periodMonthKeys.has(opMonth) && op.status === 'executed';
@@ -6953,7 +7049,7 @@ async function updateStatisticsUI() {
     const balanceEl = document.getElementById('statsMonthBalance');
     const incomeEl = document.getElementById('statsMonthIncome');
     const expenseEl = document.getElementById('statsMonthExpense');
-    
+
     const currencyCode = await getPreferredCurrencyCodeForBudgets();
 
     if (balanceEl) balanceEl.textContent = formatMoney(balance, currencyCode);
@@ -6963,7 +7059,7 @@ async function updateStatisticsUI() {
     // Operaciones Programadas (SIEMPRE del mes actual real, independiente del filtro)
     // Operaciones Programadas (Actualizar datos si es visible)
     const realCurrentMonthKey = getCurrentMonthKey();
-    
+
     if (scheduledSection && isAtCurrentPeriod) {
         const scheduledOps = allOps.filter(op => {
             const opMonth = op.monthKey || getMonthKeyFromDate(op.datetime);
@@ -6985,14 +7081,14 @@ async function updateStatisticsUI() {
         // --- Proyección en Estadísticas ---
         const statsForecastEl = document.getElementById('statsForecastValue');
         if (statsForecastEl) {
-             const currentTotalBalance = (accounts || []).reduce((sum, acc) => {
+            const currentTotalBalance = (accounts || []).reduce((sum, acc) => {
                 const b = Number(acc.balance);
                 return sum + (Number.isFinite(b) ? b : 0);
             }, 0);
-            
+
             const projected = currentTotalBalance + scheduledIncome - scheduledExpense;
             statsForecastEl.textContent = formatMoney(projected, currencyCode);
-            
+
             // Actualizar etiqueta del contenedor padre para ser explícitos
             const parentDiv = statsForecastEl.parentElement;
             if (parentDiv) {
@@ -7003,7 +7099,7 @@ async function updateStatisticsUI() {
                     labelSpan.textContent = `Proyección Cierre de ${capitalizeLabel(currentMonthName)}`;
                 }
             }
-            
+
             statsForecastEl.classList.remove('text-amber-600', 'text-green-600', 'text-gray-800');
             if (projected < currentTotalBalance) {
                 statsForecastEl.classList.add('text-amber-600');
@@ -7019,7 +7115,7 @@ async function updateStatisticsUI() {
     // Calcular días efectivos en el periodo
     const meta = OPERATIONS_PERIOD_META[statsPeriodMode];
     let totalDaysInPeriod = 0;
-    
+
     // Sumar días de cada mes en el periodo
     getPeriodMonthKeys(baseKey, statsPeriodMode).forEach(mk => {
         const [y, m] = mk.split('-').map(Number);
@@ -7035,10 +7131,10 @@ async function updateStatisticsUI() {
         const startDate = new Date(startY, startM - 1, 1);
         const now = new Date();
         const diffTime = Math.abs(now - startDate);
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         effectiveDays = diffDays;
     }
-    
+
     effectiveDays = Math.max(1, effectiveDays);
     const weeksElapsed = effectiveDays / 7;
 
@@ -7060,7 +7156,7 @@ async function updateStatisticsUI() {
     // --- Trend Analysis (Month-over-Month) ---
     const prevBaseKey = shiftPeriodKey(baseKey, statsPeriodMode, -1);
     const prevPeriodMonthKeys = new Set(getPeriodMonthKeys(prevBaseKey, statsPeriodMode));
-    
+
     const prevOps = allOps.filter(op => {
         const opMonth = op.monthKey || getMonthKeyFromDate(op.datetime);
         return prevPeriodMonthKeys.has(opMonth) && op.status === 'executed';
@@ -7075,7 +7171,7 @@ async function updateStatisticsUI() {
         const [y, m] = mk.split('-').map(Number);
         prevTotalDays += new Date(y, m, 0).getDate();
     });
-    
+
     // For previous period, we usually take full duration unless it is the future (impossible)
     const prevEffectiveDays = Math.max(1, prevTotalDays);
     const prevWeeksElapsed = prevEffectiveDays / 7;
@@ -7088,7 +7184,7 @@ async function updateStatisticsUI() {
     const updateTrendUI = (elementId, current, prev, isIncome, isSmall = false) => {
         const el = document.getElementById(elementId);
         if (!el) return;
-        
+
         if (prev === 0) {
             if (isSmall) {
                 el.textContent = current > 0 ? "Nuevo" : "-";
@@ -7104,7 +7200,7 @@ async function updateStatisticsUI() {
         const percentage = ((diff / prev) * 100).toFixed(1);
         const absPercent = Math.abs(percentage);
         const isPositive = diff >= 0;
-        
+
         let icon = isPositive ? '▲' : '▼';
         let colorClass = '';
 
@@ -7139,7 +7235,7 @@ async function updateStatisticsUI() {
 
     // Renderizar Gráficos
     renderStatisticsCharts(periodOps, baseKey, totalIncome, totalExpense, currencyCode, accounts, savingsGoals, allOps);
-    
+
     // Renderizar Listas de Distribución
     renderDistributionList('income', incomeOps, totalIncome, currencyCode);
     renderDistributionList('expense', expenseOps, totalExpense, currencyCode);
@@ -7160,7 +7256,7 @@ function renderDistributionList(type, ops, total, currencyCode) {
 
     // 2. Construir Familias (Agrupar por Categoría Padre)
     const families = {};
-    
+
     const getMeta = (id) => {
         if (id === 'uncategorized') return { rawName: 'Sin Categoría', color: '#9ca3af', parentId: null };
         return getOperationCategoryMeta(id) || { rawName: 'Desconocido', color: '#6366f1', parentId: null };
@@ -7169,12 +7265,12 @@ function renderDistributionList(type, ops, total, currencyCode) {
     Object.values(byId).forEach(item => {
         const meta = getMeta(item.id);
         const parentId = meta.parentId || item.id; // Si no tiene padre, es su propia familia
-        
+
         if (!families[parentId]) {
-            families[parentId] = { 
-                id: parentId, 
-                total: 0, 
-                items: [] 
+            families[parentId] = {
+                id: parentId,
+                total: 0,
+                items: []
             };
         }
         families[parentId].total += item.amount;
@@ -7190,7 +7286,7 @@ function renderDistributionList(type, ops, total, currencyCode) {
     const othersAmount = otherFamilies.reduce((acc, f) => acc + f.total, 0);
 
     let html = '';
-    
+
     // Renderizar Familias Principales
     topFamilies.forEach(family => {
         // Ordenar items dentro de la familia: Padre primero, luego subs por monto
@@ -7201,28 +7297,28 @@ function renderDistributionList(type, ops, total, currencyCode) {
         });
 
         family.items.forEach(item => {
-             const percent = total > 0 ? ((item.amount / total) * 100).toFixed(1) : 0;
-             const isSub = item.id !== family.id;
-             let displayName = item.meta.rawName;
-             let indentClass = '';
-             
-             if (isSub) {
-                 const parentPresent = family.items.some(i => i.id === family.id);
-                 if (parentPresent) {
-                     // Si el padre está presente, solo indentamos
-                     indentClass = 'pl-4 border-l-2 border-gray-100';
-                 } else {
-                     // Si el padre no está (monto 0), mostramos la ruta completa
-                     const parentMeta = getMeta(family.id);
-                     displayName = `${parentMeta.rawName} › ${displayName}`;
-                     // Si hay múltiples hermanos huérfanos, añadimos indentación visual también
-                     if (family.items.length > 1) {
-                        indentClass = 'pl-4 border-l-2 border-gray-100';
-                     }
-                 }
-             }
+            const percent = total > 0 ? ((item.amount / total) * 100).toFixed(1) : 0;
+            const isSub = item.id !== family.id;
+            let displayName = item.meta.rawName;
+            let indentClass = '';
 
-             html += `
+            if (isSub) {
+                const parentPresent = family.items.some(i => i.id === family.id);
+                if (parentPresent) {
+                    // Si el padre está presente, solo indentamos
+                    indentClass = 'pl-4 border-l-2 border-gray-100';
+                } else {
+                    // Si el padre no está (monto 0), mostramos la ruta completa
+                    const parentMeta = getMeta(family.id);
+                    displayName = `${parentMeta.rawName} › ${displayName}`;
+                    // Si hay múltiples hermanos huérfanos, añadimos indentación visual también
+                    if (family.items.length > 1) {
+                        indentClass = 'pl-4 border-l-2 border-gray-100';
+                    }
+                }
+            }
+
+            html += `
                 <div class="flex justify-between items-center w-full ${indentClass} mb-2">
                     <div class="flex items-center gap-2 flex-1 min-w-0 pr-2">
                         <span class="w-3 h-3 rounded-full flex-shrink-0" style="background-color: ${item.meta.color}"></span>
@@ -7237,8 +7333,8 @@ function renderDistributionList(type, ops, total, currencyCode) {
     });
 
     if (othersAmount > 0) {
-         const percent = total > 0 ? ((othersAmount / total) * 100).toFixed(1) : 0;
-         html += `
+        const percent = total > 0 ? ((othersAmount / total) * 100).toFixed(1) : 0;
+        html += `
              <div class="flex justify-between items-center mt-3 pt-3 border-t border-gray-100">
                 <div class="flex items-center gap-2">
                     <span class="w-3 h-3 rounded-full bg-gray-400"></span>
@@ -7270,66 +7366,66 @@ function renderStatisticsCharts(ops, monthKey, totalIncome, totalExpense, curren
         // 2. Agrupar familias para ordenamiento
         const families = {};
         Object.values(byId).forEach(item => {
-             const meta = item.id === 'uncategorized' ? null : getOperationCategoryMeta(item.id);
-             const parentId = meta?.parentId || item.id;
-             if (!families[parentId]) families[parentId] = { total: 0, id: parentId };
-             families[parentId].total += item.amount;
+            const meta = item.id === 'uncategorized' ? null : getOperationCategoryMeta(item.id);
+            const parentId = meta?.parentId || item.id;
+            if (!families[parentId]) families[parentId] = { total: 0, id: parentId };
+            families[parentId].total += item.amount;
         });
 
         // 3. Ordenar Items (Familias desc, luego Parent > Subs)
         const sorted = Object.values(byId).sort((a, b) => {
-             const metaA = a.id === 'uncategorized' ? null : getOperationCategoryMeta(a.id);
-             const metaB = b.id === 'uncategorized' ? null : getOperationCategoryMeta(b.id);
-             const parentA = metaA?.parentId || a.id;
-             const parentB = metaB?.parentId || b.id;
-             
-             if (parentA !== parentB) {
-                 const totalA = families[parentA]?.total || 0;
-                 const totalB = families[parentB]?.total || 0;
-                 return totalB - totalA; 
-             }
-             
-             if (a.id === parentA) return -1;
-             if (b.id === parentB) return 1;
-             return b.amount - a.amount;
+            const metaA = a.id === 'uncategorized' ? null : getOperationCategoryMeta(a.id);
+            const metaB = b.id === 'uncategorized' ? null : getOperationCategoryMeta(b.id);
+            const parentA = metaA?.parentId || a.id;
+            const parentB = metaB?.parentId || b.id;
+
+            if (parentA !== parentB) {
+                const totalA = families[parentA]?.total || 0;
+                const totalB = families[parentB]?.total || 0;
+                return totalB - totalA;
+            }
+
+            if (a.id === parentA) return -1;
+            if (b.id === parentB) return 1;
+            return b.amount - a.amount;
         });
-        
+
         const labels = [];
         const data = [];
         const colors = [];
-        
+
         sorted.forEach(item => {
-             const meta = item.id === 'uncategorized' ? { displayName: 'Sin Categoría', color: '#9ca3af' } : getOperationCategoryMeta(item.id);
-             labels.push(meta?.displayName || meta?.name || 'Desconocido');
-             data.push(item.amount);
-             colors.push(meta?.color || '#6366f1');
+            const meta = item.id === 'uncategorized' ? { displayName: 'Sin Categoría', color: '#9ca3af' } : getOperationCategoryMeta(item.id);
+            labels.push(meta?.displayName || meta?.name || 'Desconocido');
+            data.push(item.amount);
+            colors.push(meta?.color || '#6366f1');
         });
-        
+
         return { labels, data, colors };
     };
 
     const centerTextPlugin = {
         id: 'centerText',
-        beforeDraw: function(chart) {
-             const { width } = chart;
-             const { height } = chart;
-             const { ctx } = chart;
-             
-             const text = chart.options.plugins.centerText?.text;
-             if (!text) return;
+        beforeDraw: function (chart) {
+            const { width } = chart;
+            const { height } = chart;
+            const { ctx } = chart;
 
-             ctx.restore();
-             const fontSize = (height / 100).toFixed(2);
-             ctx.font = `bold ${fontSize}em sans-serif`;
-             ctx.textBaseline = 'middle';
-             ctx.textAlign = 'center';
-             ctx.fillStyle = '#1f2937'; // gray-800
-             
-             const textX = width / 2;
-             const textY = height / 2;
-             
-             ctx.fillText(text, textX, textY);
-             ctx.save();
+            const text = chart.options.plugins.centerText?.text;
+            if (!text) return;
+
+            ctx.restore();
+            const fontSize = (height / 100).toFixed(2);
+            ctx.font = `bold ${fontSize}em sans-serif`;
+            ctx.textBaseline = 'middle';
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#1f2937'; // gray-800
+
+            const textX = width / 2;
+            const textY = height / 2;
+
+            ctx.fillText(text, textX, textY);
+            ctx.save();
         }
     };
 
@@ -7344,12 +7440,12 @@ function renderStatisticsCharts(ops, monthKey, totalIncome, totalExpense, curren
             borderWidth: 0,
             hoverOffset: 4
         }]
-    }, { 
-        cutout: '70%', 
-        plugins: { 
+    }, {
+        cutout: '70%',
+        plugins: {
             legend: { display: false },
             centerText: { text: formatMoney(totalIncome, currencyCode) }
-        } 
+        }
     }, [centerTextPlugin]);
 
     updateChart('expenseChart', 'doughnut', {
@@ -7360,12 +7456,12 @@ function renderStatisticsCharts(ops, monthKey, totalIncome, totalExpense, curren
             borderWidth: 0,
             hoverOffset: 4
         }]
-    }, { 
-        cutout: '70%', 
-        plugins: { 
+    }, {
+        cutout: '70%',
+        plugins: {
             legend: { display: false },
             centerText: { text: formatMoney(totalExpense, currencyCode) }
-        } 
+        }
     }, [centerTextPlugin]);
 
     // 2. Flujo (Mensual: Semanas; Trim/Anual: Meses)
@@ -7377,13 +7473,13 @@ function renderStatisticsCharts(ops, monthKey, totalIncome, totalExpense, curren
         flowLabels = ['Semana 1', 'Semana 2', 'Semana 3', 'Semana 4'];
         incomeFlow = [0, 0, 0, 0];
         expenseFlow = [0, 0, 0, 0];
-        
+
         ops.forEach(op => {
             const date = new Date(op.datetime);
             const day = date.getDate();
             let weekIdx = Math.floor((day - 1) / 7);
-            if (weekIdx > 3) weekIdx = 3; 
-            
+            if (weekIdx > 3) weekIdx = 3;
+
             if (op.type === 'income') incomeFlow[weekIdx] += Number(op.amount);
             if (op.type === 'expense') expenseFlow[weekIdx] += Number(op.amount);
         });
@@ -7391,7 +7487,7 @@ function renderStatisticsCharts(ops, monthKey, totalIncome, totalExpense, curren
         // Agrupar por meses del periodo
         const monthKeys = getPeriodMonthKeys(monthKey, statsPeriodMode);
         const monthMap = new Map(); // key -> index
-        
+
         monthKeys.forEach((k, i) => {
             const [y, m] = k.split('-');
             const date = new Date(y, m - 1, 1);
@@ -7438,15 +7534,15 @@ function renderStatisticsCharts(ops, monthKey, totalIncome, totalExpense, curren
     const monthKeys = getPeriodMonthKeys(monthKey, statsPeriodMode);
     const startKey = monthKeys[0];
     const endKey = monthKeys[monthKeys.length - 1];
-    
+
     const [startYear, startMonth] = startKey.split('-').map(Number);
     const startDate = new Date(startYear, startMonth - 1, 1);
-    
+
     const [endYear, endMonth] = endKey.split('-').map(Number);
     const endDate = new Date(endYear, endMonth, 0, 23, 59, 59, 999); // Fin del último mes
 
     const totalDays = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
-    
+
     // Generar etiquetas de días (si son muchos, Chart.js los maneja, pero podríamos simplificar etiquetas)
     // Para simplificar, generamos un array de fechas para el eje X
     const timelineDates = [];
@@ -7483,19 +7579,21 @@ function renderStatisticsCharts(ops, monthKey, totalIncome, totalExpense, curren
                 if (amountMatch) {
                     const sign = amountMatch[1];
                     const val = Number(amountMatch[2].replace(/,/g, ''));
+                    const rawAmount = typeof h.rawAmount === 'number' ? h.rawAmount : null;
                     if (!isNaN(val)) {
                         historyEvents.push({
                             date: new Date(h.date).getTime(),
                             type: h.type === 'initial' ? 'initial' : (h.type === 'deleted' ? 'deleted' : 'account_history'),
-                            historyType: h.type, 
+                            historyType: h.type,
                             desc: h.description || '',
                             details: h.details,
-                            amount: sign === '+' ? val : -val
+                            amount: sign === '+' ? val : -val,
+                            rawAmount: rawAmount
                         });
                     }
                 } else if (h.type === 'initial' && h.details) {
                     const val = Number(h.details.replace(/[^0-9.]/g, ''));
-                     if (!isNaN(val)) {
+                    if (!isNaN(val)) {
                         historyEvents.push({
                             date: new Date(h.date).getTime(),
                             type: 'initial',
@@ -7505,14 +7603,15 @@ function renderStatisticsCharts(ops, monthKey, totalIncome, totalExpense, curren
                         });
                     }
                 } else if (h.type === 'deleted' && h.details) {
-                     historyEvents.push({
-                         date: new Date(h.date).getTime(),
-                         type: 'deleted',
-                         historyType: 'deleted',
-                         desc: h.description || '',
-                         details: h.details,
-                         amount: 0 
-                     });
+                    historyEvents.push({
+                        date: new Date(h.date).getTime(),
+                        type: 'deleted',
+                        historyType: 'deleted',
+                        desc: h.description || '',
+                        details: h.details,
+                        amount: 0,
+                        rawAmount: typeof h.rawAmount === 'number' ? h.rawAmount : null
+                    });
                 }
             });
         }
@@ -7525,19 +7624,24 @@ function renderStatisticsCharts(ops, monthKey, totalIncome, totalExpense, curren
             if (evt.opType === 'income') currentLiquid -= evt.amount;
             if (evt.opType === 'expense') currentLiquid += evt.amount;
         } else if (evt.type === 'account_history') {
-            currentLiquid -= evt.amount; 
+            currentLiquid -= evt.amount;
             const isSavingsTransfer = evt.desc.toLowerCase().includes('meta de ahorro');
             if (isSavingsTransfer) {
                 if (evt.amount < 0) currentSavings -= Math.abs(evt.amount);
                 else currentSavings += Math.abs(evt.amount);
             }
         } else if (evt.type === 'initial') {
-             currentLiquid -= evt.amount;
+            currentLiquid -= evt.amount;
         } else if (evt.type === 'deleted') {
-            const finalBalanceMatch = (evt.details || '').match(/Saldo final.*:\s*\$?([\d,]+(\.\d+)?)/);
-            if (finalBalanceMatch) {
-                 const val = Number(finalBalanceMatch[1].replace(/,/g, ''));
-                 if (!isNaN(val)) currentLiquid += val;
+            // MODIFICADO: Usar propiedad rawAmount si existe (más robusto), fallback a regex
+            if (evt.rawAmount !== undefined) {
+                currentLiquid += Number(evt.rawAmount);
+            } else {
+                const finalBalanceMatch = (evt.details || '').match(/Saldo final.*:\s*\$?([\d,]+(\.\d+)?)/);
+                if (finalBalanceMatch) {
+                    const val = Number(finalBalanceMatch[1].replace(/,/g, ''));
+                    if (!isNaN(val)) currentLiquid += val;
+                }
             }
         }
     };
@@ -7553,11 +7657,11 @@ function renderStatisticsCharts(ops, monthKey, totalIncome, totalExpense, curren
     // Llenar arrays día a día hacia atrás
     const dailyLiquid = new Array(timelineDates.length).fill(0);
     const dailySavings = new Array(timelineDates.length).fill(0);
-    
+
     // Iteramos timelineDates de atrás hacia adelante (índices altos son fechas más recientes)
     for (let i = timelineDates.length - 1; i >= 0; i--) {
         const currentDateObj = timelineDates[i];
-        
+
         // Guardar estado al FINAL de este día
         dailyLiquid[i] = currentLiquid;
         dailySavings[i] = currentSavings;
@@ -7579,7 +7683,7 @@ function renderStatisticsCharts(ops, monthKey, totalIncome, totalExpense, curren
     // Chart.js lo hace auto si no pasamos labels explícitos, pero aquí pasamos daysLabels.
     // Pasaremos fechas formateadas en labels para que Chart.js las maneje si es necesario, o índices.
     // Usaremos los índices para data, y configuraremos tooltip para mostrar fecha.
-    
+
     updateChart('balanceEvolutionChart', 'line', {
         labels: daysLabels, // 1..31 repetido, no ideal. Mejor string fecha corta.
         // Mejor usamos indices y el tooltip formatea.
@@ -7613,12 +7717,12 @@ function renderStatisticsCharts(ops, monthKey, totalIncome, totalExpense, curren
             mode: 'index',
             intersect: false,
         },
-        scales: { 
-            x: { 
+        scales: {
+            x: {
                 grid: { display: false },
                 ticks: {
                     // Mostrar menos etiquetas si es anual
-                    callback: function(val, index) {
+                    callback: function (val, index) {
                         const date = timelineDates[index];
                         if (!date) return '';
                         // Mostrar 1er día de cada mes
@@ -7630,18 +7734,18 @@ function renderStatisticsCharts(ops, monthKey, totalIncome, totalExpense, curren
                     autoSkip: false, // Control manual
                     maxRotation: 0
                 }
-            }, 
-            y: { 
-                display: true, 
+            },
+            y: {
+                display: true,
                 stacked: true,
                 ticks: {
-                    callback: function(value) {
+                    callback: function (value) {
                         return formatMoney(value, currencyCode, false);
                     }
                 }
-            } 
+            }
         },
-        plugins: { 
+        plugins: {
             legend: { display: true, position: 'bottom' },
             tooltip: {
                 enabled: true,
