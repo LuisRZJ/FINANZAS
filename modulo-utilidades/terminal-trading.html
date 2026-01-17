@@ -399,27 +399,31 @@
                 });
 
                 // RSI
-                if (i === 0) { results.push(null); continue; }
-                const change = data[i].close - data[i - 1].close;
-                if (change > 0) gains += change; else losses += Math.abs(change);
-
-                if (i < period) { results.push(null); continue; }
-
-                let avgGain, avgLoss;
-                if (i === period) {
-                    avgGain = gains / period;
-                    avgLoss = losses / period;
+                if (i === 0) {
+                    results.push(null);
                 } else {
-                    const currentGain = change > 0 ? change : 0;
-                    const currentLoss = change < 0 ? Math.abs(change) : 0;
-                    // Formula RSI suavizada Wilder
-                    avgGain = (results[i - 1].avgGain * 13 + currentGain) / 14;
-                    avgLoss = (results[i - 1].avgLoss * 13 + currentLoss) / 14;
-                }
+                    const change = data[i].close - data[i - 1].close;
+                    if (change > 0) gains += change; else losses += Math.abs(change);
 
-                const rs = avgLoss === 0 ? 100 : avgGain / avgLoss;
-                const rsi = 100 - (100 / (1 + rs));
-                results.push({ val: rsi, avgGain, avgLoss });
+                    if (i < period) {
+                        results.push(null);
+                    } else {
+                        let avgGain, avgLoss;
+                        if (i === period) {
+                            avgGain = gains / period;
+                            avgLoss = losses / period;
+                        } else {
+                            const currentGain = change > 0 ? change : 0;
+                            const currentLoss = change < 0 ? Math.abs(change) : 0;
+                            avgGain = (results[i - 1].avgGain * 13 + currentGain) / 14;
+                            avgLoss = (results[i - 1].avgLoss * 13 + currentLoss) / 14;
+                        }
+
+                        const rs = avgLoss === 0 ? 100 : avgGain / avgLoss;
+                        const rsi = 100 - (100 / (1 + rs));
+                        results.push({ val: rsi, avgGain, avgLoss });
+                    }
+                }
 
                 // === ADX Calculation ===
                 let adx = null;
@@ -615,7 +619,6 @@
 
             // === MARKET REGIME FILTER ===
             const [useRegimeFilter, setUseRegimeFilter] = useState(false);
-            const [regimeMode, setRegimeMode] = useState('TREND'); // 'TREND' or 'RANGE'
             const [adxThreshold, setAdxThreshold] = useState(25); // ADX > 25 = trending
 
             // RESULTADOS & ESTADOS ADICIONALES
@@ -2229,7 +2232,8 @@
                     useLtfIntra: useIntra,
                     maxDurationLimit = 500,
                     // Regime Filter
-                    useRegime, regimeMode, adxThreshold: adxThresh = 25
+                    useRegime,
+                    adxThreshold: adxThresh = 25
                 } = filters;
 
                 const epBase = Number(tradeParams.entryPrice);
@@ -2306,6 +2310,7 @@
                 if (useVol && (target.volume == null || !isFinite(target.volume))) return { error: 'Volumen no disponible en la vela objetivo.' };
                 if (useBp && (target.buyPressurePct == null || !isFinite(target.buyPressurePct))) return { error: 'Presión compradora no disponible en la vela objetivo.' };
                 if (useDelta && (target.delta == null || !isFinite(target.delta))) return { error: 'Delta no disponible en la vela objetivo.' };
+                if (useRegime && (target.adx == null || !isFinite(target.adx))) return { error: 'ADX no disponible en la vela objetivo.' };
 
                 const simulateTrade = (startIdx) => {
                     const startMid = data[startIdx].close;
@@ -2544,14 +2549,17 @@
                         }
                     }
 
-                    // --- Market Regime Filter (ADX-based) ---
+                    // --- Market Regime Filter (ADX-based, auto by target) ---
                     if (useRegime && match) {
-                        if (c.adx != null && isFinite(c.adx)) {
-                            if (regimeMode === 'TREND' && c.adx < adxThresh) {
-                                // Want trending market but ADX is low (ranging)
+                        if (target.adx != null && isFinite(target.adx) && c.adx != null && isFinite(c.adx)) {
+                            const isTargetTrend = target.adx >= adxThresh;
+                            const isCandleTrend = c.adx >= adxThresh;
+
+                            if (isTargetTrend && !isCandleTrend) {
+                                // Target in trend, discard range regimes
                                 match = false;
-                            } else if (regimeMode === 'RANGE' && c.adx >= adxThresh) {
-                                // Want ranging market but ADX is high (trending)
+                            } else if (!isTargetTrend && isCandleTrend) {
+                                // Target in range, discard trending regimes
                                 match = false;
                             }
                         }
@@ -2818,7 +2826,8 @@
                             htfMode,
                             requireHtf: false,
                             useLtfIntra: false,
-                            useRegime: false, regimeMode, adxThreshold, // Default values
+                            useRegime: false,
+                            adxThreshold,
                             tier: tier.key,
                             tierLabel: tier.label
                         };
@@ -2842,54 +2851,50 @@
                             .map(f => currentConfig[f.key] ? '1' : '0')
                             .join('');
 
-                        // === OPTIMIZACIÓN: Logica anidada para HTF y REGIME variants ===
+                        // === OPTIMIZACIÓN: Lógica anidada solo para HTF (régimen automático) ===
                         const modeVariants = (currentConfig.useHtf && htfData && htfData.length) ? ['DISCARD', 'MARK'] : [htfMode];
-                        const regimeVariants = (currentConfig.useRegime) ? ['TREND', 'RANGE'] : [regimeMode];
 
                         for (let mv = 0; mv < modeVariants.length; mv++) {
-                            for (let rv = 0; rv < regimeVariants.length; rv++) {
 
-                                const cfg = {
-                                    ...currentConfig,
-                                    htfMode: modeVariants[mv],
-                                    regimeMode: regimeVariants[rv]
+                            const cfg = {
+                                ...currentConfig,
+                                htfMode: modeVariants[mv]
+                            };
+
+                            const labels = [...activeLabels];
+                            if (cfg.useHtf) labels.push(`HTF:${cfg.htfMode}`);
+                            if (cfg.useRegime) labels.push('REG:AUTO');
+
+                            const result = calculateBacktest(csvData, selectedCandleIndex, tradeParams, cfg);
+
+                            if (!result.error && result.matches >= 5) {
+                                const sig = boolSignature + '_' + cfg.htfMode;
+                                const comb = {
+                                    config: cfg,
+                                    labels,
+                                    stats: result,
+                                    tier: tier.key,
+                                    tierLabel: tier.label,
+                                    boolSignature: sig
                                 };
+                                combinations.push(comb);
 
-                                const labels = [...activeLabels];
-                                if (cfg.useHtf) labels.push(`HTF:${cfg.htfMode}`);
-                                if (cfg.useRegime) labels.push(`REG:${cfg.regimeMode}`);
+                                // === OPTIMIZACIÓN: Detección de robustez en línea ===
+                                if (!signatureGroups.has(sig)) {
+                                    signatureGroups.set(sig, []);
+                                }
+                                signatureGroups.get(sig).push(comb);
 
-                                const result = calculateBacktest(csvData, selectedCandleIndex, tradeParams, cfg);
-
-                                if (!result.error && result.matches >= 5) {
-                                    const sig = boolSignature + '_' + cfg.htfMode + '_' + cfg.regimeMode;
-                                    const comb = {
-                                        config: cfg,
-                                        labels,
-                                        stats: result,
-                                        tier: tier.key,
-                                        tierLabel: tier.label,
-                                        boolSignature: sig
-                                    };
-                                    combinations.push(comb);
-
-                                    // === OPTIMIZACIÓN: Detección de robustez en línea ===
-                                    if (!signatureGroups.has(sig)) {
-                                        signatureGroups.set(sig, []);
-                                    }
-                                    signatureGroups.get(sig).push(comb);
-
-                                    // Verificar robustez inmediatamente
-                                    const group = signatureGroups.get(sig);
-                                    if (group.length === 2) {
-                                        const tiers = new Set(group.map(g => g.tier));
-                                        if (tiers.size === 2 && group.every(g => g.stats.winRateNum >= 50)) {
-                                            const normalResult = group.find(g => g.tier === 'NORMAL');
-                                            if (normalResult && !normalResult.isRobust) {
-                                                normalResult.isRobust = true;
-                                                normalResult.robustnessScore = group.reduce((acc, g) => acc + g.stats.winRateNum, 0) / 2;
-                                                robustCount++;
-                                            }
+                                // Verificar robustez inmediatamente
+                                const group = signatureGroups.get(sig);
+                                if (group.length === 2) {
+                                    const tiers = new Set(group.map(g => g.tier));
+                                    if (tiers.size === 2 && group.every(g => g.stats.winRateNum >= 50)) {
+                                        const normalResult = group.find(g => g.tier === 'NORMAL');
+                                        if (normalResult && !normalResult.isRobust) {
+                                            normalResult.isRobust = true;
+                                            normalResult.robustnessScore = group.reduce((acc, g) => acc + g.stats.winRateNum, 0) / 2;
+                                            robustCount++;
                                         }
                                     }
                                 }
@@ -2994,7 +2999,6 @@
 
                 // === NUEVO: Aplicar Filtro de Régimen ===
                 if (config.useRegime !== undefined) setUseRegimeFilter(config.useRegime);
-                if (config.regimeMode !== undefined) setRegimeMode(config.regimeMode);
                 if (config.adxThreshold !== undefined) setAdxThreshold(config.adxThreshold);
 
                 // === NUEVO: Aplicar valores numéricos del tier ganador ===
@@ -3059,7 +3063,6 @@
                     maxDurationLimit: useMacroMode ? 5000 : 500,
                     // === REGIME FILTER ===
                     useRegime: useRegimeFilter,
-                    regimeMode,
                     adxThreshold
                 };
 
@@ -4772,40 +4775,30 @@
                                         {/* 4. FILTROS */}
                                         <section className="bg-slate-50 dark:bg-slate-800/50 p-5 rounded-xl border border-slate-200 dark:border-slate-700/50 space-y-3 shadow-sm">
                                             <h3 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase mb-2 flex items-center gap-2"><Icons.AlertCircle size={16} /> Filtros de Contexto</h3>
-                                            <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 cursor-pointer hover:text-slate-800 dark:hover:text-slate-200">
-                                                <input type="checkbox" checked={useRsiFilter} onChange={(e) => setUseRsiFilter(e.target.checked)} className="accent-blue-500" />
-                                                Buscar RSI Similar (+/- {rsiTolerance})
-                                            </label>
-                                            <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 cursor-pointer hover:text-slate-800 dark:hover:text-slate-200">
-                                                <input type="checkbox" checked={useTrendFilter} onChange={(e) => setUseTrendFilter(e.target.checked)} className="accent-blue-500" />
-                                                Respetar Tendencia SMA200
-                                            </label>
-                                            <div className="pt-2 border-t border-slate-200 dark:border-slate-700/50"></div>
-                                            <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 cursor-pointer hover:text-slate-800 dark:hover:text-slate-200">
-                                                <input type="checkbox" checked={useTimeFilter} onChange={(e) => setUseTimeFilter(e.target.checked)} className="accent-blue-500" />
-                                                <Icons.Sun size={14} className="text-yellow-500" /> Mismo Horario (+/- 2h)
-                                            </label>
-                                            <div className="flex gap-2 items-center">
-                                                <span className="text-xs text-slate-500 dark:text-slate-400">Horario</span>
-                                                <select value={timeMode} onChange={(e) => setTimeMode(e.target.value)} className="flex-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded p-2 text-xs text-slate-900 dark:text-white">
-                                                    <option value="LOCAL">Local</option>
-                                                    <option value="UTC">UTC</option>
-                                                </select>
-                                            </div>
-                                            <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 cursor-pointer hover:text-slate-800 dark:hover:text-slate-200">
-                                                <input type="checkbox" checked={useVolFilter} onChange={(e) => setUseVolFilter(e.target.checked)} className="accent-blue-500" />
-                                                <Icons.Zap size={14} className="text-orange-500" /> Volatilidad Similar (Vela)
-                                            </label>
-                                            <div className="pt-2 border-t border-slate-200 dark:border-slate-700/50"></div>
-                                            <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 cursor-pointer hover:text-slate-800 dark:hover:text-slate-200">
-                                                <input type="checkbox" checked={useCooldownFilter} onChange={(e) => setUseCooldownFilter(e.target.checked)} className="accent-blue-500" />
-                                                Evitar señales solapadas (enfriamiento)
-                                            </label>
+
+                                            <h4 className="text-xs font-bold text-slate-400 uppercase mt-2 mb-2">Datos institucionales</h4>
                                             <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 cursor-pointer hover:text-slate-800 dark:hover:text-slate-200">
                                                 <input type="checkbox" checked={useAdrFilter} onChange={(e) => setUseAdrFilter(e.target.checked)} className="accent-blue-500" />
                                                 <Icons.Activity size={14} className="text-red-500" /> Evitar Agotamiento ADR (&gt;100%)
                                             </label>
+                                            <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 cursor-pointer hover:text-slate-800 dark:hover:text-slate-200">
+                                                <input type="checkbox" checked={useVolumeFilter} onChange={(e) => setUseVolumeFilter(e.target.checked)} className="accent-blue-500" disabled={!hasExtended || !(csvData[selectedCandleIndex] && csvData[selectedCandleIndex].volume)} />
+                                                Volumen Similar (± {volumeTolerance}%)
+                                            </label>
+                                            <input type="range" min="10" max="100" value={volumeTolerance} onChange={(e) => setVolumeTolerance(parseInt(e.target.value))} className="w-full accent-blue-500 h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer" />
+                                            <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 cursor-pointer hover:text-slate-800 dark:hover:text-slate-200">
+                                                <input type="checkbox" checked={useBuyPressureFilter} onChange={(e) => setUseBuyPressureFilter(e.target.checked)} className="accent-blue-500" disabled={!hasExtended || (csvData[selectedCandleIndex] ? csvData[selectedCandleIndex].buyPressurePct == null : true)} />
+                                                Presión Compradora Similar (± {bpTolerance})
+                                            </label>
+                                            <input type="range" min="1" max="20" value={bpTolerance} onChange={(e) => setBpTolerance(parseInt(e.target.value))} className="w-full accent-blue-500 h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer" />
+                                            <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 cursor-pointer hover:text-slate-800 dark:hover:text-slate-200">
+                                                <input type="checkbox" checked={useDeltaSignFilter} onChange={(e) => setUseDeltaSignFilter(e.target.checked)} className="accent-blue-500" disabled={!hasExtended || (csvData[selectedCandleIndex] ? csvData[selectedCandleIndex].delta == null : true)} />
+                                                Misma señal de Delta (compra/venta)
+                                            </label>
 
+                                            <div className="pt-2 border-t border-slate-200 dark:border-slate-700/50"></div>
+
+                                            <h4 className="text-xs font-bold text-slate-400 uppercase mt-4 mb-2">Contexto y estructura</h4>
                                             {/* === MARKET REGIME FILTER === */}
                                             <div className={`p-3 rounded-lg border transition-all ${useRegimeFilter ? 'bg-cyan-50 dark:bg-cyan-900/20 border-cyan-300 dark:border-cyan-700' : 'bg-slate-100 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700/50'}`}>
                                                 <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 cursor-pointer">
@@ -4816,15 +4809,18 @@
                                                 {useRegimeFilter && (
                                                     <div className="mt-2 animate-fade-in space-y-2">
                                                         <div className="flex gap-2 items-center">
-                                                            <span className="text-xs text-slate-500">Solo operar en:</span>
-                                                            <select
-                                                                value={regimeMode}
-                                                                onChange={(e) => setRegimeMode(e.target.value)}
-                                                                className="flex-1 bg-white dark:bg-slate-900 border border-cyan-300 dark:border-cyan-700 rounded p-1.5 text-xs font-bold"
-                                                            >
-                                                                <option value="TREND">📈 Mercado en TENDENCIA (ADX ≥ {adxThreshold})</option>
-                                                                <option value="RANGE">📊 Mercado en RANGO (ADX &lt; {adxThreshold})</option>
-                                                            </select>
+                                                            <span className="text-xs text-slate-500">Contexto detectado:</span>
+                                                            <span className="text-xs font-mono font-bold text-cyan-700 dark:text-cyan-300">
+                                                                {(() => {
+                                                                    const candle = csvData[selectedCandleIndex];
+                                                                    const adx = candle && typeof candle.adx === 'number' ? candle.adx : null;
+                                                                    if (adx == null || !isFinite(adx)) return 'Sin ADX';
+                                                                    const isTrend = adx >= adxThreshold;
+                                                                    return isTrend
+                                                                        ? `TREND (ADX ${adx.toFixed(1)} ≥ ${adxThreshold})`
+                                                                        : `RANGE (ADX ${adx.toFixed(1)} < ${adxThreshold})`;
+                                                                })()}
+                                                            </span>
                                                         </div>
                                                         <div className="flex items-center gap-2">
                                                             <span className="text-[10px] text-slate-500">Umbral ADX:</span>
@@ -4844,7 +4840,6 @@
                                                     </div>
                                                 )}
                                             </div>
-                                            <div className="pt-2 border-t border-slate-200 dark:border-slate-700/50"></div>
                                             <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 cursor-pointer hover:text-slate-800 dark:hover:text-slate-200">
                                                 <input type="checkbox" checked={useHtfFilter} onChange={(e) => setUseHtfFilter(e.target.checked)} className="accent-blue-500" disabled={!htfData.length} />
                                                 Filtro MTF HTF (SMA200)
@@ -4860,25 +4855,40 @@
                                                 <input type="checkbox" checked={requireHtf} onChange={(e) => setRequireHtf(e.target.checked)} className="accent-blue-500" disabled={!useHtfFilter || !htfData.length} />
                                                 Requerir HTF disponible
                                             </label>
-                                            <div className="pt-2 border-t border-slate-200 dark:border-slate-700/50"></div>
                                             <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 cursor-pointer hover:text-slate-800 dark:hover:text-slate-200">
                                                 <input type="checkbox" checked={useLtfIntra} onChange={(e) => setUseLtfIntra(e.target.checked)} className="accent-blue-500" disabled={!ltfData.length || !tfMinutes} />
                                                 Resolver intra-vela con LTF (casos ambiguos)
                                             </label>
+                                            <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 cursor-pointer hover:text-slate-800 dark:hover:text-slate-200">
+                                                <input type="checkbox" checked={useTimeFilter} onChange={(e) => setUseTimeFilter(e.target.checked)} className="accent-blue-500" />
+                                                <Icons.Sun size={14} className="text-yellow-500" /> Mismo Horario (+/- 2h)
+                                            </label>
+                                            <div className="flex gap-2 items-center">
+                                                <span className="text-xs text-slate-500 dark:text-slate-400">Horario</span>
+                                                <select value={timeMode} onChange={(e) => setTimeMode(e.target.value)} className="flex-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded p-2 text-xs text-slate-900 dark:text-white">
+                                                    <option value="LOCAL">Local</option>
+                                                    <option value="UTC">UTC</option>
+                                                </select>
+                                            </div>
+                                            <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 cursor-pointer hover:text-slate-800 dark:hover:text-slate-200">
+                                                <input type="checkbox" checked={useCooldownFilter} onChange={(e) => setUseCooldownFilter(e.target.checked)} className="accent-blue-500" />
+                                                Evitar señales solapadas (enfriamiento)
+                                            </label>
+
                                             <div className="pt-2 border-t border-slate-200 dark:border-slate-700/50"></div>
+
+                                            <h4 className="text-xs font-bold text-slate-400 uppercase mt-4 mb-2">Indicadores retail</h4>
                                             <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 cursor-pointer hover:text-slate-800 dark:hover:text-slate-200">
-                                                <input type="checkbox" checked={useVolumeFilter} onChange={(e) => setUseVolumeFilter(e.target.checked)} className="accent-blue-500" disabled={!hasExtended || !(csvData[selectedCandleIndex] && csvData[selectedCandleIndex].volume)} />
-                                                Volumen Similar (± {volumeTolerance}%)
+                                                <input type="checkbox" checked={useRsiFilter} onChange={(e) => setUseRsiFilter(e.target.checked)} className="accent-blue-500" />
+                                                Buscar RSI Similar (+/- {rsiTolerance})
                                             </label>
-                                            <input type="range" min="10" max="100" value={volumeTolerance} onChange={(e) => setVolumeTolerance(parseInt(e.target.value))} className="w-full accent-blue-500 h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer" />
                                             <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 cursor-pointer hover:text-slate-800 dark:hover:text-slate-200">
-                                                <input type="checkbox" checked={useBuyPressureFilter} onChange={(e) => setUseBuyPressureFilter(e.target.checked)} className="accent-blue-500" disabled={!hasExtended || (csvData[selectedCandleIndex] ? csvData[selectedCandleIndex].buyPressurePct == null : true)} />
-                                                Presión Compradora Similar (± {bpTolerance})
+                                                <input type="checkbox" checked={useTrendFilter} onChange={(e) => setUseTrendFilter(e.target.checked)} className="accent-blue-500" />
+                                                Respetar Tendencia SMA200
                                             </label>
-                                            <input type="range" min="1" max="20" value={bpTolerance} onChange={(e) => setBpTolerance(parseInt(e.target.value))} className="w-full accent-blue-500 h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer" />
                                             <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 cursor-pointer hover:text-slate-800 dark:hover:text-slate-200">
-                                                <input type="checkbox" checked={useDeltaSignFilter} onChange={(e) => setUseDeltaSignFilter(e.target.checked)} className="accent-blue-500" disabled={!hasExtended || (csvData[selectedCandleIndex] ? csvData[selectedCandleIndex].delta == null : true)} />
-                                                Misma señal de Delta (compra/venta)
+                                                <input type="checkbox" checked={useVolFilter} onChange={(e) => setUseVolFilter(e.target.checked)} className="accent-blue-500" />
+                                                <Icons.Zap size={14} className="text-orange-500" /> Volatilidad Similar (Vela)
                                             </label>
 
                                             {/* --- BLOQUE DE CÓDIGO UI PARA EL TOGGLE --- */}

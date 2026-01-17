@@ -841,8 +841,21 @@ async function hydrateAccountCategoriesFromStorage() {
             const parsed = JSON.parse(stored);
             if (Array.isArray(parsed)) {
                 accountCategories = parsed.map(cat => ({ ...cat }));
+
+                // --- CORRECCIÓN INICIO ---
+                // Detectamos si falta la categoría fallback
+                const hadFallback = accountCategories.some(cat => cat.id === FALLBACK_ACCOUNT_CATEGORY_ID);
+                
                 ensureFallbackAccountCategory();
                 ensureAccountCategoriesHaveOrder();
+
+                // Si no tenía fallback y lo acabamos de agregar, GUARDAMOS inmediatamente
+                // para que persista en navegaciones futuras.
+                if (!hadFallback) {
+                    await saveAccountCategoriesToStorage();
+                }
+                // --- CORRECCIÓN FIN ---
+
                 return;
             }
         } catch (error) {
@@ -1027,15 +1040,12 @@ function setLocalStorageFallback(key, value) {
  * @returns {Promise<string|null>} - Datos más recientes como string JSON, o null si no hay datos
  */
 async function smartLoad(storageKey) {
-    // Obtener datos de ambas fuentes en paralelo
     const idbPromise = preferencesDB.getItem(storageKey).catch(() => null);
     const lsData = getLocalStorageFallback(storageKey);
     const idbData = await idbPromise;
 
-    // Si ninguna fuente tiene datos, retornar null
     if (!idbData && !lsData) return null;
 
-    // Si solo una fuente tiene datos, usar esa
     if (!idbData) {
         console.log(`[SmartLoad] Solo LocalStorage disponible para: ${storageKey}`);
         return lsData;
@@ -1045,21 +1055,24 @@ async function smartLoad(storageKey) {
         return idbData;
     }
 
-    // Ambas fuentes tienen datos, comparar por timestamp
+    if (idbData === '[]' && lsData && lsData !== '[]' && lsData.length > 2) {
+        preferencesDB.setItem(storageKey, lsData).catch((err) => {
+            console.warn(`[SmartLoad] No se pudo sincronizar IndexedDB para ${storageKey}:`, err);
+        });
+        return lsData;
+    }
+
     try {
         const parsedIdb = JSON.parse(idbData);
         const parsedLs = JSON.parse(lsData);
 
-        // Si no son arrays, preferir LocalStorage como fallback seguro
         if (!Array.isArray(parsedIdb) || !Array.isArray(parsedLs)) {
             return lsData;
         }
 
-        // Función para obtener el timestamp más reciente de un array de objetos
         const getLastUpdate = (arr) => {
             if (arr.length === 0) return 0;
             return arr.reduce((max, item) => {
-                // Buscar cualquier campo de timestamp común
                 const timestamp = item?.updatedAt || item?.createdAt || item?.datetime || item?.date || 0;
                 const t = new Date(timestamp).getTime();
                 return Number.isFinite(t) && t > max ? t : max;
@@ -1069,21 +1082,17 @@ async function smartLoad(storageKey) {
         const timeIdb = getLastUpdate(parsedIdb);
         const timeLs = getLastUpdate(parsedLs);
 
-        // Si LocalStorage es más nuevo o igual, usarlo y reparar IndexedDB en segundo plano
         if (timeLs >= timeIdb) {
             console.log(`[SmartLoad] Usando LocalStorage (más reciente) para: ${storageKey}`);
-            // Reparar IndexedDB en segundo plano sin bloquear
             preferencesDB.setItem(storageKey, lsData).catch((err) => {
                 console.warn(`[SmartLoad] No se pudo sincronizar IndexedDB para ${storageKey}:`, err);
             });
             return lsData;
         }
 
-        // IndexedDB es más reciente
         console.log(`[SmartLoad] Usando IndexedDB (más reciente) para: ${storageKey}`);
         return idbData;
     } catch (error) {
-        // Error de parseo, usar LocalStorage como fallback seguro
         console.warn(`[SmartLoad] Error comparando fuentes para ${storageKey}, usando LocalStorage:`, error);
         return lsData;
     }
@@ -3732,6 +3741,7 @@ const deleteDataButton = document.getElementById('deleteDataButton');
 const importDataButton = document.getElementById('importDataButton');
 const exportDataButton = document.getElementById('exportDataButton');
 const importDataInput = document.getElementById('importDataInput');
+const importDropZone = document.getElementById('importDropZone');
 
 // IndexedDB wrapper class for user preferences
 class PreferencesDB {
@@ -6446,6 +6456,11 @@ async function deleteModuleDatabase() {
         })
     );
 
+    // --- CORRECCIÓN INICIO ---
+    // Limpiar también LocalStorage para evitar que SmartLoad restaure los datos
+    localStorage.clear();
+    // --- CORRECCIÓN FIN ---
+
     cachedDBSnapshot = null;
 }
 
@@ -6550,10 +6565,31 @@ async function restoreDataFromSnapshot(snapshot) {
         throw new Error('Formato de snapshot inválido');
     }
 
-    // Soporte legacy (si el snapshot era directo de stores sin la estructura nueva)
     const storesData = snapshot.stores || snapshot;
+    const localStorageData =
+        snapshot.localStorage && typeof snapshot.localStorage === 'object'
+            ? snapshot.localStorage
+            : null;
 
-    await preferencesDB.ensureReady();
+    if (localStorageData) {
+        Object.entries(localStorageData).forEach(([key, value]) => {
+            const serialized = typeof value === 'string' ? value : JSON.stringify(value);
+            try {
+                localStorage.setItem(key, serialized);
+            } catch (error) {
+                console.warn(`Error restaurando localStorage para la clave ${key}:`, error);
+            }
+        });
+    }
+
+    try {
+        if (preferencesDB && preferencesDB.db) {
+            preferencesDB.db.close();
+        }
+    } catch (error) {
+        console.warn('Error al cerrar la conexión existente de IndexedDB:', error);
+    }
+
     const openRequest = indexedDB.open(DB_NAME, DB_VERSION);
 
     await new Promise((resolve, reject) => {
@@ -6563,24 +6599,41 @@ async function restoreDataFromSnapshot(snapshot) {
             const storeNames = Array.from(db.objectStoreNames);
 
             const operations = storeNames.map((name) => {
-                // Si no hay datos para este store en el snapshot, lo limpiamos o lo ignoramos?
-                // Mejor limpiar para evitar mezclar datos viejos con restauración parcial
+                const transaction = db.transaction(name, 'readwrite');
+                const store = transaction.objectStore(name);
+
+                const isMainStore = name === STORE_NAME || name === 'fti-store';
+
                 const rawValues = Array.isArray(storesData[name]) ? storesData[name] : [];
 
-                // Transformar ítems: serializar `value` si es objeto para compatibilidad con hydrate
-                const values = rawValues.map(item => {
+                let values = rawValues.map((item) => {
                     if (item && item.value !== undefined && item.value !== null && typeof item.value !== 'string') {
-                        // Si `value` es un objeto/array, serializarlo a string
                         return { ...item, value: JSON.stringify(item.value) };
                     }
-                    // Si ya es string o no tiene `value`, mantener tal cual (compatibilidad legacy)
                     return item;
                 });
 
-                const transaction = db.transaction(name, 'readwrite');
-                const store = transaction.objectStore(name);
-                store.clear(); // Limpiar antes de restaurar
-                values.forEach((value) => store.put(value));
+                if (isMainStore && localStorageData) {
+                    const byKey = new Map();
+
+                    values.forEach((item) => {
+                        if (item && item.key != null) {
+                            byKey.set(item.key, item);
+                        }
+                    });
+
+                    Object.entries(localStorageData).forEach(([key, rawValue]) => {
+                        const serializedValue =
+                            typeof rawValue === 'string' ? rawValue : JSON.stringify(rawValue);
+                        const existing = byKey.get(key) || {};
+                        byKey.set(key, { ...existing, key, value: serializedValue });
+                    });
+
+                    values = Array.from(byKey.values());
+                }
+
+                store.clear();
+                values.forEach((record) => store.put(record));
 
                 return new Promise((innerResolve, innerReject) => {
                     transaction.oncomplete = () => innerResolve();
@@ -6599,44 +6652,6 @@ async function restoreDataFromSnapshot(snapshot) {
                 });
         };
     });
-
-    // Restaurar LocalStorage
-    if (snapshot.localStorage && typeof snapshot.localStorage === 'object') {
-        Object.entries(snapshot.localStorage).forEach(([key, value]) => {
-            // Serializar objetos/arrays a JSON, strings se guardan directamente
-            // Esto soporta tanto el formato nuevo (objetos parseados) como el viejo (strings)
-            const serialized = typeof value === 'string' ? value : JSON.stringify(value);
-            localStorage.setItem(key, serialized);
-        });
-
-        // Refrescar UI basada en preferencias restauradas
-        const theme = localStorage.getItem('fti-theme-preference');
-        if (theme) {
-            applyTheme(theme);
-            markActiveButton(theme);
-        }
-
-        await preferencesDB.ensureReady();
-        const keysToSync = [
-            ACCOUNTS_STORAGE_KEY,
-            ACCOUNT_CATEGORIES_STORAGE_KEY,
-            CATEGORIES_STORAGE_KEY,
-            OPERATIONS_STORAGE_KEY,
-            BUDGET_PLAN_STORAGE_KEY,
-            BUDGET_USAGE_STORAGE_KEY,
-            DEFAULT_CURRENCY_KEY,
-            SECONDARY_CURRENCY_KEY,
-            DATA_WEBHOOK_URL_STORAGE_KEY,
-            THEME_STORAGE_KEY,
-            ACCENT_STORAGE_KEY
-        ];
-        for (const key of keysToSync) {
-            const val = localStorage.getItem(key);
-            if (val !== null) {
-                await preferencesDB.setItem(key, val);
-            }
-        }
-    }
 }
 
 async function handleDeleteData() {
@@ -6677,13 +6692,78 @@ async function processImportFile(file) {
         }
 
         await restoreDataFromSnapshot(parsed);
-        cachedDBSnapshot = null;
-        await refreshDataPanel(true);
-        alert('Importación completada. Los datos han sido restaurados.');
+        window.location.reload();
     } catch (error) {
         console.error('Import error:', error);
         alert('No se pudieron importar los datos. Asegúrate de seleccionar un archivo JSON válido.');
     }
+}
+
+function setupImportDragAndDrop() {
+    const inputEl = document.getElementById('importDataInput');
+    const dropZoneEl = document.getElementById('importDropZone');
+    const target = dropZoneEl || document.body;
+    if (!inputEl || !target) return;
+
+    let dragCounter = 0;
+
+    const hasFiles = (event) => {
+        const dt = event.dataTransfer;
+        if (!dt) return false;
+        if (dt.types && !Array.from(dt.types).includes('Files')) return false;
+        return dt.files && dt.files.length > 0;
+    };
+
+    const setHighlight = (active) => {
+        if (!dropZoneEl) return;
+        dropZoneEl.classList.toggle('ring-2', active);
+        dropZoneEl.classList.toggle('ring-indigo-400', active);
+        dropZoneEl.classList.toggle('bg-indigo-50', active);
+    };
+
+    const handleDragEnter = (event) => {
+        if (!hasFiles(event)) return;
+        event.preventDefault();
+        dragCounter += 1;
+        if (event.dataTransfer) {
+            event.dataTransfer.dropEffect = 'copy';
+        }
+        setHighlight(true);
+    };
+
+    const handleDragOver = (event) => {
+        event.preventDefault();
+        if (!hasFiles(event)) return;
+        if (event.dataTransfer) {
+            event.dataTransfer.dropEffect = 'copy';
+        }
+    };
+
+    const handleDragLeave = (event) => {
+        if (!hasFiles(event)) return;
+        event.preventDefault();
+        dragCounter = Math.max(0, dragCounter - 1);
+        if (dragCounter === 0) {
+            setHighlight(false);
+        }
+    };
+
+    const handleDrop = (event) => {
+        event.preventDefault();
+        if (!hasFiles(event)) return;
+        dragCounter = 0;
+        setHighlight(false);
+        const files = event.dataTransfer && event.dataTransfer.files;
+        if (!files || !files.length) return;
+        const file = files[0];
+        if (!file) return;
+        processImportFile(file);
+    };
+
+    target.addEventListener('dragenter', handleDragEnter);
+    target.addEventListener('dragover', handleDragOver);
+    target.addEventListener('dragleave', handleDragLeave);
+    target.addEventListener('drop', handleDrop);
 }
 
 const DATA_WEBHOOK_URL_STORAGE_KEY = 'fti-discord-webhook-url';
@@ -6772,6 +6852,8 @@ function setupDataManagement() {
             processImportFile(file);
         });
     }
+
+    setupImportDragAndDrop();
 
     refreshDataPanel().catch(console.error);
 }
