@@ -375,18 +375,18 @@
                 const calculateFinancials = () => {
                     try {
                         // 1. Cuentas y Balance Actual
-                        // Intentamos leer de localStorage donde 'javascript.js' guarda respaldo
-                        const accountsRaw = localStorage.getItem('fti-accounts') || '[]';
+                        // Leemos de 'gtr-cuentas' que es la clave usada por el módulo de finanzas
+                        const accountsRaw = localStorage.getItem('gtr-cuentas') || '[]';
                         let accounts = [];
                         try { accounts = JSON.parse(accountsRaw); } catch (e) { console.error("Error parseando cuentas", e); }
 
-                        // Suma de balance de todas las cuentas
+                        // Suma de balance de todas las cuentas (usando propiedad 'dinero')
                         const currentBalance = Array.isArray(accounts)
-                            ? accounts.reduce((acc, account) => acc + (Number(account.balance) || 0), 0)
+                            ? accounts.reduce((acc, account) => acc + (Number(account.dinero) || 0), 0)
                             : 0;
 
                         // 2. Operaciones y Comparativa Histórica (Mes anterior)
-                        const opsRaw = localStorage.getItem('fti-operations-v1') || '[]';
+                        const opsRaw = localStorage.getItem('gtr-operaciones') || '[]';
                         let operations = [];
                         try { operations = JSON.parse(opsRaw); } catch (e) { console.error("Error parseando operaciones", e); }
 
@@ -396,18 +396,22 @@
 
                         // Operaciones en el último mes
                         const recentOps = Array.isArray(operations) ? operations.filter(op => {
-                            const opDate = new Date(op.datetime);
-                            return opDate > oneMonthAgo && opDate <= now && op.status === 'executed';
+                            // Soportar formato fecha YYYY-MM-DD o ISO
+                            const fechaStr = op.fecha.includes('T') ? op.fecha : op.fecha + 'T00:00:00';
+                            const opDate = new Date(fechaStr);
+                            // Usar estado 'pagado' (equivalente a 'executed')
+                            return opDate > oneMonthAgo && opDate <= now && op.estado === 'pagado';
                         }) : [];
 
                         // Reconstruir balance de hace un mes
                         let balanceOneMonthAgo = currentBalance;
 
                         recentOps.forEach(op => {
-                            const amount = Number(op.amount) || 0;
-                            if (op.type === 'income') {
+                            const amount = Number(op.cantidad) || 0;
+                            // Usar tipos 'ingreso' y 'gasto'
+                            if (op.tipo === 'ingreso') {
                                 balanceOneMonthAgo -= amount;
-                            } else if (op.type === 'expense') {
+                            } else if (op.tipo === 'gasto') {
                                 balanceOneMonthAgo += amount;
                             }
                         });
@@ -420,22 +424,24 @@
                         }
 
                         // 3. Presupuesto Mensual
-                        const budgetRaw = localStorage.getItem('fti-budget-plan-v1');
+                        const budgetRaw = localStorage.getItem('gtr-presupuestos');
                         let budgetPlan = null;
                         try { budgetPlan = JSON.parse(budgetRaw); } catch (e) { }
 
-                        const budgetTotal = budgetPlan ? (Number(budgetPlan.totalAmount) || 0) : 0;
+                        // Adaptar estructura de presupuestos si es diferente (asumimos similar por ahora o 0)
+                        const budgetTotal = budgetPlan ? (Number(budgetPlan.totalAmount || budgetPlan.total || 0)) : 0;
 
                         // Calcular gasto del mes actual
                         const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
                         const monthOps = Array.isArray(operations) ? operations.filter(op => {
-                            const opDate = new Date(op.datetime);
-                            const opMonthKey = op.monthKey || `${opDate.getFullYear()}-${String(opDate.getMonth() + 1).padStart(2, '0')}`;
-                            return opMonthKey === currentMonthKey && op.type === 'expense' && op.status === 'executed';
+                            const fechaStr = op.fecha.includes('T') ? op.fecha : op.fecha + 'T00:00:00';
+                            const opDate = new Date(fechaStr);
+                            const opMonthKey = `${opDate.getFullYear()}-${String(opDate.getMonth() + 1).padStart(2, '0')}`;
+                            return opMonthKey === currentMonthKey && op.tipo === 'gasto' && op.estado === 'pagado';
                         }) : [];
 
-                        const budgetSpent = monthOps.reduce((acc, op) => acc + (Number(op.amount) || 0), 0);
+                        const budgetSpent = monthOps.reduce((acc, op) => acc + (Number(op.cantidad) || 0), 0);
 
                         let budgetPercent = 0;
                         if (budgetTotal > 0) {
@@ -537,7 +543,7 @@
             }, []);
 
             const modules = [
-                { id: 1, title: 'Finanzas Personales', icon: <Wallet size={20} />, color: 'text-blue-600', href: 'modulo-finanzas/operaciones.html' },
+                { id: 1, title: 'Finanzas Personales', icon: <Wallet size={20} />, color: 'text-blue-600', href: 'modulo-finanzas/index.html' },
                 {
                     id: 2,
                     title: 'Trading',

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,7 +12,8 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <link rel="manifest" href="../pwa/manifest.json">
@@ -20,32 +22,32 @@
     <title>Inversiones - FTI</title>
 
     <script>
-      tailwind.config = {
-        darkMode: 'class',
-        theme: {
-          extend: {
-            fontFamily: {
-              sans: ['Inter', 'sans-serif'],
-            },
-          }
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
         }
-      }
     </script>
 
     <script>
-        (function() {
-            try {
-                const storedTheme = localStorage.getItem('fti_theme_preference');
-                const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                if (storedTheme === 'dark' || ((!storedTheme || storedTheme === 'system') && systemDark)) {
-                    document.documentElement.classList.add('dark');
-                } else {
-                    document.documentElement.classList.remove('dark');
+            (function () {
+                try {
+                    const storedTheme = localStorage.getItem('fti_theme_preference');
+                    const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    if (storedTheme === 'dark' || ((!storedTheme || storedTheme === 'system') && systemDark)) {
+                        document.documentElement.classList.add('dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                    }
+                } catch (e) {
+                    console.warn('Error accediendo a localStorage para tema:', e);
                 }
-            } catch (e) {
-                console.warn('Error accediendo a localStorage para tema:', e);
-            }
-        })();
+            })();
     </script>
 
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
@@ -53,13 +55,36 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <style>
-        .fade-in { animation: fadeIn 0.3s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-        .backdrop-blur-md { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
-        .backdrop-blur-xl { backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
+        .fade-in {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .backdrop-blur-md {
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        .backdrop-blur-xl {
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+        }
     </style>
 </head>
-<body class="bg-gray-200 text-slate-800 font-sans antialiased min-h-screen dark:bg-gray-900 dark:text-gray-100 transition-colors duration-300">
+
+<body
+    class="bg-gray-200 text-slate-800 font-sans antialiased min-h-screen dark:bg-gray-900 dark:text-gray-100 transition-colors duration-300">
     <div id="root"></div>
 
     <footer class="py-6 text-center border-t border-gray-300 bg-gray-200 mt-10 dark:bg-slate-900 dark:border-slate-800">
@@ -107,7 +132,7 @@
         const Calculator = (props) => <IconBase {...props}><rect width="16" height="20" x="4" y="2" rx="2" /><line x1="8" x2="16" y1="6" y2="6" /><line x1="16" x2="16" y1="14" y2="18" /><path d="M16 10h.01" /><path d="M12 10h.01" /><path d="M8 10h.01" /><path d="M12 14h.01" /><path d="M8 14h.01" /><path d="M12 18h.01" /><path d="M8 18h.01" /></IconBase>;
         const Zap = (props) => <IconBase {...props}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></IconBase>;
         const BarChart = (props) => <IconBase {...props}><line x1="12" x2="12" y1="20" y2="10" /><line x1="18" x2="18" y1="20" y2="4" /><line x1="6" x2="6" y1="20" y2="16" /></IconBase>;
-        const ChevronDown = (props) => <IconBase {...props}><path d="m6 9 6 6 6-6"/></IconBase>;
+        const ChevronDown = (props) => <IconBase {...props}><path d="m6 9 6 6 6-6" /></IconBase>;
 
         const InvestmentsPage = () => {
             const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -135,7 +160,7 @@
 
             // Adjusted paths for subdirectory
             const modules = [
-                { id: 1, title: 'Finanzas Personales', icon: <Wallet size={20} />, color: 'text-blue-600', href: '../modulo-finanzas/operaciones.html' },
+                { id: 1, title: 'Finanzas Personales', icon: <Wallet size={20} />, color: 'text-blue-600', href: '../modulo-finanzas/index.html' },
                 {
                     id: 2,
                     title: 'Trading',
@@ -315,7 +340,7 @@
                             <h2 className="text-3xl font-bold text-gray-800 tracking-tight dark:text-white">Panel de Inversiones</h2>
                             <p className="text-gray-500 font-medium dark:text-slate-400">Accede a todas las herramientas y recursos para gestionar tus inversiones</p>
                         </div>
-                        
+
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
                             {cards.map((card, idx) => (
                                 <div key={idx} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col hover:border-blue-200 transition-all hover:shadow-md dark:bg-slate-900 dark:border-slate-800 group relative z-0">
@@ -328,22 +353,22 @@
                                     <p className="text-sm text-gray-500 mb-6 flex-grow dark:text-slate-400 leading-relaxed">
                                         {card.desc}
                                     </p>
-                                    
+
                                     {card.dropdown ? (
                                         <div className="relative dropdown-container">
-                                            <button 
+                                            <button
                                                 onClick={() => toggleDropdown(card.id)}
                                                 className={`w-full inline-flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${card.bg} ${card.color} hover:brightness-95 dark:hover:brightness-110 ${card.darkBg} ${card.darkColor}`}
                                             >
                                                 <span>Seleccionar acción</span>
                                                 <ChevronDown size={16} className={`transition-transform duration-200 ${openDropdownId === card.id ? 'rotate-180' : ''}`} />
                                             </button>
-                                            
+
                                             {openDropdownId === card.id && (
                                                 <div className="absolute left-0 right-0 bottom-full mb-2 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden fade-in z-10 dark:bg-slate-800 dark:border-slate-700">
                                                     {card.dropdown.map((item, i) => (
-                                                        <a 
-                                                            key={i} 
+                                                        <a
+                                                            key={i}
                                                             href={item.href}
                                                             className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600 transition-colors border-b border-gray-50 last:border-0 dark:text-slate-300 dark:hover:bg-slate-700/50 dark:border-slate-700/50"
                                                         >
@@ -401,11 +426,11 @@
     <script src="../theme.js"></script>
     <script src="../app.js"></script>
     <script>
-        (function() {
+        (function () {
             const updateFooter = () => {
                 const appVersionElement = document.getElementById('appVersion');
                 const appDateElement = document.getElementById('appDate');
-                
+
                 // Intentar obtener variables de window, o usar valores por defecto si no están disponibles
                 const version = window.PAGE_VERSION;
                 const date = window.ACT_DATE;
@@ -413,7 +438,7 @@
                 if (appVersionElement && version) {
                     appVersionElement.textContent = version;
                 }
-                
+
                 if (appDateElement && date) {
                     appDateElement.textContent = date;
                 }
@@ -429,4 +454,5 @@
         })();
     </script>
 </body>
+
 </html>
