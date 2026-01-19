@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="es" class="min-h-full">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Transacciones — GTR Finanzas</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="js/sistema/theme.js"></script>
+  <link rel="stylesheet" href="css/estilos.css">
+</head>
+
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 antialiased min-h-screen">
+  <header class="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-8">
+        <div class="text-xl font-semibold">GTR Finanzas</div>
+        <nav class="hidden md:flex items-center gap-6">
+          <a href="index.html" data-route="index.html"
+            class="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors">Inicio</a>
+          <a href="cuentas.html" data-route="cuentas.html"
+            class="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors">Cuentas</a>
+          <a href="transacciones.html" data-route="transacciones.html"
+            class="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors">Transacciones</a>
+          <a href="presupuestos.html" data-route="presupuestos.html"
+            class="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors">Presupuestos</a>
+          <a href="reportes.html" data-route="reportes.html"
+            class="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors">Reportes</a>
+          <a href="metas.html" data-route="metas.html"
+            class="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors">Metas</a>
+          <a href="configuracion.html" data-route="configuracion.html"
+            class="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors">Configuración</a>
+        </nav>
+      </div>
+      <div class="flex items-center gap-3">
+        <button id="mobile-menu-btn"
+          class="md:hidden inline-flex items-center justify-center p-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+          <svg id="menu-icon-open" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+          <svg id="menu-icon-close" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+        <button id="theme-toggle"
+          class="inline-flex items-center gap-2 rounded-md px-3 py-2 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700">
+          <span class="hidden sm:inline">Cambiar tema</span>
+          <svg class="w-5 h-5 sm:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z">
+            </path>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <script>
+      document.getElementById('mobile-menu-btn').addEventListener('click', function () {
+        const menu = document.getElementById('mobile-menu');
+        const iconOpen = document.getElementById('menu-icon-open');
+        const iconClose = document.getElementById('menu-icon-close');
+        const isHidden = menu.classList.contains('hidden');
+        menu.classList.toggle('hidden');
+        iconOpen.classList.toggle('hidden');
+        iconClose.classList.toggle('hidden');
+        document.body.style.overflow = isHidden ? 'hidden' : '';
+      });
+    </script>
+  </header>
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="flex justify-between items-center mb-6">
+      <h1
+        class="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
+        Transacciones</h1>
+      <button onclick="window.abrirModal()"
+        class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-all shadow-lg hover:shadow-blue-500/30 transform hover:-translate-y-0.5">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+        </svg>
+        Nueva Operación
+      </button>
+    </div>
+
+    <!-- Navegación Mensual -->
+    <div
+      class="flex items-center justify-between bg-white dark:bg-gray-800 rounded-xl p-2 shadow-sm border border-gray-100 dark:border-gray-700 mb-8 max-w-sm mx-auto sm:mx-0">
+      <button id="btn-prev-mes"
+        class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-500 dark:text-gray-400 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+        </svg>
+      </button>
+      <span id="label-mes"
+        class="text-lg font-semibold text-gray-800 dark:text-gray-200 capitalize min-w-[140px] text-center">
+        <!-- Cargado por JS -->
+      </span>
+      <button id="btn-next-mes"
+        class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-500 dark:text-gray-400 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Modal Overlay -->
+    <div id="modal-operacion" class="fixed inset-0 z-[100] hidden" aria-labelledby="modal-title" role="dialog"
+      aria-modal="true">
+      <!-- Background backdrop -->
+      <div class="fixed inset-0 bg-gray-900/75 backdrop-blur-sm transition-opacity opacity-0" id="modal-backdrop"></div>
+
+      <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+        <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+          <!-- Modal panel -->
+          <div
+            class="relative transform overflow-hidden rounded-2xl bg-white dark:bg-gray-800 text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg scale-95 opacity-0"
+            id="modal-panel">
+
+            <!-- Header -->
+            <div
+              class="bg-gray-50 dark:bg-gray-800/50 px-4 py-3 sm:px-6 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
+              <h3 class="text-lg font-semibold leading-6 text-gray-900 dark:text-white" id="modal-title">Registrar
+                Operación</h3>
+              <button type="button" onclick="window.cerrarModal()"
+                class="text-gray-400 hover:text-gray-500 focus:outline-none">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <form id="form-operacion" class="p-6 space-y-5">
+              <input type="hidden" id="op-id"> <!-- Para edición -->
+
+              <!-- Tipo de Operación Selector -->
+              <div class="grid grid-cols-3 gap-2 p-1 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                <label class="cursor-pointer">
+                  <input type="radio" name="tipo" value="ingreso" class="peer sr-only" checked>
+                  <div
+                    class="text-center py-2 text-sm font-medium rounded-md peer-checked:bg-white dark:peer-checked:bg-gray-600 peer-checked:text-green-600 dark:peer-checked:text-green-400 peer-checked:shadow-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-all">
+                    Ingreso
+                  </div>
+                </label>
+                <label class="cursor-pointer">
+                  <input type="radio" name="tipo" value="gasto" class="peer sr-only">
+                  <div
+                    class="text-center py-2 text-sm font-medium rounded-md peer-checked:bg-white dark:peer-checked:bg-gray-600 peer-checked:text-red-600 dark:peer-checked:text-red-400 peer-checked:shadow-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-all">
+                    Gasto
+                  </div>
+                </label>
+                <label class="cursor-pointer">
+                  <input type="radio" name="tipo" value="transferencia" class="peer sr-only">
+                  <div
+                    class="text-center py-2 text-sm font-medium rounded-md peer-checked:bg-white dark:peer-checked:bg-gray-600 peer-checked:text-blue-600 dark:peer-checked:text-blue-400 peer-checked:shadow-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-all">
+                    Transferencia
+                  </div>
+                </label>
+              </div>
+
+              <!-- Campos Comunes -->
+              <div class="grid grid-cols-1 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre</label>
+                  <input type="text" id="op-nombre" required
+                    class="w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700/50 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cantidad</label>
+                    <div class="relative rounded-md shadow-sm">
+                      <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                        <span class="text-gray-500 sm:text-sm">$</span>
+                      </div>
+                      <input type="number" id="op-cantidad" required step="0.01" min="0.01"
+                        class="block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700/50 pl-7 text-gray-900 dark:text-white focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2"
+                        placeholder="0.00">
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Fecha y Hora</label>
+                    <input type="datetime-local" id="op-fecha" required
+                      class="w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700/50 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2">
+                  </div>
+                </div>
+
+                <!-- Campos Dinámicos -->
+                <!-- Para Ingreso/Gasto -->
+                <div id="field-cuenta" class="hidden">
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cuenta</label>
+                  <select id="op-cuenta"
+                    class="w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700/50 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2"></select>
+                </div>
+
+                <div id="field-etiqueta" class="hidden">
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Categoría</label>
+                  <select id="op-etiqueta"
+                    class="w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700/50 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2"></select>
+                </div>
+
+                <!-- Para Transferencia -->
+                <div id="fields-transferencia" class="grid grid-cols-2 gap-4 hidden">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Origen</label>
+                    <select id="op-origen"
+                      class="w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700/50 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2"></select>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Destino</label>
+                    <select id="op-destino"
+                      class="w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700/50 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2"></select>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Descripción
+                    (Opcional)</label>
+                  <textarea id="op-desc" rows="2"
+                    class="w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700/50 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2"></textarea>
+                </div>
+
+                <!-- Sección de Recurrencia -->
+                <div id="seccion-recurrencia" class="border-t border-gray-200 dark:border-gray-700 pt-4 mt-2">
+                  <div class="flex items-center justify-between mb-3">
+                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                      🔄 ¿Es recurrente?
+                    </label>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" id="op-es-recurrente" class="sr-only peer">
+                      <div
+                        class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600">
+                      </div>
+                    </label>
+                  </div>
+
+                  <!-- Campos de recurrencia (ocultos por defecto) -->
+                  <div id="campos-recurrencia"
+                    class="hidden space-y-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+                    <!-- Frecuencia -->
+                    <div class="flex items-center gap-2">
+                      <span class="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">Repetir cada</span>
+                      <input type="number" id="op-rec-frecuencia-valor" value="1" min="1" max="99"
+                        class="w-16 rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-center text-sm px-2 py-1.5">
+                      <select id="op-rec-frecuencia-tipo"
+                        class="flex-1 rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm px-2 py-1.5">
+                        <option value="dias">día(s)</option>
+                        <option value="semanas">semana(s)</option>
+                        <option value="meses" selected>mes(es)</option>
+                        <option value="anios">año(s)</option>
+                      </select>
+                    </div>
+
+                    <!-- Último día del mes -->
+                    <div class="flex items-center gap-2">
+                      <input type="checkbox" id="op-rec-ultimo-dia"
+                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                      <label for="op-rec-ultimo-dia" class="text-sm text-gray-600 dark:text-gray-400">
+                        Usar último día del mes
+                        <span class="text-xs text-gray-400">(ignora frecuencia)</span>
+                      </label>
+                    </div>
+
+                    <!-- Fin de recurrencia -->
+                    <div class="space-y-2">
+                      <span class="text-sm text-gray-600 dark:text-gray-400">Termina:</span>
+                      <div class="flex flex-col gap-2 ml-2">
+                        <label class="flex items-center gap-2">
+                          <input type="radio" name="op-rec-fin" value="nunca" checked
+                            class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                          <span class="text-sm text-gray-700 dark:text-gray-300">Nunca</span>
+                        </label>
+                        <label class="flex items-center gap-2">
+                          <input type="radio" name="op-rec-fin" value="ciclos"
+                            class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                          <span class="text-sm text-gray-700 dark:text-gray-300">Después de</span>
+                          <input type="number" id="op-rec-fin-ciclos" value="12" min="1" max="999"
+                            class="w-16 rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-center text-sm px-2 py-1">
+                          <span class="text-sm text-gray-700 dark:text-gray-300">ciclos</span>
+                        </label>
+                        <label class="flex items-center gap-2">
+                          <input type="radio" name="op-rec-fin" value="fecha"
+                            class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                          <span class="text-sm text-gray-700 dark:text-gray-300">En fecha</span>
+                          <input type="date" id="op-rec-fin-fecha"
+                            class="flex-1 rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm px-2 py-1">
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div id="op-error"
+                class="hidden rounded-md bg-red-50 dark:bg-red-900/30 p-3 text-sm text-red-600 dark:text-red-400"></div>
+
+              <div class="flex items-center gap-3 pt-2">
+                <button type="button" onclick="window.cerrarModal()"
+                  class="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
+                  Cancelar
+                </button>
+                <button type="submit"
+                  class="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/30">
+                  Guardar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    <section class="mt-10">
+      <h2 class="text-lg font-semibold mb-3">Historial</h2>
+      <div id="ops-historial" class="space-y-3"></div>
+    </section>
+  </main>
+
+  <!-- Modal de Decisión de Serie (Bug 5) -->
+  <div id="modal-decision-serie" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4">
+    <!-- Backdrop -->
+    <div id="decision-backdrop" class="absolute inset-0 bg-gray-900/70 backdrop-blur-sm transition-opacity opacity-0">
+    </div>
+
+    <!-- Panel -->
+    <div id="decision-panel"
+      class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-sm w-full transform transition-all opacity-0 scale-95">
+      <div class="p-6">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+            <span class="text-xl">🔄</span>
+          </div>
+          <div>
+            <h3 id="decision-titulo" class="text-lg font-bold text-gray-900 dark:text-white">Operación Recurrente</h3>
+            <p id="decision-subtitulo" class="text-sm text-gray-500 dark:text-gray-400"></p>
+          </div>
+        </div>
+
+        <!-- Opciones para EDICIÓN -->
+        <div id="decision-opciones-editar" class="hidden space-y-2">
+          <button data-decision="solo-esta"
+            class="w-full px-4 py-3 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-left transition-colors">
+            <div class="font-medium text-gray-900 dark:text-white">Solo esta operación</div>
+            <div class="text-xs text-gray-500 dark:text-gray-400">No afecta las futuras</div>
+          </button>
+          <button data-decision="esta-y-futuras"
+            class="w-full px-4 py-3 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-left transition-colors">
+            <div class="font-medium text-gray-900 dark:text-white">Esta y todas las futuras</div>
+            <div class="text-xs text-gray-500 dark:text-gray-400">Actualiza la plantilla de recurrencia</div>
+          </button>
+        </div>
+
+        <!-- Opciones para ELIMINACIÓN -->
+        <div id="decision-opciones-borrar" class="hidden space-y-2">
+          <button data-decision="borrar-solo-esta"
+            class="w-full px-4 py-3 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-left transition-colors">
+            <div class="font-medium text-gray-900 dark:text-white">Borrar solo esta</div>
+            <div class="text-xs text-gray-500 dark:text-gray-400">Cancela el pago de este ciclo</div>
+          </button>
+          <button data-decision="borrar-toda-serie"
+            class="w-full px-4 py-3 rounded-lg bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 text-left transition-colors">
+            <div class="font-medium text-red-600 dark:text-red-400">Borrar toda la serie</div>
+            <div class="text-xs text-red-500/70 dark:text-red-400/70">Elimina plantilla + todo el historial</div>
+          </button>
+          <button data-decision="dejar-repetir"
+            class="w-full px-4 py-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-left transition-colors">
+            <div class="font-medium text-amber-700 dark:text-amber-400">Dejar de repetir</div>
+            <div class="text-xs text-amber-600/70 dark:text-amber-400/70">Mantiene historial, cancela futuras</div>
+          </button>
+        </div>
+
+        <button onclick="window.cerrarModalDecision()"
+          class="w-full mt-4 px-4 py-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors">
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <nav id="mobile-menu" class="hidden md:hidden fixed inset-0 top-16 z-40 bg-white dark:bg-gray-900 overflow-y-auto">
+    <div class="px-4 py-6 space-y-1">
+      <a href="index.html" data-route="index.html"
+        class="block px-4 py-3 rounded-lg text-lg font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">Inicio</a>
+      <a href="cuentas.html" data-route="cuentas.html"
+        class="block px-4 py-3 rounded-lg text-lg font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">Cuentas</a>
+      <a href="transacciones.html" data-route="transacciones.html"
+        class="block px-4 py-3 rounded-lg text-lg font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">Transacciones</a>
+      <a href="presupuestos.html" data-route="presupuestos.html"
+        class="block px-4 py-3 rounded-lg text-lg font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">Presupuestos</a>
+      <a href="reportes.html" data-route="reportes.html"
+        class="block px-4 py-3 rounded-lg text-lg font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">Reportes</a>
+      <a href="metas.html" data-route="metas.html"
+        class="block px-4 py-3 rounded-lg text-lg font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">Metas</a>
+      <a href="configuracion.html" data-route="configuracion.html"
+        class="block px-4 py-3 rounded-lg text-lg font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">Configuración</a>
+    </div>
+  </nav>
+  <script type="module" src="js/paginas/transacciones.js"></script>
+</body>
+
+</html>

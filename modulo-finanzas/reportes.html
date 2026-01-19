@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="es" class="min-h-full">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reportes — GTR Finanzas</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="js/sistema/theme.js"></script>
+  <link rel="stylesheet" href="css/estilos.css">
+</head>
+
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 antialiased min-h-screen">
+  <header class="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-8">
+        <div class="text-xl font-semibold">GTR Finanzas</div>
+        <nav class="hidden md:flex items-center gap-6">
+          <a href="index.html" data-route="index.html"
+            class="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors">Inicio</a>
+          <a href="cuentas.html" data-route="cuentas.html"
+            class="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors">Cuentas</a>
+          <a href="transacciones.html" data-route="transacciones.html"
+            class="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors">Transacciones</a>
+          <a href="presupuestos.html" data-route="presupuestos.html"
+            class="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors">Presupuestos</a>
+          <a href="reportes.html" data-route="reportes.html"
+            class="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors">Reportes</a>
+          <a href="metas.html" data-route="metas.html"
+            class="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors">Metas</a>
+          <a href="configuracion.html" data-route="configuracion.html"
+            class="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors">Configuración</a>
+        </nav>
+      </div>
+      <div class="flex items-center gap-3">
+        <button id="mobile-menu-btn"
+          class="md:hidden inline-flex items-center justify-center p-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+          <svg id="menu-icon-open" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+          <svg id="menu-icon-close" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+        <button id="theme-toggle"
+          class="inline-flex items-center gap-2 rounded-md px-3 py-2 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700">
+          <span class="hidden sm:inline">Cambiar tema</span>
+          <svg class="w-5 h-5 sm:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z">
+            </path>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <script>
+      document.getElementById('mobile-menu-btn').addEventListener('click', function () {
+        const menu = document.getElementById('mobile-menu');
+        const iconOpen = document.getElementById('menu-icon-open');
+        const iconClose = document.getElementById('menu-icon-close');
+        const isHidden = menu.classList.contains('hidden');
+        menu.classList.toggle('hidden');
+        iconOpen.classList.toggle('hidden');
+        iconClose.classList.toggle('hidden');
+        document.body.style.overflow = isHidden ? 'hidden' : '';
+      });
+    </script>
+  </header>
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header y Filtros -->
+    <div class="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Reportes Financieros</h1>
+        <p class="text-gray-500 dark:text-gray-400">Analiza tus ingresos y gastos</p>
+      </div>
+      <div
+        class="flex items-center bg-white dark:bg-gray-800 rounded-lg p-1 border border-gray-200 dark:border-gray-700 shadow-sm">
+        <button
+          class="px-4 py-2 text-sm font-medium rounded-md text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          data-period="semana">Esta Semana</button>
+        <button
+          class="px-4 py-2 text-sm font-medium rounded-md text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          data-period="mes">Este Mes</button>
+        <button
+          class="px-4 py-2 text-sm font-medium rounded-md text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          data-period="anio">Este Año</button>
+        <button
+          class="px-4 py-2 text-sm font-medium rounded-md text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          data-period="todo">Todo</button>
+      </div>
+    </div>
+
+    <!-- Navegación Temporal -->
+    <div class="mb-6 flex items-center justify-center gap-3">
+      <button id="btn-prev-period"
+        class="p-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white transition-colors shadow-sm">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+        </svg>
+      </button>
+      <div id="period-label"
+        class="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm min-w-[220px] text-center">
+        <span class="text-sm font-semibold text-gray-900 dark:text-white">Cargando...</span>
+      </div>
+      <button id="btn-next-period"
+        class="p-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+        disabled>
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Tarjetas de Resumen -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <!-- Balance -->
+      <div
+        class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm flex flex-col justify-between">
+        <div>
+          <div class="flex justify-between items-start mb-2">
+            <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Balance Total</h3>
+            <span id="stat-trend-balance" class="text-xs font-medium px-2 py-0.5 rounded-full hidden"></span>
+          </div>
+          <p class="text-3xl font-bold text-gray-900 dark:text-white" id="stat-balance">$0.00</p>
+        </div>
+        <p class="text-xs font-medium text-gray-400 dark:text-gray-500 mt-3" id="stat-balance-daily">
+          —
+        </p>
+      </div>
+      <!-- Ingresos -->
+      <div
+        class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm flex flex-col justify-between">
+        <div>
+          <div class="flex justify-between items-start mb-2">
+            <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Ingresos</h3>
+            <span id="stat-trend-ingresos" class="text-xs font-medium px-2 py-0.5 rounded-full hidden"></span>
+          </div>
+          <p class="text-3xl font-bold text-green-600 dark:text-green-400" id="stat-ingresos">$0.00</p>
+        </div>
+        <p class="text-xs font-medium text-gray-400 dark:text-gray-500 mt-3" id="stat-ingresos-daily">
+          —
+        </p>
+      </div>
+      <!-- Gastos -->
+      <div
+        class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm flex flex-col justify-between">
+        <div>
+          <div class="flex justify-between items-start mb-2">
+            <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Gastos</h3>
+            <span id="stat-trend-gastos" class="text-xs font-medium px-2 py-0.5 rounded-full hidden"></span>
+          </div>
+          <p class="text-3xl font-bold text-red-600 dark:text-red-400" id="stat-gastos">$0.00</p>
+        </div>
+        <p class="text-xs font-medium text-gray-400 dark:text-gray-500 mt-3" id="stat-gastos-daily">
+          —
+        </p>
+      </div>
+    </div>
+
+    <!-- Gráficos -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8 mb-8">
+      <!-- Gráfico de Evolución -->
+      <div
+        class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm xl:col-span-1">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">Evolución de Finanzas</h3>
+        <!-- Balance Neto -->
+        <div class="text-center mb-6">
+          <p class="text-sm text-gray-500 dark:text-gray-400">Balance del Periodo</p>
+          <p class="text-3xl font-bold text-gray-900 dark:text-white" id="total-balance-evolution">$0.00</p>
+        </div>
+        <div class="relative h-72 w-full">
+          <canvas id="chart-evolution"></canvas>
+        </div>
+      </div>
+
+      <!-- Gráfico de Ingresos por Categoría -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">Ingresos por Categoría</h3>
+        <!-- Total -->
+        <div class="text-center mb-6">
+          <p class="text-sm text-gray-500 dark:text-gray-400">Total Ingresos</p>
+          <p class="text-3xl font-bold text-green-600 dark:text-green-400" id="total-income-chart">$0.00</p>
+        </div>
+        <div class="relative h-64 w-full flex justify-center mb-6">
+          <canvas id="chart-income-categories"></canvas>
+        </div>
+        <!-- Leyenda Detallada -->
+        <div id="legend-income-categories" class="space-y-3 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
+          <!-- Items generados dinámicamente -->
+        </div>
+      </div>
+
+      <!-- Gráfico de Gastos por Categoría -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">Gastos por Categoría</h3>
+        <!-- Total -->
+        <div class="text-center mb-6">
+          <p class="text-sm text-gray-500 dark:text-gray-400">Total Gastos</p>
+          <p class="text-3xl font-bold text-red-600 dark:text-red-400" id="total-expense-chart">$0.00</p>
+        </div>
+        <div class="relative h-64 w-full flex justify-center mb-6">
+          <canvas id="chart-categories"></canvas>
+        </div>
+        <!-- Leyenda Detallada -->
+        <div id="legend-expense-categories" class="space-y-3 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
+          <!-- Items generados dinámicamente -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Gráfico de Evolución de Balance Histórico (Fila completa) -->
+    <div class="mb-8">
+      <div class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Balance a lo Largo del Tiempo</h3>
+          <!-- Toggle Lineal / Barras -->
+          <div class="flex items-center bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+            <button data-chart-mode="lineal"
+              class="px-3 py-1.5 text-xs font-medium rounded-md bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm transition-colors">
+              📈 Lineal
+            </button>
+            <button data-chart-mode="barras"
+              class="px-3 py-1.5 text-xs font-medium rounded-md text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+              📊 Barras
+            </button>
+          </div>
+        </div>
+        <div class="relative h-80 w-full">
+          <canvas id="chart-balance-history"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Máximos y Mínimos del Periodo -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      <!-- Máximos -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+          <span class="text-xl">🔺</span> Máximos del Periodo
+        </h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <!-- Top Ingresos -->
+          <div>
+            <p class="text-xs font-medium text-green-600 dark:text-green-400 uppercase tracking-wide mb-2">Top 3
+              Ingresos</p>
+            <ul id="list-max-ingresos" class="space-y-2 text-sm">
+              <li class="text-gray-400 dark:text-gray-500 italic">Sin datos</li>
+            </ul>
+          </div>
+          <!-- Top Gastos -->
+          <div>
+            <p class="text-xs font-medium text-red-600 dark:text-red-400 uppercase tracking-wide mb-2">Top 3 Gastos</p>
+            <ul id="list-max-gastos" class="space-y-2 text-sm">
+              <li class="text-gray-400 dark:text-gray-500 italic">Sin datos</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <!-- Mínimos -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+          <span class="text-xl">🔻</span> Mínimos del Periodo
+        </h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <!-- Min Ingresos -->
+          <div>
+            <p class="text-xs font-medium text-green-600 dark:text-green-400 uppercase tracking-wide mb-2">Bottom 3
+              Ingresos</p>
+            <ul id="list-min-ingresos" class="space-y-2 text-sm">
+              <li class="text-gray-400 dark:text-gray-500 italic">Sin datos</li>
+            </ul>
+          </div>
+          <!-- Min Gastos -->
+          <div>
+            <p class="text-xs font-medium text-red-600 dark:text-red-400 uppercase tracking-wide mb-2">Bottom 3 Gastos
+            </p>
+            <ul id="list-min-gastos" class="space-y-2 text-sm">
+              <li class="text-gray-400 dark:text-gray-500 italic">Sin datos</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <nav id="mobile-menu" class="hidden md:hidden fixed inset-0 top-16 z-40 bg-white dark:bg-gray-900 overflow-y-auto">
+    <div class="px-4 py-6 space-y-1">
+      <a href="index.html" data-route="index.html"
+        class="block px-4 py-3 rounded-lg text-lg font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">Inicio</a>
+      <a href="cuentas.html" data-route="cuentas.html"
+        class="block px-4 py-3 rounded-lg text-lg font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">Cuentas</a>
+      <a href="transacciones.html" data-route="transacciones.html"
+        class="block px-4 py-3 rounded-lg text-lg font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">Transacciones</a>
+      <a href="presupuestos.html" data-route="presupuestos.html"
+        class="block px-4 py-3 rounded-lg text-lg font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">Presupuestos</a>
+      <a href="reportes.html" data-route="reportes.html"
+        class="block px-4 py-3 rounded-lg text-lg font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">Reportes</a>
+      <a href="metas.html" data-route="metas.html"
+        class="block px-4 py-3 rounded-lg text-lg font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">Metas</a>
+      <a href="configuracion.html" data-route="configuracion.html"
+        class="block px-4 py-3 rounded-lg text-lg font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">Configuración</a>
+    </div>
+  </nav>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script type="module" src="js/paginas/reportes.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+
+</html>

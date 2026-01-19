@@ -1,290 +1,586 @@
-<!DOCTYPE html>
-<html lang="es" data-theme="light">
+<!doctype html>
+<html lang="es" class="min-h-full">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FTI - Gestor de Finanzas | Cuentas</title>
-    <meta name="theme-color" content="#2563eb">
-    <link rel="icon" href="/pwa/logo-app.png">
-
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts: Inter -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="estilos.css">
-    <script defer src="javascript.js"></script>
-    <style>
-        /* Usando la fuente Inter como predeterminada */
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        .chart-segment {
-            transform: rotate(-90deg);
-            transform-origin: 50% 50%;
-            transition: stroke-dashoffset 0.6s ease-out;
-        }
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cuentas — GTR Finanzas</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="js/sistema/theme.js"></script>
+  <link rel="stylesheet" href="css/estilos.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body class="text-gray-800 flex justify-center">
 
-    <!-- Contenedor principal de la app -->
-    <div class="w-full max-w-2xl bg-white shadow-lg relative min-h-screen">
-        <!-- Contenido de la página con padding inferior para la barra de navegación -->
-        <div class="p-4 sm:p-6 pb-44">
-
-            <!-- Encabezado y Saludo -->
-            <header class="mb-6 flex justify-between items-start">
-                <div>
-                    <h1 class="text-3xl font-bold text-gray-900">Cuentas</h1>
-                    <p class="text-gray-500">Gestiona tus cuentas y balances.</p>
-                </div>
-
-                <!-- Contenedor de Acciones -->
-                <div class="flex items-center gap-2">
-                    <!-- Botón para Agregar Cuenta -->
-                    <div class="relative" id="addAccountCategoryWrapper">
-                        <button id="openAddMenu" type="button" class="flex items-center gap-2 text-sm font-semibold text-indigo-600 bg-indigo-100 px-3 py-2 rounded-lg hover:bg-indigo-200 transition">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                            <span>Agregar</span>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                        </button>
-                        <div id="addMenu" class="hidden absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-20">
-                            <button id="addAccountOption" type="button" class="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12a10 10 0 1 1 10 10"></path><path d="M12 6v6l4 2"></path></svg>
-                                Nueva cuenta
-                            </button>
-                            <button id="addCategoryOption" type="button" class="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M3 9h18"></path><path d="M9 21V9"></path></svg>
-                                Nueva categoría
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Menú de 3 puntos -->
-                    <div class="relative group">
-                        <button class="p-2 rounded-full hover:bg-gray-200 transition-colors">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-600"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
-                        </button>
-                        <!-- Dropdown Menu -->
-                        <div class="absolute right-0 w-56 pt-2 z-20 hidden group-hover:block">
-                            <div class="bg-white rounded-md shadow-xl py-1">
-                                <a href="/index.html" class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-500"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-                                    Volver a inicio
-                                </a>
-                                <button id="toggleCategoryReorder" type="button" class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left border-b border-gray-100">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-500"><path d="M3 7.5L7.5 3m0 0L12 7.5M7.5 3v13.5m13.5-4.5L16.5 21m0 0L12 16.5m4.5 4.5V7.5"/></svg>
-                                    Reordenar categorías
-                                </button>
-                                <button id="resetCategoryOrder" type="button" class="flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
-                                    Restablecer orden
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </header>
-
-            <!-- Sección de Balance Total con Gráfico Circular -->
-            <section class="mb-8">
-                <div class="bg-gray-50 border border-gray-200 rounded-xl p-6">
-                    <div class="flex justify-between items-center mb-4">
-                        <div>
-                            <span class="text-sm font-medium text-gray-500">Balance Neto</span>
-                            <p id="netBalanceValue" class="text-2xl font-bold text-gray-800">$0.00</p>
-                        </div>
-                        <!-- Control de Segmentos para cambiar vista del gráfico -->
-                        <div class="bg-gray-200 p-1 rounded-lg flex items-center text-sm font-medium">
-                            <button data-chart-view="accounts" class="balance-toggle w-full px-3 py-1 rounded-md transition">Cuentas</button>
-                            <button data-chart-view="categories" class="balance-toggle w-full px-3 py-1 rounded-md transition">Categorías</button>
-                        </div>
-                    </div>
-
-                    <div class="flex flex-col sm:flex-row items-center justify-between gap-6">
-                        <!-- Gráfico Circular SVG (Vista por Cuentas por defecto) -->
-                        <div id="accountsChartContainer" class="relative w-36 h-36 flex-shrink-0">
-                            <svg class="w-full h-full" viewBox="0 0 100 100"></svg>
-                            <div class="absolute inset-0 flex items-center justify-center text-center pointer-events-none">
-                                <div>
-                                    <span id="chartCenterLabel" class="text-xs text-gray-500">Activos</span>
-                                    <span id="chartCenterValue" class="text-xl font-bold text-gray-800 block">$0</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Leyenda del Gráfico (Vista por Cuentas por defecto) -->
-                        <div id="accountsChartLegend" class="w-full space-y-2"></div>
-                    </div>
-                </div>
-            </section>
-
-            <section class="mb-8" id="savingsAllocationCard">
-                <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-                    <div class="flex items-center justify-between gap-4 mb-4">
-                        <div class="flex items-center gap-3 min-w-0">
-                            <div class="p-2 rounded-lg bg-emerald-100 text-emerald-700 flex-shrink-0">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 5c-1.5 0-2.8 1.4-3 2.9A5 5 0 0 0 7 9c0 1 .2 1.9.6 2.7C5.7 12.4 4 14.2 4 16.5 4 19 6 21 8.5 21H19c2 0 3.5-1.5 3.5-3.5S21 14 19 14h-1.1"/><path d="M12 12v9"/><path d="M8 16h8"/></svg>
-                            </div>
-                            <div class="min-w-0">
-                                <h2 class="text-base font-bold text-gray-800 truncate">Ahorros asignados</h2>
-                                <p class="text-xs text-gray-500">Distribución de dinero en metas de ahorro</p>
-                            </div>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Total en metas</p>
-                            <p id="savingsGoalsTotalValue" class="text-xl font-extrabold text-gray-900">$0</p>
-                        </div>
-                    </div>
-
-                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-                        <div id="savingsGoalsChartContainer" class="relative w-32 h-32 flex-shrink-0">
-                            <svg class="w-full h-full" viewBox="0 0 100 100"></svg>
-                            <div class="absolute inset-0 flex items-center justify-center text-center pointer-events-none">
-                                <div>
-                                    <span class="text-xs text-gray-500">Metas</span>
-                                    <span id="savingsGoalsCenterValue" class="text-lg font-bold text-gray-800 block">$0</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div id="savingsGoalsLegend" class="w-full space-y-2"></div>
-                    </div>
-                </div>
-            </section>
-            
-            <!-- Lista de Cuentas por Categorías -->
-            <section class="space-y-6" id="accountGroupsContainer"></section>
-        </div>
-
-
-        <div id="accountModal" class="fixed inset-0 z-40 hidden">
-            <div class="absolute inset-0 bg-black bg-opacity-40"></div>
-            <div class="relative w-full max-w-lg mx-auto mt-10 bg-white rounded-2xl shadow-xl overflow-hidden">
-                <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
-                    <h2 id="accountModalTitle" class="text-lg font-semibold text-gray-800">Agregar cuenta</h2>
-                    <button id="closeAccountModal" type="button" class="p-2 rounded-full text-gray-500 hover:bg-gray-200">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                    </button>
-                </div>
-                <form id="accountForm" class="px-6 py-5 space-y-4">
-                    <input id="accountIdField" type="hidden">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div class="sm:col-span-2">
-                            <label for="accountNameInput" class="block text-sm font-medium text-gray-700 mb-1">Nombre de la cuenta</label>
-                            <input id="accountNameInput" type="text" required class="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Cuenta Principal">
-                        </div>
-                        <div class="sm:col-span-2">
-                            <label for="accountInstitutionInput" class="block text-sm font-medium text-gray-700 mb-1">Institución o nota</label>
-                            <input id="accountInstitutionInput" type="text" class="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Banco XYZ">
-                        </div>
-                        <div>
-                            <label for="accountBalanceInput" class="block text-sm font-medium text-gray-700 mb-1">Balance</label>
-                            <input id="accountBalanceInput" type="number" step="0.01" class="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="0.00">
-                        </div>
-                        <div>
-                            <label for="accountGroupSelect" class="block text-sm font-medium text-gray-700 mb-1">Categoría</label>
-                            <select id="accountGroupSelect" class="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"></select>
-                        </div>
-                        <div>
-                            <label for="accountIconSelect" class="block text-sm font-medium text-gray-700 mb-1">Icono</label>
-                            <select id="accountIconSelect" class="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"></select>
-                        </div>
-                        <div>
-                            <label for="accountColorInput" class="block text-sm font-medium text-gray-700 mb-1">Color</label>
-                            <input id="accountColorInput" type="color" value="#2563eb" class="w-full h-10 border border-gray-200 rounded-lg p-1">
-                        </div>
-                    </div>
-                    <div class="flex justify-end gap-3 pt-4">
-                        <button id="cancelAccountModal" type="button" class="px-4 py-2 rounded-lg text-sm font-semibold text-gray-600 hover:bg-gray-100">Cancelar</button>
-                        <button type="submit" class="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700">Guardar</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <div id="accountCategoryModal" class="fixed inset-0 z-40 hidden">
-            <div class="absolute inset-0 bg-black bg-opacity-40"></div>
-            <div class="relative w-full max-w-lg mx-auto mt-10 bg-white rounded-2xl shadow-xl overflow-hidden">
-                <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
-                    <h2 id="accountCategoryModalTitle" class="text-lg font-semibold text-gray-800">Agregar categoría</h2>
-                    <button id="closeAccountCategoryModal" type="button" class="p-2 rounded-full text-gray-500 hover:bg-gray-200">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                    </button>
-                </div>
-                <form id="accountCategoryForm" class="px-6 py-5 space-y-4">
-                    <input id="accountCategoryIdField" type="hidden">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div class="sm:col-span-2">
-                            <label for="accountCategoryNameInput" class="block text-sm font-medium text-gray-700 mb-1">Nombre de la categoría</label>
-                            <input id="accountCategoryNameInput" type="text" required class="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Nueva categoría">
-                        </div>
-                        <div>
-                            <label for="accountCategoryTypeSelect" class="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
-                            <select id="accountCategoryTypeSelect" class="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                <option value="asset">Activos</option>
-                                <option value="liability">Deudas</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="accountCategoryIconSelect" class="block text-sm font-medium text-gray-700 mb-1">Icono</label>
-                            <select id="accountCategoryIconSelect" class="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"></select>
-                        </div>
-                        <div>
-                            <label for="accountCategoryColorInput" class="block text-sm font-medium text-gray-700 mb-1">Color</label>
-                            <input id="accountCategoryColorInput" type="color" value="#2563eb" class="w-full h-10 border border-gray-200 rounded-lg p-1">
-                        </div>
-                    </div>
-                    <div class="flex justify-end gap-3 pt-4">
-                        <button id="cancelAccountCategoryModal" type="button" class="px-4 py-2 rounded-lg text-sm font-semibold text-gray-600 hover:bg-gray-100">Cancelar</button>
-                        <button type="submit" class="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700">Guardar</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <div id="accountHistoryModal" class="fixed inset-0 z-[70] hidden">
-            <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" data-close-account-history="true"></div>
-            <div class="relative w-full max-w-md mx-auto mt-20 bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[70vh] animate-in fade-in zoom-in duration-200">
-                <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/50">
-                    <div class="flex items-center gap-3">
-                        <div class="p-2 bg-indigo-100 rounded-lg text-indigo-600">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                        </div>
-                        <div>
-                            <h3 id="accountHistoryModalTitle" class="font-bold text-gray-800 text-lg">Historial de Cuenta</h3>
-                            <p id="accountHistoryModalSubtitle" class="text-[10px] text-gray-400 uppercase tracking-widest font-bold"></p>
-                        </div>
-                    </div>
-                    <button id="closeAccountHistoryModal" type="button" class="p-2 rounded-full text-gray-400 hover:bg-gray-100 transition">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                    </button>
-                </div>
-                <div id="accountHistoryList" class="flex-grow min-h-0 overflow-y-auto p-6 space-y-4"></div>
-            </div>
-        </div>
-
-        <br><br>
-
-        <!-- Barra de Navegación Inferior -->
-        <footer class="fixed bottom-0 left-0 right-0 max-w-2xl mx-auto bg-white border-t border-gray-200">
-            <div class="grid grid-cols-5 items-center justify-items-center h-16">
-                <!-- Resumen -->
-                <a href="resumen.html" class="flex flex-col items-center justify-center text-gray-500 hover:text-indigo-600 w-full h-full transition"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 mb-1"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg><span class="text-xs font-medium">Resumen</span></a>
-                <!-- Operaciones -->
-                <a href="operaciones.html" class="flex flex-col items-center justify-center text-gray-500 hover:text-indigo-600 w-full h-full transition"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 mb-1"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg><span class="text-xs font-medium">Operaciones</span></a>
-                <!-- Estadísticas -->
-                <a href="estadisticas.html" class="flex flex-col items-center justify-center text-gray-500 hover:text-indigo-600 w-full h-full transition"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 mb-1"><line x1="12" y1="20" x2="12" y2="10"></line><line x1="18" y1="20" x2="18" y2="4"></line><line x1="6" y1="20" x2="6" y2="16"></line></svg><span class="text-xs font-medium">Estadísticas</span></a>
-                <!-- Cuentas (Activo) -->
-                <a href="#" class="flex flex-col items-center justify-center text-indigo-600 w-full h-full transition"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 mb-1"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"></path></svg><span class="text-xs font-medium">Cuentas</span></a>
-                <!-- Ajustes -->
-                 <a href="ajustes.html" class="flex flex-col items-center justify-center text-gray-500 hover:text-indigo-600 w-full h-full transition"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 mb-1"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg><span class="text-xs font-medium">Ajustes</span></a>
-            </div>
-        </footer>
-
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 antialiased min-h-screen">
+  <header class="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-8">
+        <div class="text-xl font-semibold">GTR Finanzas</div>
+        <nav class="hidden md:flex items-center gap-6">
+          <a href="index.html" data-route="index.html"
+            class="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors">Inicio</a>
+          <a href="cuentas.html" data-route="cuentas.html"
+            class="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors">Cuentas</a>
+          <a href="transacciones.html" data-route="transacciones.html"
+            class="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors">Transacciones</a>
+          <a href="presupuestos.html" data-route="presupuestos.html"
+            class="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors">Presupuestos</a>
+          <a href="reportes.html" data-route="reportes.html"
+            class="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors">Reportes</a>
+          <a href="metas.html" data-route="metas.html"
+            class="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors">Metas</a>
+          <a href="configuracion.html" data-route="configuracion.html"
+            class="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors">Configuración</a>
+        </nav>
+      </div>
+      <div class="flex items-center gap-3">
+        <button id="mobile-menu-btn"
+          class="md:hidden inline-flex items-center justify-center p-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+          <svg id="menu-icon-open" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+          <svg id="menu-icon-close" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+        <button id="theme-toggle"
+          class="inline-flex items-center gap-2 rounded-md px-3 py-2 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700">
+          <span class="hidden sm:inline">Cambiar tema</span>
+          <svg class="w-5 h-5 sm:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z">
+            </path>
+          </svg>
+        </button>
+      </div>
     </div>
 
+    <script>
+      document.getElementById('mobile-menu-btn').addEventListener('click', function () {
+        const menu = document.getElementById('mobile-menu');
+        const iconOpen = document.getElementById('menu-icon-open');
+        const iconClose = document.getElementById('menu-icon-close');
+        const isHidden = menu.classList.contains('hidden');
+        menu.classList.toggle('hidden');
+        iconOpen.classList.toggle('hidden');
+        iconClose.classList.toggle('hidden');
+        document.body.style.overflow = isHidden ? 'hidden' : '';
+      });
+    </script>
+  </header>
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <section class="mb-8">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <h2 class="text-lg font-semibold">Cuentas</h2>
+        <div class="flex flex-wrap items-center gap-2">
+          <button id="btn-abrir-modal-separador"
+            class="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
+              </path>
+            </svg>
+            Nueva categoría
+          </button>
+          <button id="btn-gestionar-separadores"
+            class="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
+              </path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            </svg>
+            Gestionar
+          </button>
+          <button id="btn-abrir-modal-cuenta" class="btn btn-primary">Nueva cuenta</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Resumen y Gráfico -->
+    <section class="mb-8 animate-fade-in">
+      <div class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+        <div class="flex flex-col md:flex-row items-center justify-between gap-8">
+          <!-- Balance Total -->
+          <div class="flex-1 text-center md:text-left">
+            <h2 class="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
+              Balance Total Consolidado
+            </h2>
+            <p class="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4" id="resumen-total-dinero">
+              $0.00
+            </p>
+            <p class="text-sm text-gray-500 dark:text-gray-400">
+              Suma de todas tus cuentas y subcuentas
+            </p>
+          </div>
+
+          <!-- Separador móvil -->
+          <div class="w-full h-px bg-gray-100 dark:bg-gray-700 md:hidden"></div>
+
+          <!-- Gráfico -->
+          <div class="flex-1 flex flex-col items-center justify-center w-full max-w-xs md:max-w-sm">
+            <!-- Toggle de Vistas (Oculto por defecto) -->
+            <div id="grafico-view-toggle" class="hidden mb-4">
+              <div class="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1 gap-1">
+                <button data-view="cuentas"
+                  class="flex-1 px-3 py-1.5 text-xs font-medium rounded-md bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm transition-all">
+                  Cuentas
+                </button>
+                <button data-view="categorias"
+                  class="flex-1 px-3 py-1.5 text-xs font-medium rounded-md text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all">
+                  Categorías
+                </button>
+              </div>
+            </div>
+
+            <div class="relative w-64 h-64">
+              <canvas id="grafico-distribucion"></canvas>
+            </div>
+            <!-- Leyenda detallada -->
+            <div id="grafico-leyenda" class="w-full mt-6 space-y-2"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div id="cuentas-lista" class="space-y-6"></div>
+    </section>
+    <div id="modal-cuenta"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm hidden">
+      <div
+        class="bg-white dark:bg-gray-900 rounded-xl shadow-2xl w-full max-w-3xl mx-4 overflow-hidden animate-fade-in">
+        <div
+          class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50/80 dark:bg-gray-900/80 backdrop-blur-sm">
+          <div>
+            <h3 class="text-lg font-semibold">Nueva cuenta</h3>
+            <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
+              Define el nombre, color y saldo inicial para organizar mejor tus finanzas.
+            </p>
+          </div>
+          <button id="btn-cerrar-modal-cuenta"
+            class="inline-flex items-center justify-center rounded-full p-2 text-gray-500 hover:bg-gray-200/70 dark:hover:bg-gray-800"
+            aria-label="Cerrar">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+        <form id="form-cuenta" class="px-6 py-6 space-y-6">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="space-y-1">
+              <label class="block text-sm font-medium">Nombre</label>
+              <input type="text" id="cuenta-nombre" required
+                class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                placeholder="Ej. Cuenta principal">
+              <p class="text-xs text-gray-500 dark:text-gray-400">
+                Usa un nombre fácil de identificar, como nómina, ahorro o efectivo.
+              </p>
+            </div>
+            <div class="space-y-1">
+              <label class="block text-sm font-medium">Descripción</label>
+              <input type="text" id="cuenta-desc"
+                class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                placeholder="Opcional">
+              <p class="text-xs text-gray-500 dark:text-gray-400">
+                Agrega detalles como banco, terminación de tarjeta u objetivo.
+              </p>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="space-y-1">
+              <label class="block text-sm font-medium">Color</label>
+              <div
+                class="flex items-center gap-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2">
+                <input type="color" id="cuenta-color" value="#0ea5e9"
+                  class="h-8 w-10 rounded border border-gray-200 dark:border-gray-700 bg-transparent cursor-pointer">
+                <div class="flex-1">
+                  <p class="text-xs text-gray-600 dark:text-gray-300">
+                    El color se usa como identificador visual en las tarjetas.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="space-y-1">
+              <label class="block text-sm font-medium">Dinero</label>
+              <div
+                class="flex items-center gap-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2">
+                <span class="text-xs font-medium text-gray-500 dark:text-gray-400">MXN</span>
+                <input type="number" step="0.01" id="cuenta-dinero" value="0"
+                  class="w-full rounded-md border-0 bg-transparent px-1 py-1 text-sm focus:outline-none focus:ring-0"
+                  placeholder="0.00">
+              </div>
+              <p class="text-xs text-gray-500 dark:text-gray-400">
+                Saldo inicial de la cuenta. Puedes actualizarlo después con transacciones.
+              </p>
+            </div>
+          </div>
+          <!-- Sub-account toggle -->
+          <div
+            class="space-y-4 p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
+            <div class="flex items-center gap-3">
+              <input type="checkbox" id="cuenta-es-subcuenta"
+                class="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-sky-600 focus:ring-sky-500 cursor-pointer">
+              <label for="cuenta-es-subcuenta" class="text-sm font-medium cursor-pointer">
+                Esta es una subcuenta
+              </label>
+            </div>
+            <div id="cuenta-padre-container" class="hidden space-y-1">
+              <label class="block text-sm font-medium">Cuenta principal</label>
+              <select id="cuenta-padre"
+                class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+                <option value="">Selecciona una cuenta principal...</option>
+              </select>
+              <p class="text-xs text-gray-500 dark:text-gray-400">
+                Selecciona a qué cuenta pertenece esta subcuenta.
+              </p>
+            </div>
+          </div>
+          <div
+            class="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-3 pt-2 border-t border-gray-100 dark:border-gray-800">
+            <button id="btn-cancelar-modal-cuenta" type="button"
+              class="inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-700 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800">
+              Cancelar
+            </button>
+            <button type="submit" class="btn btn-primary justify-center px-5 py-2.5 text-sm w-full sm:w-auto">
+              Crear cuenta
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="modal-editar-cuenta"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm hidden">
+      <div
+        class="bg-white dark:bg-gray-900 rounded-xl shadow-2xl w-full max-w-3xl mx-4 overflow-hidden animate-fade-in">
+        <div
+          class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50/80 dark:bg-gray-900/80 backdrop-blur-sm">
+          <div>
+            <h3 class="text-lg font-semibold">Editar cuenta</h3>
+            <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
+              Actualiza los detalles de tu cuenta.
+            </p>
+          </div>
+          <button id="btn-cerrar-modal-editar"
+            class="inline-flex items-center justify-center rounded-full p-2 text-gray-500 hover:bg-gray-200/70 dark:hover:bg-gray-800"
+            aria-label="Cerrar">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+        <form id="form-editar-cuenta" class="px-6 py-6 space-y-6">
+          <input type="hidden" id="editar-cuenta-id">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="space-y-1">
+              <label class="block text-sm font-medium">Nombre</label>
+              <input type="text" id="editar-cuenta-nombre" required
+                class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                placeholder="Ej. Cuenta principal">
+              <p class="text-xs text-gray-500 dark:text-gray-400">
+                Usa un nombre fácil de identificar, como nómina, ahorro o efectivo.
+              </p>
+            </div>
+            <div class="space-y-1">
+              <label class="block text-sm font-medium">Descripción</label>
+              <input type="text" id="editar-cuenta-desc"
+                class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                placeholder="Opcional">
+              <p class="text-xs text-gray-500 dark:text-gray-400">
+                Agrega detalles como banco, terminación de tarjeta u objetivo.
+              </p>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="space-y-1">
+              <label class="block text-sm font-medium">Color</label>
+              <div
+                class="flex items-center gap-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2">
+                <input type="color" id="editar-cuenta-color" value="#0ea5e9"
+                  class="h-8 w-10 rounded border border-gray-200 dark:border-gray-700 bg-transparent cursor-pointer">
+                <div class="flex-1">
+                  <p class="text-xs text-gray-600 dark:text-gray-300">
+                    El color se usa como identificador visual en las tarjetas.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="space-y-1">
+              <label class="block text-sm font-medium">Dinero</label>
+              <div
+                class="flex items-center gap-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2">
+                <span class="text-xs font-medium text-gray-500 dark:text-gray-400">MXN</span>
+                <input type="number" step="0.01" id="editar-cuenta-dinero" value="0"
+                  class="w-full rounded-md border-0 bg-transparent px-1 py-1 text-sm focus:outline-none focus:ring-0"
+                  placeholder="0.00">
+              </div>
+              <p class="text-xs text-gray-500 dark:text-gray-400">
+                Saldo actual de la cuenta.
+              </p>
+            </div>
+          </div>
+          <!-- Parent account info (for sub-accounts) -->
+          <div id="editar-cuenta-padre-info"
+            class="hidden p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+            <div class="flex items-center gap-3">
+              <div class="flex-shrink-0">
+                <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor"
+                  viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+              </div>
+              <div>
+                <p class="text-sm font-medium text-blue-800 dark:text-blue-200">Esta es una subcuenta</p>
+                <p class="text-xs text-blue-600 dark:text-blue-400">Pertenece a: <span id="editar-cuenta-padre-nombre"
+                    class="font-semibold"></span></p>
+              </div>
+            </div>
+          </div>
+          <!-- Sub-accounts panel (for parent accounts) -->
+          <div id="editar-subcuentas-panel" class="hidden space-y-3">
+            <div class="flex items-center justify-between">
+              <h4 class="text-sm font-semibold text-gray-800 dark:text-gray-200">Subcuentas asociadas</h4>
+              <span id="editar-subcuentas-count"
+                class="text-xs bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300 px-2 py-0.5 rounded-full"></span>
+            </div>
+            <div id="editar-subcuentas-lista" class="space-y-2 max-h-32 overflow-y-auto">
+              <!-- Sub-accounts will be listed here -->
+            </div>
+          </div>
+          <div
+            class="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-3 pt-2 border-t border-gray-100 dark:border-gray-800">
+            <button id="btn-cancelar-modal-editar" type="button"
+              class="inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-700 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800">
+              Cancelar
+            </button>
+            <button type="submit" class="btn btn-primary justify-center px-5 py-2.5 text-sm w-full sm:w-auto">
+              Guardar cambios
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="modal-historial-cuenta"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm hidden">
+      <div
+        class="bg-white dark:bg-gray-900 rounded-xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden animate-fade-in flex flex-col max-h-[85vh]">
+        <div
+          class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50/80 dark:bg-gray-900/80 backdrop-blur-sm shrink-0">
+          <div>
+            <h3 class="text-lg font-semibold" id="modal-historial-titulo">Historial de actividad</h3>
+            <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1" id="modal-historial-subtitulo">
+              Movimientos recientes
+            </p>
+          </div>
+          <button id="btn-cerrar-modal-historial"
+            class="inline-flex items-center justify-center rounded-full p-2 text-gray-500 hover:bg-gray-200/70 dark:hover:bg-gray-800"
+            aria-label="Cerrar">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+        <div id="lista-historial-content" class="p-6 overflow-y-auto">
+          <!-- El historial se insertará aquí dinámicamente -->
+        </div>
+      </div>
+    </div>
+
+    <div id="modal-eliminar-cuenta"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm hidden">
+      <div
+        class="bg-white dark:bg-gray-900 rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden animate-fade-in transform transition-all scale-100 p-6">
+        <div class="text-center">
+          <div
+            class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30 mb-4">
+            <svg class="h-6 w-6 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+            </svg>
+          </div>
+          <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-gray-100" id="modal-eliminar-titulo">
+            ¿Eliminar cuenta?
+          </h3>
+          <div class="mt-2">
+            <p class="text-sm text-gray-500 dark:text-gray-400">
+              ¿Estás seguro de que quieres eliminar la cuenta <span id="nombre-cuenta-eliminar"
+                class="font-bold text-gray-700 dark:text-gray-200"></span>? Esta acción no se puede deshacer y borrará
+              todo el historial asociado.
+            </p>
+          </div>
+          <!-- Sub-account cascade warning -->
+          <div id="eliminar-subcuentas-warning"
+            class="hidden mt-3 p-3 rounded-lg bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800">
+            <div class="flex items-start gap-2">
+              <svg class="w-5 h-5 text-orange-600 dark:text-orange-400 flex-shrink-0 mt-0.5" fill="none"
+                stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                </path>
+              </svg>
+              <div>
+                <p class="text-sm font-medium text-orange-800 dark:text-orange-200">¡Atención!</p>
+                <p class="text-xs text-orange-700 dark:text-orange-300">Esta cuenta tiene <span
+                    id="eliminar-subcuentas-count" class="font-bold"></span> subcuenta(s) que también serán eliminadas.
+                </p>
+              </div>
+            </div>
+          </div>
+          <!-- Operations warning -->
+          <div id="eliminar-operaciones-warning"
+            class="hidden mt-3 p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
+            <div class="flex items-start gap-2">
+              <svg class="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" fill="none"
+                stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2">
+                </path>
+              </svg>
+              <div class="text-left">
+                <p class="text-sm font-medium text-amber-800 dark:text-amber-200">Operaciones asociadas</p>
+                <p class="text-xs text-amber-700 dark:text-amber-300">Esta cuenta tiene <span
+                    id="eliminar-operaciones-count" class="font-bold"></span> transacción(es) registradas.
+                </p>
+              </div>
+            </div>
+          </div>
+          <!-- Operations options -->
+          <div id="eliminar-opciones-operaciones"
+            class="hidden mt-4 p-3 rounded-lg bg-gray-50 dark:bg-gray-800 text-left">
+            <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">¿Qué hacer con las transacciones?</p>
+            <div class="space-y-2">
+              <label class="flex items-start gap-3 cursor-pointer p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
+                <input type="radio" name="eliminar-ops-accion" id="eliminar-ops-conservar" value="conservar" checked
+                  class="mt-0.5 w-4 h-4 text-sky-600 border-gray-300 focus:ring-sky-500">
+                <div>
+                  <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Conservar transacciones</p>
+                  <p class="text-xs text-gray-500">Las transacciones quedarán sin cuenta asignada (pueden editarse
+                    después)</p>
+                </div>
+              </label>
+              <label class="flex items-start gap-3 cursor-pointer p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
+                <input type="radio" name="eliminar-ops-accion" id="eliminar-ops-eliminar" value="eliminar"
+                  class="mt-0.5 w-4 h-4 text-red-600 border-gray-300 focus:ring-red-500">
+                <div>
+                  <p class="text-sm font-medium text-red-600 dark:text-red-400">Eliminar transacciones</p>
+                  <p class="text-xs text-gray-500">Se borrarán permanentemente todas las transacciones asociadas</p>
+                </div>
+              </label>
+            </div>
+          </div>
+          <input type="hidden" id="id-cuenta-eliminar">
+        </div>
+        <div class="mt-6 flex flex-col sm:flex-row-reverse gap-3">
+          <button type="button" id="btn-confirmar-eliminar"
+            class="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:w-auto">
+            Sí, eliminar
+          </button>
+          <button type="button" id="btn-cancelar-eliminar"
+            class="inline-flex w-full justify-center rounded-md bg-white dark:bg-gray-800 px-3 py-2 text-sm font-semibold text-gray-900 dark:text-gray-200 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 sm:w-auto">
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Crear Separador -->
+    <div id="modal-crear-separador"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm hidden">
+      <div class="bg-white dark:bg-gray-900 rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden animate-fade-in">
+        <div
+          class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50/80 dark:bg-gray-900/80">
+          <h3 class="text-lg font-semibold">Nueva categoría</h3>
+          <button id="btn-cerrar-modal-separador" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+        <form id="form-crear-separador" class="p-6 space-y-4">
+          <div class="space-y-1">
+            <label class="block text-sm font-medium">Nombre de la categoría</label>
+            <input type="text" id="separador-nombre" required
+              class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500 outline-none"
+              placeholder="Ej: Ahorros, Inversiones...">
+          </div>
+          <div class="space-y-2">
+            <label class="block text-sm font-medium">Selecciona las cuentas</label>
+            <p class="text-xs text-gray-500">Selecciona al menos una cuenta principal para esta categoría.</p>
+            <div id="separador-cuentas-lista"
+              class="max-h-48 overflow-y-auto space-y-2 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
+              <!-- Checkboxes de cuentas se insertarán aquí -->
+            </div>
+          </div>
+          <div class="space-y-2">
+            <label class="block text-sm font-medium">Color de la categoría</label>
+            <div id="separador-colores" class="flex flex-wrap gap-2">
+              <!-- Color swatches se insertarán aquí -->
+            </div>
+          </div>
+          <div class="flex gap-3 justify-end pt-2 border-t border-gray-100 dark:border-gray-800">
+            <button type="button" id="btn-cancelar-separador"
+              class="px-4 py-2 rounded-md text-sm font-medium border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+              Cancelar
+            </button>
+            <button type="submit" class="btn btn-primary px-5 py-2 text-sm">
+              Crear categoría
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal: Gestionar Separadores -->
+    <div id="modal-gestionar-separadores"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm hidden">
+      <div
+        class="bg-white dark:bg-gray-900 rounded-xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden animate-fade-in flex flex-col max-h-[85vh]">
+        <div
+          class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50/80 dark:bg-gray-900/80 shrink-0">
+          <h3 class="text-lg font-semibold">Gestionar categorías</h3>
+          <button id="btn-cerrar-gestionar-separadores"
+            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+        <div id="gestionar-separadores-content" class="p-6 overflow-y-auto space-y-4">
+          <!-- Lista de separadores se insertará aquí -->
+        </div>
+        <div class="px-6 py-4 border-t border-gray-100 dark:border-gray-800 shrink-0">
+          <button id="btn-cerrar-gestionar-abajo"
+            class="w-full px-4 py-2 rounded-md text-sm font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+  <nav id="mobile-menu" class="hidden md:hidden fixed inset-0 top-16 z-40 bg-white dark:bg-gray-900 overflow-y-auto">
+    <div class="px-4 py-6 space-y-1">
+      <a href="index.html" data-route="index.html"
+        class="block px-4 py-3 rounded-lg text-lg font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">Inicio</a>
+      <a href="cuentas.html" data-route="cuentas.html"
+        class="block px-4 py-3 rounded-lg text-lg font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">Cuentas</a>
+      <a href="transacciones.html" data-route="transacciones.html"
+        class="block px-4 py-3 rounded-lg text-lg font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">Transacciones</a>
+      <a href="presupuestos.html" data-route="presupuestos.html"
+        class="block px-4 py-3 rounded-lg text-lg font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">Presupuestos</a>
+      <a href="reportes.html" data-route="reportes.html"
+        class="block px-4 py-3 rounded-lg text-lg font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">Reportes</a>
+      <a href="metas.html" data-route="metas.html"
+        class="block px-4 py-3 rounded-lg text-lg font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">Metas</a>
+      <a href="configuracion.html" data-route="configuracion.html"
+        class="block px-4 py-3 rounded-lg text-lg font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">Configuración</a>
+    </div>
+  </nav>
+  <script type="module" src="js/paginas/cuentas.js"></script>
 </body>
+
 </html>
