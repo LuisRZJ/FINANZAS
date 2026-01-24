@@ -8,7 +8,10 @@ let chartEvolution = null;
 let chartCategories = null;
 let chartIncomeCategories = null;
 let chartBalanceHistory = null;
+let chartProjection = null;
 let chartBalanceMode = 'lineal'; // 'lineal' or 'barras'
+let showSMA = false; // Control para mostrar SMA 30d
+let showBollinger = false; // Control para mostrar Bandas de Bollinger
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
@@ -40,6 +43,9 @@ function inicializarEventos() {
 
     // Toggle para modo de gráfico (Lineal / Barras)
     const modeButtons = document.querySelectorAll('[data-chart-mode]');
+    const toggleSMA = document.getElementById('toggle-sma');
+    const toggleBollinger = document.getElementById('toggle-bollinger');
+
     modeButtons.forEach(btn => {
         btn.addEventListener('click', (e) => {
             // Update UI active state
@@ -52,6 +58,12 @@ function inicializarEventos() {
 
             // Change mode and re-render
             chartBalanceMode = e.target.dataset.chartMode;
+
+            // Habilitar/deshabilitar switches de indicadores según el modo
+            const isLineal = chartBalanceMode === 'lineal';
+            if (toggleSMA) toggleSMA.disabled = !isLineal;
+            if (toggleBollinger) toggleBollinger.disabled = !isLineal;
+
             const operaciones = listarOperaciones();
             actualizarGraficoBalanceHistorico(operaciones, currentPeriodo);
         });
@@ -77,6 +89,25 @@ function inicializarEventos() {
         });
     }
 
+    // Indicadores Técnicos (SMA y Bollinger)
+    // Nota: toggleSMA y toggleBollinger ya están declarados arriba en la sección de modo gráfico
+
+    if (toggleSMA) {
+        toggleSMA.addEventListener('change', (e) => {
+            showSMA = e.target.checked;
+            // Optimización: solo redibujar el gráfico de balance, no todos los reportes
+            actualizarGraficoBalanceHistorico(listarOperaciones(), currentPeriodo);
+        });
+    }
+
+    if (toggleBollinger) {
+        toggleBollinger.addEventListener('change', (e) => {
+            showBollinger = e.target.checked;
+            // Optimización: solo redibujar el gráfico de balance, no todos los reportes
+            actualizarGraficoBalanceHistorico(listarOperaciones(), currentPeriodo);
+        });
+    }
+
     // Set default active
     const defaultBtn = document.querySelector('[data-period="semana"]');
     if (defaultBtn) {
@@ -99,6 +130,7 @@ function cargarDatos(periodo) {
     actualizarGraficoCategorias(filteredOps, etiquetas);
     actualizarGraficoIngresos(filteredOps, etiquetas);
     actualizarGraficoBalanceHistorico(operaciones, periodo); // Usa TODAS las operaciones para calcular balance inicial
+    actualizarProyeccionFinanciera(operaciones, periodo);
     actualizarMaximosMinimos(filteredOps);
 }
 
@@ -161,7 +193,10 @@ function calcularRangoPeriodo(periodo, offset = 0) {
         // Usar la fecha de la primera operación o hace 1 año si no hay
         const todasOps = listarOperaciones();
         if (todasOps.length > 0) {
-            const fechas = todasOps.map(op => new Date(op.fecha + 'T00:00:00'));
+            const fechas = todasOps.map(op => {
+                const fechaNormalizada = op.fecha.includes('T') ? op.fecha : op.fecha + 'T00:00:00';
+                return new Date(fechaNormalizada);
+            });
             const minFecha = new Date(Math.min(...fechas));
             start = minFecha;
         } else {
@@ -245,7 +280,8 @@ function actualizarResumen(operaciones, periodo) {
         let gastosPrev = 0;
         const todasOps = listarOperaciones();
         todasOps.forEach(op => {
-            const d = new Date(op.fecha + 'T00:00:00');
+            const fechaNormalizada = op.fecha.includes('T') ? op.fecha : op.fecha + 'T00:00:00';
+            const d = new Date(fechaNormalizada);
             if (d >= startPrev && d <= endPrev) {
                 if (op.tipo === 'ingreso') ingresosPrev += Number(op.cantidad);
                 if (op.tipo === 'gasto') gastosPrev += Number(op.cantidad);
@@ -350,13 +386,147 @@ function actualizarResumen(operaciones, periodo) {
     elBalanceDaily.innerHTML = `PNL Medio Diario: <span class="${colorClass}">${formatoMoneda(promBalance)}</span>`;
 }
 
+function calcularPnLPorRango(operaciones, start, end) {
+    let pnl = 0;
+    operaciones.forEach(op => {
+        const fechaStr = op.fecha.includes('T') ? op.fecha : op.fecha + 'T00:00:00';
+        const fechaOp = new Date(fechaStr);
+        if (fechaOp >= start && fechaOp <= end) {
+            if (op.tipo === 'ingreso') pnl += Number(op.cantidad);
+            if (op.tipo === 'gasto') pnl -= Number(op.cantidad);
+        }
+    });
+    return pnl;
+}
+
+function obtenerDiasPeriodo(periodo, referenciaFecha) {
+    if (periodo === 'semana') return 7;
+    if (periodo === 'mes') {
+        return new Date(referenciaFecha.getFullYear(), referenciaFecha.getMonth() + 1, 0).getDate();
+    }
+    if (periodo === 'anio') {
+        const inicio = new Date(referenciaFecha.getFullYear(), 0, 1);
+        const fin = new Date(referenciaFecha.getFullYear(), 11, 31);
+        const diff = fin - inicio;
+        return Math.floor(diff / (1000 * 60 * 60 * 24)) + 1;
+    }
+    return 30;
+}
+
+function calcularPnLPromedioTresPeriodos(operaciones, periodo) {
+    const periodoBase = periodo === 'todo' ? 'mes' : periodo;
+    const offsets = [periodOffset, periodOffset - 1, periodOffset - 2];
+    let suma = 0;
+    offsets.forEach(offset => {
+        const rango = calcularRangoPeriodo(periodoBase, offset);
+        suma += calcularPnLPorRango(operaciones, rango.start, rango.end);
+    });
+    return { pnlPromedio: suma / 3, periodoBase };
+}
+
+function actualizarProyeccionFinanciera(operaciones, periodo) {
+    const canvas = document.getElementById('chart-projection-year');
+    const statEl = document.getElementById('stat-run-rate');
+    const finalEl = document.getElementById('stat-projection-final');
+    const growthEl = document.getElementById('stat-projection-growth');
+    if (!canvas || !statEl || !finalEl || !growthEl) return;
+
+    const { pnlPromedio, periodoBase } = calcularPnLPromedioTresPeriodos(operaciones, periodo);
+    const rangoActual = calcularRangoPeriodo(periodoBase, periodOffset);
+    const diasPeriodo = obtenerDiasPeriodo(periodoBase, rangoActual.start);
+    const pnlDiario = pnlPromedio / (diasPeriodo || 1);
+
+    const cuentas = listarCuentas();
+    const saldoActual = cuentas.reduce((acc, c) => acc + Number(c.dinero || 0), 0);
+    const saldoFinal = saldoActual + (pnlDiario * 365);
+    const porcentajeCrecimiento = saldoActual === 0 ? 0 : ((saldoFinal - saldoActual) / Math.abs(saldoActual)) * 100;
+
+    const labels = [];
+    const data = [];
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    for (let i = 0; i <= 365; i++) {
+        const d = new Date(hoy);
+        d.setDate(hoy.getDate() + i);
+        labels.push(d.toISOString().split('T')[0]);
+        data.push(saldoActual + (pnlDiario * i));
+    }
+
+    statEl.textContent = formatoMoneda(pnlPromedio);
+    statEl.classList.remove('text-green-600', 'dark:text-green-400', 'text-red-600', 'dark:text-red-400', 'text-gray-900', 'dark:text-white');
+    if (pnlPromedio > 0) statEl.classList.add('text-green-600', 'dark:text-green-400');
+    else if (pnlPromedio < 0) statEl.classList.add('text-red-600', 'dark:text-red-400');
+    else statEl.classList.add('text-gray-900', 'dark:text-white');
+
+    finalEl.textContent = formatoMoneda(saldoFinal);
+    finalEl.classList.remove('text-green-600', 'dark:text-green-400', 'text-red-600', 'dark:text-red-400', 'text-gray-900', 'dark:text-white');
+    if (saldoFinal > saldoActual) finalEl.classList.add('text-green-600', 'dark:text-green-400');
+    else if (saldoFinal < saldoActual) finalEl.classList.add('text-red-600', 'dark:text-red-400');
+    else finalEl.classList.add('text-gray-900', 'dark:text-white');
+
+    const growthLabel = `${porcentajeCrecimiento >= 0 ? '+' : ''}${porcentajeCrecimiento.toFixed(1)}%`;
+    growthEl.textContent = growthLabel;
+    growthEl.classList.remove('text-green-600', 'dark:text-green-400', 'text-red-600', 'dark:text-red-400', 'text-gray-900', 'dark:text-white');
+    if (porcentajeCrecimiento > 0) growthEl.classList.add('text-green-600', 'dark:text-green-400');
+    else if (porcentajeCrecimiento < 0) growthEl.classList.add('text-red-600', 'dark:text-red-400');
+    else growthEl.classList.add('text-gray-900', 'dark:text-white');
+
+    const ctx = canvas.getContext('2d');
+    if (chartProjection) chartProjection.destroy();
+    const lineColor = pnlDiario >= 0 ? '#10b981' : '#ef4444';
+    const areaColor = pnlDiario >= 0 ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)';
+
+    chartProjection = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [{
+                label: 'Proyección de saldo',
+                data,
+                borderColor: lineColor,
+                backgroundColor: areaColor,
+                fill: true,
+                tension: 0.3,
+                pointRadius: labels.length > 60 ? 0 : 2,
+                pointHoverRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: false,
+                    grid: { color: 'rgba(156, 163, 175, 0.1)' }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: {
+                        maxTicksLimit: 10
+                    }
+                }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function (context) {
+                            return formatoMoneda(context.parsed.y);
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
 function actualizarGraficoEvolucion(operaciones) {
     const ctx = document.getElementById('chart-evolution').getContext('2d');
 
     // Group by date
     const grouped = {};
     operaciones.forEach(op => {
-        const date = op.fecha; // YYYY-MM-DD
+        const date = op.fecha.split('T')[0]; // Normalizar a YYYY-MM-DD
         if (!grouped[date]) grouped[date] = { ingresos: 0, gastos: 0 };
 
         if (op.tipo === 'ingreso') grouped[date].ingresos += Number(op.cantidad);
@@ -627,7 +797,8 @@ function OLD_actualizarGraficoBalanceHistorico(todasOperaciones, periodo) {
         // 'todo': Usar la primera operación o hace 1 año si no hay
         if (todasOperaciones.length > 0) {
             const firstDate = todasOperaciones.reduce((min, op) => op.fecha < min ? op.fecha : min, todasOperaciones[0].fecha);
-            startDate = new Date(firstDate + 'T00:00:00');
+            const fechaNormalizada = firstDate.includes('T') ? firstDate : firstDate + 'T00:00:00';
+            startDate = new Date(fechaNormalizada);
         } else {
             startDate = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
         }
@@ -635,7 +806,8 @@ function OLD_actualizarGraficoBalanceHistorico(todasOperaciones, periodo) {
 
     // Filtrar operaciones que están DESPUÉS del inicio del periodo hasta hoy
     const opsDespues = todasOperaciones.filter(op => {
-        const fechaOp = new Date(op.fecha + 'T00:00:00');
+        const fechaNormalizada = op.fecha.includes('T') ? op.fecha : op.fecha + 'T00:00:00';
+        const fechaOp = new Date(fechaNormalizada);
         return fechaOp >= startDate && fechaOp <= now;
     });
 
@@ -657,8 +829,11 @@ function OLD_actualizarGraficoBalanceHistorico(todasOperaciones, periodo) {
     // Agrupar operaciones por fecha
     const opsPorDia = {};
     opsDespues.forEach(op => {
-        if (!opsPorDia[op.fecha]) opsPorDia[op.fecha] = [];
-        opsPorDia[op.fecha].push(op);
+        // Normalizar a YYYY-MM-DD para coincidir con el bucle de renderizado
+        const fechaKey = op.fecha.split('T')[0];
+
+        if (!opsPorDia[fechaKey]) opsPorDia[fechaKey] = [];
+        opsPorDia[fechaKey].push(op);
     });
 
     // Iterar cada día del periodo
@@ -731,11 +906,85 @@ function OLD_actualizarGraficoBalanceHistorico(todasOperaciones, periodo) {
     });
 }
 
+/**
+ * Calcula la Media Móvil Simple (SMA) para un conjunto de datos
+ * @param {Array<number>} data - Array de valores numéricos
+ * @param {number} period - Periodo de la media móvil (ej: 30 para 30 días)
+ * @returns {Array<number|null>} - Array del mismo tamaño, con null para los primeros period-1 valores
+ */
+function calcularSMA(data, period) {
+    const result = [];
+
+    for (let i = 0; i < data.length; i++) {
+        if (i < period - 1) {
+            // No hay suficientes datos para calcular el promedio
+            result.push(null);
+        } else {
+            // Calcular promedio de los últimos 'period' valores
+            let sum = 0;
+            for (let j = 0; j < period; j++) {
+                sum += data[i - j];
+            }
+            result.push(sum / period);
+        }
+    }
+
+    return result;
+}
+
+/**
+ * Calcula las Bandas de Bollinger para un conjunto de datos
+ * @param {Array<number>} data - Array de valores numéricos
+ * @param {number} period - Periodo de la media móvil (ej: 30)
+ * @param {number} stdDev - Multiplicador de desviación estándar (ej: 2)
+ * @returns {Object} - Objeto con arrays upper y lower del mismo tamaño que data
+ */
+function calcularBollinger(data, period, stdDev) {
+    const upper = [];
+    const lower = [];
+    const sma = calcularSMA(data, period);
+
+    for (let i = 0; i < data.length; i++) {
+        if (i < period - 1 || sma[i] === null) {
+            // No hay suficientes datos
+            upper.push(null);
+            lower.push(null);
+        } else {
+            // Calcular desviación estándar de la ventana
+            let sumSquaredDiff = 0;
+            for (let j = 0; j < period; j++) {
+                const diff = data[i - j] - sma[i];
+                sumSquaredDiff += diff * diff;
+            }
+            const standardDeviation = Math.sqrt(sumSquaredDiff / period);
+
+            // Bandas superior e inferior
+            upper.push(sma[i] + (stdDev * standardDeviation));
+            lower.push(sma[i] - (stdDev * standardDeviation));
+        }
+    }
+
+    return { upper, lower };
+}
+
 function actualizarGraficoBalanceHistorico(todasOperaciones, periodo) {
     const ctx = document.getElementById('chart-balance-history').getContext('2d');
 
-    // Sort operations cronologically
-    const opsSorted = [...todasOperaciones].sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+    /**
+     * Helper function: Normaliza el parseo de fechas para soportar formatos mixtos
+     * - Si la fecha ya incluye 'T' (formato ISO con hora), la usa tal cual
+     * - Si no incluye 'T' (formato YYYY-MM-DD), agrega 'T00:00:00'
+     * @param {string} fechaStr - Fecha en formato YYYY-MM-DD o YYYY-MM-DDTHH:MM
+     * @returns {Date} - Objeto Date correctamente parseado
+     */
+    const normalizarFecha = (fechaStr) => {
+        if (!fechaStr) return new Date();
+        const fechaNormalizada = fechaStr.includes('T') ? fechaStr : fechaStr + 'T00:00:00';
+        return new Date(fechaNormalizada);
+    };
+
+    // Sort operations cronologically - ahora con parseo correcto
+    const opsSorted = [...todasOperaciones].sort((a, b) => normalizarFecha(a.fecha) - normalizarFecha(b.fecha));
 
     // Usar calcularRangoPeriodo para determinar fechas límite
     const rango = calcularRangoPeriodo(periodo, periodOffset);
@@ -745,34 +994,45 @@ function actualizarGraficoBalanceHistorico(todasOperaciones, periodo) {
     // Calcular el balance acumulado JUSTO ANTES del inicio del periodo
     // Esto es: Suma de (Ingresos - Gastos) de todas las operaciones anteriores a startDate
     let balanceInicialCalculado = 0;
-    const opsAnteriores = opsSorted.filter(op => new Date(op.fecha + 'T00:00:00') < startDate);
+    const opsAnteriores = opsSorted.filter(op => normalizarFecha(op.fecha) < startDate);
 
     opsAnteriores.forEach(op => {
         if (op.tipo === 'ingreso') balanceInicialCalculado += Number(op.cantidad);
         else if (op.tipo === 'gasto') balanceInicialCalculado -= Number(op.cantidad);
     });
 
-    // Filtramos operaciones DENTRO del periodo
-    const opsDentro = opsSorted.filter(op => {
-        const d = new Date(op.fecha + 'T00:00:00');
-        return d >= startDate && d <= endDate;
-    });
+    // ========================================================================
+    // IMPORTANTE: Para que los indicadores técnicos (SMA y Bollinger) estén
+    // disponibles incluso en periodos cortos (ej: filtro semanal), necesitamos
+    // calcular el balance histórico COMPLETO desde la primera operación hasta
+    // el final del periodo filtrado. Luego recortamos solo el rango visible.
+    // ========================================================================
 
-    // Generar serie temporal día a día
-    const labels = [];
-    const data = [];
-    let balanceAcumulado = balanceInicialCalculado;
+    // 1. Determinar la fecha de inicio real (primera operación o startDate)
+    let fechaInicioCalculo = startDate;
+    if (opsAnteriores.length > 0) {
+        const fechasAnteriores = opsAnteriores.map(op => normalizarFecha(op.fecha));
+        fechaInicioCalculo = new Date(Math.min(...fechasAnteriores));
+    }
 
-    // Agrupar operaciones del periodo por fecha
+    // 2. Agrupar TODAS las operaciones (no solo las del periodo visible)
     const opsPorDia = {};
-    opsDentro.forEach(op => {
-        if (!opsPorDia[op.fecha]) opsPorDia[op.fecha] = [];
-        opsPorDia[op.fecha].push(op);
+    opsSorted.forEach(op => {
+        const d = normalizarFecha(op.fecha);
+        // Solo incluir operaciones hasta endDate
+        if (d <= endDate) {
+            const fechaKey = op.fecha.split('T')[0];
+            if (!opsPorDia[fechaKey]) opsPorDia[fechaKey] = [];
+            opsPorDia[fechaKey].push(op);
+        }
     });
 
-    // Iterar cada día del periodo
-    const currentDate = new Date(startDate);
+    // 3. Generar serie temporal COMPLETA desde fechaInicioCalculo hasta endDate
+    const labelsCompleto = [];
+    const dataCompleto = [];
+    let balanceAcumulado = 0; // Empezar desde 0 en la primera fecha histórica
 
+    const currentDate = new Date(fechaInicioCalculo);
     while (currentDate <= endDate) {
         const dateStr = currentDate.toISOString().split('T')[0];
 
@@ -784,12 +1044,20 @@ function actualizarGraficoBalanceHistorico(todasOperaciones, periodo) {
             });
         }
 
-        labels.push(dateStr);
-        data.push(balanceAcumulado);
+        labelsCompleto.push(dateStr);
+        dataCompleto.push(balanceAcumulado);
 
         // Siguiente día
         currentDate.setDate(currentDate.getDate() + 1);
     }
+
+    // 4. Encontrar el índice donde empieza el periodo visible
+    const startDateStr = startDate.toISOString().split('T')[0];
+    const indexInicio = labelsCompleto.findIndex(label => label >= startDateStr);
+
+    // 5. Recortar arrays para el periodo visible
+    const labels = labelsCompleto.slice(indexInicio >= 0 ? indexInicio : 0);
+    const data = dataCompleto.slice(indexInicio >= 0 ? indexInicio : 0);
 
     if (chartBalanceHistory) chartBalanceHistory.destroy();
 
@@ -798,20 +1066,80 @@ function actualizarGraficoBalanceHistorico(todasOperaciones, periodo) {
         const areaColor = balanceAcumulado >= 0 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)';
         const lineColor = balanceAcumulado >= 0 ? '#10b981' : '#ef4444';
 
+        // ✅ Calcular indicadores sobre el array COMPLETO (con historial)
+        const smaCompleto = showSMA ? calcularSMA(dataCompleto, 30) : null;
+        const bollingerCompleto = showBollinger ? calcularBollinger(dataCompleto, 30, 2) : null;
+
+        // ✅ Recortar indicadores al periodo visible
+        const smaData = smaCompleto ? smaCompleto.slice(indexInicio >= 0 ? indexInicio : 0) : null;
+        const bollingerData = bollingerCompleto ? {
+            upper: bollingerCompleto.upper.slice(indexInicio >= 0 ? indexInicio : 0),
+            lower: bollingerCompleto.lower.slice(indexInicio >= 0 ? indexInicio : 0)
+        } : null;
+
+        // Construir datasets en el orden correcto de capas
+        const datasets = [];
+
+        // 1. Bollinger Lower (primera capa, abajo)
+        if (showBollinger && bollingerData) {
+            datasets.push({
+                label: 'Bollinger Inferior',
+                data: bollingerData.lower,
+                borderColor: 'rgba(200, 200, 200, 0.5)',
+                backgroundColor: 'rgba(200, 200, 200, 0.1)',
+                fill: false,
+                pointRadius: 0,
+                borderWidth: 1,
+                tension: 0.3
+            });
+        }
+
+        // 2. Bollinger Upper (rellena hacia la inferior con fill: '-1')
+        if (showBollinger && bollingerData) {
+            datasets.push({
+                label: 'Bollinger Superior',
+                data: bollingerData.upper,
+                borderColor: 'rgba(200, 200, 200, 0.5)',
+                backgroundColor: 'rgba(200, 200, 200, 0.15)',
+                fill: '-1', // Rellena hacia el dataset anterior (Bollinger Lower)
+                pointRadius: 0,
+                borderWidth: 1,
+                tension: 0.3
+            });
+        }
+
+        // 3. SMA (línea punteada violeta)
+        if (showSMA && smaData) {
+            datasets.push({
+                label: 'Tendencia SMA (30d)',
+                data: smaData,
+                borderColor: '#8b5cf6',
+                borderDash: [5, 5],
+                fill: false,
+                pointRadius: 0,
+                borderWidth: 2,
+                tension: 0.4
+            });
+        }
+
+        // 4. Balance Principal (última capa, encima de todo)
+        datasets.push({
+            label: 'Balance Histórico (Operaciones)',
+            data: data,
+            borderColor: lineColor,
+            backgroundColor: areaColor,
+            fill: true,
+            tension: 0.3,
+            pointRadius: labels.length > 60 ? 0 : 3,
+            pointHoverRadius: 5,
+            borderWidth: 2
+        });
+
         chartBalanceHistory = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: labels,
-                datasets: [{
-                    label: 'Balance Histórico (Operaciones)',
-                    data: data,
-                    borderColor: lineColor,
-                    backgroundColor: areaColor,
-                    fill: true,
-                    tension: 0.3,
-                    pointRadius: labels.length > 60 ? 0 : 3,
-                    pointHoverRadius: 5
-                }]
+                datasets: datasets
             },
             options: {
                 responsive: true,
@@ -826,11 +1154,19 @@ function actualizarGraficoBalanceHistorico(todasOperaciones, periodo) {
                     }
                 },
                 plugins: {
-                    legend: { display: false },
+                    legend: {
+                        display: showSMA || showBollinger, // Mostrar leyenda solo si hay indicadores
+                        position: 'bottom',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 15,
+                            font: { size: 11 }
+                        }
+                    },
                     tooltip: {
                         callbacks: {
                             label: function (context) {
-                                return formatoMoneda(context.parsed.y);
+                                return context.dataset.label + ': ' + formatoMoneda(context.parsed.y);
                             }
                         }
                     }

@@ -1,5 +1,5 @@
 import { listarCuentas, crearCuenta, actualizarCuenta, eliminarCuenta, obtenerSubcuentas, obtenerCuentaPadre, obtenerCuentaPorId, obtenerIdsParaEliminar } from '../servicios/cuentas.js'
-import { contarOperacionesPorCuentas, eliminarOperacionesPorCuentas } from '../servicios/operaciones.js'
+import { contarOperacionesPorCuentas, eliminarOperacionesPorCuentas, listarOperaciones } from '../servicios/operaciones.js'
 import { listarSeparadores, crearSeparador, actualizarSeparador, eliminarSeparador, obtenerSeparadorDeCuenta, moverSeparador, COLORES_SEPARADOR } from '../servicios/separadores.js'
 
 function formatCurrency(n) {
@@ -563,6 +563,65 @@ function abrirModalHistorial(c) {
   if (titulo) titulo.textContent = `Historial: ${c.nombre}`
   if (subtitulo) subtitulo.textContent = c.descripcion || 'Movimientos registrados en esta cuenta'
 
+  // Configuración visual por tipo de evento
+  const tipoConfig = {
+    creacion: {
+      label: 'Creación',
+      bgColor: 'bg-emerald-50 dark:bg-emerald-900/20',
+      textColor: 'text-emerald-600 dark:text-emerald-400',
+      borderColor: 'border-emerald-200 dark:border-emerald-800',
+      labelBg: 'bg-emerald-100 dark:bg-emerald-900/40',
+      labelText: 'text-emerald-700 dark:text-emerald-300',
+      icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+      </svg>`
+    },
+    modificacion: {
+      label: 'Edición manual',
+      bgColor: 'bg-amber-50 dark:bg-amber-900/20',
+      textColor: 'text-amber-600 dark:text-amber-400',
+      borderColor: 'border-amber-200 dark:border-amber-800',
+      labelBg: 'bg-amber-100 dark:bg-amber-900/40',
+      labelText: 'text-amber-700 dark:text-amber-300',
+      icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+      </svg>`
+    },
+    operacion: {
+      label: 'Transacción',
+      bgColor: 'bg-blue-50 dark:bg-blue-900/20',
+      textColor: 'text-blue-600 dark:text-blue-400',
+      borderColor: 'border-blue-200 dark:border-blue-800',
+      labelBg: 'bg-blue-100 dark:bg-blue-900/40',
+      labelText: 'text-blue-700 dark:text-blue-300',
+      icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
+      </svg>`
+    },
+    sistema: {
+      label: 'Sistema (lote)',
+      bgColor: 'bg-sky-50 dark:bg-sky-900/20',
+      textColor: 'text-sky-600 dark:text-sky-400',
+      borderColor: 'border-sky-200 dark:border-sky-800',
+      labelBg: 'bg-sky-100 dark:bg-sky-900/40',
+      labelText: 'text-sky-700 dark:text-sky-300',
+      icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+      </svg>`
+    },
+    default: {
+      label: 'Actividad',
+      bgColor: 'bg-gray-50 dark:bg-gray-800/50',
+      textColor: 'text-gray-600 dark:text-gray-400',
+      borderColor: 'border-gray-200 dark:border-gray-700',
+      labelBg: 'bg-gray-100 dark:bg-gray-800',
+      labelText: 'text-gray-600 dark:text-gray-400',
+      icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+      </svg>`
+    }
+  }
+
   // Generar lista
   const container = document.getElementById('lista-historial-content')
   if (container) {
@@ -570,17 +629,54 @@ function abrirModalHistorial(c) {
     const list = document.createElement('ul')
     list.className = 'space-y-4'
 
-    let historial = Array.isArray(c.historial) ? [...c.historial] : []
+    // 1. Obtener eventos administrativos (creación, edición manual, etc.)
+    let historialAdmin = Array.isArray(c.historial) ? [...c.historial] : []
+    // Filtrar operaciones antiguas que pudieran haber quedado guardadas como 'operacion'
+    // para evitar duplicados con la tabla real de operaciones
+    historialAdmin = historialAdmin.filter(h => h.tipo !== 'operacion')
 
-    // Compatibilidad
-    const hasCreation = historial.some(h => h.tipo === 'creacion')
+    // Compatibilidad: si es antigua y no tiene evento de creación en array
+    const hasCreation = historialAdmin.some(h => h.tipo === 'creacion')
     if (!hasCreation && c.creadaEn) {
-      historial.push({ fecha: c.creadaEn, tipo: 'creacion', mensaje: 'Cuenta creada' })
+      historialAdmin.push({ fecha: c.creadaEn, tipo: 'creacion', mensaje: 'Cuenta creada' })
     }
 
-    historial.sort((a, b) => new Date(b.fecha) - new Date(a.fecha))
+    // 2. Obtener operaciones reales que involucren a esta cuenta
+    const todasOps = listarOperaciones()
+    const misOps = todasOps.filter(op => op.cuentaId === c.id || op.origenId === c.id || op.destinoId === c.id)
 
-    if (historial.length === 0) {
+    // 3. Transformar operaciones al formato de historial visual
+    const historialOps = misOps.map(op => {
+      let mensaje = ''
+      const esIngreso = op.tipo === 'ingreso'
+      const esGasto = op.tipo === 'gasto'
+      const esTrans = op.tipo === 'transferencia'
+      const monto = Number(op.cantidad || 0)
+
+      if (esIngreso) {
+        mensaje = `Ingreso: ${op.nombre} +$${monto.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}`
+      } else if (esGasto) {
+        mensaje = `Gasto: ${op.nombre} -$${monto.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}`
+      } else if (esTrans) {
+        if (op.origenId === c.id) {
+          mensaje = `Transferencia enviada: ${op.nombre} -$${monto.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}`
+        } else {
+          mensaje = `Transferencia recibida: ${op.nombre} +$${monto.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}`
+        }
+      }
+
+      return {
+        fecha: op.fecha, // Fecha original de la operación (Source of Truth)
+        tipo: 'operacion',
+        mensaje: mensaje
+      }
+    })
+
+    // 4. Combinar y Ordenar
+    const historialCompleto = [...historialAdmin, ...historialOps]
+    historialCompleto.sort((a, b) => new Date(b.fecha) - new Date(a.fecha))
+
+    if (historialCompleto.length === 0) {
       container.innerHTML = `
         <div class="flex flex-col items-center justify-center py-8 text-gray-500">
           <svg class="w-12 h-12 mb-3 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -590,34 +686,43 @@ function abrirModalHistorial(c) {
         </div>
       `
     } else {
-      historial.forEach((h) => {
+      historialCompleto.forEach((h) => {
+        const config = tipoConfig[h.tipo] || tipoConfig.default
+
         const item = document.createElement('li')
-        item.className = 'flex gap-4 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors border border-transparent hover:border-gray-100 dark:hover:border-gray-800'
+        item.className = `flex gap-4 p-4 rounded-xl border ${config.borderColor} ${config.bgColor} transition-all hover:shadow-sm`
 
         const date = new Date(h.fecha)
         const dateStr = date.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
         const timeStr = date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
 
-        // Icono según tipo (opcional, por ahora genérico)
+        // Icono según tipo
         const iconDiv = document.createElement('div')
-        iconDiv.className = 'flex-shrink-0 w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600 dark:text-blue-400'
-        iconDiv.innerHTML = `
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-          </svg>
-        `
+        iconDiv.className = `flex-shrink-0 w-10 h-10 rounded-full ${config.bgColor} flex items-center justify-center ${config.textColor}`
+        iconDiv.innerHTML = config.icon
 
         const contentDiv = document.createElement('div')
         contentDiv.className = 'flex-1 min-w-0'
+
+        // Header con etiqueta de tipo
+        const headerDiv = document.createElement('div')
+        headerDiv.className = 'flex items-center gap-2 mb-1'
+
+        const labelSpan = document.createElement('span')
+        labelSpan.className = `text-xs font-semibold px-2 py-0.5 rounded-full ${config.labelBg} ${config.labelText}`
+        labelSpan.textContent = config.label
+
+        headerDiv.appendChild(labelSpan)
 
         const msgP = document.createElement('p')
         msgP.className = 'text-sm font-medium text-gray-900 dark:text-gray-100'
         msgP.textContent = h.mensaje
 
         const timeP = document.createElement('p')
-        timeP.className = 'text-xs text-gray-500 dark:text-gray-400 mt-0.5'
+        timeP.className = 'text-xs text-gray-500 dark:text-gray-400 mt-1'
         timeP.textContent = `${dateStr} • ${timeStr}`
 
+        contentDiv.appendChild(headerDiv)
         contentDiv.appendChild(msgP)
         contentDiv.appendChild(timeP)
 
@@ -663,6 +768,16 @@ function abrirModalCuenta() {
   const container = document.getElementById('cuenta-padre-container')
   if (container) container.classList.add('hidden')
 
+  // Establecer fecha de creación por defecto (hoy en hora local)
+  const fechaInput = document.getElementById('cuenta-fecha-creacion')
+  if (fechaInput) {
+    const ahora = new Date()
+    const año = ahora.getFullYear()
+    const mes = String(ahora.getMonth() + 1).padStart(2, '0')
+    const dia = String(ahora.getDate()).padStart(2, '0')
+    fechaInput.value = `${año}-${mes}-${dia}`
+  }
+
   modal.classList.remove('hidden')
   document.body.style.overflow = 'hidden'
   const nombre = document.getElementById('cuenta-nombre')
@@ -686,6 +801,17 @@ function abrirModalEdicion(c) {
   document.getElementById('editar-cuenta-desc').value = c.descripcion || ''
   document.getElementById('editar-cuenta-color').value = c.color || '#0ea5e9'
   document.getElementById('editar-cuenta-dinero').value = c.dinero ?? 0
+
+  // Llenar fecha de creación (usando fecha local, no UTC)
+  const fechaInput = document.getElementById('editar-cuenta-fecha-creacion')
+  if (fechaInput && c.creadaEn) {
+    const fechaObj = new Date(c.creadaEn)
+    // Formatear como YYYY-MM-DD en hora local
+    const año = fechaObj.getFullYear()
+    const mes = String(fechaObj.getMonth() + 1).padStart(2, '0')
+    const dia = String(fechaObj.getDate()).padStart(2, '0')
+    fechaInput.value = `${año}-${mes}-${dia}`
+  }
 
   // Handle parent info for sub-accounts
   const padreInfo = document.getElementById('editar-cuenta-padre-info')
@@ -753,8 +879,9 @@ function handleEditar() {
     const descripcion = document.getElementById('editar-cuenta-desc').value
     const color = document.getElementById('editar-cuenta-color').value
     const dinero = parseFloat(document.getElementById('editar-cuenta-dinero').value || '0')
+    const creadaEn = document.getElementById('editar-cuenta-fecha-creacion')?.value || null
 
-    actualizarCuenta(id, { nombre, descripcion, color, dinero })
+    actualizarCuenta(id, { nombre, descripcion, color, dinero, creadaEn })
     renderLista()
     cerrarModalEdicion()
   })
@@ -793,11 +920,12 @@ function handleCrear() {
     const descripcion = document.getElementById('cuenta-desc').value
     const color = document.getElementById('cuenta-color').value
     const dinero = parseFloat(document.getElementById('cuenta-dinero').value || '0')
+    const creadaEn = document.getElementById('cuenta-fecha-creacion')?.value || null
 
     const esSubcuenta = document.getElementById('cuenta-es-subcuenta')?.checked || false
     const parentId = esSubcuenta ? document.getElementById('cuenta-padre')?.value || null : null
 
-    crearCuenta({ nombre, descripcion, color, dinero, esSubcuenta, parentId })
+    crearCuenta({ nombre, descripcion, color, dinero, esSubcuenta, parentId, creadaEn })
     form.reset()
     renderLista()
     cerrarModalCuenta()

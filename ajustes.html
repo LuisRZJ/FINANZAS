@@ -132,15 +132,100 @@
         const LayoutGrid = (props) => <IconBase {...props}><rect width="7" height="7" x="3" y="3" rx="1" /><rect width="7" height="7" x="14" y="3" rx="1" /><rect width="7" height="7" x="14" y="14" rx="1" /><rect width="7" height="7" x="3" y="14" rx="1" /></IconBase>;
         const Activity = (props) => <IconBase {...props}><path d="M22 12h-4l-3 9L9 3l-3 9H2" /></IconBase>;
 
+        const SHORTCUT_COOKIE = 'fti_shortcuts_utilities';
+        const MAX_SHORTCUTS = 4;
+
+        const readShortcutCookie = () => {
+            try {
+                const raw = document.cookie.split('; ').find(row => row.startsWith(SHORTCUT_COOKIE + '='));
+                if (!raw) return null;
+                const value = decodeURIComponent(raw.split('=')[1]);
+                const parsed = JSON.parse(value);
+                return Array.isArray(parsed) ? parsed : null;
+            } catch (e) {
+                return null;
+            }
+        };
+
+        const writeShortcutCookie = (ids) => {
+            try {
+                const expires = new Date();
+                expires.setFullYear(expires.getFullYear() + 5);
+                const value = encodeURIComponent(JSON.stringify(ids));
+                document.cookie = `${SHORTCUT_COOKIE}=${value};expires=${expires.toUTCString()};path=/;SameSite=Lax`;
+            } catch (e) {
+            }
+        };
+
         const SettingsPage = () => {
             const [isMenuOpen, setIsMenuOpen] = useState(false);
             const [expandedModuleId, setExpandedModuleId] = useState(null);
             const [currentTheme, setCurrentTheme] = useState('system');
+            const [shortcutIds, setShortcutIds] = useState([]);
+            const [shortcutError, setShortcutError] = useState('');
+
+            const utilityShortcuts = [
+                {
+                    id: 'conversor-cripto',
+                    title: 'Conversor Cripto ↔ MXN',
+                    desc: 'Conversión entre MXN y criptomonedas en tiempo real.',
+                    href: '/modulo-utilidades/conversor-cripto.html'
+                },
+                {
+                    id: 'calculadora-intereses',
+                    title: 'Calculadora de Intereses',
+                    desc: 'Interés simple y compuesto para inversiones y préstamos.',
+                    href: 'modulo-utilidades/intereses.html'
+                },
+                {
+                    id: 'calculadora-metas',
+                    title: 'Calculadora de Metas',
+                    desc: 'Cálculo de ahorro necesario para alcanzar metas.',
+                    href: 'modulo-utilidades/metas.html'
+                },
+                {
+                    id: 'calculadora-inversiones',
+                    title: 'Calculadora de Inversiones',
+                    desc: 'Evaluación de rentabilidad de proyectos.',
+                    href: 'modulo-utilidades/calculadora-inv.html'
+                },
+                {
+                    id: 'analizador-roi',
+                    title: 'Analizador de ROI',
+                    desc: 'Comparación del ROI de distintas criptomonedas.',
+                    href: 'modulo-utilidades/analizador-roi.html'
+                },
+                {
+                    id: 'terminal-trading',
+                    title: 'Terminal de Trading',
+                    desc: 'Procesamiento de CSV y análisis de operaciones.',
+                    href: 'modulo-utilidades/terminal-trading/index.html'
+                },
+                {
+                    id: 'analizador-mercado',
+                    title: 'Analizador de Mercado',
+                    desc: 'Exploración de métricas clave de mercado.',
+                    href: 'modulo-utilidades/analizador-mercado.html'
+                },
+                {
+                    id: 'calculadora-riesgo',
+                    title: 'Calculadora de Riesgo',
+                    desc: 'Control de riesgo por operación y proyección de balances.',
+                    href: 'modulo-utilidades/calculadora-riesgo-trading.html'
+                }
+            ];
 
             useEffect(() => {
-                // Sincronizar estado inicial con localStorage
                 const stored = localStorage.getItem('fti_theme_preference') || 'system';
                 setCurrentTheme(stored);
+                const fromCookie = readShortcutCookie();
+                if (fromCookie && fromCookie.length) {
+                    setShortcutIds(fromCookie.slice(0, MAX_SHORTCUTS));
+                } else {
+                    const defaultIds = ['calculadora-riesgo', 'conversor-cripto'];
+                    setShortcutIds(defaultIds);
+                    writeShortcutCookie(defaultIds);
+                }
             }, []);
 
             const toggleSubmenu = (id) => {
@@ -152,6 +237,26 @@
                 if (window.ThemeManager) {
                     window.ThemeManager.setTheme(theme);
                 }
+            };
+
+            const toggleShortcut = (id) => {
+                setShortcutIds((prev) => {
+                    const exists = prev.includes(id);
+                    if (exists) {
+                        const updated = prev.filter(x => x !== id);
+                        writeShortcutCookie(updated);
+                        setShortcutError('');
+                        return updated;
+                    }
+                    if (prev.length >= MAX_SHORTCUTS) {
+                        setShortcutError(`Solo puedes seleccionar hasta ${MAX_SHORTCUTS} accesos directos.`);
+                        return prev;
+                    }
+                    const updated = [...prev, id];
+                    writeShortcutCookie(updated);
+                    setShortcutError('');
+                    return updated;
+                });
             };
 
             const modules = [
@@ -280,7 +385,6 @@
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {/* Tarjetas de Utilidades/Settings */}
                             {settingsCards.map((card, idx) => (
                                 <div key={idx} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col hover:border-blue-200 transition-all hover:shadow-md dark:bg-slate-900 dark:border-slate-800 group">
                                     <div className="flex items-center gap-4 mb-4">
@@ -303,7 +407,6 @@
                                 </div>
                             ))}
 
-                            {/* Tarjeta de Tema */}
                             <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col hover:border-purple-200 transition-all hover:shadow-md dark:bg-slate-900 dark:border-slate-800 group">
                                 <div className="flex items-center gap-4 mb-4">
                                     <div className="p-3 rounded-xl bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400 group-hover:scale-110 transition-transform duration-300">
@@ -341,6 +444,62 @@
                                         <Monitor size={20} className={`mb-2 ${currentTheme === 'system' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`} />
                                         <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Sistema</span>
                                     </button>
+                                </div>
+                            </div>
+
+                            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 md:col-span-2 lg:col-span-3 flex flex-col hover:border-yellow-200 transition-all hover:shadow-md dark:bg-slate-900 dark:border-slate-800">
+                                <div className="flex items-center justify-between mb-4">
+                                    <div>
+                                        <h3 className="text-lg font-bold text-gray-900 mb-1 dark:text-white">
+                                            Accesos Directos del Dashboard
+                                        </h3>
+                                        <p className="text-sm text-gray-500 dark:text-slate-400">
+                                            Elige hasta {MAX_SHORTCUTS} utilidades para mostrar en el widget de Accesos Directos del inicio.
+                                        </p>
+                                    </div>
+                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 dark:bg-slate-800 dark:text-slate-300">
+                                        {shortcutIds.length}/{MAX_SHORTCUTS} seleccionados
+                                    </span>
+                                </div>
+
+                                {shortcutError && (
+                                    <div className="mb-3 text-xs text-red-600 dark:text-red-400">
+                                        {shortcutError}
+                                    </div>
+                                )}
+
+                                <div className="divide-y divide-gray-100 dark:divide-slate-800">
+                                    {utilityShortcuts.map((util) => {
+                                        const enabled = shortcutIds.includes(util.id);
+                                        return (
+                                            <div key={util.id} className="flex items-center justify-between py-3">
+                                                <div className="mr-4">
+                                                    <p className="text-sm font-medium text-gray-800 dark:text-slate-100">
+                                                        {util.title}
+                                                    </p>
+                                                    <p className="text-xs text-gray-500 dark:text-slate-400">
+                                                        {util.desc}
+                                                    </p>
+                                                    <a
+                                                        href={util.href}
+                                                        className="inline-flex items-center gap-1 mt-1 text-xs text-blue-600 hover:underline dark:text-blue-300"
+                                                    >
+                                                        Ver herramienta
+                                                        <ArrowUpRight size={12} />
+                                                    </a>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => toggleShortcut(util.id)}
+                                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${enabled ? 'bg-blue-600' : 'bg-gray-300 dark:bg-slate-700'}`}
+                                                >
+                                                    <span
+                                                        className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${enabled ? 'translate-x-5' : 'translate-x-1'}`}
+                                                    />
+                                                </button>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             </div>
                         </div>

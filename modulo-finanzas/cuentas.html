@@ -221,6 +221,16 @@
               </p>
             </div>
           </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="space-y-1">
+              <label class="block text-sm font-medium">Fecha de creación</label>
+              <input type="date" id="cuenta-fecha-creacion"
+                class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+              <p class="text-xs text-gray-500 dark:text-gray-400">
+                Define desde cuándo existe esta cuenta. Útil para migrar datos históricos.
+              </p>
+            </div>
+          </div>
           <!-- Sub-account toggle -->
           <div
             class="space-y-4 p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
@@ -325,6 +335,17 @@
                 Saldo actual de la cuenta.
               </p>
             </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="space-y-1">
+              <label class="block text-sm font-medium">Fecha de creación</label>
+              <input type="date" id="editar-cuenta-fecha-creacion"
+                class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+              <p class="text-xs text-gray-500 dark:text-gray-400">
+                Modifica la fecha de creación para poder registrar transacciones anteriores.
+              </p>
+            </div>
+            <div class="hidden sm:block"></div> <!-- Spacer para mantener el grid alineado -->
           </div>
           <!-- Parent account info (for sub-accounts) -->
           <div id="editar-cuenta-padre-info"

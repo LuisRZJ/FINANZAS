@@ -1,6 +1,6 @@
 import { STORAGE_KEYS } from '../sistema/constantes.js'
 import { leer, escribir } from './almacenamiento.js'
-import { listarCuentas, actualizarCuenta, actualizarMultiplesSaldos } from './cuentas.js'
+import { listarCuentas, actualizarCuenta, actualizarMultiplesSaldos, ajustarSaldoPorOperacion } from './cuentas.js'
 
 function uid() {
   return 'op_' + Math.random().toString(36).slice(2) + Date.now().toString(36)
@@ -44,34 +44,28 @@ function validarFechaCuentas(fechaStr, cuentaIds) {
 }
 
 function revertirEfecto(op) {
-  const cuentas = listarCuentas()
+  const opInfo = { nombre: op.nombre, tipo: op.tipo, cantidad: op.cantidad, fecha: op.fecha, accion: 'revertir' }
+
   if (op.tipo === 'ingreso') {
-    const c = cuentas.find(x => x.id === op.cuentaId)
-    if (c) actualizarCuenta(c.id, { dinero: Number(c.dinero) - Number(op.cantidad) })
+    ajustarSaldoPorOperacion(op.cuentaId, -Number(op.cantidad), opInfo)
   } else if (op.tipo === 'gasto') {
-    const c = cuentas.find(x => x.id === op.cuentaId)
-    if (c) actualizarCuenta(c.id, { dinero: Number(c.dinero) + Number(op.cantidad) })
+    ajustarSaldoPorOperacion(op.cuentaId, Number(op.cantidad), opInfo)
   } else if (op.tipo === 'transferencia') {
-    const org = cuentas.find(x => x.id === op.origenId)
-    const dest = cuentas.find(x => x.id === op.destinoId)
-    if (org) actualizarCuenta(org.id, { dinero: Number(org.dinero) + Number(op.cantidad) })
-    if (dest) actualizarCuenta(dest.id, { dinero: Number(dest.dinero) - Number(op.cantidad) })
+    ajustarSaldoPorOperacion(op.origenId, Number(op.cantidad), opInfo)
+    ajustarSaldoPorOperacion(op.destinoId, -Number(op.cantidad), opInfo)
   }
 }
 
 function aplicarEfecto(op) {
-  const cuentas = listarCuentas()
+  const opInfo = { nombre: op.nombre, tipo: op.tipo, cantidad: op.cantidad, fecha: op.fecha, accion: 'aplicar' }
+
   if (op.tipo === 'ingreso') {
-    const c = cuentas.find(x => x.id === op.cuentaId)
-    if (c) actualizarCuenta(c.id, { dinero: Number(c.dinero) + Number(op.cantidad) })
+    ajustarSaldoPorOperacion(op.cuentaId, Number(op.cantidad), opInfo)
   } else if (op.tipo === 'gasto') {
-    const c = cuentas.find(x => x.id === op.cuentaId)
-    if (c) actualizarCuenta(c.id, { dinero: Number(c.dinero) - Number(op.cantidad) })
+    ajustarSaldoPorOperacion(op.cuentaId, -Number(op.cantidad), opInfo)
   } else if (op.tipo === 'transferencia') {
-    const org = cuentas.find(x => x.id === op.origenId)
-    const dest = cuentas.find(x => x.id === op.destinoId)
-    if (org) actualizarCuenta(org.id, { dinero: Number(org.dinero) - Number(op.cantidad) })
-    if (dest) actualizarCuenta(dest.id, { dinero: Number(dest.dinero) + Number(op.cantidad) })
+    ajustarSaldoPorOperacion(op.origenId, -Number(op.cantidad), opInfo)
+    ajustarSaldoPorOperacion(op.destinoId, Number(op.cantidad), opInfo)
   }
 }
 
@@ -141,8 +135,7 @@ export function crearIngreso(payload) {
 
   // Solo aplicar efecto si está pagado
   if (estado === 'pagado') {
-    const nuevoSaldo = Number(cuenta.dinero || 0) + cantidad
-    actualizarCuenta(cuentaId, { dinero: nuevoSaldo })
+    ajustarSaldoPorOperacion(cuentaId, cantidad, { nombre, tipo: 'ingreso', cantidad, fecha })
   }
 
   const now = new Date().toISOString()
@@ -188,8 +181,7 @@ export function crearGasto(payload) {
 
   // Solo aplicar efecto si está pagado
   if (estado === 'pagado') {
-    const nuevoSaldo = Number(cuenta.dinero || 0) - cantidad
-    actualizarCuenta(cuentaId, { dinero: nuevoSaldo })
+    ajustarSaldoPorOperacion(cuentaId, -cantidad, { nombre, tipo: 'gasto', cantidad, fecha })
   }
 
   const now = new Date().toISOString()
@@ -237,10 +229,8 @@ export function crearTransferencia(payload) {
 
   // Solo aplicar efecto si está pagado
   if (estado === 'pagado') {
-    const nuevoOrigen = Number(origen.dinero || 0) - cantidad
-    const nuevoDestino = Number(destino.dinero || 0) + cantidad
-    actualizarCuenta(origenId, { dinero: nuevoOrigen })
-    actualizarCuenta(destinoId, { dinero: nuevoDestino })
+    ajustarSaldoPorOperacion(origenId, -cantidad, { nombre, tipo: 'transferencia', cantidad, fecha })
+    ajustarSaldoPorOperacion(destinoId, cantidad, { nombre, tipo: 'transferencia', cantidad, fecha })
   }
 
   const now = new Date().toISOString()
@@ -336,21 +326,14 @@ export function actualizarOperacion(id, payload) {
   // 3. Aplicar nuevo efecto (solo si el nuevo estado es pagado)
   if (nuevoEstado === 'pagado') {
     try {
-      const cuentas = listarCuentas()
+      const opInfo = { nombre, tipo: nuevoTipo, cantidad, fecha }
       if (nuevoTipo === 'ingreso') {
-        const c = cuentas.find(x => x.id === next.cuentaId)
-        if (!c) throw new Error('Cuenta no encontrada')
-        actualizarCuenta(c.id, { dinero: Number(c.dinero) + Number(cantidad) })
+        ajustarSaldoPorOperacion(next.cuentaId, Number(cantidad), opInfo)
       } else if (nuevoTipo === 'gasto') {
-        const c = cuentas.find(x => x.id === next.cuentaId)
-        if (!c) throw new Error('Cuenta no encontrada')
-        actualizarCuenta(c.id, { dinero: Number(c.dinero) - Number(cantidad) })
+        ajustarSaldoPorOperacion(next.cuentaId, -Number(cantidad), opInfo)
       } else if (nuevoTipo === 'transferencia') {
-        const org = cuentas.find(x => x.id === next.origenId)
-        const dest = cuentas.find(x => x.id === next.destinoId)
-        if (!org || !dest) throw new Error('Cuenta(s) no encontrada(s)')
-        actualizarCuenta(org.id, { dinero: Number(org.dinero) - Number(cantidad) })
-        actualizarCuenta(dest.id, { dinero: Number(dest.dinero) + Number(cantidad) })
+        ajustarSaldoPorOperacion(next.origenId, -Number(cantidad), opInfo)
+        ajustarSaldoPorOperacion(next.destinoId, Number(cantidad), opInfo)
       }
     } catch (e) {
       // Rollback si la anterior estaba pagada
