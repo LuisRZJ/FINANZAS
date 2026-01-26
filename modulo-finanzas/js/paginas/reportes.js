@@ -630,9 +630,11 @@ function actualizarGraficoCategorias(operaciones, etiquetas) {
 
     if (chartCategories) chartCategories.destroy();
 
-    // If no data
+    // If no data, clear chart and legend
     if (data.length === 0) {
-        // Optional: Show empty state or clear canvas
+        document.getElementById('total-expense-chart').textContent = formatoMoneda(0);
+        const legendContainer = document.getElementById('legend-expense-categories');
+        legendContainer.innerHTML = '<p class="text-sm text-gray-400 italic text-center py-4">Sin gastos en este periodo</p>';
         return;
     }
 
@@ -724,8 +726,11 @@ function actualizarGraficoIngresos(operaciones, etiquetas) {
 
     if (chartIncomeCategories) chartIncomeCategories.destroy();
 
-    // If no data
+    // If no data, clear chart and legend
     if (data.length === 0) {
+        document.getElementById('total-income-chart').textContent = formatoMoneda(0);
+        const legendContainer = document.getElementById('legend-income-categories');
+        legendContainer.innerHTML = '<p class="text-sm text-gray-400 italic text-center py-4">Sin ingresos en este periodo</p>';
         return;
     }
 

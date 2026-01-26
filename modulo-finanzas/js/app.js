@@ -1,10 +1,7 @@
 import { listarOperaciones } from './servicios/operaciones.js'
 import { listarEtiquetas } from './servicios/etiquetas.js'
 import { listarCuentas } from './servicios/cuentas.js'
-
-function formatCurrency(n) {
-  return Number(n || 0).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })
-}
+import { formatoMoneda } from './utilidades/formato.js'
 
 function formatDate(s) {
   // Soportar formato nuevo (YYYY-MM-DDTHH:MM) y antiguo (YYYY-MM-DD)
@@ -60,11 +57,11 @@ function renderSummary(data) {
   const expenseEl = document.getElementById('expense-amount')
 
   if (balanceEl) {
-    balanceEl.textContent = formatCurrency(data.pnl)
+    balanceEl.textContent = '$' + formatoMoneda(data.pnl)
     balanceEl.className = `mt-2 text-2xl font-bold ${data.pnl >= 0 ? 'text-gray-900 dark:text-gray-100' : 'text-red-600 dark:text-red-400'}`
   }
-  if (incomeEl) incomeEl.textContent = formatCurrency(data.income)
-  if (expenseEl) expenseEl.textContent = formatCurrency(data.expense)
+  if (incomeEl) incomeEl.textContent = '$' + formatoMoneda(data.income)
+  if (expenseEl) expenseEl.textContent = '$' + formatoMoneda(data.expense)
 }
 
 function renderTransactions(ops) {
@@ -153,7 +150,7 @@ function renderTransactions(ops) {
     }
 
     tdAmount.className = amtClass
-    tdAmount.textContent = sign + formatCurrency(tx.cantidad)
+    tdAmount.textContent = sign + '$' + formatoMoneda(tx.cantidad)
 
     tr.appendChild(tdDate)
     tr.appendChild(tdAccount)

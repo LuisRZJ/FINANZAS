@@ -1,7 +1,8 @@
 export function formatoMoneda(cantidad) {
     return Number(cantidad || 0).toLocaleString('es-MX', {
-        style: 'currency',
-        currency: 'MXN'
+        style: 'decimal',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
     });
 }
 

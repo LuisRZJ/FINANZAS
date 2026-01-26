@@ -1,10 +1,7 @@
 import { listarCuentas, crearCuenta, actualizarCuenta, eliminarCuenta, obtenerSubcuentas, obtenerCuentaPadre, obtenerCuentaPorId, obtenerIdsParaEliminar } from '../servicios/cuentas.js'
 import { contarOperacionesPorCuentas, eliminarOperacionesPorCuentas, listarOperaciones } from '../servicios/operaciones.js'
 import { listarSeparadores, crearSeparador, actualizarSeparador, eliminarSeparador, obtenerSeparadorDeCuenta, moverSeparador, COLORES_SEPARADOR } from '../servicios/separadores.js'
-
-function formatCurrency(n) {
-  return Number(n || 0).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })
-}
+import { formatoMoneda } from '../utilidades/formato.js'
 
 function renderLista() {
   const cont = document.getElementById('cuentas-lista')
@@ -125,7 +122,7 @@ function crearSeparadorVisual(sep, mainAccounts, subAccounts, isSystem = false) 
 
   const totalBadge = document.createElement('span')
   totalBadge.className = 'text-xs font-bold px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
-  totalBadge.textContent = formatCurrency(totalDinero)
+  totalBadge.textContent = formatoMoneda(totalDinero)
 
   badgesWrapper.appendChild(countBadge)
   badgesWrapper.appendChild(totalBadge)
@@ -202,7 +199,7 @@ function renderGraficoDistribucion(cuentas, subcuentas, separadores = []) {
 
   // 2. Calcular Balance Total Real (Todas las cuentas + subcuentas)
   const totalReal = [...cuentas, ...subcuentas].reduce((sum, c) => sum + (c.dinero || 0), 0)
-  totalEl.textContent = formatCurrency(totalReal)
+  totalEl.textContent = formatoMoneda(totalReal)
 
   // 3. Preparar Datos según el Modo
   let dataPoints = []
@@ -302,7 +299,7 @@ function renderGraficoDistribucion(cuentas, subcuentas, separadores = []) {
       left.appendChild(name)
 
       const right = document.createElement('div')
-      right.textContent = `${formatCurrency(item.dinero)} (${percentage}%)`
+      right.textContent = `${formatoMoneda(item.dinero)} (${percentage}%)`
 
       mainRow.appendChild(left)
       mainRow.appendChild(right)
@@ -319,11 +316,11 @@ function renderGraficoDistribucion(cuentas, subcuentas, separadores = []) {
         breakdown.innerHTML = `
           <div class="flex justify-between">
              <span>↳ Propio</span>
-             <span>${formatCurrency(item.montoPropio)} (${pctPropio}%)</span>
+             <span>${formatoMoneda(item.montoPropio)} (${pctPropio}%)</span>
           </div>
           <div class="flex justify-between">
              <span>↳ Subcuentas</span>
-             <span>${formatCurrency(item.montoSubs)} (${pctSubs}%)</span>
+             <span>${formatoMoneda(item.montoSubs)} (${pctSubs}%)</span>
           </div>
         `
         itemContainer.appendChild(breakdown)
@@ -395,7 +392,7 @@ function renderGraficoDistribucion(cuentas, subcuentas, separadores = []) {
                 if (!item) return ''
                 const value = item.dinero
                 const percentage = totalReal > 0 ? ((value / totalReal) * 100).toFixed(1) : 0
-                return ` ${item.nombre}: ${formatCurrency(value)} (${percentage}%)`
+                return ` ${item.nombre}: ${formatoMoneda(value)} (${percentage}%)`
               }
             }
           }
@@ -453,7 +450,7 @@ function crearItemSubcuenta(c) {
 
   const money = document.createElement('div')
   money.className = 'text-xs font-bold text-gray-500 dark:text-gray-400'
-  money.textContent = formatCurrency(c.dinero)
+  money.textContent = formatoMoneda(c.dinero)
 
   info.appendChild(name)
   info.appendChild(money)
@@ -524,7 +521,7 @@ function crearTarjetaCuenta(c, esSubcuenta) {
 
   const money = document.createElement('div')
   money.className = 'mt-4 text-lg font-bold'
-  money.textContent = formatCurrency(c.dinero)
+  money.textContent = formatoMoneda(c.dinero)
 
   const actions = document.createElement('div')
   actions.className = 'mt-4 flex flex-wrap items-center gap-3'
@@ -654,14 +651,14 @@ function abrirModalHistorial(c) {
       const monto = Number(op.cantidad || 0)
 
       if (esIngreso) {
-        mensaje = `Ingreso: ${op.nombre} +$${monto.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}`
+        mensaje = `Ingreso: ${op.nombre} +$${formatoMoneda(monto)}`
       } else if (esGasto) {
-        mensaje = `Gasto: ${op.nombre} -$${monto.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}`
+        mensaje = `Gasto: ${op.nombre} -$${formatoMoneda(monto)}`
       } else if (esTrans) {
         if (op.origenId === c.id) {
-          mensaje = `Transferencia enviada: ${op.nombre} -$${monto.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}`
+          mensaje = `Transferencia enviada: ${op.nombre} -$${formatoMoneda(monto)}`
         } else {
-          mensaje = `Transferencia recibida: ${op.nombre} +$${monto.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}`
+          mensaje = `Transferencia recibida: ${op.nombre} +$${formatoMoneda(monto)}`
         }
       }
 

@@ -721,7 +721,10 @@ function renderHistorial() {
       // Extract time from op.fecha if present
       let timeStr = ''
       if (op.fecha.includes('T')) {
-        timeStr = `<span class="text-gray-400 mx-1">@ ${op.fecha.split('T')[1]}</span>`
+        // Extraer solo HH:MM, eliminando segundos y zona horaria (+00:00)
+        const parteHora = op.fecha.split('T')[1] || ''
+        const horaLimpia = parteHora.slice(0, 5) // Solo HH:MM
+        timeStr = `<span class="text-gray-400 mx-1">@ ${horaLimpia}</span>`
       }
 
       // Badge de Estado

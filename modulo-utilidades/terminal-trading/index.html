@@ -3071,7 +3071,7 @@
                                 className="absolute inset-0 bg-slate-950/60"
                                 onClick={closeLoadMethod}
                             ></div>
-                            <div className="relative w-full max-w-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
+                            <div className="relative w-full max-w-xl max-h-[90vh] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
                                 <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex items-start justify-between gap-4">
                                     <div>
                                         <div className="text-lg font-bold text-slate-800 dark:text-white">Seleccionar método de carga</div>
@@ -3085,7 +3085,7 @@
                                         Cerrar
                                     </button>
                                 </div>
-                                <div className="p-5 space-y-4">
+                                <div className="p-5 space-y-4 flex-1 overflow-y-auto min-h-0">
                                     <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4">
                                         <div className="flex items-center justify-between">
                                             <div className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Límite memoria LTF</div>
@@ -3123,7 +3123,7 @@
                                 className="absolute inset-0 bg-slate-950/60"
                                 onClick={closeOptimizeModal}
                             ></div>
-                            <div className="relative w-full max-w-4xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
+                            <div className="relative w-full max-w-4xl max-h-[90vh] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
                                 <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex items-start justify-between gap-4">
                                     <div>
                                         <div className="text-lg font-bold text-slate-800 dark:text-white">Optimización de configuración</div>
@@ -3138,7 +3138,7 @@
                                         Cerrar
                                     </button>
                                 </div>
-                                <div className="p-5 space-y-5">
+                                <div className="p-5 space-y-5 flex-1 overflow-y-auto min-h-0">
                                     <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                                         <button
                                             type="button"
@@ -3362,7 +3362,7 @@
                                 className="absolute inset-0 bg-slate-950/60"
                                 onClick={closeManualLoad}
                             ></div>
-                            <div className="relative w-full max-w-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
+                            <div className="relative w-full max-w-3xl max-h-[90vh] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
                                 <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex items-start justify-between gap-4">
                                     <div>
                                         <div className="text-lg font-bold text-slate-800 dark:text-white">Carga manual de datasets</div>
@@ -3376,7 +3376,7 @@
                                         Cerrar
                                     </button>
                                 </div>
-                                <div className="p-5 space-y-4">
+                                <div className="p-5 space-y-4 flex-1 overflow-y-auto min-h-0">
                                     <div
                                         className={`bg-slate-50 dark:bg-slate-800/50 p-5 rounded-xl border transition-all duration-300 ${isDragging ? 'border-blue-500 ring-2 ring-blue-500/20 bg-blue-50/50 dark:bg-slate-800' : 'border-slate-200 dark:border-slate-700/50'} shadow-sm`}
                                         onDragOver={handleDragOver}
@@ -3506,7 +3506,7 @@
                                     if (autoLoadPhase !== 'loading') closeAutoLoad();
                                 }}
                             ></div>
-                            <div className="relative w-full max-w-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
+                            <div className="relative w-full max-w-3xl max-h-[90vh] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
                                 <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex items-start justify-between gap-4">
                                     <div>
                                         <div className="text-lg font-bold text-slate-800 dark:text-white">Carga automática ({autoMarket === 'forex' ? 'TwelveData' : 'Binance'})</div>
@@ -3522,7 +3522,7 @@
                                     </button>
                                 </div>
 
-                                <div className="p-5 space-y-4">
+                                <div className="p-5 space-y-4 flex-1 overflow-y-auto min-h-0">
                                     {autoLoadError && (
                                         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900 rounded-lg p-3 text-sm text-red-700 dark:text-red-300">
                                             {autoLoadError}
@@ -3753,7 +3753,7 @@
                                     </button>
                                 </div>
 
-                                <div className="p-5 space-y-5 overflow-y-auto">
+                                <div className="p-5 space-y-5 overflow-y-auto flex-1 min-h-0">
                                     {/* MÉTRICAS CLAVE */}
                                     <div className="grid grid-cols-5 gap-2 text-center">
                                         <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">

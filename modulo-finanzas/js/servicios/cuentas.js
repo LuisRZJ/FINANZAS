@@ -132,18 +132,10 @@ export function actualizarMultiplesSaldos(actualizaciones) {
       const prev = list[idx]
       const nuevoDinero = Number(prev.dinero || 0) + Number(delta)
 
-      const historial = Array.isArray(prev.historial) ? [...prev.historial] : []
-      historial.push({
-        fecha: now,
-        tipo: 'sistema', // 'sistema' para indicar actualización automática
-        mensaje: `Saldo ajustado en lote (${delta > 0 ? '+' : ''}${delta})`
-      })
-
       list[idx] = {
         ...prev,
         dinero: nuevoDinero,
-        actualizadaEn: now,
-        historial
+        actualizadaEn: now
       }
       changed = true
     }

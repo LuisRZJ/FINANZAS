@@ -470,7 +470,8 @@ export async function restaurarDatos() {
             estado: op.estado || 'pagado',
             recurrenciaId: op.recurrencia_id || null,
             cicloNumero: op.ciclo_numero || null,
-            creadaEn: op.created_at || new Date().toISOString()
+            creadaEn: op.creada_en || op.created_at || new Date().toISOString(),
+            actualizadaEn: op.actualizada_en || op.creada_en || new Date().toISOString()
         }))
         escribir(OPERACIONES_KEY, operacionesLocales)
         stats.operaciones = operacionesLocales.length
