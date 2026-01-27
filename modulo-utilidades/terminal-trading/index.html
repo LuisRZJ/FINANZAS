@@ -434,6 +434,7 @@
             const [customMinTrades, setCustomMinTrades] = useState(30);
             const [customMinWinRate, setCustomMinWinRate] = useState(60);
             const [customRobustOnly, setCustomRobustOnly] = useState(false);
+            const [forceCooldown, setForceCooldown] = useState(false);
             const [isAutoDetecting, setIsAutoDetecting] = useState(false);
             const [copyAllStatus, setCopyAllStatus] = useState('idle');
             const [currentPrice, setCurrentPrice] = useState('');
@@ -517,14 +518,27 @@
             useEffect(() => {
                 const FIVE_MINUTES_MS = 5 * 60 * 1000;
                 const { session, expired } = loadSession({ expiryMs: FIVE_MINUTES_MS });
+                const reviveDateArray = (arr) => {
+                    if (!Array.isArray(arr)) return arr;
+                    return arr.map((c) => {
+                        if (!c) return c;
+                        const dt = c.datetime;
+                        const revived = dt instanceof Date ? dt : new Date(dt);
+                        if (isNaN(revived.getTime())) return c;
+                        return { ...c, datetime: revived };
+                    });
+                };
                 if (expired) {
                     console.log('Sesión activa expirada (>5 min). Iniciando nueva sesión.');
                     isRestoringRef.current = false;
                     return;
                 }
                 if (session) {
+                    const revivedCsvData = reviveDateArray(session.csvData);
+                    const revivedHtfData = reviveDateArray(session.htfData);
+                    const revivedLtfData = reviveDateArray(session.ltfData);
                     if (session.activeTab) setActiveTab(session.activeTab);
-                    if (session.csvData) setCsvData(session.csvData);
+                    if (revivedCsvData) setCsvData(revivedCsvData);
                     if (session.selectedCandleIndex !== undefined) setSelectedCandleIndex(session.selectedCandleIndex);
                     if (session.tfMinutes) setTfMinutes(session.tfMinutes);
                     if (session.fileName) setFileName(session.fileName);
@@ -556,10 +570,10 @@
                     if (session.ltfMaxCandles) setLtfMaxCandles(session.ltfMaxCandles);
                     if (session.simResult) setSimResult(session.simResult);
                     if (session.optimizationResults) setOptimizationResults(session.optimizationResults);
-                    if (session.htfData) setHtfData(session.htfData);
+                    if (revivedHtfData) setHtfData(revivedHtfData);
                     if (session.htfTfMinutes) setHtfTfMinutes(session.htfTfMinutes);
                     if (session.htfFileName) setHtfFileName(session.htfFileName);
-                    if (session.ltfData) setLtfData(session.ltfData);
+                    if (revivedLtfData) setLtfData(revivedLtfData);
                     if (session.ltfTfMinutes) setLtfTfMinutes(session.ltfTfMinutes);
                     if (session.ltfFileName) setLtfFileName(session.ltfFileName);
                     if (session.autoMarket) setAutoMarket(session.autoMarket);
@@ -2317,7 +2331,8 @@
                             minTrades: customMinTrades,
                             minWinRate: customMinWinRate,
                             robustOnly: customRobustOnly
-                        }
+                        },
+                        forceCooldown
                     }
                 });
             };
@@ -3221,6 +3236,17 @@
                                                         }`}
                                                 >
                                                     {customRobustOnly ? 'Activado' : 'Desactivado'}
+                                                </button>
+                                                <div className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 mt-3">Forzar Enfriamiento (No solapar)</div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setForceCooldown(!forceCooldown)}
+                                                    className={`w-full px-3 py-2 rounded-lg border text-sm font-bold ${forceCooldown
+                                                        ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300'
+                                                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'
+                                                        }`}
+                                                >
+                                                    {forceCooldown ? 'Activado' : 'Desactivado'}
                                                 </button>
                                             </div>
                                         </div>

@@ -1,5 +1,9 @@
 self.onmessage = function(e) {
     const { trades, simCount, riskPercent } = e.data;
+    if (!Array.isArray(trades) || trades.length === 0) {
+        self.postMessage({ error: 'Entrada inválida: trades debe ser un array no vacío.' });
+        return;
+    }
     
     // Fisher-Yates shuffle
     function shuffle(arr) {

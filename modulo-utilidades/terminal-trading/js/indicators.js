@@ -40,7 +40,9 @@ window.FTI_Indicators.calculateIndicators = function (data) {
 
     const getDayKey = (dt) => {
         if (!dt) return null;
-        return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+        const dateObj = dt instanceof Date ? dt : new Date(dt);
+        if (isNaN(dateObj.getTime())) return null;
+        return `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
     };
 
     for (let i = 0; i < data.length; i++) {

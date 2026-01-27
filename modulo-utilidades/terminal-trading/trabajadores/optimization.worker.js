@@ -11,15 +11,30 @@ const lowerBound = (arr, target) => {
     return left;
 };
 
+const getTime = (dt) => {
+    if (dt instanceof Date) {
+        const t = dt.getTime();
+        return isNaN(t) ? null : t;
+    }
+    if (typeof dt === 'string' || typeof dt === 'number') {
+        const d = new Date(dt);
+        const t = d.getTime();
+        return isNaN(t) ? null : t;
+    }
+    return null;
+};
+
 const buildIndex = (data) => {
     const times = [];
     const rows = [];
     for (let i = 0; i < data.length; i++) {
         const x = data[i];
-        if (x && x.datetime instanceof Date && !isNaN(x.datetime.getTime())) {
-            times.push(x.datetime.getTime());
-            rows.push(x);
-        }
+        if (!x) continue;
+        const t = getTime(x.datetime);
+        if (t == null) continue;
+        const revived = x.datetime instanceof Date ? x : { ...x, datetime: new Date(t) };
+        times.push(t);
+        rows.push(revived);
     }
     return { times, rows };
 };
@@ -53,12 +68,22 @@ const runOptimization = async (payload) => {
             tfMinutes,
             htfTfMinutes,
             hasExtended,
-            customCriteria
+            customCriteria,
+            forceCooldown
         } = payload;
 
         if (!Array.isArray(csvData) || !csvData.length) {
             self.postMessage({ type: 'error', payload: { message: 'Sin datos para optimizar.' } });
             return;
+        }
+
+        for (let i = 0; i < csvData.length; i++) {
+            const c = csvData[i];
+            if (!c) continue;
+            const t = getTime(c.datetime);
+            if (t != null && !(c.datetime instanceof Date)) {
+                c.datetime = new Date(t);
+            }
         }
 
         const FILTER_WEIGHTS = {
@@ -670,7 +695,6 @@ const runOptimization = async (payload) => {
             { key: 'useTrend', label: 'Tendencia' },
             { key: 'useTime', label: 'Horario' },
             { key: 'useVolBody', label: 'Volatilidad' },
-            { key: 'useCooldown', label: 'Enfriamiento' },
             { key: 'useAdr', label: 'ADR' }
         ];
 
@@ -735,7 +759,7 @@ const runOptimization = async (payload) => {
                     useVol: false, volTol: tieredValues.volTol,
                     useBp: false, bpTol: tieredValues.bpTol,
                     useDelta: false,
-                    useCooldown: false,
+                    useCooldown: !!forceCooldown,
                     useAdr: false,
                     useHtf: false,
                     htfMode,
