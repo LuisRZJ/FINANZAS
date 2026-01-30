@@ -229,22 +229,37 @@ window.FTI_Indicators.calculateIndicators = function (data) {
         adxValues.push(adx);
     }
 
-    return data.map((d, i) => ({
-        ...d,
-        rsi: (results[i] && results[i].val) || null,
-        sma200: sma200[i],
-        hour: d.datetime ? d.datetime.getHours() : 0,
-        hourLocal: d.datetime ? d.datetime.getHours() : null,
-        hourUtc: d.datetime ? d.datetime.getUTCHours() : null,
-        bodySizePct: (Math.abs(d.close - d.open) / d.open) * 100,
-        // --- Campos ADR ---
-        adrValue: adrData[i] ? adrData[i].adrValue : null,
-        adrFilledPct: adrData[i] ? adrData[i].adrFilledPct : null,
-        currentDayRange: adrData[i] ? adrData[i].currentDayRange : null,
-        adrRoomTop: adrData[i] ? adrData[i].adrRoomTop : null,
-        adrRoomBottom: adrData[i] ? adrData[i].adrRoomBottom : null,
-        dayOpen: adrData[i] ? adrData[i].dayOpen : null,
-        // --- ADX (Regime Detection) ---
-        adx: adxValues[i] || null
-    }));
+    return data.map((d, i) => {
+        const high = d.high;
+        const low = d.low;
+        const open = d.open;
+        const close = d.close;
+        const range = high - low;
+        let upperWickPct = 0;
+        let lowerWickPct = 0;
+        if (isFinite(range) && range > 0) {
+            const upperWick = Math.max(0, high - Math.max(open, close));
+            const lowerWick = Math.max(0, Math.min(open, close) - low);
+            upperWickPct = (upperWick / range) * 100;
+            lowerWickPct = (lowerWick / range) * 100;
+        }
+        return {
+            ...d,
+            rsi: (results[i] && results[i].val) || null,
+            sma200: sma200[i],
+            hour: d.datetime ? d.datetime.getHours() : 0,
+            hourLocal: d.datetime ? d.datetime.getHours() : null,
+            hourUtc: d.datetime ? d.datetime.getUTCHours() : null,
+            bodySizePct: (Math.abs(d.close - d.open) / d.open) * 100,
+            upperWickPct,
+            lowerWickPct,
+            adrValue: adrData[i] ? adrData[i].adrValue : null,
+            adrFilledPct: adrData[i] ? adrData[i].adrFilledPct : null,
+            currentDayRange: adrData[i] ? adrData[i].currentDayRange : null,
+            adrRoomTop: adrData[i] ? adrData[i].adrRoomTop : null,
+            adrRoomBottom: adrData[i] ? adrData[i].adrRoomBottom : null,
+            dayOpen: adrData[i] ? adrData[i].dayOpen : null,
+            adx: adxValues[i] || null
+        };
+    });
 };

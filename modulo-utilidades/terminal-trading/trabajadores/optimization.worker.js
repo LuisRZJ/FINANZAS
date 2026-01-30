@@ -61,6 +61,7 @@ const runOptimization = async (payload) => {
             rsiTolerance,
             volumeTolerance,
             bpTolerance,
+            wickTolerance,
             trendCondition,
             timeMode,
             htfMode,
@@ -117,6 +118,8 @@ const runOptimization = async (payload) => {
                 useVol, volTol,
                 useBp, bpTol,
                 useDelta,
+                useWick,
+                wickTol = 10,
                 useCooldown,
                 useAdr,
                 useHtf,
@@ -203,6 +206,7 @@ const runOptimization = async (payload) => {
             if (useVol && (target.volume == null || !isFinite(target.volume))) return { error: 'Volumen no disponible en la vela objetivo.' };
             if (useBp && (target.buyPressurePct == null || !isFinite(target.buyPressurePct))) return { error: 'Presión compradora no disponible en la vela objetivo.' };
             if (useDelta && (target.delta == null || !isFinite(target.delta))) return { error: 'Delta no disponible en la vela objetivo.' };
+            if (useWick && (target.upperWickPct == null || !isFinite(target.upperWickPct) || target.lowerWickPct == null || !isFinite(target.lowerWickPct))) return { error: 'Morfología de mechas no disponible en la vela objetivo.' };
             if (useRegime && (target.adx == null || !isFinite(target.adx))) return { error: 'ADX no disponible en la vela objetivo.' };
 
             const simulateTrade = (startIdx) => {
@@ -438,6 +442,14 @@ const runOptimization = async (payload) => {
                     let pass = true;
                     if (c.bodySizePct == null || !isFinite(c.bodySizePct)) pass = false;
                     else if (Math.abs(c.bodySizePct - target.bodySizePct) > 0.5) pass = false;
+                    if (pass) currentScore += FILTER_WEIGHTS.OTHER;
+                }
+
+                if (useWick) {
+                    maxPossibleScore += FILTER_WEIGHTS.OTHER;
+                    let pass = true;
+                    if (c.upperWickPct == null || !isFinite(c.upperWickPct) || c.lowerWickPct == null || !isFinite(c.lowerWickPct)) pass = false;
+                    else if (Math.abs(c.upperWickPct - target.upperWickPct) > wickTol || Math.abs(c.lowerWickPct - target.lowerWickPct) > wickTol) pass = false;
                     if (pass) currentScore += FILTER_WEIGHTS.OTHER;
                 }
 
@@ -687,7 +699,8 @@ const runOptimization = async (payload) => {
         const computeTieredValues = (tierFactor) => ({
             rsiTol: Math.max(1, Math.round(rsiTolerance * tierFactor)),
             volTol: Math.max(5, Math.round(volumeTolerance * tierFactor)),
-            bpTol: Math.max(1, Math.round(bpTolerance * tierFactor))
+            bpTol: Math.max(1, Math.round(bpTolerance * tierFactor)),
+            wickTol: Math.max(5, Math.round((wickTolerance || 10) * tierFactor))
         });
 
         const toggleableFilters = [
@@ -695,6 +708,7 @@ const runOptimization = async (payload) => {
             { key: 'useTrend', label: 'Tendencia' },
             { key: 'useTime', label: 'Horario' },
             { key: 'useVolBody', label: 'Volatilidad' },
+            { key: 'useWick', label: 'Mechas' },
             { key: 'useAdr', label: 'ADR' }
         ];
 
@@ -759,6 +773,7 @@ const runOptimization = async (payload) => {
                     useVol: false, volTol: tieredValues.volTol,
                     useBp: false, bpTol: tieredValues.bpTol,
                     useDelta: false,
+                    useWick: false, wickTol: tieredValues.wickTol,
                     useCooldown: !!forceCooldown,
                     useAdr: false,
                     useHtf: false,

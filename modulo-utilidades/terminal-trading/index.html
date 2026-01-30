@@ -281,6 +281,7 @@
         const App = () => {
             // DATA & CONFIG
             const [activeTab, setActiveTab] = useState('LAB'); // 'LAB' (Laboratorio) | 'MONITOR' (Monitor Activo)
+            const [forecastHorizon, setForecastHorizon] = useState(3);
             const [csvData, setCsvData] = useState([]);
             const [selectedCandleIndex, setSelectedCandleIndex] = useState(-1);
             const [tfMinutes, setTfMinutes] = useState(null);
@@ -399,6 +400,8 @@
             const [useBuyPressureFilter, setUseBuyPressureFilter] = useState(false);
             const [bpTolerance, setBpTolerance] = useState(5);
             const [useDeltaSignFilter, setUseDeltaSignFilter] = useState(false);
+            const [useWickFilter, setUseWickFilter] = useState(false);
+            const [wickTolerance, setWickTolerance] = useState(10);
 
             const [useHtfFilter, setUseHtfFilter] = useState(false);
             const [htfMode, setHtfMode] = useState('DISCARD');
@@ -475,7 +478,10 @@
                     volumeTolerance,
                     useBuyPressureFilter,
                     bpTolerance,
+                    wickTolerance,
                     useDeltaSignFilter,
+                    useWickFilter,
+                    wickTolerance,
                     useHtfFilter,
                     htfMode,
                     requireHtf,
@@ -507,7 +513,7 @@
                 tradeType, entryPrice, stopLoss, takeProfit, spread, useMacroMode,
                 useRsiFilter, targetRsi, rsiTolerance, useTrendFilter, trendCondition,
                 useTimeFilter, timeMode, useVolFilter, useCooldownFilter, useAdrFilter, useVolumeFilter,
-                volumeTolerance, useBuyPressureFilter, bpTolerance, useDeltaSignFilter,
+                volumeTolerance, useBuyPressureFilter, bpTolerance, useDeltaSignFilter, useWickFilter, wickTolerance,
                 useHtfFilter, htfMode, requireHtf, useLtfIntra, ltfMaxCandles,
                 simResult, optimizationResults, csvData, htfData, ltfData,
                 htfTfMinutes, htfFileName, ltfTfMinutes, ltfFileName,
@@ -563,6 +569,8 @@
                     if (session.useBuyPressureFilter !== undefined) setUseBuyPressureFilter(session.useBuyPressureFilter);
                     if (session.bpTolerance) setBpTolerance(session.bpTolerance);
                     if (session.useDeltaSignFilter !== undefined) setUseDeltaSignFilter(session.useDeltaSignFilter);
+                    if (session.useWickFilter !== undefined) setUseWickFilter(session.useWickFilter);
+                    if (session.wickTolerance) setWickTolerance(session.wickTolerance);
                     if (session.useHtfFilter !== undefined) setUseHtfFilter(session.useHtfFilter);
                     if (session.htfMode) setHtfMode(session.htfMode);
                     if (session.requireHtf !== undefined) setRequireHtf(session.requireHtf);
@@ -844,7 +852,9 @@
                         hourUtc: target.hourUtc,
                         volume: target.volume,
                         delta: target.delta,
-                        buyPressurePct: target.buyPressurePct
+                        buyPressurePct: target.buyPressurePct,
+                        upperWickPct: target.upperWickPct,
+                        lowerWickPct: target.lowerWickPct
                     }
                     : null;
                 const params = {
@@ -858,6 +868,7 @@
                     trend: { useTrendFilter, trendCondition },
                     time: { useTimeFilter, timeMode },
                     volBody: { useVolFilter },
+                    wick: { useWickFilter, wickTolerance },
                     cooldown: { useCooldownFilter },
                     mtf: {
                         useHtfFilter,
@@ -1129,7 +1140,9 @@
                     hourUtc: target.hourUtc,
                     volume: target.volume,
                     delta: target.delta,
-                    buyPressurePct: target.buyPressurePct
+                    buyPressurePct: target.buyPressurePct,
+                    upperWickPct: target.upperWickPct,
+                    lowerWickPct: target.lowerWickPct
                 } : null;
 
                 const params = {
@@ -1143,6 +1156,7 @@
                     trend: { useTrendFilter, trendCondition },
                     time: { useTimeFilter, timeMode },
                     volBody: { useVolFilter },
+                    wick: { useWickFilter, wickTolerance },
                     cooldown: { useCooldownFilter },
                     mtf: {
                         useHtfFilter,
@@ -1640,6 +1654,8 @@
                     useVol, volTol,
                     useBp, bpTol,
                     useDelta,
+                    useWick,
+                    wickTol = 10,
                     useCooldown,
                     useAdr,
                     useHtf,
@@ -1727,6 +1743,7 @@
                 if (useVol && (target.volume == null || !isFinite(target.volume))) return { error: 'Volumen no disponible en la vela objetivo.' };
                 if (useBp && (target.buyPressurePct == null || !isFinite(target.buyPressurePct))) return { error: 'Presión compradora no disponible en la vela objetivo.' };
                 if (useDelta && (target.delta == null || !isFinite(target.delta))) return { error: 'Delta no disponible en la vela objetivo.' };
+                if (useWick && (target.upperWickPct == null || !isFinite(target.upperWickPct) || target.lowerWickPct == null || !isFinite(target.lowerWickPct))) return { error: 'Morfología de mechas no disponible en la vela objetivo.' };
                 if (useRegime && (target.adx == null || !isFinite(target.adx))) return { error: 'ADX no disponible en la vela objetivo.' };
 
                 const simulateTrade = (startIdx) => {
@@ -1970,6 +1987,14 @@
                             const currentVol = c.bodySizePct;
                             if (currentVol < targetVol * 0.5 || currentVol > targetVol * 1.5) pass = false;
                         }
+                        if (pass) currentScore += FILTER_WEIGHTS.OTHER;
+                    }
+
+                    if (useWick) {
+                        maxPossibleScore += FILTER_WEIGHTS.OTHER;
+                        let pass = true;
+                        if (c.upperWickPct == null || !isFinite(c.upperWickPct) || c.lowerWickPct == null || !isFinite(c.lowerWickPct)) pass = false;
+                        else if (Math.abs(c.upperWickPct - target.upperWickPct) > wickTol || Math.abs(c.lowerWickPct - target.lowerWickPct) > wickTol) pass = false;
                         if (pass) currentScore += FILTER_WEIGHTS.OTHER;
                     }
 
@@ -2239,6 +2264,223 @@
                 };
             };
 
+            const calculateForecast = (data, targetIdx, horizon, tradeParams, filters) => {
+                if (!data || !data.length) return { error: 'Sin datos' };
+                if (targetIdx == null || targetIdx < 0 || targetIdx >= data.length) return { error: 'Índice objetivo inválido' };
+                const target = data[targetIdx];
+                if (!target) return { error: 'Vela objetivo inválida' };
+                const h = Math.max(1, Math.min(100, Number(horizon) || 1));
+                const minIndexInclusive = Math.max(200, 0);
+                const maxIndexExclusive = data.length - h;
+                if (maxIndexExclusive <= minIndexInclusive) return { error: 'Histórico insuficiente para el horizonte seleccionado.' };
+
+                const {
+                    useRsi, rsiTol,
+                    useTrend, trendCond,
+                    useTime, timeMode: tm,
+                    useVolBody,
+                    useWick, wickTol = 10,
+                    useVol, volTol,
+                    useBp, bpTol,
+                    useDelta,
+                    useAdr,
+                    useHtf,
+                    useRegime,
+                    adxThreshold: adxThresh = 25,
+                    minScore = 70
+                } = filters;
+
+                const getHour = (x) => {
+                    const h2 = (tm === 'UTC') ? x.hourUtc : x.hourLocal;
+                    return (typeof h2 === 'number' && isFinite(h2)) ? h2 : null;
+                };
+
+                const getHtfCandleAtMs = (tMs) => {
+                    if (!htfIndex || !htfIndex.times || !htfIndex.times.length) return null;
+                    const pos = lowerBound(htfIndex.times, tMs) - 1;
+                    if (pos < 0) return null;
+                    const c = htfIndex.rows[pos];
+                    if (!c || !(c.datetime instanceof Date)) return null;
+                    const tf = htfTfMinutes;
+                    if (!tf || !isFinite(tf)) return null;
+                    const startMs = c.datetime.getTime();
+                    const endMs = startMs + tf * 60000;
+                    if (tMs < startMs || tMs >= endMs) return null;
+                    return c;
+                };
+
+                if (useRsi && (target.rsi == null || !isFinite(target.rsi))) return { error: 'RSI no disponible en la vela objetivo.' };
+                if (useVolBody && (target.bodySizePct == null || !isFinite(target.bodySizePct))) return { error: 'Volatilidad de vela no disponible en la vela objetivo.' };
+                if (useWick && (target.upperWickPct == null || !isFinite(target.upperWickPct) || target.lowerWickPct == null || !isFinite(target.lowerWickPct))) return { error: 'Morfología de mechas no disponible en la vela objetivo.' };
+                if (useVol && (target.volume == null || !isFinite(target.volume))) return { error: 'Volumen no disponible en la vela objetivo.' };
+                if (useBp && (target.buyPressurePct == null || !isFinite(target.buyPressurePct))) return { error: 'Presión compradora no disponible en la vela objetivo.' };
+                if (useDelta && (target.delta == null || !isFinite(target.delta))) return { error: 'Delta no disponible en la vela objetivo.' };
+                if (useRegime && (target.adx == null || !isFinite(target.adx))) return { error: 'ADX no disponible en la vela objetivo.' };
+
+                let totalMatches = 0;
+                let countUp = 0;
+                let countDown = 0;
+                let sumChange = 0;
+                let countChange = 0;
+
+                for (let i = minIndexInclusive; i < maxIndexExclusive; i++) {
+                    const c = data[i];
+                    if (!c) continue;
+
+                    let currentScore = 0;
+                    let maxPossibleScore = 0;
+
+                    if (useRsi) {
+                        maxPossibleScore += FILTER_WEIGHTS.RSI;
+                        let pass = true;
+                        if (c.rsi == null || !isFinite(c.rsi)) pass = false;
+                        else if (Math.abs(c.rsi - target.rsi) > rsiTol) pass = false;
+                        if (pass) currentScore += FILTER_WEIGHTS.RSI;
+                    }
+
+                    if (useTrend) {
+                        maxPossibleScore += FILTER_WEIGHTS.HTF;
+                        let pass = true;
+                        if (c.sma200 == null || !isFinite(c.sma200)) pass = false;
+                        else if (trendCond === 'ABOVE' && c.close < c.sma200) pass = false;
+                        else if (trendCond === 'BELOW' && c.close > c.sma200) pass = false;
+                        if (pass) currentScore += FILTER_WEIGHTS.HTF;
+                    }
+
+                    if (useTime) {
+                        maxPossibleScore += FILTER_WEIGHTS.TIME;
+                        let pass = true;
+                        const th = getHour(target);
+                        const ch = getHour(c);
+                        if (th == null || ch == null) pass = false;
+                        else {
+                            let diff = Math.abs(th - ch);
+                            if (diff > 12) diff = 24 - diff;
+                            if (diff > 2) pass = false;
+                        }
+                        if (pass) currentScore += FILTER_WEIGHTS.TIME;
+                    }
+
+                    if (useVolBody) {
+                        maxPossibleScore += FILTER_WEIGHTS.OTHER;
+                        let pass = true;
+                        if (c.bodySizePct == null || !isFinite(c.bodySizePct)) pass = false;
+                        else {
+                            const targetVol = target.bodySizePct;
+                            const currentVol = c.bodySizePct;
+                            if (currentVol < targetVol * 0.5 || currentVol > targetVol * 1.5) pass = false;
+                        }
+                        if (pass) currentScore += FILTER_WEIGHTS.OTHER;
+                    }
+
+                    if (useWick) {
+                        maxPossibleScore += FILTER_WEIGHTS.OTHER;
+                        let pass = true;
+                        if (c.upperWickPct == null || !isFinite(c.upperWickPct) || c.lowerWickPct == null || !isFinite(c.lowerWickPct)) pass = false;
+                        else if (Math.abs(c.upperWickPct - target.upperWickPct) > wickTol || Math.abs(c.lowerWickPct - target.lowerWickPct) > wickTol) pass = false;
+                        if (pass) currentScore += FILTER_WEIGHTS.OTHER;
+                    }
+
+                    if (useVol) {
+                        maxPossibleScore += FILTER_WEIGHTS.VOL;
+                        let pass = true;
+                        if (c.volume == null || !isFinite(c.volume)) pass = false;
+                        else {
+                            const low = target.volume * (1 - volTol / 100);
+                            const high = target.volume * (1 + volTol / 100);
+                            if (c.volume < low || c.volume > high) pass = false;
+                        }
+                        if (pass) currentScore += FILTER_WEIGHTS.VOL;
+                    }
+
+                    if (useBp) {
+                        maxPossibleScore += FILTER_WEIGHTS.VOL;
+                        let pass = true;
+                        if (c.buyPressurePct == null || !isFinite(c.buyPressurePct)) pass = false;
+                        else if (Math.abs(c.buyPressurePct - target.buyPressurePct) > bpTol) pass = false;
+                        if (pass) currentScore += FILTER_WEIGHTS.VOL;
+                    }
+
+                    if (useDelta) {
+                        maxPossibleScore += FILTER_WEIGHTS.VOL;
+                        let pass = true;
+                        if (c.delta == null || !isFinite(c.delta)) pass = false;
+                        else if (Math.sign(target.delta) !== Math.sign(c.delta)) pass = false;
+                        if (pass) currentScore += FILTER_WEIGHTS.VOL;
+                    }
+
+                    if (useAdr) {
+                        maxPossibleScore += FILTER_WEIGHTS.OTHER;
+                        let pass = true;
+                        if (c.adrFilledPct != null && c.adrFilledPct > 100) {
+                            pass = false;
+                        }
+                        if (pass) currentScore += FILTER_WEIGHTS.OTHER;
+                    }
+
+                    if (useRegime) {
+                        maxPossibleScore += FILTER_WEIGHTS.OTHER;
+                        let pass = true;
+                        if (target.adx != null && isFinite(target.adx) && c.adx != null && isFinite(c.adx)) {
+                            const isTargetTrend = target.adx >= adxThresh;
+                            const isCandleTrend = c.adx >= adxThresh;
+                            if (isTargetTrend && !isCandleTrend) {
+                                pass = false;
+                            } else if (!isTargetTrend && isCandleTrend) {
+                                pass = false;
+                            }
+                        }
+                        if (pass) currentScore += FILTER_WEIGHTS.OTHER;
+                    }
+
+                    if (useHtf) {
+                        maxPossibleScore += FILTER_WEIGHTS.HTF;
+                        let pass = false;
+                        const tMs = c.datetime instanceof Date ? c.datetime.getTime() : null;
+                        if (tMs != null) {
+                            const htfC = getHtfCandleAtMs(tMs);
+                            if (htfC && htfC.sma200 != null && isFinite(htfC.sma200) && htfC.close != null && isFinite(htfC.close)) {
+                                const macroDir = htfC.close >= htfC.sma200 ? 'LONG' : 'SHORT';
+                                if (macroDir === tradeParams.tradeType) pass = true;
+                            }
+                        }
+                        if (pass) currentScore += FILTER_WEIGHTS.HTF;
+                    }
+
+                    let finalScore = 0;
+                    if (maxPossibleScore > 0) {
+                        finalScore = (currentScore / maxPossibleScore) * 100;
+                    }
+
+                    if (maxPossibleScore > 0 && finalScore < minScore) continue;
+
+                    const next = data[i + h];
+                    if (!next) continue;
+                    const base = c.close;
+                    const future = next.close;
+                    if (!isFinite(base) || !isFinite(future)) continue;
+
+                    totalMatches++;
+                    if (future > base) countUp++;
+                    else if (future < base) countDown++;
+
+                    const changePct = ((future - base) / base) * 100;
+                    if (isFinite(changePct)) {
+                        sumChange += changePct;
+                        countChange++;
+                    }
+                }
+
+                if (totalMatches === 0) return { error: 'No hay coincidencias' };
+
+                return {
+                    totalMatches,
+                    countUp,
+                    countDown,
+                    avgChange: countChange > 0 ? (sumChange / countChange) : 0
+                };
+            };
+
             const handleOptimize = async (mode = 'STANDARD') => {
                 if (!csvData.length || !stopLoss || !takeProfit) return;
                 if (isOptimizing) return;
@@ -2320,6 +2562,7 @@
                         rsiTolerance,
                         volumeTolerance,
                         bpTolerance,
+                        wickTolerance,
                         trendCondition,
                         timeMode,
                         htfMode,
@@ -2353,6 +2596,7 @@
                 if (config.useVol !== undefined) setUseVolumeFilter(config.useVol);
                 if (config.useBp !== undefined) setUseBuyPressureFilter(config.useBp);
                 if (config.useDelta !== undefined) setUseDeltaSignFilter(config.useDelta);
+                if (config.useWick !== undefined) setUseWickFilter(config.useWick);
                 if (config.useCooldown !== undefined) setUseCooldownFilter(config.useCooldown);
                 if (config.useAdr !== undefined) setUseAdrFilter(config.useAdr);
                 if (config.useHtf !== undefined) setUseHtfFilter(config.useHtf);
@@ -2368,6 +2612,7 @@
                 if (config.rsiTol !== undefined) setRsiTolerance(config.rsiTol);
                 if (config.volTol !== undefined) setVolumeTolerance(config.volTol);
                 if (config.bpTol !== undefined) setBpTolerance(config.bpTol);
+                if (config.wickTol !== undefined) setWickTolerance(config.wickTol);
 
             };
 
@@ -2410,6 +2655,7 @@
                     useTrend: useTrendFilter, trendCond: trendCondition,
                     useTime: useTimeFilter, timeMode,
                     useVolBody: useVolFilter,
+                    useWick: useWickFilter, wickTol: wickTolerance,
                     useVol: useVolumeFilter, volTol: volumeTolerance,
                     useBp: useBuyPressureFilter, bpTol: bpTolerance,
                     useDelta: useDeltaSignFilter,
@@ -2919,13 +3165,49 @@
 
 
             // --- RENDERIZADO ---
-            const tabClass = (tab) => `flex-1 py-4 text-center font-bold text-sm uppercase tracking-wider cursor-pointer transition-all border-b-2 ${activeTab === tab
+            const tabClass = (tab) => `px-6 py-3 text-center font-bold text-sm uppercase tracking-wider cursor-pointer transition-all border-b-2 whitespace-nowrap shrink-0 ${activeTab === tab
                 ? 'border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-slate-800'
                 : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/50'
                 }`;
             const hasExtended = React.useMemo(() => {
                 return csvData.some(d => d.volume !== undefined || d.buyPressurePct !== undefined || d.delta !== undefined);
             }, [csvData]);
+            const forecastResult = useMemo(() => {
+                if (!csvData.length || selectedCandleIndex == null || selectedCandleIndex < 0) return null;
+                const filters = {
+                    useRsi: useRsiFilter, rsiTol: rsiTolerance,
+                    useTrend: useTrendFilter, trendCond: trendCondition,
+                    useTime: useTimeFilter, timeMode,
+                    useVolBody: useVolFilter,
+                    useWick: useWickFilter, wickTol: wickTolerance,
+                    useVol: useVolumeFilter, volTol: volumeTolerance,
+                    useBp: useBuyPressureFilter, bpTol: bpTolerance,
+                    useDelta: useDeltaSignFilter,
+                    useAdr: useAdrFilter,
+                    useHtf: useHtfFilter,
+                    useRegime: useRegimeFilter,
+                    adxThreshold
+                };
+                return calculateForecast(csvData, selectedCandleIndex, forecastHorizon, { tradeType }, filters);
+            }, [
+                csvData, selectedCandleIndex, forecastHorizon, tradeType,
+                useRsiFilter, rsiTolerance, useTrendFilter, trendCondition, useTimeFilter, timeMode,
+                useVolFilter, useWickFilter, wickTolerance, useVolumeFilter, volumeTolerance,
+                useBuyPressureFilter, bpTolerance, useDeltaSignFilter, useAdrFilter,
+                useHtfFilter, useRegimeFilter, adxThreshold, htfIndex, htfTfMinutes
+            ]);
+            const forecastMetrics = useMemo(() => {
+                if (!forecastResult || forecastResult.error) return null;
+                const total = forecastResult.totalMatches || 0;
+                const upPct = total > 0 ? (forecastResult.countUp / total) * 100 : 0;
+                const downPct = total > 0 ? (forecastResult.countDown / total) * 100 : 0;
+                return {
+                    total,
+                    upPct,
+                    downPct,
+                    avgChange: forecastResult.avgChange
+                };
+            }, [forecastResult]);
             React.useEffect(() => {
                 if (activeTab === 'SAVES') refreshSavedSims();
             }, [activeTab]);
@@ -3897,7 +4179,8 @@
                         </div>
 
                         {/* NAV TABS */}
-                        <div className="flex border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950">
+                        <div className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 overflow-x-auto">
+                            <div className="flex gap-2 px-2 min-w-max">
                             <div className={tabClass('LAB')} onClick={() => setActiveTab('LAB')}>
                                 1. Laboratorio (Backtest)
                             </div>
@@ -3909,6 +4192,10 @@
                             </div>
                             <div className={tabClass('SAVES')} onClick={() => setActiveTab('SAVES')}>
                                 3. Guardadas
+                            </div>
+                            <div className={tabClass('PROJ')} onClick={() => setActiveTab('PROJ')}>
+                                4. Proyección
+                            </div>
                             </div>
                         </div>
 
@@ -4481,6 +4768,11 @@
                                                 <input type="checkbox" checked={useVolFilter} onChange={(e) => setUseVolFilter(e.target.checked)} className="accent-blue-500" />
                                                 <Icons.Zap size={14} className="text-orange-500" /> Volatilidad Similar (Vela)
                                             </label>
+                                            <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 cursor-pointer hover:text-slate-800 dark:hover:text-slate-200">
+                                                <input type="checkbox" checked={useWickFilter} onChange={(e) => setUseWickFilter(e.target.checked)} className="accent-blue-500" disabled={!csvData[selectedCandleIndex] || csvData[selectedCandleIndex].upperWickPct == null || csvData[selectedCandleIndex].lowerWickPct == null} />
+                                                Morfología de Mechas Similar (± {wickTolerance}%)
+                                            </label>
+                                            <input type="range" min="5" max="30" value={wickTolerance} onChange={(e) => setWickTolerance(parseInt(e.target.value))} className="w-full accent-blue-500 h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer" />
 
                                             {/* --- BLOQUE DE CÓDIGO UI PARA EL TOGGLE --- */}
                                             <div className="bg-slate-100 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-200 dark:border-slate-700/50 mb-4">
@@ -5120,6 +5412,128 @@
                                             </div>
                                         )}
                                     </div>
+                                </div>
+                            )}
+                            {activeTab === 'PROJ' && (
+                                <div className="space-y-6 animate-fade-in">
+                                    <section className="bg-slate-50 dark:bg-slate-800/50 p-5 rounded-xl border border-slate-200 dark:border-slate-700/50 shadow-sm space-y-3">
+                                        <h3 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase flex items-center gap-2">
+                                            <Icons.Activity size={16} /> Proyección Direccional
+                                        </h3>
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-xs text-slate-500 dark:text-slate-400">Horizonte (velas)</span>
+                                            <button
+                                                type="button"
+                                                onClick={() => setForecastHorizon((prev) => Math.max(1, prev - 1))}
+                                                className="h-8 w-8 inline-flex items-center justify-center bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-md text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95 transition"
+                                                aria-label="Reducir horizonte"
+                                            >
+                                                <Icons.ChevronLeft size={14} />
+                                            </button>
+                                            <input
+                                                type="range"
+                                                min="1"
+                                                max="100"
+                                                value={forecastHorizon}
+                                                onChange={(e) => setForecastHorizon(parseInt(e.target.value, 10))}
+                                                className="flex-1 accent-blue-500 h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setForecastHorizon((prev) => Math.min(100, prev + 1))}
+                                                className="h-8 w-8 inline-flex items-center justify-center bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-md text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95 transition"
+                                                aria-label="Aumentar horizonte"
+                                            >
+                                                <Icons.ChevronRight size={14} />
+                                            </button>
+                                            <span className="text-xs font-mono font-bold text-slate-700 dark:text-slate-200 w-8 text-right">{forecastHorizon}</span>
+                                        </div>
+                                    </section>
+                                    <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div className="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                                            <div className="flex items-center gap-2 text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
+                                                <Icons.History size={14} />
+                                                Contexto histórico
+                                            </div>
+                                            <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed mt-2">
+                                                Reutiliza los filtros activos del Laboratorio para buscar velas similares a la seleccionada y formar una muestra estadística coherente.
+                                            </p>
+                                        </div>
+                                        <div className="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                                            <div className="flex items-center gap-2 text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
+                                                <Icons.Clock size={14} />
+                                                Horizonte y retorno
+                                            </div>
+                                            <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed mt-2">
+                                                El horizonte define cuántas velas hacia adelante se mide el cambio de precio promedio en las coincidencias históricas.
+                                            </p>
+                                        </div>
+                                        <div className="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                                            <div className="flex items-center gap-2 text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
+                                                <Icons.Target size={14} />
+                                                Probabilidad direccional
+                                            </div>
+                                            <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed mt-2">
+                                                La probabilidad alcista/bajista se obtiene del porcentaje de coincidencias que terminaron con retorno positivo o negativo.
+                                            </p>
+                                        </div>
+                                    </section>
+                                    <section className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                                        {!csvData.length || selectedCandleIndex < 200 ? (
+                                            <div className="text-sm text-slate-500 dark:text-slate-400">
+                                                Carga datos y selecciona una vela válida para proyectar.
+                                            </div>
+                                        ) : !forecastResult ? (
+                                            <div className="text-sm text-slate-500 dark:text-slate-400">
+                                                Selecciona una vela para iniciar el cálculo.
+                                            </div>
+                                        ) : forecastResult.error ? (
+                                            <div className="text-sm text-red-500 dark:text-red-400">
+                                                {forecastResult.error}
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-5">
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div className="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-lg border border-slate-200 dark:border-slate-700">
+                                                        <div className="text-[10px] uppercase text-slate-400">Coincidencias</div>
+                                                        <div className="text-xl font-mono font-bold text-slate-700 dark:text-slate-200">
+                                                            {forecastMetrics ? forecastMetrics.total : 0}
+                                                        </div>
+                                                    </div>
+                                                    <div className="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-lg border border-slate-200 dark:border-slate-700">
+                                                        <div className="text-[10px] uppercase text-slate-400">Retorno Promedio</div>
+                                                        <div className={`text-xl font-mono font-bold ${forecastMetrics && forecastMetrics.avgChange >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'}`}>
+                                                            {forecastMetrics ? forecastMetrics.avgChange.toFixed(3) : '0.000'}%
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="space-y-3">
+                                                    <div>
+                                                        <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
+                                                            <span>Alcista</span>
+                                                            <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                                                                {forecastMetrics ? forecastMetrics.upPct.toFixed(1) : '0.0'}%
+                                                            </span>
+                                                        </div>
+                                                        <div className="w-full h-4 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                                                            <div className="h-4 bg-emerald-500 transition-all" style={{ width: `${forecastMetrics ? forecastMetrics.upPct : 0}%` }}></div>
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
+                                                            <span>Bajista</span>
+                                                            <span className="font-mono font-bold text-red-500 dark:text-red-400">
+                                                                {forecastMetrics ? forecastMetrics.downPct.toFixed(1) : '0.0'}%
+                                                            </span>
+                                                        </div>
+                                                        <div className="w-full h-4 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                                                            <div className="h-4 bg-red-500 transition-all" style={{ width: `${forecastMetrics ? forecastMetrics.downPct : 0}%` }}></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </section>
                                 </div>
                             )}
 

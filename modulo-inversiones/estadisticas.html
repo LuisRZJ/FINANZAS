@@ -899,10 +899,10 @@
 
         function updateOneTimeCostsUI() {
             const services = [
-                { storageKey: 'btcMiningInvestments', title: 'BTC Mining', accentClass: 'text-orange-600', badgeClass: 'bg-gray-100 text-orange-700', roiMethod: 'linear' },
-                { storageKey: 'cloudPowerMinerInvestments', title: 'Cloud Power Miner', accentClass: 'text-cyan-600', badgeClass: 'bg-gray-100 text-cyan-700', roiMethod: 'linear' },
-                { storageKey: 'goMiningInvestments', title: 'GO Mining', accentClass: 'text-blue-600', badgeClass: 'bg-gray-100 text-blue-700', roiMethod: 'cagr' },
-                { storageKey: 'tapMiningInvestments', title: 'TAP Mining', accentClass: 'text-emerald-600', badgeClass: 'bg-gray-100 text-emerald-700', roiMethod: 'cagr' }
+                { storageKey: 'btcMiningInvestments', title: 'BTC Mining', accentClass: 'text-orange-600 dark:text-orange-400', badgeClass: 'bg-gray-100 text-orange-700 dark:bg-slate-700/70 dark:text-orange-300', roiMethod: 'linear' },
+                { storageKey: 'cloudPowerMinerInvestments', title: 'Cloud Power Miner', accentClass: 'text-cyan-600 dark:text-cyan-400', badgeClass: 'bg-gray-100 text-cyan-700 dark:bg-slate-700/70 dark:text-cyan-300', roiMethod: 'linear' },
+                { storageKey: 'goMiningInvestments', title: 'GO Mining', accentClass: 'text-blue-600 dark:text-blue-400', badgeClass: 'bg-gray-100 text-blue-700 dark:bg-slate-700/70 dark:text-blue-300', roiMethod: 'cagr' },
+                { storageKey: 'tapMiningInvestments', title: 'TAP Mining', accentClass: 'text-emerald-600 dark:text-emerald-400', badgeClass: 'bg-gray-100 text-emerald-700 dark:bg-slate-700/70 dark:text-emerald-300', roiMethod: 'cagr' }
             ];
 
             const container = document.getElementById('one-time-costs-cards');
@@ -917,7 +917,7 @@
                 totalAll += summary.totalCost;
 
                 const card = document.createElement('div');
-                card.className = 'p-5 border border-gray-200 rounded-lg bg-gray-50/50';
+                card.className = 'p-5 border border-gray-200 dark:border-slate-700 rounded-lg bg-gray-50/50 dark:bg-slate-800/50';
 
                 const maxLabel = summary.maxCost > 0 ? currencyFormatter.format(summary.maxCost) : '—';
                 const maxName = summary.maxCostName ? ` (${summary.maxCostName})` : '';
@@ -927,30 +927,30 @@
                 card.innerHTML = `
                     <div class="flex items-start justify-between gap-4">
                         <div class="min-w-0">
-                            <h3 class="text-lg font-semibold text-gray-800 truncate">${service.title}</h3>
+                            <h3 class="text-lg font-semibold text-gray-800 dark:text-slate-100 truncate">${service.title}</h3>
                             <div class="mt-2 flex flex-wrap gap-2">
                                 <span class="text-xs font-semibold px-2 py-1 rounded-full ${service.badgeClass}">Inversiones: ${summary.count}</span>
-                                <span class="text-xs font-semibold px-2 py-1 rounded-full bg-gray-100 text-gray-700">Activas: ${summary.activeCount}</span>
+                                <span class="text-xs font-semibold px-2 py-1 rounded-full bg-gray-100 text-gray-700 dark:bg-slate-700/70 dark:text-slate-200">Activas: ${summary.activeCount}</span>
                             </div>
-                            <div class="mt-2 text-sm text-gray-500">Rango: ${summary.dateRange}</div>
+                            <div class="mt-2 text-sm text-gray-500 dark:text-slate-400">Rango: ${summary.dateRange}</div>
                         </div>
                         <div class="text-right flex-shrink-0">
-                            <div class="text-xs text-gray-500">Gasto total</div>
+                            <div class="text-xs text-gray-500 dark:text-slate-400">Gasto total</div>
                             <div class="text-2xl font-bold ${service.accentClass}">${currencyFormatter.format(summary.totalCost)}</div>
                         </div>
                     </div>
                     <div class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <div class="p-3 rounded-lg border border-gray-200 bg-white/60">
-                            <div class="text-xs text-gray-500">ROI anualizado</div>
-                            <div class="text-sm font-semibold text-gray-900">${roiLabel}</div>
+                        <div class="p-3 rounded-lg border border-gray-200 dark:border-slate-700 bg-white/60 dark:bg-slate-900/40">
+                            <div class="text-xs text-gray-500 dark:text-slate-400">ROI anualizado</div>
+                            <div class="text-sm font-semibold text-gray-900 dark:text-slate-100">${roiLabel}</div>
                         </div>
-                        <div class="p-3 rounded-lg border border-gray-200 bg-white/60">
-                            <div class="text-xs text-gray-500">Costo promedio</div>
-                            <div class="text-sm font-semibold text-gray-900">${avgLabel}</div>
+                        <div class="p-3 rounded-lg border border-gray-200 dark:border-slate-700 bg-white/60 dark:bg-slate-900/40">
+                            <div class="text-xs text-gray-500 dark:text-slate-400">Costo promedio</div>
+                            <div class="text-sm font-semibold text-gray-900 dark:text-slate-100">${avgLabel}</div>
                         </div>
-                        <div class="p-3 rounded-lg border border-gray-200 bg-white/60">
-                            <div class="text-xs text-gray-500">Mayor inversión</div>
-                            <div class="text-sm font-semibold text-gray-900">${maxLabel}${maxName}</div>
+                        <div class="p-3 rounded-lg border border-gray-200 dark:border-slate-700 bg-white/60 dark:bg-slate-900/40">
+                            <div class="text-xs text-gray-500 dark:text-slate-400">Mayor inversión</div>
+                            <div class="text-sm font-semibold text-gray-900 dark:text-slate-100">${maxLabel}${maxName}</div>
                         </div>
                     </div>
                 `;
@@ -1335,7 +1335,7 @@
             const legendEl = document.getElementById('roiSourceLegend');
             const canvas = document.getElementById('roiSourceChart');
             if (legendEl) {
-                legendEl.innerHTML = `<p class="text-gray-500 text-center">${message || 'Sin datos para mostrar'}</p>`;
+                legendEl.innerHTML = `<p class="text-gray-500 dark:text-slate-400 text-center">${message || 'Sin datos para mostrar'}</p>`;
             }
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
@@ -1348,9 +1348,10 @@
                 if (h > 0) canvas.height = h;
             }
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#f8fafc';
+            const isDark = document.documentElement.classList.contains('dark');
+            ctx.fillStyle = isDark ? '#0f172a' : '#f8fafc';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#64748b';
+            ctx.fillStyle = isDark ? '#94a3b8' : '#64748b';
             ctx.font = '14px sans-serif';
             ctx.textAlign = 'center';
             ctx.fillText(message || 'No hay datos de ROI disponibles', canvas.width / 2, canvas.height / 2);
@@ -1390,19 +1391,19 @@
                 if (roiBadgeEl) {
                     if (totalRoiPct === null || !Number.isFinite(totalRoiPct)) {
                         roiBadgeEl.textContent = 'N/A';
-                        roiBadgeEl.className = 'text-xs font-semibold px-2 py-1 rounded-full bg-gray-100 text-gray-700';
+                        roiBadgeEl.className = 'text-xs font-semibold px-2 py-1 rounded-full bg-gray-100 text-gray-700 dark:bg-slate-700 dark:text-slate-200';
                     } else if (totalRoiPct < 5) {
                         roiBadgeEl.textContent = 'Malo';
-                        roiBadgeEl.className = 'text-xs font-semibold px-2 py-1 rounded-full bg-red-100 text-red-700';
+                        roiBadgeEl.className = 'text-xs font-semibold px-2 py-1 rounded-full bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300';
                     } else if (totalRoiPct < 10) {
                         roiBadgeEl.textContent = 'Aceptable';
-                        roiBadgeEl.className = 'text-xs font-semibold px-2 py-1 rounded-full bg-yellow-100 text-yellow-700';
+                        roiBadgeEl.className = 'text-xs font-semibold px-2 py-1 rounded-full bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300';
                     } else if (totalRoiPct < 20) {
                         roiBadgeEl.textContent = 'Bueno';
-                        roiBadgeEl.className = 'text-xs font-semibold px-2 py-1 rounded-full bg-green-100 text-green-700';
+                        roiBadgeEl.className = 'text-xs font-semibold px-2 py-1 rounded-full bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300';
                     } else {
                         roiBadgeEl.textContent = 'Excelente';
-                        roiBadgeEl.className = 'text-xs font-semibold px-2 py-1 rounded-full bg-indigo-100 text-indigo-700';
+                        roiBadgeEl.className = 'text-xs font-semibold px-2 py-1 rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300';
                     }
                 }
 
@@ -1434,32 +1435,32 @@
                     const roiText = it.roiPct === null ? 'N/A' : `${it.roiPct.toFixed(2)}%`;
                     const signLabel = annualReturn < 0 ? 'Pérdida anual' : 'Retorno anual';
                     const row = document.createElement('div');
-                    row.className = 'flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 transition-colors';
+                    row.className = 'flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-800/60 transition-colors';
                     row.innerHTML = `
                         <div class="flex items-center space-x-3">
                             <div class="w-4 h-4 rounded-full" style="background-color: ${it.color}"></div>
                             <div class="min-w-0">
-                                <div class="text-sm font-medium text-gray-700 truncate">${it.title}</div>
-                                <div class="text-xs text-gray-500">ROI anualizado: ${roiText}</div>
+                                <div class="text-sm font-medium text-gray-700 dark:text-slate-200 truncate">${it.title}</div>
+                                <div class="text-xs text-gray-500 dark:text-slate-400">ROI anualizado: ${roiText}</div>
                             </div>
                         </div>
                         <div class="text-right">
-                            <div class="text-sm font-semibold text-gray-900">${pct.toFixed(1)}%</div>
-                            <div class="text-xs text-gray-500">${signLabel}: ${currencyFormatter.format(annualReturn)} / año</div>
+                            <div class="text-sm font-semibold text-gray-900 dark:text-slate-100">${pct.toFixed(1)}%</div>
+                            <div class="text-xs text-gray-500 dark:text-slate-400">${signLabel}: ${currencyFormatter.format(annualReturn)} / año</div>
                         </div>
                     `;
                     legendEl.appendChild(row);
                 });
 
                 const summary = document.createElement('div');
-                summary.className = 'mt-4 pt-3 border-t border-gray-200';
+                summary.className = 'mt-4 pt-3 border-t border-gray-200 dark:border-slate-700';
                 summary.innerHTML = `
                     <div class="flex justify-between items-center">
-                        <span class="text-sm font-semibold text-gray-700">Retorno anual estimado:</span>
+                        <span class="text-sm font-semibold text-gray-700 dark:text-slate-200">Retorno anual estimado:</span>
                         <span class="text-sm font-bold text-cyan-600">${currencyFormatter.format(totalAnnualReturn)} / año</span>
                     </div>
                     <div class="flex justify-between items-center mt-1">
-                        <span class="text-sm font-semibold text-gray-700">ROI total:</span>
+                        <span class="text-sm font-semibold text-gray-700 dark:text-slate-200">ROI total:</span>
                         <span class="text-sm font-bold text-cyan-600">${totalRoiPct === null ? 'N/A' : `${totalRoiPct.toFixed(2)}%`}</span>
                     </div>
                 `;
@@ -1968,22 +1969,27 @@
         function showEmptyChart() {
             const canvas = document.getElementById('incomeSourceChart');
             const ctx = canvas.getContext('2d');
+            const container = canvas.parentElement;
+            if (container) {
+                const w = container.offsetWidth;
+                const h = container.offsetHeight;
+                if (w > 0) canvas.width = w;
+                if (h > 0) canvas.height = h;
+            }
 
-            // Clear canvas
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Draw empty state
-            ctx.fillStyle = '#f8fafc';
+            const isDark = document.documentElement.classList.contains('dark');
+            ctx.fillStyle = isDark ? '#0f172a' : '#f8fafc';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            ctx.fillStyle = '#64748b';
+            ctx.fillStyle = isDark ? '#94a3b8' : '#64748b';
             ctx.font = '14px sans-serif';
             ctx.textAlign = 'center';
             ctx.fillText('No hay datos de ingresos disponibles', canvas.width / 2, canvas.height / 2);
 
-            // Update legend
             document.getElementById('incomeSourceLegend').innerHTML =
-                '<p class="text-gray-500 text-center">Sin datos para mostrar</p>';
+                '<p class="text-gray-500 dark:text-slate-400 text-center">Sin datos para mostrar</p>';
         }
 
         // Function to create the pie chart
