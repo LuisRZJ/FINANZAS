@@ -101,12 +101,12 @@ function renderTransactions(ops) {
 
     // Fecha
     const tdDate = document.createElement('td')
-    tdDate.className = 'px-4 py-3 text-sm text-gray-700 dark:text-gray-300'
+    tdDate.className = 'px-4 py-3 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap snap-start'
     tdDate.textContent = formatDate(tx.fecha)
 
     // Cuenta
     const tdAccount = document.createElement('td')
-    tdAccount.className = 'px-4 py-3 text-sm text-gray-700 dark:text-gray-300'
+    tdAccount.className = 'px-4 py-3 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap snap-start'
     let accText = ''
     if (tx.tipo === 'transferencia') {
       const o = ctMap.get(tx.origenId) || '?'
@@ -119,7 +119,7 @@ function renderTransactions(ops) {
 
     // Categoría / Etiqueta
     const tdCat = document.createElement('td')
-    tdCat.className = 'px-4 py-3 text-sm text-gray-700 dark:text-gray-300'
+    tdCat.className = 'px-4 py-3 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap snap-start'
     let catText = tx.tipo.charAt(0).toUpperCase() + tx.tipo.slice(1)
     if (tx.etiquetaId) {
       const etName = etMap.get(tx.etiquetaId)
@@ -131,12 +131,12 @@ function renderTransactions(ops) {
 
     // Descripción
     const tdDesc = document.createElement('td')
-    tdDesc.className = 'px-4 py-3 text-sm text-gray-700 dark:text-gray-300'
+    tdDesc.className = 'px-4 py-3 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap snap-start'
     tdDesc.textContent = tx.descripcion || tx.nombre
 
     // Monto
     const tdAmount = document.createElement('td')
-    let amtClass = 'px-4 py-3 text-sm font-medium text-right '
+    let amtClass = 'px-4 py-3 text-sm font-medium text-right whitespace-nowrap snap-start '
     let sign = ''
 
     if (tx.tipo === 'ingreso') {

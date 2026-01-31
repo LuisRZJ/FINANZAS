@@ -10,6 +10,7 @@ const OPERACIONES_KEY = STORAGE_KEYS.operaciones
 const METAS_KEY = STORAGE_KEYS.metas
 const PRESUPUESTOS_KEY = STORAGE_KEYS.presupuestos
 const CONFIG_KEY = STORAGE_KEYS.configuracion
+const SEPARADORES_KEY = STORAGE_KEYS.separadores
 
 /**
  * Obtiene la fecha de última actualización de los datos en la nube
@@ -36,9 +37,18 @@ async function obtenerTimestampNube(supabase, userId) {
             .limit(1)
             .maybeSingle()
 
+        const { data: separadorReciente } = await supabase
+            .from('separadores')
+            .select('creado_en')
+            .eq('user_id', userId)
+            .order('creado_en', { ascending: false })
+            .limit(1)
+            .maybeSingle()
+
         const timestamps = [
             opReciente?.actualizada_en,
-            cuentaReciente?.actualizada_en
+            cuentaReciente?.actualizada_en,
+            separadorReciente?.creado_en
         ].filter(Boolean)
 
         if (timestamps.length === 0) {
@@ -60,11 +70,13 @@ async function obtenerTimestampNube(supabase, userId) {
 function obtenerTimestampLocal() {
     const operaciones = leer(OPERACIONES_KEY, [])
     const cuentas = leer(CUENTAS_KEY, [])
+    const separadores = leer(SEPARADORES_KEY, [])
 
     const timestamps = [
         // Usar actualizadaEn si existe, si no creadaEn
         ...operaciones.map(op => op.actualizadaEn || op.creadaEn),
-        ...cuentas.map(c => c.actualizadaEn)
+        ...cuentas.map(c => c.actualizadaEn),
+        ...separadores.map(s => s.creadoEn)
     ].filter(Boolean)
 
     if (timestamps.length === 0) return null
@@ -161,7 +173,7 @@ export async function respaldarDatos(opciones = {}) {
     }
 
     const userId = user.id
-    const stats = { cuentas: 0, etiquetas: 0, operaciones: 0, metas: 0, presupuestos: 0, configuracion: 0 }
+    const stats = { cuentas: 0, etiquetas: 0, operaciones: 0, separadores: 0, metas: 0, presupuestos: 0, configuracion: 0 }
 
     try {
         const cuentasLocales = leer(CUENTAS_KEY, [])
@@ -303,7 +315,7 @@ export async function respaldarDatos(opciones = {}) {
         stats.operaciones = operacionesLocales.length
 
         // 5. Separadores (resolver IDs de cuentas)
-        const separadoresLocales = leer(STORAGE_KEYS.separadores, [])
+        const separadoresLocales = leer(SEPARADORES_KEY, [])
         await supabase.from('separadores').delete().eq('user_id', userId)
 
         for (const sep of separadoresLocales) {
@@ -323,6 +335,7 @@ export async function respaldarDatos(opciones = {}) {
 
             if (error) throw new Error(`Separadores: ${error.message}`)
         }
+        stats.separadores = separadoresLocales.length
 
         // 6. Metas (guardar como JSON completo)
         const metasLocales = leer(METAS_KEY, [])
@@ -380,11 +393,11 @@ export async function restaurarDatos() {
         return { success: false, error: 'Debes iniciar sesión para restaurar', stats: {} }
     }
 
-    const stats = { cuentas: 0, etiquetas: 0, operaciones: 0, metas: 0, presupuestos: 0 }
+    const stats = { cuentas: 0, etiquetas: 0, operaciones: 0, separadores: 0, metas: 0, presupuestos: 0 }
 
     try {
         // 1. Cuentas
-        const { data: cuentasCloud, error: errCuentas } = await supabase.from('cuentas').select('*')
+        const { data: cuentasCloud, error: errCuentas } = await supabase.from('cuentas').select('*').eq('user_id', user.id)
         if (errCuentas) throw new Error(`Cuentas: ${errCuentas.message}`)
 
         const cuentasLocales = cuentasCloud.map(c => ({
@@ -405,7 +418,7 @@ export async function restaurarDatos() {
         stats.cuentas = cuentasLocales.length
 
         // 2. Etiquetas
-        const { data: etiquetasCloud, error: errEtiquetas } = await supabase.from('etiquetas').select('*')
+        const { data: etiquetasCloud, error: errEtiquetas } = await supabase.from('etiquetas').select('*').eq('user_id', user.id)
         if (errEtiquetas) throw new Error(`Etiquetas: ${errEtiquetas.message}`)
 
         const etiquetasLocales = etiquetasCloud.map(e => ({
@@ -423,7 +436,7 @@ export async function restaurarDatos() {
         stats.etiquetas = etiquetasLocales.length
 
         // 3. Recurrencias
-        const { data: recurrenciasCloud, error: errRec } = await supabase.from('recurrencias').select('*')
+        const { data: recurrenciasCloud, error: errRec } = await supabase.from('recurrencias').select('*').eq('user_id', user.id)
         if (errRec) throw new Error(`Recurrencias: ${errRec.message}`)
 
         const recurrenciasLocales = recurrenciasCloud.map(rec => ({
@@ -453,7 +466,7 @@ export async function restaurarDatos() {
         stats.recurrencias = recurrenciasLocales.length
 
         // 4. Operaciones
-        const { data: operacionesCloud, error: errOps } = await supabase.from('operaciones').select('*')
+        const { data: operacionesCloud, error: errOps } = await supabase.from('operaciones').select('*').eq('user_id', user.id)
         if (errOps) throw new Error(`Operaciones: ${errOps.message}`)
 
         const operacionesLocales = operacionesCloud.map(op => ({
@@ -477,7 +490,7 @@ export async function restaurarDatos() {
         stats.operaciones = operacionesLocales.length
 
         // 5. Separadores
-        const { data: separadoresCloud, error: errSep } = await supabase.from('separadores').select('*')
+        const { data: separadoresCloud, error: errSep } = await supabase.from('separadores').select('*').eq('user_id', user.id)
         if (errSep) throw new Error(`Separadores: ${errSep.message}`)
 
         const separadoresLocales = separadoresCloud.map(sep => ({
@@ -489,7 +502,8 @@ export async function restaurarDatos() {
             cuentaIds: sep.cuenta_ids || [],
             creadoEn: sep.creado_en
         }))
-        escribir(STORAGE_KEYS.separadores, separadoresLocales)
+        escribir(SEPARADORES_KEY, separadoresLocales)
+        stats.separadores = separadoresLocales.length
         // No stats property for separadores defined in user object but it's fine
 
 

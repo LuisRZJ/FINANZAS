@@ -592,6 +592,7 @@ function inicializarPanelDatos() {
   const btnExport = document.getElementById('btn-export-data')
   const inputImport = document.getElementById('input-import-data')
   const btnClear = document.getElementById('btn-clear-data')
+  const dropOverlay = document.getElementById('drop-overlay')
 
   if (usageEl) {
     usageEl.textContent = calcularUsoAlmacenamiento()
@@ -624,30 +625,71 @@ function inicializarPanelDatos() {
     })
   }
 
+  const handleImportFile = (file) => {
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      try {
+        const text = ev.target?.result
+        const data = JSON.parse(text)
+        restaurarDesdeSnapshot(data)
+        if (msgEl) {
+          msgEl.textContent = 'Datos restaurados correctamente. Recarga la página para ver los cambios.'
+        }
+        if (usageEl) {
+          usageEl.textContent = calcularUsoAlmacenamiento()
+        }
+      } catch (err) {
+        if (msgEl) {
+          msgEl.textContent = 'Error al importar respaldo: ' + (err.message || String(err))
+        }
+      } finally {
+        if (inputImport) inputImport.value = ''
+      }
+    }
+    reader.readAsText(file)
+  }
+
   if (inputImport) {
     inputImport.addEventListener('change', () => {
       const file = inputImport.files && inputImport.files[0]
-      if (!file) return
-      const reader = new FileReader()
-      reader.onload = (ev) => {
-        try {
-          const text = ev.target?.result
-          const data = JSON.parse(text)
-          restaurarDesdeSnapshot(data)
-          if (msgEl) {
-            msgEl.textContent = 'Datos restaurados correctamente. Recarga la página para ver los cambios.'
-          }
-          if (usageEl) {
-            usageEl.textContent = calcularUsoAlmacenamiento()
-          }
-        } catch (err) {
-          if (msgEl) {
-            msgEl.textContent = 'Error al importar respaldo: ' + (err.message || String(err))
-          }
-        }
-      }
-      reader.readAsText(file)
+      handleImportFile(file)
     })
+  }
+
+  if (dropOverlay) {
+    let dragDepth = 0
+    const showOverlay = () => dropOverlay.classList.remove('hidden')
+    const hideOverlay = () => dropOverlay.classList.add('hidden')
+
+    const onDragEnter = (e) => {
+      e.preventDefault()
+      dragDepth += 1
+      showOverlay()
+    }
+    const onDragOver = (e) => {
+      e.preventDefault()
+    }
+    const onDragLeave = (e) => {
+      e.preventDefault()
+      dragDepth -= 1
+      if (dragDepth <= 0) {
+        dragDepth = 0
+        hideOverlay()
+      }
+    }
+    const onDrop = (e) => {
+      e.preventDefault()
+      dragDepth = 0
+      hideOverlay()
+      const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]
+      handleImportFile(file)
+    }
+
+    window.addEventListener('dragenter', onDragEnter)
+    window.addEventListener('dragover', onDragOver)
+    window.addEventListener('dragleave', onDragLeave)
+    window.addEventListener('drop', onDrop)
   }
 
   if (btnClear) {
@@ -911,7 +953,7 @@ async function inicializarAuth() {
       const result = await respaldarDatos()
 
       if (result.success) {
-        showMessage(syncMsgEl, `✓ Respaldo subido: ${result.stats.cuentas} cuentas, ${result.stats.etiquetas} etiquetas, ${result.stats.operaciones} operaciones.`, false)
+        showMessage(syncMsgEl, `✓ Respaldo subido: ${result.stats.cuentas} cuentas, ${result.stats.etiquetas} etiquetas, ${result.stats.operaciones} operaciones, ${result.stats.separadores} categorías.`, false)
       } else if (result.conflicto) {
         // Mostrar modal de conflicto
         const overlay = document.createElement('div')
@@ -978,7 +1020,7 @@ async function inicializarAuth() {
           showMessage(syncMsgEl, 'Forzando subida...', false)
           const forceResult = await respaldarDatos({ forzar: true })
           if (forceResult.success) {
-            showMessage(syncMsgEl, `✓ Respaldo forzado: ${forceResult.stats.cuentas} cuentas, ${forceResult.stats.etiquetas} etiquetas, ${forceResult.stats.operaciones} operaciones.`, false)
+            showMessage(syncMsgEl, `✓ Respaldo forzado: ${forceResult.stats.cuentas} cuentas, ${forceResult.stats.etiquetas} etiquetas, ${forceResult.stats.operaciones} operaciones, ${forceResult.stats.separadores} categorías.`, false)
           } else {
             showMessage(syncMsgEl, forceResult.error, true)
           }
@@ -998,7 +1040,7 @@ async function inicializarAuth() {
       const result = await restaurarDatos()
 
       if (result.success) {
-        showMessage(syncMsgEl, `✓ Restaurado: ${result.stats.cuentas} cuentas, ${result.stats.etiquetas} etiquetas, ${result.stats.operaciones} operaciones. Recarga la página.`, false)
+        showMessage(syncMsgEl, `✓ Restaurado: ${result.stats.cuentas} cuentas, ${result.stats.etiquetas} etiquetas, ${result.stats.operaciones} operaciones, ${result.stats.separadores} categorías. Recarga la página.`, false)
         renderTodas()
         const usageEl = document.getElementById('data-usage')
         if (usageEl) usageEl.textContent = calcularUsoAlmacenamiento()
