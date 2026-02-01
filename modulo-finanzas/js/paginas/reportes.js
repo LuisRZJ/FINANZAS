@@ -12,6 +12,9 @@ let chartProjection = null;
 let chartBalanceMode = 'lineal'; // 'lineal' or 'barras'
 let showSMA = false; // Control para mostrar SMA 30d
 let showBollinger = false; // Control para mostrar Bandas de Bollinger
+let operacionesPeriodo = [];
+let etiquetasCache = [];
+let cuentasCache = [];
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
@@ -113,14 +116,27 @@ function inicializarEventos() {
     if (defaultBtn) {
         defaultBtn.click();
     }
+
+    const modal = document.getElementById('modal-categoria');
+    const closeBtn = document.getElementById('modal-categoria-close');
+    if (closeBtn) closeBtn.addEventListener('click', cerrarModalCategoria);
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal || e.target.id === 'modal-categoria-backdrop') cerrarModalCategoria();
+        });
+    }
 }
 
 function cargarDatos(periodo) {
     const operaciones = listarOperaciones();
     const etiquetas = listarEtiquetas();
+    const cuentas = listarCuentas();
 
     // Filter by period
     const filteredOps = filtrarOperacionesPorPeriodo(operaciones, periodo);
+    operacionesPeriodo = filteredOps;
+    etiquetasCache = etiquetas;
+    cuentasCache = cuentas;
 
     // Calculate Summary
     actualizarResumen(filteredOps, periodo);
@@ -599,34 +615,22 @@ function actualizarGraficoCategorias(operaciones, etiquetas) {
 
     // Group by etiqueta
     const grouped = {};
-    // Agrupar por etiqueta PADRE
     gastos.forEach(op => {
-        let tagId = op.etiquetaId;
-        const tag = etiquetas.find(t => t.id === tagId);
-
-        // Si es subetiqueta y tiene padre válido, usar el padre
-        if (tag && tag.padreId) {
-            const padre = etiquetas.find(p => p.id === tag.padreId);
-            if (padre) {
-                tagId = padre.id;
-            }
-        }
-
+        const tagId = obtenerEtiquetaRaizId(op.etiquetaId, etiquetas);
         if (!grouped[tagId]) grouped[tagId] = 0;
         grouped[tagId] += Number(op.cantidad);
     });
 
-    const labels = [];
-    const data = [];
-    const colors = [];
+    const items = Object.keys(grouped).map(tagId => ({
+        tagId,
+        label: obtenerNombreEtiqueta(tagId, etiquetas),
+        value: grouped[tagId],
+        color: obtenerColorEtiqueta(tagId, etiquetas)
+    })).sort((a, b) => b.value - a.value);
 
-    // Map IDs to Names and Colors
-    Object.keys(grouped).forEach(tagId => {
-        const tag = etiquetas.find(t => t.id === tagId);
-        labels.push(tag ? tag.nombre : 'Sin etiqueta');
-        colors.push(tag ? tag.color : '#94a3b8'); // Default slate-400
-        data.push(grouped[tagId]);
-    });
+    const labels = items.map(i => i.label);
+    const data = items.map(i => i.value);
+    const colors = items.map(i => i.color);
 
     if (chartCategories) chartCategories.destroy();
 
@@ -666,24 +670,22 @@ function actualizarGraficoCategorias(operaciones, etiquetas) {
     legendContainer.innerHTML = '';
 
     // Crear array de objetos para ordenar
-    const items = labels.map((label, i) => ({
-        label,
-        value: data[i],
-        color: colors[i],
-        percent: total > 0 ? (data[i] / total) * 100 : 0
-    })).sort((a, b) => b.value - a.value); // Ordenar mayor a menor
-
     items.forEach(item => {
-        const row = document.createElement('div');
-        row.className = 'flex items-center justify-between text-sm py-1 border-b border-gray-100 dark:border-gray-700 last:border-0';
+        const row = document.createElement('button');
+        row.type = 'button';
+        row.className = 'w-full flex items-center justify-between text-sm py-1 border-b border-gray-100 dark:border-gray-700 last:border-0 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors';
+        row.dataset.tagId = item.tagId;
+        row.dataset.tipo = 'gasto';
+        const percent = total > 0 ? (item.value / total) * 100 : 0;
         row.innerHTML = `
             <div class="flex items-center gap-3">
                 <span class="w-3 h-3 rounded-full" style="background-color: ${item.color}"></span>
                 <span class="text-gray-700 dark:text-gray-300 font-medium truncate max-w-[120px]" title="${item.label}">${item.label}</span>
-                <span class="text-xs text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full">${item.percent.toFixed(1)}%</span>
+                <span class="text-xs text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full">${percent.toFixed(1)}%</span>
             </div>
             <span class="font-semibold text-gray-900 dark:text-white tabular-nums">${formatoMoneda(item.value)}</span>
         `;
+        row.addEventListener('click', () => abrirModalCategoria('gasto', item.tagId, item.label));
         legendContainer.appendChild(row);
     });
 }
@@ -697,32 +699,21 @@ function actualizarGraficoIngresos(operaciones, etiquetas) {
     // Group by etiqueta
     const grouped = {};
     ingresos.forEach(op => {
-        let tagId = op.etiquetaId;
-        const tag = etiquetas.find(t => t.id === tagId);
-
-        // Si es subetiqueta y tiene padre válido, usar el padre
-        if (tag && tag.padreId) {
-            const padre = etiquetas.find(p => p.id === tag.padreId);
-            if (padre) {
-                tagId = padre.id;
-            }
-        }
-
+        const tagId = obtenerEtiquetaRaizId(op.etiquetaId, etiquetas);
         if (!grouped[tagId]) grouped[tagId] = 0;
         grouped[tagId] += Number(op.cantidad);
     });
 
-    const labels = [];
-    const data = [];
-    const colors = [];
+    const items = Object.keys(grouped).map(tagId => ({
+        tagId,
+        label: obtenerNombreEtiqueta(tagId, etiquetas),
+        value: grouped[tagId],
+        color: obtenerColorEtiqueta(tagId, etiquetas)
+    })).sort((a, b) => b.value - a.value);
 
-    // Map IDs to Names and Colors
-    Object.keys(grouped).forEach(tagId => {
-        const tag = etiquetas.find(t => t.id === tagId);
-        labels.push(tag ? tag.nombre : 'Sin etiqueta');
-        colors.push(tag ? tag.color : '#94a3b8'); // Default slate-400
-        data.push(grouped[tagId]);
-    });
+    const labels = items.map(i => i.label);
+    const data = items.map(i => i.value);
+    const colors = items.map(i => i.color);
 
     if (chartIncomeCategories) chartIncomeCategories.destroy();
 
@@ -761,26 +752,124 @@ function actualizarGraficoIngresos(operaciones, etiquetas) {
     const legendContainer = document.getElementById('legend-income-categories');
     legendContainer.innerHTML = '';
 
-    const items = labels.map((label, i) => ({
-        label,
-        value: data[i],
-        color: colors[i],
-        percent: total > 0 ? (data[i] / total) * 100 : 0
-    })).sort((a, b) => b.value - a.value);
-
     items.forEach(item => {
-        const row = document.createElement('div');
-        row.className = 'flex items-center justify-between text-sm py-1 border-b border-gray-100 dark:border-gray-700 last:border-0';
+        const row = document.createElement('button');
+        row.type = 'button';
+        row.className = 'w-full flex items-center justify-between text-sm py-1 border-b border-gray-100 dark:border-gray-700 last:border-0 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors';
+        row.dataset.tagId = item.tagId;
+        row.dataset.tipo = 'ingreso';
+        const percent = total > 0 ? (item.value / total) * 100 : 0;
         row.innerHTML = `
             <div class="flex items-center gap-3">
                 <span class="w-3 h-3 rounded-full" style="background-color: ${item.color}"></span>
                 <span class="text-gray-700 dark:text-gray-300 font-medium truncate max-w-[120px]" title="${item.label}">${item.label}</span>
-                <span class="text-xs text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full">${item.percent.toFixed(1)}%</span>
+                <span class="text-xs text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full">${percent.toFixed(1)}%</span>
             </div>
             <span class="font-semibold text-gray-900 dark:text-white tabular-nums">${formatoMoneda(item.value)}</span>
         `;
+        row.addEventListener('click', () => abrirModalCategoria('ingreso', item.tagId, item.label));
         legendContainer.appendChild(row);
     });
+}
+
+function obtenerEtiquetaRaizId(etiquetaId, etiquetas) {
+    if (!etiquetaId) return 'sin-etiqueta';
+    let tag = etiquetas.find(t => t.id === etiquetaId);
+    if (!tag) return 'sin-etiqueta';
+    while (tag && tag.padreId) {
+        const padre = etiquetas.find(p => p.id === tag.padreId);
+        if (!padre) break;
+        tag = padre;
+    }
+    return tag ? tag.id : 'sin-etiqueta';
+}
+
+function obtenerNombreEtiqueta(tagId, etiquetas) {
+    if (tagId === 'sin-etiqueta') return 'Sin etiqueta';
+    const tag = etiquetas.find(t => t.id === tagId);
+    return tag ? tag.nombre : 'Sin etiqueta';
+}
+
+function obtenerColorEtiqueta(tagId, etiquetas) {
+    if (tagId === 'sin-etiqueta') return '#94a3b8';
+    const tag = etiquetas.find(t => t.id === tagId);
+    return tag ? tag.color : '#94a3b8';
+}
+
+function formatearFechaHora(fechaStr) {
+    const normalizada = fechaStr.includes('T') ? fechaStr : fechaStr + 'T00:00:00';
+    const fecha = new Date(normalizada);
+    const fechaParte = fecha.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+    const horaParte = fecha.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+    return `${fechaParte} ${horaParte}`;
+}
+
+function abrirModalCategoria(tipo, tagId, label) {
+    const modal = document.getElementById('modal-categoria');
+    const backdrop = document.getElementById('modal-categoria-backdrop');
+    const panel = document.getElementById('modal-categoria-panel');
+    const title = document.getElementById('modal-categoria-title');
+    const subtitle = document.getElementById('modal-categoria-subtitle');
+    const list = document.getElementById('modal-categoria-list');
+    const totalEl = document.getElementById('modal-categoria-total');
+    if (!modal || !backdrop || !panel || !list || !title || !subtitle || !totalEl) return;
+
+    const cuentasMap = new Map(cuentasCache.map(c => [c.id, c.nombre]));
+    const operaciones = operacionesPeriodo.filter(op => {
+        if (op.tipo !== tipo) return false;
+        return obtenerEtiquetaRaizId(op.etiquetaId, etiquetasCache) === tagId;
+    }).sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+
+    title.textContent = `${tipo === 'ingreso' ? 'Ingresos' : 'Gastos'}: ${label}`;
+    const periodoLabel = document.getElementById('period-label')?.textContent || '';
+    subtitle.textContent = periodoLabel ? `Periodo: ${periodoLabel}` : '';
+
+    const total = operaciones.reduce((acc, op) => acc + Number(op.cantidad || 0), 0);
+    totalEl.textContent = formatoMoneda(total);
+
+    if (operaciones.length === 0) {
+        list.innerHTML = '<p class="text-sm text-gray-400 italic text-center py-6">Sin operaciones en este periodo</p>';
+    } else {
+        list.innerHTML = '';
+        operaciones.forEach(op => {
+            const item = document.createElement('div');
+            const cuenta = cuentasMap.get(op.cuentaId) || 'Sin cuenta';
+            const etiqueta = op.etiquetaId ? etiquetasCache.find(t => t.id === op.etiquetaId) : null;
+            const subEtiqueta = etiqueta && etiqueta.padreId ? etiqueta.nombre : null;
+            const etiquetaTexto = subEtiqueta ? ` • ${subEtiqueta}` : '';
+            item.className = 'flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700';
+            item.innerHTML = `
+                <div class="min-w-0">
+                    <p class="text-sm font-medium text-gray-900 dark:text-white truncate">${op.nombre || 'Sin nombre'}</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">${formatearFechaHora(op.fecha)} • ${cuenta}${etiquetaTexto}</p>
+                </div>
+                <span class="text-sm font-semibold ${tipo === 'ingreso' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'} tabular-nums">${formatoMoneda(op.cantidad)}</span>
+            `;
+            list.appendChild(item);
+        });
+    }
+
+    document.body.style.overflow = 'hidden';
+    modal.classList.remove('hidden');
+    requestAnimationFrame(() => {
+        backdrop.classList.remove('opacity-0');
+        panel.classList.remove('opacity-0', 'scale-95');
+        panel.classList.add('opacity-100', 'scale-100');
+    });
+}
+
+function cerrarModalCategoria() {
+    const modal = document.getElementById('modal-categoria');
+    const backdrop = document.getElementById('modal-categoria-backdrop');
+    const panel = document.getElementById('modal-categoria-panel');
+    if (!modal || !backdrop || !panel) return;
+    backdrop.classList.add('opacity-0');
+    panel.classList.remove('opacity-100', 'scale-100');
+    panel.classList.add('opacity-0', 'scale-95');
+    setTimeout(() => {
+        modal.classList.add('hidden');
+        document.body.style.overflow = '';
+    }, 200);
 }
 
 function OLD_actualizarGraficoBalanceHistorico(todasOperaciones, periodo) {

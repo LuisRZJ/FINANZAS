@@ -181,6 +181,26 @@ function renderTodas() {
 }
 
 function abrirEdicion(tag) {
+  const etiquetas = listarEtiquetas()
+  const padresMismaCategoria = etiquetas.filter(t => !t.padreId && t.tipo === tag.tipo && t.id !== tag.id)
+  const padreActual = tag.padreId ? etiquetas.find(t => t.id === tag.padreId) : null
+  const opcionesPadre = padresMismaCategoria.map(p => {
+    const selected = p.id === tag.padreId ? 'selected' : ''
+    return `<option value="${p.id}" ${selected}>${p.nombre}</option>`
+  }).join('')
+  const opcionPadreActual = tag.padreId && !padreActual
+    ? `<option value="${tag.padreId}" selected>Etiqueta padre no disponible</option>`
+    : ''
+  const bloquePadre = tag.padreId ? `
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Etiqueta padre</label>
+        <select id="edit-tag-padre" required class="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 px-3 py-2 text-sm">
+          ${opcionPadreActual}
+          ${opcionesPadre}
+        </select>
+      </div>
+  ` : ''
+
   const overlay = document.createElement('div')
   overlay.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[60] animate-fade-in'
   overlay.id = `modal-editar-etiqueta-${tag.id}`
@@ -217,6 +237,7 @@ function abrirEdicion(tag) {
           </select>
         </div>
       </div>
+      ${bloquePadre}
       <div class="flex gap-3 justify-end pt-2">
         <button type="button" id="btn-cancel-edit" 
           class="px-4 py-2 rounded-md text-sm font-medium border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
@@ -252,13 +273,15 @@ function abrirEdicion(tag) {
     const nuevoIcono = document.getElementById('edit-tag-icono').value
     const nuevoColor = document.getElementById('edit-tag-color').value
     const nuevoTipo = document.getElementById('edit-tag-tipo').value
+    const nuevoPadre = document.getElementById('edit-tag-padre')?.value
 
     try {
       actualizarEtiqueta(tag.id, {
         nombre: nuevoNombre,
         icono: nuevoIcono,
         color: nuevoColor,
-        tipo: nuevoTipo
+        tipo: nuevoTipo,
+        padreId: tag.padreId ? (nuevoPadre || null) : undefined
       })
       renderTodas()
       cerrarModal()

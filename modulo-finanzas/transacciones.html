@@ -192,27 +192,87 @@
                 <!-- Para Ingreso/Gasto -->
                 <div id="field-cuenta" class="hidden">
                   <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cuenta</label>
-                  <select id="op-cuenta"
-                    class="w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700/50 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2"></select>
+                  <div class="relative" data-select="op-cuenta">
+                    <button type="button"
+                      class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700/50 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 flex items-center justify-between gap-3"
+                      data-select-trigger aria-haspopup="listbox" aria-expanded="false">
+                      <span class="truncate text-gray-400" data-select-label>Selecciona una opción</span>
+                      <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M19 9l-7 7-7-7"></path>
+                      </svg>
+                    </button>
+                    <div
+                      class="absolute z-20 mt-1 w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg max-h-56 overflow-auto hidden"
+                      data-select-menu>
+                      <ul class="py-1 text-sm" data-select-options></ul>
+                    </div>
+                  </div>
+                  <select id="op-cuenta" required class="sr-only"></select>
                 </div>
 
                 <div id="field-etiqueta" class="hidden">
                   <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Categoría</label>
-                  <select id="op-etiqueta"
-                    class="w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700/50 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2"></select>
+                  <div class="relative" data-select="op-etiqueta">
+                    <button type="button"
+                      class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700/50 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 flex items-center justify-between gap-3"
+                      data-select-trigger aria-haspopup="listbox" aria-expanded="false">
+                      <span class="truncate text-gray-400" data-select-label>Selecciona una opción</span>
+                      <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M19 9l-7 7-7-7"></path>
+                      </svg>
+                    </button>
+                    <div
+                      class="absolute z-20 mt-1 w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg max-h-56 overflow-auto hidden"
+                      data-select-menu>
+                      <ul class="py-1 text-sm" data-select-options></ul>
+                    </div>
+                  </div>
+                  <select id="op-etiqueta" required class="sr-only"></select>
                 </div>
 
                 <!-- Para Transferencia -->
                 <div id="fields-transferencia" class="grid grid-cols-2 gap-4 hidden">
                   <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Origen</label>
-                    <select id="op-origen"
-                      class="w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700/50 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2"></select>
+                    <div class="relative" data-select="op-origen">
+                      <button type="button"
+                        class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700/50 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 flex items-center justify-between gap-3"
+                        data-select-trigger aria-haspopup="listbox" aria-expanded="false">
+                        <span class="truncate text-gray-400" data-select-label>Selecciona una opción</span>
+                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                      </button>
+                      <div
+                        class="absolute z-20 mt-1 w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg max-h-56 overflow-auto hidden"
+                        data-select-menu>
+                        <ul class="py-1 text-sm" data-select-options></ul>
+                      </div>
+                    </div>
+                    <select id="op-origen" required class="sr-only"></select>
                   </div>
                   <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Destino</label>
-                    <select id="op-destino"
-                      class="w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700/50 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2"></select>
+                    <div class="relative" data-select="op-destino">
+                      <button type="button"
+                        class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700/50 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 flex items-center justify-between gap-3"
+                        data-select-trigger aria-haspopup="listbox" aria-expanded="false">
+                        <span class="truncate text-gray-400" data-select-label>Selecciona una opción</span>
+                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                      </button>
+                      <div
+                        class="absolute z-20 mt-1 w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg max-h-56 overflow-auto hidden"
+                        data-select-menu>
+                        <ul class="py-1 text-sm" data-select-options></ul>
+                      </div>
+                    </div>
+                    <select id="op-destino" required class="sr-only"></select>
                   </div>
                 </div>
 
@@ -245,8 +305,23 @@
                       <span class="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">Repetir cada</span>
                       <input type="number" id="op-rec-frecuencia-valor" value="1" min="1" max="99"
                         class="w-16 rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-center text-sm px-2 py-1.5">
-                      <select id="op-rec-frecuencia-tipo"
-                        class="flex-1 rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm px-2 py-1.5">
+                      <div class="relative flex-1" data-select="op-rec-frecuencia-tipo">
+                        <button type="button"
+                          class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm px-2 py-1.5 flex items-center justify-between gap-2"
+                          data-select-trigger aria-haspopup="listbox" aria-expanded="false">
+                          <span class="truncate text-gray-400" data-select-label>Selecciona una opción</span>
+                          <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M19 9l-7 7-7-7"></path>
+                          </svg>
+                        </button>
+                        <div
+                          class="absolute z-20 mt-1 w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg max-h-56 overflow-auto hidden"
+                          data-select-menu>
+                          <ul class="py-1 text-sm" data-select-options></ul>
+                        </div>
+                      </div>
+                      <select id="op-rec-frecuencia-tipo" class="sr-only">
                         <option value="dias">día(s)</option>
                         <option value="semanas">semana(s)</option>
                         <option value="meses" selected>mes(es)</option>

@@ -348,6 +348,41 @@
       </div>
     </div>
   </main>
+  <div id="modal-categoria" class="fixed inset-0 z-[100] hidden" aria-labelledby="modal-categoria-title" role="dialog"
+    aria-modal="true">
+    <div class="fixed inset-0 bg-gray-900/70 backdrop-blur-sm transition-opacity opacity-0" id="modal-categoria-backdrop">
+    </div>
+    <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+      <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+        <div
+          class="relative transform overflow-hidden rounded-2xl bg-white dark:bg-gray-800 text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-2xl scale-95 opacity-0"
+          id="modal-categoria-panel">
+          <div
+            class="bg-gray-50 dark:bg-gray-800/50 px-4 py-3 sm:px-6 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
+            <div>
+              <h3 class="text-lg font-semibold leading-6 text-gray-900 dark:text-white" id="modal-categoria-title">
+                Operaciones por categoría</h3>
+              <p id="modal-categoria-subtitle" class="text-xs text-gray-500 dark:text-gray-400"></p>
+            </div>
+            <button type="button" id="modal-categoria-close"
+              class="text-gray-400 hover:text-gray-500 focus:outline-none">
+              <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <div class="p-6">
+            <div class="flex items-center justify-between mb-4">
+              <p class="text-sm text-gray-600 dark:text-gray-300">Total</p>
+              <p class="text-lg font-semibold text-gray-900 dark:text-white" id="modal-categoria-total">$0.00</p>
+            </div>
+            <div id="modal-categoria-list" class="space-y-2 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
   <nav id="mobile-menu" class="hidden md:hidden fixed inset-0 top-16 z-40 bg-white dark:bg-gray-900 overflow-y-auto">
     <div class="px-4 py-6 space-y-1">
       <a href="../index.html"

@@ -129,6 +129,118 @@ function formatCurrency(n) {
   return Number(n || 0).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })
 }
 
+function getCustomSelect(selectEl) {
+  return document.querySelector(`[data-select="${selectEl.id}"]`)
+}
+
+function closeCustomSelect(custom) {
+  const menu = custom.querySelector('[data-select-menu]')
+  const trigger = custom.querySelector('[data-select-trigger]')
+  if (menu) menu.classList.add('hidden')
+  if (trigger) trigger.setAttribute('aria-expanded', 'false')
+}
+
+function closeAllCustomSelects(except) {
+  const all = document.querySelectorAll('[data-select]')
+  all.forEach(custom => {
+    if (custom !== except) closeCustomSelect(custom)
+  })
+}
+
+function updateCustomSelection(custom, value) {
+  const options = custom.querySelectorAll('[data-select-options] button[data-value]')
+  options.forEach(btn => {
+    const selected = btn.getAttribute('data-value') === value
+    btn.classList.toggle('bg-blue-50', selected)
+    btn.classList.toggle('text-blue-700', selected)
+    btn.classList.toggle('dark:bg-blue-900/20', selected)
+    btn.classList.toggle('dark:text-blue-300', selected)
+  })
+}
+
+function updateCustomLabel(selectEl) {
+  const custom = getCustomSelect(selectEl)
+  if (!custom) return
+  const label = custom.querySelector('[data-select-label]')
+  if (!label) return
+  const selectedOption = selectEl.options[selectEl.selectedIndex]
+  label.textContent = selectedOption ? selectedOption.textContent : 'Selecciona una opción'
+  label.classList.toggle('text-gray-400', !selectEl.value)
+  updateCustomSelection(custom, selectEl.value)
+}
+
+function rebuildCustomOptions(selectEl) {
+  const custom = getCustomSelect(selectEl)
+  if (!custom) return
+  const optionsWrap = custom.querySelector('[data-select-options]')
+  if (!optionsWrap) return
+  optionsWrap.innerHTML = ''
+  Array.from(selectEl.options).forEach(opt => {
+    const li = document.createElement('li')
+    const btn = document.createElement('button')
+    btn.type = 'button'
+    btn.setAttribute('data-value', opt.value)
+    btn.className = 'w-full text-left px-3 py-2 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700'
+    btn.textContent = opt.textContent
+    btn.addEventListener('click', () => {
+      selectEl.value = opt.value
+      selectEl.dispatchEvent(new Event('change', { bubbles: true }))
+      closeCustomSelect(custom)
+    })
+    li.appendChild(btn)
+    optionsWrap.appendChild(li)
+  })
+  updateCustomLabel(selectEl)
+}
+
+function bindCustomSelects() {
+  const customSelects = document.querySelectorAll('[data-select]')
+  customSelects.forEach(custom => {
+    const selectId = custom.getAttribute('data-select')
+    const selectEl = document.getElementById(selectId)
+    if (!selectEl) return
+    const trigger = custom.querySelector('[data-select-trigger]')
+    if (trigger) {
+      trigger.addEventListener('click', (e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        const menu = custom.querySelector('[data-select-menu]')
+        const isOpen = menu && !menu.classList.contains('hidden')
+        if (isOpen) {
+          closeCustomSelect(custom)
+        } else {
+          closeAllCustomSelects(custom)
+          if (menu) menu.classList.remove('hidden')
+          trigger.setAttribute('aria-expanded', 'true')
+        }
+      })
+    }
+    custom.addEventListener('click', (e) => e.stopPropagation())
+    selectEl.addEventListener('change', () => updateCustomLabel(selectEl))
+    rebuildCustomOptions(selectEl)
+  })
+  document.addEventListener('click', () => closeAllCustomSelects())
+}
+
+function setCustomSelectDisabled(selectEl, disabled) {
+  const custom = getCustomSelect(selectEl)
+  if (!custom) return
+  const trigger = custom.querySelector('[data-select-trigger]')
+  if (disabled) {
+    custom.classList.add('opacity-50', 'pointer-events-none')
+    if (trigger) trigger.setAttribute('aria-disabled', 'true')
+  } else {
+    custom.classList.remove('opacity-50', 'pointer-events-none')
+    if (trigger) trigger.setAttribute('aria-disabled', 'false')
+  }
+}
+
+function setSelectValue(selectEl, value) {
+  if (!selectEl) return
+  selectEl.value = value ?? ''
+  selectEl.dispatchEvent(new Event('change', { bubbles: true }))
+}
+
 function fillSelect(el, options, getLabel, getValue) {
   el.innerHTML = ''
   const placeholder = document.createElement('option')
@@ -149,6 +261,7 @@ function fillSelect(el, options, getLabel, getValue) {
 
     el.appendChild(opt)
   })
+  rebuildCustomOptions(el)
 }
 
 // === Date Navigation Logic ===
@@ -180,6 +293,15 @@ window.abrirModal = function (modo = 'crear', op = null) {
   document.getElementById('form-operacion').reset()
   document.getElementById('op-error').classList.add('hidden')
   document.body.style.overflow = 'hidden' // Disable scroll
+  const inputFrecuenciaValor = document.getElementById('op-rec-frecuencia-valor')
+  const selectFrecuenciaTipo = document.getElementById('op-rec-frecuencia-tipo')
+  if (inputFrecuenciaValor && selectFrecuenciaTipo) {
+    inputFrecuenciaValor.disabled = false
+    selectFrecuenciaTipo.disabled = false
+    inputFrecuenciaValor.classList.remove('opacity-50')
+    selectFrecuenciaTipo.classList.remove('opacity-50')
+    setCustomSelectDisabled(selectFrecuenciaTipo, false)
+  }
 
   // Load Selects Data
   loadSelectsData()
@@ -220,11 +342,11 @@ window.abrirModal = function (modo = 'crear', op = null) {
     }
 
     if (op.tipo === 'ingreso' || op.tipo === 'gasto') {
-      document.getElementById('op-cuenta').value = op.cuentaId
-      document.getElementById('op-etiqueta').value = op.etiquetaId
+      setSelectValue(document.getElementById('op-cuenta'), op.cuentaId)
+      setSelectValue(document.getElementById('op-etiqueta'), op.etiquetaId)
     } else if (op.tipo === 'transferencia') {
-      document.getElementById('op-origen').value = op.origenId
-      document.getElementById('op-destino').value = op.destinoId
+      setSelectValue(document.getElementById('op-origen'), op.origenId)
+      setSelectValue(document.getElementById('op-destino'), op.destinoId)
     }
 
     // Bug 1 Fix: Cargar estado de recurrencia si existe
@@ -240,7 +362,7 @@ window.abrirModal = function (modo = 'crear', op = null) {
 
         // Cargar valores de la plantilla
         document.getElementById('op-rec-frecuencia-valor').value = rec.frecuenciaValor || 1
-        document.getElementById('op-rec-frecuencia-tipo').value = rec.frecuenciaTipo || 'meses'
+        setSelectValue(document.getElementById('op-rec-frecuencia-tipo'), rec.frecuenciaTipo || 'meses')
         document.getElementById('op-rec-ultimo-dia').checked = rec.ultimoDiaMes || false
 
         // Cargar tipo de fin
@@ -256,6 +378,7 @@ window.abrirModal = function (modo = 'crear', op = null) {
           document.getElementById('op-rec-frecuencia-tipo').disabled = true
           document.getElementById('op-rec-frecuencia-valor').classList.add('opacity-50')
           document.getElementById('op-rec-frecuencia-tipo').classList.add('opacity-50')
+          setCustomSelectDisabled(document.getElementById('op-rec-frecuencia-tipo'), true)
         }
       }
     } else {
@@ -343,7 +466,7 @@ function updateFormVisibility() {
       const ops = listarOperaciones()
       const op = ops.find(o => o.id === editandoId)
       if (op && op.tipo === tipo) {
-        selEtiquetas.value = op.etiquetaId
+        setSelectValue(selEtiquetas, op.etiquetaId)
       }
     }
   }
@@ -401,6 +524,7 @@ function bindModalEvents() {
         inputFrecuenciaValor.classList.remove('opacity-50')
         selectFrecuenciaTipo.classList.remove('opacity-50')
       }
+      setCustomSelectDisabled(selectFrecuenciaTipo, deshabilitado)
     })
   }
 
@@ -846,6 +970,7 @@ function init() {
   if (btnNext) btnNext.addEventListener('click', () => cambiarMes(1))
 
   bindModalEvents()
+  bindCustomSelects()
   bindDecisionEvents() // Eventos del modal de decisión de series
   ejecutarPendientes() // Procesar operaciones cuya fecha ya pasó
   generarInstanciasRecurrentes() // Generar instancias de recurrencias pendientes
