@@ -237,11 +237,22 @@ window.FTI_Indicators.calculateIndicators = function (data) {
         const range = high - low;
         let upperWickPct = 0;
         let lowerWickPct = 0;
+        let crt = 0;
+        let crtZone = null; // 'LOWER', 'MID', 'UPPER'
+
         if (isFinite(range) && range > 0) {
             const upperWick = Math.max(0, high - Math.max(open, close));
             const lowerWick = Math.max(0, Math.min(open, close) - low);
             upperWickPct = (upperWick / range) * 100;
             lowerWickPct = (lowerWick / range) * 100;
+
+            // --- CRT Logic (Candle Range Theory) ---
+            // Posición del cierre dentro del rango total (0-100)
+            crt = ((close - low) / range) * 100;
+            
+            if (crt <= 33.33) crtZone = 'LOWER';
+            else if (crt <= 66.66) crtZone = 'MID';
+            else crtZone = 'UPPER';
         }
         return {
             ...d,
@@ -253,6 +264,8 @@ window.FTI_Indicators.calculateIndicators = function (data) {
             bodySizePct: (Math.abs(d.close - d.open) / d.open) * 100,
             upperWickPct,
             lowerWickPct,
+            crt,
+            crtZone,
             adrValue: adrData[i] ? adrData[i].adrValue : null,
             adrFilledPct: adrData[i] ? adrData[i].adrFilledPct : null,
             currentDayRange: adrData[i] ? adrData[i].currentDayRange : null,

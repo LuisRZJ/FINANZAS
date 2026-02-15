@@ -211,6 +211,29 @@
                 width: 22px;
                 height: 22px;
             }
+            #${ROOT_ID}.embedded {
+                position: relative;
+                right: auto;
+                bottom: auto;
+                z-index: auto;
+                margin: 0;
+                width: 48px;
+                height: 48px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                overflow: visible;
+            }
+            #${ROOT_ID}.embedded .fti-focus-audio__toggle {
+                box-shadow: none;
+                width: 48px;
+                height: 48px;
+                margin: 0;
+            }
+            #${ROOT_ID}.embedded .fti-focus-audio__panel {
+                right: calc(100% + 12px);
+                bottom: 0;
+            }
         `;
         document.head.appendChild(style);
     };
@@ -297,11 +320,26 @@
     };
 
     const init = () => {
-        if (document.getElementById(ROOT_ID)) return;
         injectStyles();
-        const root = createMarkup();
-        document.body.appendChild(root);
-        bindUI(root);
+        
+        let root = document.getElementById(ROOT_ID);
+        if (!root) {
+            root = createMarkup();
+            bindUI(root);
+        }
+        
+        const container = document.getElementById('global-sidebar-audio');
+        if (container) {
+            root.classList.add('embedded');
+            if (root.parentElement !== container) {
+                container.appendChild(root);
+            }
+        } else {
+            root.classList.remove('embedded');
+            if (!root.parentElement) {
+                document.body.appendChild(root);
+            }
+        }
     };
 
     window.FTI_FocusAudio = { init };

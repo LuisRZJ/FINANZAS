@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NakedEdgeChart</title>
+    <meta name="theme-color" content="#2563eb">
+    <link rel="icon" href="/pwa/logo-app.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        accent: {
+                            DEFAULT: 'var(--accent-color)',
+                            hover: 'var(--accent-color-hover)',
+                            shadow: 'var(--accent-color-shadow)',
+                            soft: 'var(--accent-color-soft)'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <script>
+        try {
+            const stored = localStorage.getItem('nec_theme_preference') || 'system';
+            const isDark = stored === 'dark' || (stored === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            document.documentElement.classList.toggle('dark', isDark);
+        } catch (e) {}
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/estilos.css">
+    <script src="https://unpkg.com/lucide@latest" defer></script>
+    <script src="js/theme.js" defer></script>
+    <script src="js/paginas/index.js" defer></script>
+</head>
+<body class="relative h-screen w-screen bg-slate-50 dark:bg-slate-900 overflow-hidden">
+    <canvas id="bg-chart" class="absolute inset-0 w-full h-full"></canvas>
+
+    <div class="absolute inset-0 bg-white/10 dark:bg-slate-900/25 pointer-events-none"></div>
+    <div class="absolute inset-0 bg-gradient-to-b from-white/5 via-transparent to-white/15 dark:from-slate-900/10 dark:to-slate-900/35 pointer-events-none"></div>
+
+    <main class="relative z-10 h-full w-full flex items-center justify-center p-6">
+        <section aria-label="Navegación" class="w-full max-w-xl sm:max-w-3xl">
+            <div class="card bg-white/72 dark:bg-slate-900/58 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-sm backdrop-blur-sm p-6 sm:p-8">
+                <header class="flex items-center justify-between gap-6">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="accent-bg p-2 rounded-xl shadow accent-shadow">
+                            <i data-lucide="bar-chart-2" class="w-5 h-5 text-white"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-wide leading-tight truncate">NakedEdge<span class="accent-text">Chart</span></h1>
+                            <p id="bg-subtitle" class="text-xs text-slate-500 dark:text-slate-400">Simulador de trading · Análisis</p>
+                        </div>
+                    </div>
+                    <div class="hidden sm:flex items-center gap-2 text-[10px] text-slate-500 dark:text-slate-400">
+                        <i data-lucide="candlestick-chart" class="w-4 h-4 text-accent"></i>
+                        <span id="bg-meta" class="font-mono">BTCUSDT · 1m</span>
+                    </div>
+                </header>
+
+                <nav class="mt-6" aria-label="Menú principal">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <a href="naked-edge-chart.html" class="group flex items-center justify-between gap-3 px-4 py-3 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white/60 dark:bg-slate-900/40 hover:bg-slate-50 dark:hover:bg-slate-800 transition min-w-0">
+                            <div class="flex items-center gap-3 min-w-0 flex-1">
+                                <div class="w-9 h-9 rounded-lg bg-accent-soft dark:bg-slate-800 flex items-center justify-center shrink-0">
+                                    <i data-lucide="line-chart" class="w-4 h-4 text-accent"></i>
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="text-[13px] font-bold text-slate-900 dark:text-slate-100 truncate">Gráfico</div>
+                                    <div class="text-[10px] text-slate-500 dark:text-slate-400">Simulador</div>
+                                </div>
+                            </div>
+                            <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200 shrink-0"></i>
+                        </a>
+
+                        <a href="estadisticas.html" class="group flex items-center justify-between gap-3 px-4 py-3 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white/60 dark:bg-slate-900/40 hover:bg-slate-50 dark:hover:bg-slate-800 transition min-w-0">
+                            <div class="flex items-center gap-3 min-w-0 flex-1">
+                                <div class="w-9 h-9 rounded-lg bg-accent-soft dark:bg-slate-800 flex items-center justify-center shrink-0">
+                                    <i data-lucide="activity" class="w-4 h-4 text-accent"></i>
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="text-[13px] font-bold text-slate-900 dark:text-slate-100 truncate">Estadísticas</div>
+                                    <div class="text-[10px] text-slate-500 dark:text-slate-400">Rendimiento</div>
+                                </div>
+                            </div>
+                            <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200 shrink-0"></i>
+                        </a>
+
+                        <a href="ajustes.html" class="group flex items-center justify-between gap-3 px-4 py-3 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white/60 dark:bg-slate-900/40 hover:bg-slate-50 dark:hover:bg-slate-800 transition min-w-0">
+                            <div class="flex items-center gap-3 min-w-0 flex-1">
+                                <div class="w-9 h-9 rounded-lg bg-accent-soft dark:bg-slate-800 flex items-center justify-center shrink-0">
+                                    <i data-lucide="sliders" class="w-4 h-4 text-accent"></i>
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="text-[13px] font-bold text-slate-900 dark:text-slate-100 truncate">Ajustes</div>
+                                    <div class="text-[10px] text-slate-500 dark:text-slate-400">Preferencias</div>
+                                </div>
+                            </div>
+                            <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200 shrink-0"></i>
+                        </a>
+                    </div>
+                </nav>
+
+                <div class="mt-4 flex justify-end">
+                    <a href="../../utilidades.html" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-200/80 dark:border-slate-800 bg-white/60 dark:bg-slate-900/40 text-[11px] font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+                        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                        Volver a Utilidades
+                    </a>
+                </div>
+
+                <div class="mt-6 flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400">
+                    <div class="flex items-center gap-2">
+                        <span class="inline-flex w-2 h-2 rounded-full bg-emerald-500"></span>
+                        <span id="bg-status">Cargando mercado…</span>
+                    </div>
+                    <div class="font-mono">v2.0 Native Canvas Core</div>
+                </div>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

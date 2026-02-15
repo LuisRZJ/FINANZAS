@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gráfico - NakedEdgeChart</title>
+    <meta name="theme-color" content="#2563eb">
+    <link rel="icon" href="/pwa/logo-app.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        accent: {
+                            DEFAULT: 'var(--accent-color)',
+                            hover: 'var(--accent-color-hover)',
+                            shadow: 'var(--accent-color-shadow)',
+                            soft: 'var(--accent-color-soft)',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <script>
+        try {
+            const stored = localStorage.getItem('nec_theme_preference') || 'system';
+            const isDark = stored === 'dark' || (stored === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            document.documentElement.classList.toggle('dark', isDark);
+        } catch (e) {}
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/estilos.css">
+    <script src="https://unpkg.com/lucide@latest" defer></script>
+    <script src="js/theme.js" defer></script>
+    <script src="js/paginas/naked-edge-chart.js" defer></script>
+</head>
+<body class="flex h-screen w-screen bg-slate-50 dark:bg-slate-900">
+
+    <!-- SECCIÓN IZQUIERDA: GRÁFICO (Flexible, ocupa el resto) -->
+    <main class="flex-1 relative h-full flex flex-col">
+        
+        <!-- Control Flotante de Temporalidad -->
+        <div class="absolute top-4 left-4 z-20">
+            <div class="flex items-center gap-1 bg-white/90 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700/80 p-1 rounded-lg shadow-lg">
+                <button id="btn-ltf" class="px-3 py-1 rounded-md transition-all flex items-center text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800">
+                    <span class="text-xs">LTF</span>
+                </button>
+                <button id="btn-normal" class="px-3 py-1 rounded-md transition-all flex items-center text-slate-900 bg-slate-200 shadow-sm dark:bg-slate-600 dark:text-white font-medium">
+                    <span class="text-xs">Normal</span>
+                </button>
+                <button id="btn-htf" class="px-3 py-1 rounded-md transition-all flex items-center text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800">
+                    <span class="text-xs">HTF</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Precio Actual Flotante (Abajo Izquierda) -->
+        <div class="absolute bottom-6 left-6 z-10 hidden">
+            <h2 id="floating-price" class="text-4xl font-bold text-white tracking-tighter drop-shadow-lg">--.--</h2>
+            <div id="floating-change" class="text-sm font-medium mt-1 px-2 py-0.5 rounded bg-slate-800/50 dark:bg-slate-700/50 inline-block backdrop-blur">
+                <span class="text-slate-400">Esperando datos...</span>
+            </div>
+        </div>
+
+        <!-- Canvas Container -->
+        <div id="canvas-container" class="w-full h-full relative cursor-crosshair">
+            <canvas id="chartCanvas" class="block"></canvas>
+            
+            <!-- Tooltip Personalizado -->
+            <div id="tooltip" class="absolute bg-white/95 dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 p-3 rounded shadow-xl text-xs hidden pointer-events-none z-50 backdrop-blur-sm">
+                <div class="flex items-center justify-between gap-4 mb-2 border-b border-slate-200 dark:border-slate-700 pb-1">
+                    <span class="text-slate-500 dark:text-slate-400">OHLC</span>
+                    <span id="t-date" class="text-slate-700 dark:text-slate-200"></span>
+                </div>
+                <div class="grid grid-cols-2 gap-x-6 gap-y-1.5 font-mono">
+                    <span class="text-slate-500 dark:text-slate-400">Open</span> <span id="t-open" class="text-right text-slate-800 dark:text-slate-100"></span>
+                    <span class="text-slate-500 dark:text-slate-400">High</span> <span id="t-high" class="text-right text-slate-800 dark:text-slate-100"></span>
+                    <span class="text-slate-500 dark:text-slate-400">Low</span>  <span id="t-low" class="text-right text-slate-800 dark:text-slate-100"></span>
+                    <span class="text-slate-500 dark:text-slate-400">Close</span> <span id="t-close" class="text-right dark:text-slate-100"></span>
+                </div>
+            </div>
+
+            <!-- Loader -->
+            <div id="loader" class="absolute inset-0 flex items-center justify-center bg-slate-50 dark:bg-slate-900 z-20">
+                <div class="flex flex-col items-center gap-4">
+                    <div class="relative w-12 h-12">
+                        <div class="absolute inset-0 border-t-4 rounded-full animate-spin accent-border-top"></div>
+                        <div class="absolute inset-2 border-b-4 border-slate-300 rounded-full animate-spin" style="animation-direction: reverse;"></div>
+                    </div>
+                    <div class="text-slate-500 dark:text-slate-400 text-sm font-medium animate-pulse">Analizando mercado...</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- SECCIÓN DERECHA: PANEL LATERAL (Fijo) -->
+    <aside class="w-80 h-full bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 flex flex-col shadow-xl z-30">
+        
+        <!-- 1. Header del Panel -->
+        <div class="p-6 border-b border-slate-200 dark:border-slate-800 relative">
+            <div class="flex items-center justify-between mb-1">
+                <div class="flex items-center gap-3">
+                    <div class="accent-bg p-1.5 rounded-lg">
+                        <i data-lucide="bar-chart-2" class="w-5 h-5 text-white"></i>
+                    </div>
+                    <h1 class="font-bold text-slate-900 dark:text-slate-100 tracking-wide">NakedEdge<span class="accent-text">Chart</span></h1>
+                </div>
+                <button id="nav-toggle" class="w-9 h-9 flex items-center justify-center rounded-lg border accent-border accent-text hover:text-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 dark:hover:text-white transition">
+                    <i data-lucide="menu" class="w-4 h-4"></i>
+                </button>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 ml-1">v2.0 Native Canvas Core</p>
+            <div id="nav-menu" class="nav-menu hidden">
+                <a class="nav-link" href="index.html">Inicio</a>
+                <a class="nav-link" href="estadisticas.html">Estadísticas</a>
+                <a class="nav-link" href="ajustes.html">Ajustes</a>
+                <a class="nav-link nav-link-active" href="naked-edge-chart.html">Gráfico</a>
+            </div>
+        </div>
+
+        <!-- 2. Información del Activo -->
+        <div class="p-6 flex-1 overflow-y-auto">
+            <div class="mb-8 hidden">
+                <h3 class="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold mb-3">Activo Seleccionado</h3>
+                <div class="sidebar-info bg-slate-100 dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <span id="symbol-display" class="text-2xl font-bold text-slate-900 dark:text-slate-100 block">BTC/USDT</span>
+                            <span class="text-xs text-slate-500 dark:text-slate-400">Binance Spot Market</span>
+                        </div>
+                        <span id="interval-badge" class="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs px-2 py-1 rounded font-mono">1H</span>
+                    </div>
+                    <div class="h-1 w-full bg-slate-200 dark:bg-slate-700 rounded-full mt-2 overflow-hidden">
+                        <div class="h-full w-2/3 animate-pulse accent-bg"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botón de Acción Principal -->
+            <div class="mb-8">
+                <h3 class="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold mb-3">Control de Escáner</h3>
+                <button id="randomize-chart" class="w-full group relative overflow-hidden accent-bg accent-bg-hover text-white p-4 rounded-xl transition-all shadow-lg accent-shadow active:translate-y-0.5">
+                    <div class="absolute inset-0 bg-white/10 group-hover:translate-x-full transition-transform duration-500 skew-x-12 -translate-x-full"></div>
+                    <div class="flex items-center justify-center gap-3 relative z-10">
+                        <i data-lucide="shuffle" class="w-5 h-5"></i>
+                        <span class="font-bold">Generar Gráfico Aleatorio</span>
+                    </div>
+                </button>
+                <p class="text-[10px] text-center text-slate-500 dark:text-slate-400 mt-3">
+                    Selecciona aleatoriamente entre >80 pares y 7 temporalidades
+                </p>
+            </div>
+
+            <div class="mb-6">
+                <h3 class="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold mb-3">Simulador de Trade</h3>
+                
+                <div id="trade-panel" class="bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 p-4 transition-all duration-200">
+                    
+                    <div class="grid grid-cols-2 gap-3 mb-4">
+                        <button id="trade-long" class="flex flex-col items-center justify-center p-3 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 hover:border-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all group">
+                            <span class="text-xs font-bold text-slate-500 dark:text-slate-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 mb-1">LONG</span>
+                            <i data-lucide="trending-up" class="w-5 h-5 text-slate-400 group-hover:text-emerald-500 transition-colors"></i>
+                        </button>
+                        
+                        <button id="trade-short" class="flex flex-col items-center justify-center p-3 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 hover:border-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-all group">
+                            <span class="text-xs font-bold text-slate-500 dark:text-slate-400 group-hover:text-rose-600 dark:group-hover:text-rose-400 mb-1">SHORT</span>
+                            <i data-lucide="trending-down" class="w-5 h-5 text-slate-400 group-hover:text-rose-500 transition-colors"></i>
+                        </button>
+                    </div>
+
+                    <div class="flex items-center justify-between bg-white dark:bg-slate-800 rounded-lg p-3 border border-slate-100 dark:border-slate-700 mb-4">
+                        <div class="flex items-center gap-2">
+                            <div class="p-1.5 rounded bg-slate-100 dark:bg-slate-700">
+                                <i data-lucide="crosshair" class="w-3.5 h-3.5 text-slate-500 dark:text-slate-400"></i>
+                            </div>
+                            <span class="text-xs text-slate-500 dark:text-slate-400">Ratio R:R</span>
+                        </div>
+                        <span id="trade-rr" class="text-sm font-mono font-bold text-slate-900 dark:text-slate-100">--</span>
+                    </div>
+
+                    <button id="trade-execute" class="w-full hidden group relative overflow-hidden bg-slate-900 dark:bg-white text-white dark:text-slate-900 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all active:scale-[0.98]">
+                        <div class="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                        <div class="relative flex items-center justify-center gap-2">
+                            <i data-lucide="play" class="w-4 h-4 fill-current"></i>
+                            <span class="text-xs font-bold tracking-wide">EJECUTAR</span>
+                        </div>
+                    </button>
+
+                    <p class="text-[10px] text-center text-slate-400 dark:text-slate-500 mt-3 italic">
+                        Ajusta TP/SL arrastrando las líneas en el gráfico
+                    </p>
+                </div>
+            </div>
+
+            <!-- Mini estadísticas (Decorativas/Funcionales) -->
+            <div class="space-y-4 hidden">
+                <h3 class="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold">Resumen de Velas</h3>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="sidebar-info bg-slate-50 dark:bg-slate-800 p-3 rounded border border-slate-200 dark:border-slate-700">
+                        <div class="text-xs text-slate-500 dark:text-slate-400 mb-1">Muestra</div>
+                        <div class="text-slate-800 dark:text-slate-200 font-mono">200</div>
+                    </div>
+                    <div class="sidebar-info bg-slate-50 dark:bg-slate-800 p-3 rounded border border-slate-200 dark:border-slate-700">
+                        <div class="text-xs text-slate-500 dark:text-slate-400 mb-1">Motor</div>
+                        <div class="text-emerald-600 dark:text-emerald-400 font-mono text-xs">Canvas 2D</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Footer del Panel -->
+        <div class="sidebar-footer p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900">
+            <div class="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400">
+                <span id="last-updated">Actualizado: --:--:--</span>
+                <div class="flex gap-2">
+                    <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                    <span class="text-slate-600 dark:text-slate-400">Conectado</span>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <div id="trade-result-modal" class="fixed inset-0 hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-sm z-50">
+        <div class="w-[360px] rounded-2xl bg-white/90 dark:bg-slate-900/90 border border-slate-200/60 dark:border-slate-700/60 shadow-2xl p-6">
+            <div class="flex items-center justify-between text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-4">
+                <span>Resultados</span>
+                <span id="trade-result-status" class="text-emerald-500">WIN</span>
+            </div>
+            <div class="text-center space-y-2">
+                <div id="trade-result-title" class="text-2xl font-bold text-slate-900 dark:text-slate-100">PROFIT</div>
+                <div id="trade-result-pnl" class="text-lg font-semibold text-emerald-500">+0.00%</div>
+                <div class="text-xs text-slate-500 dark:text-slate-400">RR <span id="trade-result-rr" class="text-slate-700 dark:text-slate-200 font-semibold">1:1.00</span></div>
+                <div class="text-xs text-slate-500 dark:text-slate-400">Duración <span id="trade-result-duration" class="text-slate-700 dark:text-slate-200 font-semibold">0 velas</span></div>
+            </div>
+            <div class="mt-5 flex justify-center">
+                <button id="trade-result-close" class="px-4 py-2 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

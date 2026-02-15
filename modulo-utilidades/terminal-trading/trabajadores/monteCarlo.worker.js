@@ -4,6 +4,14 @@ self.onmessage = function(e) {
         self.postMessage({ error: 'Entrada inválida: trades debe ser un array no vacío.' });
         return;
     }
+    if (!Number.isFinite(simCount) || simCount <= 0) {
+        self.postMessage({ error: 'Entrada inválida: simCount debe ser un número mayor a 0.' });
+        return;
+    }
+    if (!Number.isFinite(riskPercent) || riskPercent <= 0) {
+        self.postMessage({ error: 'Entrada inválida: riskPercent debe ser un número mayor a 0.' });
+        return;
+    }
     
     // Fisher-Yates shuffle
     function shuffle(arr) {

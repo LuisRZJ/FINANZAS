@@ -47,3 +47,155 @@ details[open] summary~* {
 details[open] .group-open\:rotate-180 {
     transform: rotate(180deg);
 }
+
+.fti-md {
+    line-height: 1.6;
+    word-break: break-word;
+}
+
+.fti-md > :first-child {
+    margin-top: 0;
+}
+
+.fti-md > :last-child {
+    margin-bottom: 0;
+}
+
+.fti-md p {
+    margin: 0.5rem 0;
+}
+
+.fti-md h1,
+.fti-md h2,
+.fti-md h3,
+.fti-md h4 {
+    font-weight: 800;
+    line-height: 1.25;
+    margin: 1rem 0 0.5rem;
+}
+
+.fti-md h1 {
+    font-size: 1.25rem;
+}
+
+.fti-md h2 {
+    font-size: 1.1rem;
+}
+
+.fti-md h3 {
+    font-size: 1rem;
+}
+
+.fti-md h4 {
+    font-size: 0.95rem;
+}
+
+.fti-md ul,
+.fti-md ol {
+    padding-left: 1.25rem;
+    margin: 0.5rem 0;
+}
+
+.fti-md li {
+    margin: 0.25rem 0;
+}
+
+.fti-md a {
+    color: #2563eb;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.dark .fti-md a {
+    color: #60a5fa;
+}
+
+.fti-md hr {
+    border: none;
+    border-top: 1px solid #e2e8f0;
+    margin: 1rem 0;
+}
+
+.dark .fti-md hr {
+    border-top-color: #334155;
+}
+
+.fti-md blockquote {
+    margin: 0.75rem 0;
+    padding-left: 0.85rem;
+    border-left: 3px solid #cbd5e1;
+    color: #475569;
+}
+
+.dark .fti-md blockquote {
+    border-left-color: #334155;
+    color: #cbd5e1;
+}
+
+.fti-md code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85em;
+    padding: 0.12rem 0.3rem;
+    border-radius: 0.35rem;
+    background: rgba(15, 23, 42, 0.06);
+}
+
+.dark .fti-md code {
+    background: rgba(148, 163, 184, 0.14);
+}
+
+.fti-md pre {
+    margin: 0.75rem 0;
+    padding: 0.85rem;
+    border-radius: 0.85rem;
+    overflow: auto;
+    background: #0b1220;
+    color: #e5e7eb;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+}
+
+.dark .fti-md pre {
+    background: rgba(2, 6, 23, 0.75);
+    border: 1px solid rgba(51, 65, 85, 0.6);
+}
+
+.fti-md pre code {
+    background: transparent;
+    padding: 0;
+    font-size: inherit;
+    color: inherit;
+}
+
+.fti-md table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0.75rem 0;
+    font-size: 0.9em;
+}
+
+.fti-md th,
+.fti-md td {
+    border: 1px solid #e2e8f0;
+    padding: 0.4rem 0.55rem;
+    vertical-align: top;
+}
+
+.dark .fti-md th,
+.dark .fti-md td {
+    border-color: #334155;
+}
+
+.fti-md th {
+    background: rgba(148, 163, 184, 0.15);
+    font-weight: 700;
+}
+
+.dark .fti-md th {
+    background: rgba(51, 65, 85, 0.35);
+}
+
+.fti-md img {
+    max-width: 100%;
+    height: auto;
+}

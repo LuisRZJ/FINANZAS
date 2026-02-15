@@ -191,6 +191,9 @@
 
     <script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
 
+    <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.5/dist/purify.min.js"></script>
+
     <link rel="stylesheet" href="css/estilos.css">
 </head>
 
@@ -274,10 +277,392 @@
         const IconBase = window.FTI_IconBase;
         const { POPULAR_PAIRS, FOREX_PAIRS, AUTOLOAD_ENTRY_TFS, AUTOLOAD_TF_MAP, AUTOLOAD_TF_LABEL, getAuditVariants, findLocalDataset } = window.FTI_Constants;
         const AUDIT_VARIANTS = getAuditVariants(Icons);
+        const GOOGLE_AI_KEY_STORAGE = 'fti_google_ai_studio_api_key';
 
         // --- COMPONENTES Y CONSTANTES CARGADOS DESDE js/components/ ---
 
         // --- COMPONENTE PRINCIPAL ---
+        const HelpPanel = ({ isOpen, onClose }) => {
+            if (!isOpen) return null;
+
+            return (
+                <div className="fixed inset-y-0 right-[80px] w-80 bg-white dark:bg-slate-900 shadow-2xl z-50 border-l border-slate-200 dark:border-slate-800 overflow-y-auto animate-slide-in-right custom-scrollbar">
+                    <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between sticky top-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur z-10">
+                        <h2 className="font-bold text-base text-slate-800 dark:text-white flex items-center gap-2">
+                            <Icons.HelpCircle className="text-indigo-500" size={18} /> Ayuda y Referencia
+                        </h2>
+                        <button onClick={onClose} className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors text-slate-500">
+                            <Icons.X size={18} />
+                        </button>
+                    </div>
+                    
+                    <div className="p-4 space-y-6 pb-20">
+                        {/* 1. Auto-Detección */}
+                        <section>
+                            <h3 className="font-bold text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3 flex items-center gap-2">
+                                <Icons.Zap size={14} className="text-amber-500" /> Auto-Detección
+                            </h3>
+                            <div className="text-xs text-slate-600 dark:text-slate-400 space-y-2 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700">
+                                <p><strong className="text-slate-700 dark:text-slate-300">1. Análisis de Volatilidad:</strong> Se calcula el ATR (14 periodos) para medir el "ruido" del mercado y adaptar el SL dinámicamente.</p>
+                                <p><strong className="text-slate-700 dark:text-slate-300">2. Estructura de Mercado:</strong> Se identifican Pivotes (Swing Highs/Lows) recientes para determinar si la tendencia es Alcista (Higher Highs) o Bajista (Lower Lows).</p>
+                                <p><strong className="text-slate-700 dark:text-slate-300">3. Fuerza de Tendencia:</strong> Se usa ADX o EMA200 para filtrar mercados laterales donde las señales de tendencia fallan.</p>
+                            </div>
+                        </section>
+
+                        {/* 2. Guía de Clasificación */}
+                        <section>
+                            <h3 className="font-bold text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3 flex items-center gap-2">
+                                <Icons.ShieldCheck size={14} className="text-green-500" /> Clasificación de Edge
+                            </h3>
+                            <div className="space-y-2 text-xs">
+                                <div className="flex justify-between items-center p-2 bg-slate-50 dark:bg-slate-800/50 rounded border border-slate-100 dark:border-slate-700">
+                                    <span className="font-bold text-green-700 dark:text-green-400">Robusto (Excelente)</span>
+                                    <span className="text-slate-500">Wilson 95% &gt; BE</span>
+                                </div>
+                                <div className="flex justify-between items-center p-2 bg-slate-50 dark:bg-slate-800/50 rounded border border-slate-100 dark:border-slate-700">
+                                    <span className="font-bold text-orange-500 dark:text-orange-400">Especulativo</span>
+                                    <span className="text-slate-500">Histórico OK, Wilson Mal</span>
+                                </div>
+                                <div className="p-2 bg-orange-50 dark:bg-orange-900/10 border border-orange-100 dark:border-orange-900/20 rounded text-orange-800 dark:text-orange-300 italic text-[10px]">
+                                    Un Edge Especulativo significa que aunque el histórico es bueno, la muestra es muy pequeña para garantizar ganancias futuras.
+                                </div>
+                                <div className="flex justify-between items-center p-2 bg-slate-50 dark:bg-slate-800/50 rounded border border-slate-100 dark:border-slate-700">
+                                    <span className="font-bold text-slate-600 dark:text-slate-400">Marginal</span>
+                                    <span className="text-slate-500">Edge ≥ 0%</span>
+                                </div>
+                                <div className="flex justify-between items-center p-2 bg-slate-50 dark:bg-slate-800/50 rounded border border-slate-100 dark:border-slate-700">
+                                    <span className="font-bold text-red-500 dark:text-red-400">Esperanza Negativa</span>
+                                    <span className="text-slate-500">Edge &lt; 0%</span>
+                                </div>
+                            </div>
+                        </section>
+
+                        {/* 3. Win Rate Referencia */}
+                        <section>
+                            <h3 className="font-bold text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3 flex items-center gap-2">
+                                <Icons.Target size={14} className="text-blue-500" /> Min. Win Rate (Break-Even)
+                            </h3>
+                            <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700 overflow-hidden">
+                                <table className="w-full text-xs text-left">
+                                    <thead className="bg-slate-100 dark:bg-slate-800 text-slate-500">
+                                        <tr>
+                                            <th className="p-2 font-semibold">Ratio R:R</th>
+                                            <th className="p-2 font-semibold text-right">Min. WR %</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100 dark:divide-slate-700 text-slate-600 dark:text-slate-300">
+                                        <tr><td className="p-2 font-mono">1:1</td><td className="p-2 text-right font-mono font-bold">50.0%</td></tr>
+                                        <tr><td className="p-2 font-mono">1:1.5</td><td className="p-2 text-right font-mono font-bold">40.0%</td></tr>
+                                        <tr><td className="p-2 font-mono">1:2</td><td className="p-2 text-right font-mono font-bold">33.3%</td></tr>
+                                        <tr><td className="p-2 font-mono">1:2.5</td><td className="p-2 text-right font-mono font-bold">28.6%</td></tr>
+                                        <tr><td className="p-2 font-mono">1:3</td><td className="p-2 text-right font-mono font-bold">25.0%</td></tr>
+                                        <tr><td className="p-2 font-mono">1:4</td><td className="p-2 text-right font-mono font-bold">20.0%</td></tr>
+                                        <tr><td className="p-2 font-mono">1:5</td><td className="p-2 text-right font-mono font-bold">16.7%</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </section>
+
+                        {/* 4. Riesgo de Azar */}
+                        <section>
+                            <h3 className="font-bold text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3 flex items-center gap-2">
+                                <Icons.Activity size={14} className="text-purple-500" /> Riesgo de Azar
+                            </h3>
+                            <div className="space-y-2 text-xs">
+                                <p className="text-slate-500 italic mb-2">Probabilidad de que tu Edge sea suerte.</p>
+                                <div className="space-y-1">
+                                    <div className="flex justify-between p-2 bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/20 rounded">
+                                        <span className="font-bold text-emerald-600 dark:text-emerald-400">&lt; 1%</span>
+                                        <span className="text-right">Certeza Institucional</span>
+                                    </div>
+                                    <div className="flex justify-between p-2 bg-green-50 dark:bg-green-900/10 border border-green-100 dark:border-green-900/20 rounded">
+                                        <span className="font-bold text-green-600 dark:text-green-400">1% - 5%</span>
+                                        <span className="text-right">Validado</span>
+                                    </div>
+                                    <div className="flex justify-between p-2 bg-orange-50 dark:bg-orange-900/10 border border-orange-100 dark:border-orange-900/20 rounded">
+                                        <span className="font-bold text-orange-500">5% - 20%</span>
+                                        <span className="text-right">Zona Especulativa</span>
+                                    </div>
+                                    <div className="flex justify-between p-2 bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/20 rounded">
+                                        <span className="font-bold text-red-500">&gt; 20%</span>
+                                        <span className="text-right">Ruido / Aleatorio</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        {/* Nuevo: Riesgo de Reversión (Hazard) */}
+                        <section>
+                            <h3 className="font-bold text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3 flex items-center gap-2">
+                                <Icons.AlertTriangle size={14} className="text-yellow-500" /> Riesgo de Reversión (Hazard)
+                            </h3>
+                            <div className="space-y-3 text-xs text-slate-600 dark:text-slate-400">
+                                <p className="leading-relaxed">
+                                    Mide la probabilidad condicional de perder el <strong>siguiente trade</strong> dado que llevas una racha ganadora de <span className="font-mono bg-slate-100 dark:bg-slate-800 px-1 rounded">k</span> victorias consecutivas.
+                                </p>
+                                
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-3 p-2 bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/20 rounded">
+                                        <div className="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></div>
+                                        <div>
+                                            <span className="font-bold text-emerald-700 dark:text-emerald-400 block mb-0.5">Bajo (Seguro)</span>
+                                            <span className="text-emerald-600/80 dark:text-emerald-400/70 text-[10px] leading-tight">El riesgo actual es menor al promedio histórico. Zona verde para operar.</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-3 p-2 bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-100 dark:border-yellow-900/20 rounded">
+                                        <div className="w-2 h-2 rounded-full bg-yellow-400 shrink-0"></div>
+                                        <div>
+                                            <span className="font-bold text-yellow-700 dark:text-yellow-400 block mb-0.5">Medio (Precaución)</span>
+                                            <span className="text-yellow-600/80 dark:text-yellow-400/70 text-[10px] leading-tight">El riesgo ha subido por encima del promedio. Considera reducir tamaño.</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-3 p-2 bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/20 rounded">
+                                        <div className="w-2 h-2 rounded-full bg-red-500 shrink-0"></div>
+                                        <div>
+                                            <span className="font-bold text-red-700 dark:text-red-400 block mb-0.5">Alto (Crítico)</span>
+                                            <span className="text-red-600/80 dark:text-red-400/70 text-[10px] leading-tight">Estás en el 90% de riesgo histórico o en territorio inexplorado. Alta probabilidad de reversión inminente.</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div className="p-2 bg-slate-50 dark:bg-slate-800/50 rounded border border-slate-100 dark:border-slate-700 text-[10px] italic text-slate-500">
+                                    <strong>Nota:</strong> Si la muestra para una racha específica es muy baja (&lt;5 casos), el sistema agrupa datos de rachas menores para dar una estimación conservadora.
+                                </div>
+                            </div>
+                        </section>
+
+                        {/* 5. Calidad de Señal */}
+                        <section>
+                            <h3 className="font-bold text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3 flex items-center gap-2">
+                                <Icons.CheckCircle size={14} className="text-indigo-500" /> Calidad de Señal
+                            </h3>
+                            <div className="space-y-2 text-xs">
+                                <p className="text-slate-500 italic mb-2">Confluencia Técnica según filtros activos.</p>
+                                <div className="space-y-1">
+                                    <div className="flex justify-between p-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 rounded">
+                                        <span className="font-bold text-emerald-600 dark:text-emerald-400">90% - 100%</span>
+                                        <span className="text-right">A+ (Perfecto)</span>
+                                    </div>
+                                    <div className="flex justify-between p-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 rounded">
+                                        <span className="font-bold text-blue-600 dark:text-blue-400">70% - 89%</span>
+                                        <span className="text-right">A/B (Estándar)</span>
+                                    </div>
+                                    <div className="flex justify-between p-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 rounded">
+                                        <span className="font-bold text-orange-500"> &lt; 70%</span>
+                                        <span className="text-right">Baja Calidad</span>
+                                    </div>
+                                </div>
+                                <div className="mt-2 p-2 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-900/30 rounded text-indigo-800 dark:text-indigo-300 text-[10px]">
+                                    <strong>⚠️ Nota:</strong> Un trade de Calidad 100% puede perder. La calidad mide tu disciplina, no el futuro.
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+            );
+        };
+
+        const ToolsDock = ({ runSimulation, openLoadMethod, toggleHelp, isHelpOpen, handleAutoDetect, isAutoDetecting, openSettings, useMacroMode, setUseMacroMode, useWalkForward, setUseWalkForward, walkForwardSplit, setWalkForwardSplit, csvDataLength }) => {
+            const [isQuickTogglesOpen, setIsQuickTogglesOpen] = useState(false);
+            const quickTogglesRef = useRef(null);
+
+            useEffect(() => {
+                const onPointerDown = (e) => {
+                    if (!isQuickTogglesOpen) return;
+                    const el = quickTogglesRef.current;
+                    if (!el) return;
+                    if (!el.contains(e.target)) setIsQuickTogglesOpen(false);
+                };
+                document.addEventListener('pointerdown', onPointerDown, true);
+                return () => document.removeEventListener('pointerdown', onPointerDown, true);
+            }, [isQuickTogglesOpen]);
+
+            React.useEffect(() => {
+                // Intentar inicializar FocusAudio si está disponible
+                if (window.FTI_FocusAudio && window.FTI_FocusAudio.init) {
+                    window.FTI_FocusAudio.init();
+                }
+            }, []);
+
+            return (
+                <div 
+                    className="fixed z-50 flex flex-col items-center gap-3 p-2 bg-slate-900/90 backdrop-blur-md border border-slate-700/50 shadow-2xl transition-all hover:bg-slate-900 animate-fade-in right-0 bottom-[18px] rounded-l-2xl rounded-r-none border-r-0 md:right-[18px] md:rounded-2xl md:border-r"
+                >
+                    <div className="relative" ref={quickTogglesRef}>
+                        <button
+                            onClick={() => setIsQuickTogglesOpen((v) => !v)}
+                            className={`flex items-center justify-center w-12 h-12 rounded-xl shadow-lg border transition-all active:scale-95 group relative ${isQuickTogglesOpen ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border-slate-600'}`}
+                            aria-label="Modos rápidos"
+                            title="Modos rápidos"
+                        >
+                            <Icons.Cpu size={20} />
+                            {(useMacroMode || useWalkForward) && (
+                                <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-emerald-400 shadow"></span>
+                            )}
+                            <span className="absolute right-full mr-3 px-2 py-1 bg-slate-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none border border-slate-700 font-medium tracking-wide shadow-xl z-[60]">
+                                MODOS
+                            </span>
+                        </button>
+
+                        {isQuickTogglesOpen && (
+                            <div className="absolute right-full mr-3 top-0 w-72 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl p-3 z-[70]">
+                                <div className="flex items-center justify-between mb-2">
+                                    <div className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase">Modos</div>
+                                    <button
+                                        onClick={() => setIsQuickTogglesOpen(false)}
+                                        className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500"
+                                        aria-label="Cerrar"
+                                    >
+                                        <Icons.X size={16} />
+                                    </button>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <div className="p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950">
+                                        <div className="flex items-center justify-between gap-3">
+                                            <div className="min-w-0">
+                                                <div className="flex items-center gap-2">
+                                                    {useMacroMode ? <Icons.Map size={14} className="text-purple-500" /> : <Icons.Zap size={14} className="text-orange-500" />}
+                                                    <span className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase truncate">
+                                                        {useMacroMode ? 'Análisis Macro' : 'Intradía Rápido'}
+                                                    </span>
+                                                </div>
+                                                <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
+                                                    {useMacroMode ? 'Límite 5,000 velas' : 'Límite 500 velas'}
+                                                </div>
+                                            </div>
+                                            <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={useMacroMode}
+                                                    onChange={(e) => setUseMacroMode(e.target.checked)}
+                                                    className="sr-only peer"
+                                                />
+                                                <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div className={`p-2 rounded-lg border ${useWalkForward ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-700' : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800'}`}>
+                                        <div className="flex items-center justify-between gap-3">
+                                            <div className="min-w-0">
+                                                <div className="flex items-center gap-2">
+                                                    <Icons.Split size={14} className={useWalkForward ? 'text-indigo-500' : 'text-slate-400'} />
+                                                    <span className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase truncate">Walk-Forward</span>
+                                                </div>
+                                                <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
+                                                    {useWalkForward ? `${walkForwardSplit}% / ${100 - walkForwardSplit}%` : 'Validación anti-overfitting'}
+                                                </div>
+                                            </div>
+                                            <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={useWalkForward}
+                                                    onChange={(e) => setUseWalkForward(e.target.checked)}
+                                                    className="sr-only peer"
+                                                    disabled={csvDataLength < 500}
+                                                />
+                                                <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600 peer-disabled:opacity-50"></div>
+                                            </label>
+                                        </div>
+
+                                        {csvDataLength < 500 && (
+                                            <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-2">
+                                                Requiere ≥ 500 velas cargadas
+                                            </div>
+                                        )}
+
+                                        {useWalkForward && (
+                                            <div className="mt-2">
+                                                <div className="flex justify-between text-[10px] mb-1">
+                                                    <span className="text-indigo-600 dark:text-indigo-400 font-bold">In ({walkForwardSplit}%)</span>
+                                                    <span className="text-orange-600 dark:text-orange-400 font-bold">Out ({100 - walkForwardSplit}%)</span>
+                                                </div>
+                                                <input
+                                                    type="range"
+                                                    min="50"
+                                                    max="90"
+                                                    step="5"
+                                                    value={walkForwardSplit}
+                                                    onChange={(e) => setWalkForwardSplit(parseInt(e.target.value))}
+                                                    className="w-full accent-indigo-500 h-2 bg-transparent appearance-none cursor-pointer"
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="w-8 h-px bg-slate-700/50"></div>
+
+                    <button
+                        onClick={openLoadMethod}
+                        className="flex items-center justify-center w-12 h-12 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white shadow-lg border border-slate-600 transition-all active:scale-95 group relative"
+                        aria-label="Cargar datos"
+                    >
+                        <Icons.Upload size={20} />
+                        <span className="absolute right-full mr-3 px-2 py-1 bg-slate-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none border border-slate-700 font-medium tracking-wide shadow-xl z-[60]">
+                            CARGAR DATOS
+                        </span>
+                    </button>
+
+                    <button
+                        onClick={handleAutoDetect}
+                        disabled={isAutoDetecting}
+                        className="flex items-center justify-center w-12 h-12 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-600 disabled:cursor-not-allowed text-white shadow-lg border border-indigo-400/40 transition-all active:scale-95 group relative"
+                        aria-label="Autodetectar Setup"
+                    >
+                        {isAutoDetecting ? <Icons.Activity size={20} className="animate-spin" /> : <Icons.Target size={20} />}
+                        <span className="absolute right-full mr-3 px-2 py-1 bg-slate-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none border border-slate-700 font-medium tracking-wide shadow-xl z-[60]">
+                            AUTODETECTAR
+                        </span>
+                    </button>
+
+                    <button
+                        onClick={runSimulation}
+                        className="flex items-center justify-center w-12 h-12 rounded-xl bg-blue-600 hover:bg-blue-500 text-white shadow-lg border border-blue-400/40 transition-all active:scale-95 group relative"
+                        aria-label="Ejecutar simulación"
+                    >
+                        <Icons.Play size={20} className="ml-0.5" />
+                        <span className="absolute right-full mr-3 px-2 py-1 bg-slate-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none border border-slate-700 font-medium tracking-wide shadow-xl z-[60]">
+                            EJECUTAR ANÁLISIS
+                        </span>
+                    </button>
+                    
+                    <div className="w-8 h-px bg-slate-700/50"></div>
+                    
+                    <div id="global-sidebar-audio" className="flex items-center justify-center min-h-[48px] min-w-[48px]"></div>
+
+                    <button
+                        onClick={openSettings}
+                        className="flex items-center justify-center w-12 h-12 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white shadow-lg border border-slate-600 transition-all active:scale-95 group relative"
+                        aria-label="Ajustes"
+                        title="Ajustes"
+                    >
+                        <Icons.Edit2 size={20} />
+                        <span className="absolute right-full mr-3 px-2 py-1 bg-slate-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none border border-slate-700 font-medium tracking-wide shadow-xl z-[60]">
+                            AJUSTES
+                        </span>
+                    </button>
+
+                    <button
+                        onClick={toggleHelp}
+                        className={`flex items-center justify-center w-12 h-12 rounded-xl shadow-lg border transition-all active:scale-95 group relative ${isHelpOpen ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border-slate-600'}`}
+                        aria-label="Ayuda"
+                    >
+                        <Icons.HelpCircle size={20} />
+                        <span className="absolute right-full mr-3 px-2 py-1 bg-slate-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none border border-slate-700 font-medium tracking-wide shadow-xl z-[60]">
+                            AYUDA
+                        </span>
+                    </button>
+                </div>
+            );
+        };
+
         const App = () => {
             // DATA & CONFIG
             const [activeTab, setActiveTab] = useState('LAB'); // 'LAB' (Laboratorio) | 'MONITOR' (Monitor Activo)
@@ -300,8 +685,10 @@
             const [ltfError, setLtfError] = useState(null);
 
             const [isAutoLoadOpen, setIsAutoLoadOpen] = useState(false);
+            const [isSettingsOpen, setIsSettingsOpen] = useState(false);
             const [isLoadMethodOpen, setIsLoadMethodOpen] = useState(false);
             const [isManualLoadOpen, setIsManualLoadOpen] = useState(false);
+            const [isHelpOpen, setIsHelpOpen] = useState(false);
             const [autoMarket, setAutoMarket] = useState('crypto');
             const [autoSymbol, setAutoSymbol] = useState('BTCUSDT');
             const [autoEntryTf, setAutoEntryTf] = useState('1h');
@@ -317,6 +704,10 @@
             });
             const autoAbortRef = useRef(null);
             const [useLocalData, setUseLocalData] = useState(true); // Toggle para usar datos locales
+
+            const [googleAiApiKeyInput, setGoogleAiApiKeyInput] = useState('');
+            const [googleAiApiKeyStatus, setGoogleAiApiKeyStatus] = useState(null);
+            const [hasGoogleAiApiKey, setHasGoogleAiApiKey] = useState(false);
 
             // PERSISTENCIA DE SESIÓN (Refs y Keys)
             const isRestoringRef = useRef(true);
@@ -350,6 +741,56 @@
                 }
             };
 
+            const refreshGoogleAiKeyStatus = () => {
+                try {
+                    const stored = localStorage.getItem(GOOGLE_AI_KEY_STORAGE) || '';
+                    setHasGoogleAiApiKey(!!stored);
+                    setGoogleAiApiKeyInput(stored);
+                } catch (e) {
+                    setHasGoogleAiApiKey(false);
+                }
+            };
+
+            const openSettings = () => {
+                refreshGoogleAiKeyStatus();
+                setGoogleAiApiKeyStatus(null);
+                setIsSettingsOpen(true);
+            };
+
+            const closeSettings = () => {
+                setIsSettingsOpen(false);
+            };
+
+            const saveGoogleAiKey = () => {
+                const value = (googleAiApiKeyInput || '').trim();
+                if (!value) {
+                    setGoogleAiApiKeyStatus({ type: 'error', message: 'Ingresa una API Key válida.' });
+                    return;
+                }
+                try {
+                    const hadKey = hasGoogleAiApiKey;
+                    localStorage.setItem(GOOGLE_AI_KEY_STORAGE, value);
+                    setHasGoogleAiApiKey(true);
+                    setGoogleAiApiKeyStatus({
+                        type: 'success',
+                        message: hadKey ? 'API Key actualizada.' : 'API Key guardada.'
+                    });
+                } catch (e) {
+                    setGoogleAiApiKeyStatus({ type: 'error', message: 'No se pudo guardar en este navegador.' });
+                }
+            };
+
+            const deleteGoogleAiKey = () => {
+                try {
+                    localStorage.removeItem(GOOGLE_AI_KEY_STORAGE);
+                    setGoogleAiApiKeyInput('');
+                    setHasGoogleAiApiKey(false);
+                    setGoogleAiApiKeyStatus({ type: 'success', message: 'API Key eliminada.' });
+                } catch (e) {
+                    setGoogleAiApiKeyStatus({ type: 'error', message: 'No se pudo borrar en este navegador.' });
+                }
+            };
+
             useEffect(() => {
                 // Limpiar intervalo del pre-loader si existe
                 if (window.loaderInterval) {
@@ -365,6 +806,15 @@
                 window.addEventListener('storage', onStorage);
                 return () => window.removeEventListener('storage', onStorage);
             }, [isAutoLoadOpen]);
+
+            useEffect(() => {
+                if (!isSettingsOpen) return;
+                const onKeyDown = (e) => {
+                    if (e.key === 'Escape') closeSettings();
+                };
+                window.addEventListener('keydown', onKeyDown);
+                return () => window.removeEventListener('keydown', onKeyDown);
+            }, [isSettingsOpen]);
 
             useEffect(() => {
                 if (isRestoringRef.current) return;
@@ -402,6 +852,7 @@
             const [useDeltaSignFilter, setUseDeltaSignFilter] = useState(false);
             const [useWickFilter, setUseWickFilter] = useState(false);
             const [wickTolerance, setWickTolerance] = useState(10);
+            const [useCrtFilter, setUseCrtFilter] = useState(false);
 
             const [useHtfFilter, setUseHtfFilter] = useState(false);
             const [htfMode, setHtfMode] = useState('DISCARD');
@@ -417,6 +868,7 @@
 
             // === MONTE CARLO SIMULATION ===
             const [monteCarloSimulations, setMonteCarloSimulations] = useState(1000);
+            const [monteCarloRisk, setMonteCarloRisk] = useState(1);
             const [isRunningMonteCarlo, setIsRunningMonteCarlo] = useState(false);
             const [monteCarloResult, setMonteCarloResult] = useState(null);
             // Result: { worstDrawdown, avgDrawdown, ruinProbability, percentiles: {p5,p25,p50,p75,p95}, equityCurves: [] }
@@ -440,6 +892,26 @@
             const [forceCooldown, setForceCooldown] = useState(false);
             const [isAutoDetecting, setIsAutoDetecting] = useState(false);
             const [copyAllStatus, setCopyAllStatus] = useState('idle');
+            const [isAiAuditOpen, setIsAiAuditOpen] = useState(false);
+            const [aiAuditLoading, setAiAuditLoading] = useState(false);
+            const [aiAuditResult, setAiAuditResult] = useState('');
+            const [aiAuditError, setAiAuditError] = useState('');
+            const aiAuditHtml = useMemo(() => {
+                const md = (aiAuditResult || '').trim();
+                if (!md) return '';
+                try {
+                    const markedLib = window.marked;
+                    if (!markedLib || typeof markedLib.parse !== 'function') return '';
+                    const rawHtml = markedLib.parse(md, { gfm: true, breaks: true, headerIds: false, mangle: false });
+                    const purify = window.DOMPurify;
+                    if (purify && typeof purify.sanitize === 'function') {
+                        return purify.sanitize(rawHtml, { USE_PROFILES: { html: true } });
+                    }
+                    return '';
+                } catch (e) {
+                    return '';
+                }
+            }, [aiAuditResult]);
             const [currentPrice, setCurrentPrice] = useState('');
             const [candlesSinceEntry, setCandlesSinceEntry] = useState(0);
             const [liveTradeStatus, setLiveTradeStatus] = useState(null); // null | { status: 'WIN'|'LOSS'|'ACTIVE', exitPrice, exitDate }
@@ -482,6 +954,7 @@
                     useDeltaSignFilter,
                     useWickFilter,
                     wickTolerance,
+                    useCrtFilter,
                     useHtfFilter,
                     htfMode,
                     requireHtf,
@@ -513,7 +986,7 @@
                 tradeType, entryPrice, stopLoss, takeProfit, spread, useMacroMode,
                 useRsiFilter, targetRsi, rsiTolerance, useTrendFilter, trendCondition,
                 useTimeFilter, timeMode, useVolFilter, useCooldownFilter, useAdrFilter, useVolumeFilter,
-                volumeTolerance, useBuyPressureFilter, bpTolerance, useDeltaSignFilter, useWickFilter, wickTolerance,
+                volumeTolerance, useBuyPressureFilter, bpTolerance, useDeltaSignFilter, useWickFilter, wickTolerance, useCrtFilter,
                 useHtfFilter, htfMode, requireHtf, useLtfIntra, ltfMaxCandles,
                 simResult, optimizationResults, csvData, htfData, ltfData,
                 htfTfMinutes, htfFileName, ltfTfMinutes, ltfFileName,
@@ -571,6 +1044,7 @@
                     if (session.useDeltaSignFilter !== undefined) setUseDeltaSignFilter(session.useDeltaSignFilter);
                     if (session.useWickFilter !== undefined) setUseWickFilter(session.useWickFilter);
                     if (session.wickTolerance) setWickTolerance(session.wickTolerance);
+                    if (session.useCrtFilter !== undefined) setUseCrtFilter(session.useCrtFilter);
                     if (session.useHtfFilter !== undefined) setUseHtfFilter(session.useHtfFilter);
                     if (session.htfMode) setHtfMode(session.htfMode);
                     if (session.requireHtf !== undefined) setRequireHtf(session.requireHtf);
@@ -1217,6 +1691,118 @@
                 }
             };
 
+            const analyzeCurrentSetup = async () => {
+                if (aiAuditLoading) return;
+                setAiAuditLoading(true);
+                setAiAuditError('');
+                setAiAuditResult('');
+                setIsAiAuditOpen(true);
+
+                try {
+                    const storedKey = localStorage.getItem(GOOGLE_AI_KEY_STORAGE) || localStorage.getItem('GOOGLE_AI_KEY_STORAGE') || '';
+                    const apiKey = storedKey.trim();
+                    if (!apiKey) {
+                        throw new Error('No se encontró la API Key de Google IA Studio.');
+                    }
+
+                    const target = csvData[selectedCandleIndex];
+                    if (!target) {
+                        throw new Error('No hay vela seleccionada para analizar.');
+                    }
+
+                    const snapshot = {
+                        index: selectedCandleIndex,
+                        datetime: target.datetime && target.datetime.toISOString ? target.datetime.toISOString() : null,
+                        open: target.open,
+                        high: target.high,
+                        low: target.low,
+                        close: target.close,
+                        rsi: target.rsi,
+                        sma200: target.sma200,
+                        bodySizePct: target.bodySizePct,
+                        hourLocal: target.hourLocal,
+                        hourUtc: target.hourUtc,
+                        volume: target.volume,
+                        delta: target.delta,
+                        buyPressurePct: target.buyPressurePct,
+                        upperWickPct: target.upperWickPct,
+                        lowerWickPct: target.lowerWickPct
+                    };
+
+                    const payload = {
+                        dataset: { fileName, candles: csvData.length, tfMinutes, hasExtended },
+                        candle: snapshot,
+                        params: {
+                            analysis: { useMacroMode, maxDurationLimit: useMacroMode ? 5000 : 500 },
+                            tradeType,
+                            entryPrice,
+                            stopLoss,
+                            takeProfit,
+                            spread,
+                            rsi: { useRsiFilter, targetRsi, rsiTolerance },
+                            trend: { useTrendFilter, trendCondition },
+                            time: { useTimeFilter, timeMode },
+                            volBody: { useVolFilter },
+                            wick: { useWickFilter, wickTolerance },
+                            cooldown: { useCooldownFilter },
+                            mtf: {
+                                useHtfFilter,
+                                htfMode,
+                                requireHtf,
+                                htfFileName,
+                                htfTfMinutes,
+                                htfCandles: htfData.length,
+                                useLtfIntra,
+                                ltfFileName,
+                                ltfTfMinutes,
+                                ltfMaxCandles,
+                                ltfCandles: ltfData.length
+                            },
+                            extended: { useVolumeFilter, volumeTolerance, useBuyPressureFilter, bpTolerance, useDeltaSignFilter },
+                            monitor: { currentPrice, candlesSinceEntry }
+                        },
+                        result: simResult
+                    };
+
+                    const systemPrompt = 'Actúa como un Analista Técnico + Risk Manager escéptico. Eres una segunda opinión para “conectar los puntos” usando SOLO los datos aportados (vela objetivo, indicadores, parámetros del setup, MTF y resultados de la simulación). No es asesoramiento financiero.\n\nOBJETIVO: Producir una recomendación operativa contextual: TOMAR el trade, ESPERAR (condiciones aún no confirmadas) o DESCARTAR (asimetría/condiciones pobres), con justificación técnica.\n\nINSTRUCCIONES:\n1) Interpreta el contexto de mercado: tendencia vs SMA200/HTF, momentum (RSI), volatilidad/estructura de vela (cuerpo/mechas), y si hay datos extendidos usa volumen/delta/buyPressure.\n2) Usa el resultado histórico (win rate, Wilson/robustez si existe, muestras) como evidencia, pero explica riesgos de sobreajuste/muestra pequeña.\n3) Describe 2–3 escenarios probables (alcista/bajista/lateral) y qué invalidaría cada uno.\n4) Concluye con: Recomendación (TOMAR/ESPERAR/DESCARTAR), Confianza 0–100 y 2–4 “Condiciones de confirmación” accionables (ej. cierre por encima de X, RSI recupera Y, HTF alineado).\n5) Si faltan datos críticos o hay inconsistencias, dilo explícitamente y baja la confianza.\n\nFORMATO: Responde en Markdown (.md), usando títulos, bullets y, si aplica, una tabla corta para pros/contras.';
+                    const promptTexto = `INSTRUCCIONES DEL SISTEMA: ${systemPrompt}\n\nDATOS DEL MERCADO: ${JSON.stringify(payload)}`;
+
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemma-3-27b-it:generateContent?key=${encodeURIComponent(apiKey)}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: promptTexto }] }],
+                            generationConfig: { temperature: 0.3, maxOutputTokens: 1024 }
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const errText = await response.text();
+                        throw new Error(`Error API (${response.status}): ${errText}`);
+                    }
+
+                    const data = await response.json();
+                    const finishReason = data && data.candidates && data.candidates[0] ? data.candidates[0].finishReason : null;
+                    const text = data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts
+                        ? data.candidates[0].content.parts.map(p => p.text).join('')
+                        : '';
+
+                    if (!text) {
+                        throw new Error('Respuesta vacía del modelo.');
+                    }
+
+                    const trimmed = text.trim();
+                    const suffix = finishReason === 'MAX_TOKENS'
+                        ? '\n\n---\nNota: la respuesta fue recortada por límite de longitud (MAX_TOKENS).'
+                        : '';
+                    setAiAuditResult(trimmed + suffix);
+                } catch (e) {
+                    setAiAuditError(e && e.message ? e.message : 'No se pudo completar la auditoría.');
+                } finally {
+                    setAiAuditLoading(false);
+                }
+            };
+
             const closeAutoLoad = () => {
                 try {
                     if (autoAbortRef.current) autoAbortRef.current.abort();
@@ -1627,9 +2213,206 @@
             const FILTER_WEIGHTS = {
                 HTF: 30,      // Estructura Mayor / Tendencia (Prioridad Alta)
                 VOL: 25,      // Volumen / Presión (Validación Institucional)
+                CRT: 20,      // Estructura/Rango (CRT)
                 RSI: 15,      // Gatillo (Momentum)
                 TIME: 15,     // Horario
                 OTHER: 15     // Volatilidad / Otros
+            };
+
+            const computeConditionalLossHazard = (pnlList, { minSample = 5 } = {}) => {
+                const pnls = Array.isArray(pnlList) ? pnlList : [];
+                if (pnls.length < 2) {
+                    return {
+                        level: 'N/A',
+                        label: 'Datos insuficientes',
+                        kCurrent: 0,
+                        kUsed: null,
+                        hk: null,
+                        hkPct: null,
+                        sampleSize: 0,
+                        lossesAfter: 0,
+                        baseline: null,
+                        baselinePct: null,
+                        p90: null,
+                        p90Pct: null,
+                        inexplored: false,
+                        warning: 'Datos insuficientes para estimar hazard.',
+                        rawText: null
+                    };
+                }
+
+                let kCurrent = 0;
+                for (let i = pnls.length - 1; i >= 0; i--) {
+                    if (Number(pnls[i]) > 0) kCurrent++;
+                    else break;
+                }
+
+                const occurrences = new Map();
+                const lossAfter = new Map();
+                let streak = 0;
+                for (let i = 0; i < pnls.length - 1; i++) {
+                    const pnl = Number(pnls[i]);
+                    if (!isFinite(pnl)) {
+                        streak = 0;
+                        continue;
+                    }
+                    if (pnl > 0) streak++;
+                    else streak = 0;
+
+                    if (streak <= 0) continue;
+
+                    const nextPnl = Number(pnls[i + 1]);
+                    if (!isFinite(nextPnl)) continue;
+
+                    const prevOcc = occurrences.get(streak) || 0;
+                    occurrences.set(streak, prevOcc + 1);
+
+                    if (nextPnl <= 0) {
+                        const prevLoss = lossAfter.get(streak) || 0;
+                        lossAfter.set(streak, prevLoss + 1);
+                    }
+                }
+
+                const ks = Array.from(occurrences.keys()).sort((a, b) => a - b);
+                const maxObservedK = ks.length ? ks[ks.length - 1] : 0;
+
+                const eligible = ks
+                    .map((k) => {
+                        const n = occurrences.get(k) || 0;
+                        const losses = lossAfter.get(k) || 0;
+                        const hk = n > 0 ? losses / n : null;
+                        return { k, n, losses, hk };
+                    })
+                    .filter((x) => x.n >= minSample && x.hk != null);
+
+                const totalOcc = eligible.reduce((acc, x) => acc + x.n, 0);
+                const totalLoss = eligible.reduce((acc, x) => acc + x.losses, 0);
+                const baseline = totalOcc > 0 ? totalLoss / totalOcc : null;
+
+                const hkVals = eligible.map((x) => x.hk).slice().sort((a, b) => a - b);
+                const p90 = hkVals.length
+                    ? hkVals[Math.min(Math.floor(hkVals.length * 0.9), hkVals.length - 1)]
+                    : null;
+
+                if (kCurrent <= 0) {
+                    return {
+                        level: 'N/A',
+                        label: 'Sin racha activa',
+                        kCurrent: 0,
+                        kUsed: null,
+                        hk: null,
+                        hkPct: null,
+                        sampleSize: 0,
+                        lossesAfter: 0,
+                        baseline,
+                        baselinePct: baseline != null ? baseline * 100 : null,
+                        p90,
+                        p90Pct: p90 != null ? p90 * 100 : null,
+                        inexplored: false,
+                        warning: null,
+                        rawText: null
+                    };
+                }
+
+                let inexplored = false;
+                let kUsed = kCurrent;
+                let warning = null;
+
+                if (kCurrent > maxObservedK) {
+                    inexplored = true;
+                    warning = `Territorio inexplorado: racha actual (${kCurrent}) supera el máximo observado (${maxObservedK}).`;
+                    kUsed = maxObservedK > 0 ? maxObservedK : kCurrent;
+                }
+
+                const getStatsForK = (k) => {
+                    const n = occurrences.get(k) || 0;
+                    const losses = lossAfter.get(k) || 0;
+                    return { n, losses, hk: n > 0 ? losses / n : null };
+                };
+
+                let stats = getStatsForK(kUsed);
+                if (!inexplored && stats.n > 0 && stats.n < minSample) {
+                    let fallbackK = kUsed - 1;
+                    while (fallbackK >= 1) {
+                        const s = getStatsForK(fallbackK);
+                        if (s.n >= minSample) {
+                            kUsed = fallbackK;
+                            stats = s;
+                            warning = `Datos insuficientes para k=${kCurrent} (muestra ${getStatsForK(kCurrent).n}). Usando k=${kUsed} (muestra ${stats.n}).`;
+                            break;
+                        }
+                        fallbackK--;
+                    }
+                    if (fallbackK < 1 && (!stats.n || stats.n < minSample)) {
+                        warning = `Datos insuficientes para estimar hazard en k=${kCurrent} (muestra ${stats.n}).`;
+                        return {
+                            level: 'N/A',
+                            label: 'Datos insuficientes',
+                            kCurrent,
+                            kUsed,
+                            hk: null,
+                            hkPct: null,
+                            sampleSize: stats.n,
+                            lossesAfter: stats.losses,
+                            baseline,
+                            baselinePct: baseline != null ? baseline * 100 : null,
+                            p90,
+                            p90Pct: p90 != null ? p90 * 100 : null,
+                            inexplored,
+                            warning,
+                            rawText: null
+                        };
+                    }
+                }
+
+                const hk = stats.hk;
+                const hkPct = hk != null ? hk * 100 : null;
+                const baselinePct = baseline != null ? baseline * 100 : null;
+                const p90Pct = p90 != null ? p90 * 100 : null;
+
+                let level = 'N/A';
+                let label = 'N/A';
+                if (inexplored) {
+                    level = 'HIGH';
+                    label = 'Alto';
+                } else if (hk != null && p90 != null && hk >= p90) {
+                    level = 'HIGH';
+                    label = 'Alto';
+                } else if (hk != null && baseline != null && hk > baseline) {
+                    level = 'MEDIUM';
+                    label = 'Medio';
+                } else if (hk != null && baseline != null && hk < baseline) {
+                    level = 'LOW';
+                    label = 'Bajo';
+                } else if (hk != null) {
+                    level = 'MEDIUM';
+                    label = 'Medio';
+                }
+
+                const kForText = kUsed != null ? kUsed : kCurrent;
+                const nForText = stats.n;
+                const hkForText = hk != null ? (hk * 100).toFixed(0) : null;
+                const rawText = hkForText != null
+                    ? `Históricamente, tras ganar ${kForText} veces, el ${kForText + 1}º trade se perdió el ${hkForText}% de las veces (Muestra: ${nForText} casos).`
+                    : null;
+
+                return {
+                    level,
+                    label,
+                    kCurrent,
+                    kUsed,
+                    hk,
+                    hkPct,
+                    sampleSize: stats.n,
+                    lossesAfter: stats.losses,
+                    baseline,
+                    baselinePct,
+                    p90,
+                    p90Pct,
+                    inexplored,
+                    warning,
+                    rawText
+                };
             };
 
             // Función pura de backtest desacoplada del estado para permitir iteraciones rápidas
@@ -1656,6 +2439,7 @@
                     useDelta,
                     useWick,
                     wickTol = 10,
+                    useCrt, // CRT Filter
                     useCooldown,
                     useAdr,
                     useHtf,
@@ -1744,6 +2528,7 @@
                 if (useBp && (target.buyPressurePct == null || !isFinite(target.buyPressurePct))) return { error: 'Presión compradora no disponible en la vela objetivo.' };
                 if (useDelta && (target.delta == null || !isFinite(target.delta))) return { error: 'Delta no disponible en la vela objetivo.' };
                 if (useWick && (target.upperWickPct == null || !isFinite(target.upperWickPct) || target.lowerWickPct == null || !isFinite(target.lowerWickPct))) return { error: 'Morfología de mechas no disponible en la vela objetivo.' };
+                if (useCrt && target.crtZone == null) return { error: 'CRT no disponible en la vela objetivo.' };
                 if (useRegime && (target.adx == null || !isFinite(target.adx))) return { error: 'ADX no disponible en la vela objetivo.' };
 
                 const simulateTrade = (startIdx) => {
@@ -2056,7 +2841,16 @@
                         if (pass) currentScore += FILTER_WEIGHTS.OTHER;
                     }
 
-                    // --- 10. HTF Filter [Weight: 30] ---
+                    // --- 10. CRT Filter [Weight: 20] ---
+                    if (useCrt) {
+                        maxPossibleScore += FILTER_WEIGHTS.CRT;
+                        let pass = true;
+                        if (c.crtZone == null || target.crtZone == null) pass = false;
+                        else if (c.crtZone !== target.crtZone) pass = false;
+                        if (pass) currentScore += FILTER_WEIGHTS.CRT;
+                    }
+
+                    // --- 11. HTF Filter [Weight: 30] ---
                     let isHighRisk = false;
                     if (useHtf) {
                         maxPossibleScore += FILTER_WEIGHTS.HTF;
@@ -2220,6 +3014,8 @@
                     else qualityClassification = 'C (Low Quality)';
                 }
 
+                const reversalHazard = computeConditionalLossHazard(pnlList, { minSample: 5 });
+
                 return {
                     matches,
                     closedTrades,
@@ -2254,6 +3050,7 @@
                     weightedWinRateVolume: totalVolAll > 0 ? ((totalVolWins / totalVolAll) * 100).toFixed(1) : null,
                     weightedWinRateBuyPressure: totalBpAll > 0 ? ((totalBpWins / totalBpAll) * 100).toFixed(1) : null,
                     pnlList, // Devolver el array de PnL real (en unidades R)
+                    reversalHazard,
                     htfAligned,
                     htfOpposed,
                     htfUnknown,
@@ -2505,9 +3302,19 @@
                 const worker = new Worker('trabajadores/optimization.worker.js');
                 optimizeWorkerRef.current = worker;
 
+                const startTime = Date.now();
+
                 worker.onmessage = (event) => {
                     const { type, payload } = event.data || {};
                     if (type === 'progress') {
+                        const now = Date.now();
+                        const elapsed = now - startTime;
+                        if (elapsed > 500 && payload.processed > 0) {
+                            const speed = payload.processed / elapsed;
+                            const remaining = payload.total - payload.processed;
+                            const etaMs = remaining / speed;
+                            payload.eta = etaMs;
+                        }
                         setOptimizationProgress(payload);
                         return;
                     }
@@ -2567,6 +3374,7 @@
                         timeMode,
                         htfMode,
                         adxThreshold,
+                        useCrt: useCrtFilter, // Agregar CRT al payload
                         tfMinutes,
                         htfTfMinutes,
                         hasExtended,
@@ -2575,7 +3383,9 @@
                             minWinRate: customMinWinRate,
                             robustOnly: customRobustOnly
                         },
-                        forceCooldown
+                        forceCooldown,
+                        useMacroMode,
+                        useCooldownFilter
                     }
                 });
             };
@@ -2586,7 +3396,10 @@
                 }
             };
 
-            const applyOptimization = (config) => {
+            const applyOptimization = (result) => {
+                const config = result && result.config ? result.config : result;
+                const appliedValues = result && result.appliedValues ? result.appliedValues : null;
+
                 // Aplicar estados booleanos
                 if (config.useRsi !== undefined) setUseRsiFilter(config.useRsi);
                 if (config.useTrend !== undefined) setUseTrendFilter(config.useTrend);
@@ -2603,16 +3416,24 @@
                 if (config.htfMode !== undefined) setHtfMode(config.htfMode);
                 if (config.requireHtf !== undefined) setRequireHtf(config.requireHtf);
                 if (config.useLtfIntra !== undefined) setUseLtfIntra(config.useLtfIntra);
+                if (config.useCrt !== undefined) setUseCrtFilter(config.useCrt);
 
                 // === NUEVO: Aplicar Filtro de Régimen ===
                 if (config.useRegime !== undefined) setUseRegimeFilter(config.useRegime);
                 if (config.adxThreshold !== undefined) setAdxThreshold(config.adxThreshold);
 
                 // === NUEVO: Aplicar valores numéricos del tier ganador ===
-                if (config.rsiTol !== undefined) setRsiTolerance(config.rsiTol);
-                if (config.volTol !== undefined) setVolumeTolerance(config.volTol);
-                if (config.bpTol !== undefined) setBpTolerance(config.bpTol);
-                if (config.wickTol !== undefined) setWickTolerance(config.wickTol);
+                if (appliedValues) {
+                    if (config.useRsi) setRsiTolerance(appliedValues.rsiTolerance);
+                    if (config.useVol) setVolumeTolerance(appliedValues.volumeTolerance);
+                    if (config.useBp) setBpTolerance(appliedValues.bpTolerance);
+                    if (config.useWick) setWickTolerance(appliedValues.wickTolerance);
+                } else {
+                    if (config.rsiTol !== undefined) setRsiTolerance(config.rsiTol);
+                    if (config.volTol !== undefined) setVolumeTolerance(config.volTol);
+                    if (config.bpTol !== undefined) setBpTolerance(config.bpTol);
+                    if (config.wickTol !== undefined) setWickTolerance(config.wickTol);
+                }
 
             };
 
@@ -2656,6 +3477,7 @@
                     useTime: useTimeFilter, timeMode,
                     useVolBody: useVolFilter,
                     useWick: useWickFilter, wickTol: wickTolerance,
+                    useCrt: useCrtFilter,
                     useVol: useVolumeFilter, volTol: volumeTolerance,
                     useBp: useBuyPressureFilter, bpTol: bpTolerance,
                     useDelta: useDeltaSignFilter,
@@ -2741,7 +3563,13 @@
                     return;
                 }
                 const rMultiples = trades.map((trade) => (trade * 100) / riskDistPercent);
-                const riskPercent = 0.01;
+                const riskPct = Number(monteCarloRisk);
+                if (!isFinite(riskPct) || riskPct <= 0) {
+                    setIsRunningMonteCarlo(false);
+                    alert('Riesgo inválido. Ingresa un porcentaje mayor a 0.');
+                    return;
+                }
+                const riskPercent = riskPct / 100;
 
                 // Instantiate external worker
                 const worker = new Worker('trabajadores/monteCarlo.worker.js');
@@ -3361,8 +4189,113 @@
                 return () => window.removeEventListener('keydown', onKeyDown);
             }, [isLoadMethodOpen, isManualLoadOpen]);
 
+            useEffect(() => {
+                if (!isAiAuditOpen) return;
+                const onKeyDown = (e) => {
+                    if (e.key === 'Escape') setIsAiAuditOpen(false);
+                };
+                window.addEventListener('keydown', onKeyDown);
+                return () => window.removeEventListener('keydown', onKeyDown);
+            }, [isAiAuditOpen]);
+
             return (
                 <div className="min-h-screen p-4 md:p-8">
+                    {isSettingsOpen && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                            <div
+                                className="absolute inset-0 bg-slate-950/60"
+                                onClick={closeSettings}
+                            ></div>
+                            <div className="relative w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+                                <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex items-start justify-between gap-4">
+                                    <div>
+                                        <div className="text-lg font-bold text-slate-800 dark:text-white">Ajustes</div>
+                                        <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">Configura diferentes cosas.</div>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={closeSettings}
+                                        className="px-3 py-2 rounded-lg text-sm font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-200"
+                                    >
+                                        Cerrar
+                                    </button>
+                                </div>
+                                <div className="p-5 space-y-4">
+                                    <div className="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60 rounded-xl p-4">
+                                        <div className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Google IA Studio</div>
+                                        <div className="mt-3 space-y-2">
+                                            <label className="text-xs font-semibold text-slate-600 dark:text-slate-300">API Key</label>
+                                            <input
+                                                type="password"
+                                                value={googleAiApiKeyInput}
+                                                onChange={(e) => setGoogleAiApiKeyInput(e.target.value)}
+                                                placeholder="Pega tu API Key aquí"
+                                                className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                            />
+                                            <div className="text-[11px] text-slate-500 dark:text-slate-400">Se guarda localmente en este navegador.</div>
+                                        </div>
+                                    </div>
+                                    {googleAiApiKeyStatus && (
+                                        <div className={`text-xs font-semibold ${googleAiApiKeyStatus.type === 'success' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
+                                            {googleAiApiKeyStatus.message}
+                                        </div>
+                                    )}
+                                    <div className="flex items-center gap-3">
+                                        <button
+                                            type="button"
+                                            onClick={saveGoogleAiKey}
+                                            className="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-2 rounded-lg shadow-sm transition-all active:scale-95"
+                                        >
+                                            {hasGoogleAiApiKey ? 'Actualizar' : 'Guardar'}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={deleteGoogleAiKey}
+                                            disabled={!hasGoogleAiApiKey && !googleAiApiKeyInput}
+                                            className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold px-4 py-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            Borrar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                    {isAiAuditOpen && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                            <div className="absolute inset-0 bg-slate-950/60" onClick={() => setIsAiAuditOpen(false)}></div>
+                            <div className="relative w-full max-w-xl max-h-[90vh] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+                                <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex items-start justify-between gap-4">
+                                    <div>
+                                        <div className="text-lg font-bold text-slate-800 dark:text-white">Auditoría de IA</div>
+                                        <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">Validación crítica de la configuración actual.</div>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsAiAuditOpen(false)}
+                                        className="px-3 py-2 rounded-lg text-sm font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-200"
+                                    >
+                                        Cerrar
+                                    </button>
+                                </div>
+                                <div className="p-5 space-y-3 flex-1 overflow-y-auto min-h-0">
+                                    {aiAuditLoading && (
+                                        <div className="text-sm text-slate-500 dark:text-slate-400">Analizando setup con Gemini…</div>
+                                    )}
+                                    {aiAuditError && (
+                                        <div className="text-sm text-red-600 dark:text-red-400">{aiAuditError}</div>
+                                    )}
+                                    {aiAuditResult && (
+                                        aiAuditHtml ? (
+                                            <div className="fti-md text-sm text-slate-700 dark:text-slate-200" dangerouslySetInnerHTML={{ __html: aiAuditHtml }}></div>
+                                        ) : (
+                                            <div className="text-sm text-slate-700 dark:text-slate-200 whitespace-pre-wrap">{aiAuditResult}</div>
+                                        )
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
                     {isLoadMethodOpen && (
                         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                             <div
@@ -3425,7 +4358,7 @@
                                 <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex items-start justify-between gap-4">
                                     <div>
                                         <div className="text-lg font-bold text-slate-800 dark:text-white">Optimización de configuración</div>
-                                        <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">Define el objetivo y ejecuta para ver el Top 5 de combinaciones.</div>
+                                        <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">Define el objetivo y ejecuta para ver el Top 50 de combinaciones.</div>
                                     </div>
                                     <button
                                         type="button"
@@ -3437,7 +4370,7 @@
                                     </button>
                                 </div>
                                 <div className="p-5 space-y-5 flex-1 overflow-y-auto min-h-0">
-                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                                    <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
                                         <button
                                             type="button"
                                             onClick={() => setOptimizeMode('STANDARD')}
@@ -3470,6 +4403,17 @@
                                         >
                                             <div className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase">Mayor Edge robusto</div>
                                             <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Busca el mejor edge con prioridad robusta.</div>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setOptimizeMode('SQN')}
+                                            className={`p-4 rounded-xl border text-left transition-all ${optimizeMode === 'SQN'
+                                                ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-300 dark:border-amber-700'
+                                                : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-amber-300 dark:hover:border-amber-600'
+                                                }`}
+                                        >
+                                            <div className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase">Mayor SQN</div>
+                                            <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Maximiza SQN (expectativa vs variabilidad) sin otros objetivos.</div>
                                         </button>
                                         <button
                                             type="button"
@@ -3548,7 +4492,17 @@
                                                     ></div>
                                                 </div>
                                                 <div className="flex justify-between items-center text-[10px] text-slate-500">
-                                                    <span>{optimizationProgress.processed} / {optimizationProgress.total} combinaciones</span>
+                                                    <div className="flex items-center gap-2">
+                                                        <span>{optimizationProgress.processed} / {optimizationProgress.total} combs.</span>
+                                                        {optimizationProgress.eta != null && (
+                                                            <span className="font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-1.5 rounded">
+                                                                ETA: {(() => {
+                                                                    const sec = Math.ceil(optimizationProgress.eta / 1000);
+                                                                    return sec < 60 ? `${sec}s` : `${Math.floor(sec / 60)}m ${sec % 60}s`;
+                                                                })()}
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                     <button
                                                         type="button"
                                                         onClick={cancelOptimization}
@@ -3577,7 +4531,7 @@
 
                                     <div className="bg-slate-50 dark:bg-slate-950/40 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
                                         <div className="flex items-center justify-between mb-3">
-                                            <div className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase">Top 5 resultados</div>
+                                            <div className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase">Top 50 resultados</div>
                                             <button
                                                 type="button"
                                                 onClick={() => setOptimizationResults(null)}
@@ -3635,10 +4589,11 @@
                                                                 {opt.labels.length === 0 && <span className="text-[10px] text-slate-400 italic">Sin Filtros</span>}
                                                             </div>
                                                             <div className="text-xs text-slate-500 flex gap-2 flex-wrap">
-                                                                <span className={opt.isRobust ? "font-bold text-emerald-600 dark:text-emerald-400" : ""}>{opt.stats.matches} coincidencias</span>
-                                                                {opt.config.useRsi && <span className="text-slate-400">RSI±{opt.config.rsiTol}</span>}
-                                                                {opt.config.useVol && <span className="text-slate-400">Vol±{opt.config.volTol}%</span>}
-                                                                {opt.config.useBp && <span className="text-slate-400">BP±{opt.config.bpTol}</span>}
+                                                                <span className={opt.isRobust ? "font-bold text-emerald-600 dark:text-emerald-400" : ""}>{opt.stats.closedTrades} operaciones</span>
+                                                                <span className="text-slate-400">{opt.stats.matches} coincidencias</span>
+                                                                {opt.config.useRsi && <span className="text-slate-400">RSI±{(opt.appliedValues && opt.appliedValues.rsiTolerance) ?? opt.config.rsiTol}</span>}
+                                                                {opt.config.useVol && <span className="text-slate-400">Vol±{(opt.appliedValues && opt.appliedValues.volumeTolerance) ?? opt.config.volTol}%</span>}
+                                                                {opt.config.useBp && <span className="text-slate-400">BP±{(opt.appliedValues && opt.appliedValues.bpTolerance) ?? opt.config.bpTol}</span>}
                                                             </div>
                                                         </div>
                                                         <div className="text-right">
@@ -3648,7 +4603,7 @@
                                                             <button
                                                                 type="button"
                                                                 onClick={() => {
-                                                                    applyOptimization(opt.config);
+                                                                    applyOptimization(opt);
                                                                     closeOptimizeModal();
                                                                 }}
                                                                 className="mt-1 text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
@@ -3860,11 +4815,49 @@
                                         </div>
                                         <div className="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-4">
                                             <div className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Activo</div>
-                                            <select value={autoSymbol} onChange={(e) => setAutoSymbol(e.target.value)} className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded p-2 text-sm text-slate-900 dark:text-white">
-                                                {(autoMarket === 'forex' ? FOREX_PAIRS : POPULAR_PAIRS).map((p) => (
-                                                    <option key={p} value={p}>{p}</option>
-                                                ))}
-                                            </select>
+                                            {(() => {
+                                                const list = autoMarket === 'forex' ? FOREX_PAIRS : POPULAR_PAIRS;
+                                                const isCustom = !list.includes(autoSymbol);
+                                                return (
+                                                    <>
+                                                        <select 
+                                                            value={isCustom ? 'CUSTOM' : autoSymbol} 
+                                                            onChange={(e) => {
+                                                                const val = e.target.value;
+                                                                if (val === 'CUSTOM') {
+                                                                    setAutoSymbol('');
+                                                                } else {
+                                                                    setAutoSymbol(val);
+                                                                }
+                                                            }} 
+                                                            className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded p-2 text-sm text-slate-900 dark:text-white"
+                                                        >
+                                                            {list.map((p) => (
+                                                                <option key={p} value={p}>{p}</option>
+                                                            ))}
+                                                            <option value="CUSTOM">Otro / Personalizado...</option>
+                                                        </select>
+                                                        {isCustom && (
+                                                            <div className="mt-2">
+                                                                <input
+                                                                    type="text"
+                                                                    value={autoSymbol}
+                                                                    onChange={(e) => setAutoSymbol(e.target.value.toUpperCase())}
+                                                                    placeholder={autoMarket === 'forex' ? "Símbolo (ej. AAPL, EUR/USD, SPX...)" : "Símbolo (ej. BTCUSDT)"}
+                                                                    className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded p-2 text-sm text-slate-900 dark:text-white font-mono uppercase focus:ring-2 focus:ring-blue-500 outline-none"
+                                                                    autoFocus
+                                                                />
+                                                                {autoMarket === 'forex' && (
+                                                                    <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 ml-1 flex items-center gap-1">
+                                                                        <Icons.HelpCircle size={10} />
+                                                                        <span>Twelve Data soporta Acciones, Forex, ETFs e Índices.</span>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </>
+                                                );
+                                            })()}
                                         </div>
 
                                         <div className="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-4">
@@ -4151,14 +5144,14 @@
                     <div className="max-w-6xl mx-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden transition-colors duration-300">
 
                         {/* HEADER */}
-                        <div className="bg-slate-50 dark:bg-slate-950 p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center transition-colors duration-300">
-                            <div>
-                                <h1 className="text-2xl font-bold text-blue-600 dark:text-blue-500 flex items-center gap-2">
+                        <div className="bg-slate-50 dark:bg-slate-950 p-6 border-b border-slate-200 dark:border-slate-800 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 transition-colors duration-300">
+                            <div className="min-w-0">
+                                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-blue-600 dark:text-blue-500 flex flex-wrap items-center gap-2 leading-tight">
                                     <Icons.Activity className="text-blue-600 dark:text-blue-500" /> Smart Trading Suite
                                 </h1>
-                                <p className="text-slate-500 dark:text-slate-500 text-sm mt-1">Probabilidad Histórica & Gestión Activa</p>
+                                <p className="text-slate-500 dark:text-slate-500 text-xs sm:text-sm mt-1 leading-snug">Probabilidad Histórica & Gestión Activa</p>
                             </div>
-                            <div className="flex items-center gap-3">
+                            <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full lg:w-auto">
                                 {csvData.length > 0 && (
                                     <div className="hidden md:flex items-center gap-2 bg-white dark:bg-slate-900 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-800 text-xs text-green-600 dark:text-green-400 shadow-sm">
                                         <Icons.CheckCircle size={12} /> Dataset Cargado ({csvData.length} velas)
@@ -4209,31 +5202,22 @@
                                     {/* COLUMNA IZQUIERDA: CONFIGURACION */}
                                     <div id="analysis-config" className="lg:col-span-5 space-y-6">
 
-                                        {/* 1. DATASET */}
-                                        <section className="bg-slate-50 dark:bg-slate-800/50 p-5 rounded-xl border border-slate-200 dark:border-slate-700/50 shadow-sm">
-                                            <button
-                                                type="button"
-                                                onClick={openLoadMethod}
-                                                className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-3 rounded-lg shadow-sm transition-all active:scale-95"
-                                            >
-                                                Cargar datos
-                                            </button>
-                                        </section>
-
+                                        {/* 1. DATASET ELIMINADO - MOVIDO AL DOCK LATERAL */}
+                                        
                                         {/* 2. ESCENARIO */}
                                         <section className="bg-slate-50 dark:bg-slate-800/50 p-5 rounded-xl border border-slate-200 dark:border-slate-700/50 shadow-sm">
                                             <h3 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase mb-3 flex items-center gap-2"><Icons.History size={16} /> Escenario (Vela Actual)</h3>
                                             {csvData.length > 0 ? (
                                                 <>
-                                                    <div className="flex items-center gap-2">
+                                                    {/* Barra de Navegación Integrada */}
+                                                    <div className="flex items-center gap-2 bg-white dark:bg-slate-900 p-1 rounded-lg border border-slate-200 dark:border-slate-700 mb-3">
                                                         <button
                                                             type="button"
                                                             onClick={() => setSelectedCandleIndex((prev) => Math.max(200, prev - 1))}
                                                             disabled={selectedCandleIndex <= 200}
-                                                            aria-label="Vela anterior"
-                                                            className="h-10 w-10 shrink-0 inline-flex items-center justify-center bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                                                            className="h-6 w-6 flex items-center justify-center rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 disabled:opacity-30 transition-colors"
                                                         >
-                                                            <Icons.ChevronLeft size={18} />
+                                                            <Icons.ChevronLeft size={16} />
                                                         </button>
                                                         <input
                                                             type="range"
@@ -4241,108 +5225,61 @@
                                                             max={csvData.length - 1}
                                                             value={selectedCandleIndex}
                                                             onChange={(e) => setSelectedCandleIndex(parseInt(e.target.value, 10))}
-                                                            className="flex-1 accent-blue-500 h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer"
+                                                            className="flex-1 accent-indigo-500 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer"
                                                         />
                                                         <button
                                                             type="button"
                                                             onClick={() => setSelectedCandleIndex((prev) => Math.min(csvData.length - 1, prev + 1))}
                                                             disabled={selectedCandleIndex >= csvData.length - 1}
-                                                            aria-label="Vela siguiente"
-                                                            className="h-10 w-10 shrink-0 inline-flex items-center justify-center bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                                                            className="h-6 w-6 flex items-center justify-center rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 disabled:opacity-30 transition-colors"
                                                         >
-                                                            <Icons.ChevronRight size={18} />
+                                                            <Icons.ChevronRight size={16} />
                                                         </button>
                                                     </div>
-                                                    <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3 text-xs font-mono">
-                                                        <div className="bg-white dark:bg-slate-900 p-2 rounded border border-slate-200 dark:border-slate-800">
-                                                            <div className="text-[11px] text-slate-500">Índice en dataset</div>
-                                                            <div className="text-slate-800 dark:text-white font-bold">{selectedCandleIndex}</div>
+                                                    {/* Status Bar de Datos */}
+                                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-[10px] font-mono text-slate-500">
+                                                        <div className="flex flex-col">
+                                                            <span>FECHA</span>
+                                                            <span className="font-bold text-slate-800 dark:text-white text-xs">
+                                                                {(csvData[selectedCandleIndex]?.datetime) ? csvData[selectedCandleIndex].datetime.toLocaleDateString('es-ES') : '—'}
+                                                            </span>
                                                         </div>
-                                                        <div className="bg-white dark:bg-slate-900 p-2 rounded border border-slate-200 dark:border-slate-800">
-                                                            <div className="text-[11px] text-slate-500">Fecha</div>
-                                                            <div className="text-blue-600 dark:text-blue-300 font-bold">
-                                                                {(csvData[selectedCandleIndex] && csvData[selectedCandleIndex].datetime) ? csvData[selectedCandleIndex].datetime.toLocaleDateString('es-ES') : '—'}
-                                                                {' '}
-                                                                {(csvData[selectedCandleIndex] && csvData[selectedCandleIndex].datetime) ? csvData[selectedCandleIndex].datetime.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : ''}
-                                                            </div>
+                                                        <div className="flex flex-col">
+                                                            <span>HORA</span>
+                                                            <span className="font-bold text-slate-800 dark:text-white text-xs">
+                                                                {(csvData[selectedCandleIndex]?.datetime) ? csvData[selectedCandleIndex].datetime.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : '—'}
+                                                            </span>
                                                         </div>
-                                                        <div className="bg-white dark:bg-slate-900 p-2 rounded border border-slate-200 dark:border-slate-800">
-                                                            <div className="text-[11px] text-slate-500">Periodo de la vela</div>
-                                                            <div className="text-slate-800 dark:text-white font-bold">
-                                                                {(() => {
-                                                                    const d = csvData[selectedCandleIndex] ? csvData[selectedCandleIndex].datetime : undefined;
-                                                                    const tf = tfMinutes || 0;
-                                                                    if (!d || !tf) return '—';
-                                                                    const end = new Date(d.getTime() + tf * 60000);
-                                                                    const fmt = (x) => x.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-                                                                    const tfLabel = tf >= 1440 ? `${Math.round(tf / 1440)}D` : tf >= 60 ? `${Math.round(tf / 60)}H` : `${tf}m`;
-                                                                    return `${fmt(d)} → ${fmt(end)} (${tfLabel})`;
-                                                                })()}
-                                                            </div>
+                                                        <div className="flex flex-col">
+                                                            <span>PRECIO</span>
+                                                            <span className="font-bold text-blue-600 dark:text-blue-400 text-xs">
+                                                                {entryPrice.toFixed(2)}
+                                                            </span>
                                                         </div>
-                                                    </div>
-                                                    <div className="mt-4 grid grid-cols-2 gap-4 text-sm font-mono">
-                                                        <div className="bg-white dark:bg-slate-900 p-2 rounded border border-slate-200 dark:border-slate-800">
-                                                            <div className="text-xs text-slate-500">Precio Cierre</div>
-                                                            <div className="text-blue-600 dark:text-blue-300 font-bold">{entryPrice.toFixed(2)}</div>
-                                                        </div>
-                                                        <div className="bg-white dark:bg-slate-900 p-2 rounded border border-slate-200 dark:border-slate-800">
-                                                            <div className="text-xs text-slate-500">RSI (14)</div>
-                                                            <div className={targetRsi > 70 ? 'text-red-500 dark:text-red-400' : targetRsi < 30 ? 'text-green-600 dark:text-green-400' : 'text-slate-700 dark:text-slate-300'}>{targetRsi}</div>
+                                                        <div className="flex flex-col">
+                                                            <span>RSI(14)</span>
+                                                            <span className={`font-bold text-xs ${targetRsi > 70 ? 'text-red-500' : targetRsi < 30 ? 'text-green-500' : 'text-slate-700 dark:text-slate-300'}`}>
+                                                                {targetRsi}
+                                                            </span>
                                                         </div>
                                                     </div>
 
-                                                    {/* --- Indicador ADR (Average Daily Range) --- */}
+                                                    {/* --- Indicador ADR Compacto --- */}
                                                     {(() => {
                                                         const candle = csvData[selectedCandleIndex];
                                                         if (!candle || candle.adrValue == null) return null;
                                                         const adrPct = candle.adrFilledPct || 0;
                                                         const isExhausted = adrPct > 100;
-                                                        const barWidth = Math.min(adrPct, 150); // Cap visual al 150%
+                                                        
                                                         return (
-                                                            <div className={`mt-4 p-3 rounded-lg border shadow-sm ${isExhausted ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800'}`}>
-                                                                <div className="flex items-center justify-between mb-2">
-                                                                    <div className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase flex items-center gap-2">
-                                                                        <Icons.Activity size={12} /> ADR Diario (14D)
-                                                                    </div>
-                                                                    {isExhausted && (
-                                                                        <span className="text-[10px] font-bold text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30 px-2 py-0.5 rounded animate-pulse">
-                                                                            ⚠️ AGOTAMIENTO ESTADÍSTICO
-                                                                        </span>
-                                                                    )}
+                                                            <div className="mt-3 pt-2 border-t border-slate-200 dark:border-slate-700/50 flex items-center gap-3 text-[10px]">
+                                                                <div className="flex items-center gap-1 font-bold text-slate-500 uppercase whitespace-nowrap">
+                                                                    <Icons.Activity size={10} /> ADR {adrPct.toFixed(0)}%
                                                                 </div>
-                                                                <div className="grid grid-cols-2 gap-3 text-xs font-mono mb-2">
-                                                                    <div>
-                                                                        <div className="text-[10px] text-slate-500">Rango Hoy</div>
-                                                                        <div className="text-slate-800 dark:text-white font-bold">{candle.currentDayRange != null ? candle.currentDayRange.toFixed(2) : '—'}</div>
-                                                                    </div>
-                                                                    <div>
-                                                                        <div className="text-[10px] text-slate-500">ADR Promedio</div>
-                                                                        <div className="text-blue-600 dark:text-blue-300 font-bold">{candle.adrValue != null ? candle.adrValue.toFixed(2) : '—'}</div>
-                                                                    </div>
+                                                                <div className="flex-1 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                                                                    <div className={`h-full ${isExhausted ? 'bg-red-500' : 'bg-indigo-500'}`} style={{ width: `${Math.min(adrPct, 100)}%` }}></div>
                                                                 </div>
-                                                                {/* Barra de Progreso ADR */}
-                                                                <div className="relative h-3 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                                                                    <div
-                                                                        className={`h-full transition-all duration-300 ${isExhausted ? 'bg-red-500' : adrPct > 80 ? 'bg-orange-500' : 'bg-green-500'}`}
-                                                                        style={{ width: `${Math.min(barWidth, 100)}%` }}
-                                                                    ></div>
-                                                                    {adrPct > 100 && (
-                                                                        <div
-                                                                            className="absolute top-0 h-full bg-red-600/50"
-                                                                            style={{ left: '100%', width: `${Math.min(adrPct - 100, 50)}%` }}
-                                                                        ></div>
-                                                                    )}
-                                                                    {/* Marcador del 100% */}
-                                                                    <div className="absolute top-0 bottom-0 w-0.5 bg-slate-400 dark:bg-slate-500" style={{ left: '100%' }}></div>
-                                                                </div>
-                                                                <div className="flex justify-between text-[10px] text-slate-500 mt-1">
-                                                                    <span>0%</span>
-                                                                    <span className={`font-bold ${isExhausted ? 'text-red-600 dark:text-red-400' : 'text-slate-700 dark:text-slate-300'}`}>
-                                                                        {adrPct.toFixed(1)}% Completado
-                                                                    </span>
-                                                                    <span>100%</span>
-                                                                </div>
+                                                                {isExhausted && <span className="text-red-500 font-bold">⚠️ AGOTADO</span>}
                                                             </div>
                                                         );
                                                     })()}
@@ -4351,43 +5288,37 @@
                                             ) : <div className="text-slate-500 dark:text-slate-600 text-sm italic">Carga un archivo CSV primero...</div>}
                                         </section>
 
-                                        {/* 3. ESTRATEGIA */}
-                                        <section className="bg-slate-50 dark:bg-slate-800/50 p-5 rounded-xl border border-slate-200 dark:border-slate-700/50 shadow-sm">
-                                            <h3 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase mb-3 flex items-center gap-2"><Icons.TrendingUp size={16} /> Estrategia de Trade</h3>
-                                            <div className="flex bg-slate-200 dark:bg-slate-900 p-1 rounded-lg mb-4">
-                                                <button onClick={() => setTradeType('LONG')} className={`flex-1 py-2 rounded text-xs font-bold transition-all ${tradeType === 'LONG' ? 'bg-green-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>LONG</button>
-                                                <button onClick={() => setTradeType('SHORT')} className={`flex-1 py-2 rounded text-xs font-bold transition-all ${tradeType === 'SHORT' ? 'bg-red-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>SHORT</button>
-                                            </div>
-                                            <div className="grid grid-cols-2 gap-3">
-                                                <div>
-                                                    <label className="text-xs text-red-500 dark:text-red-400 font-bold">Stop Loss</label>
-                                                    <input type="number" placeholder="Precio SL" value={stopLoss} onChange={(e) => setStopLoss(e.target.value)} className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded p-2 text-sm font-mono leading-tight mt-1 text-slate-900 dark:text-white focus:border-red-500 outline-none transition-colors" />
-                                                </div>
-                                                <div>
-                                                    <label className="text-xs text-green-600 dark:text-green-400 font-bold">Take Profit</label>
-                                                    <input type="number" placeholder="Precio TP" value={takeProfit} onChange={(e) => setTakeProfit(e.target.value)} className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded p-2 text-sm font-mono leading-tight mt-1 text-slate-900 dark:text-white focus:border-green-500 outline-none transition-colors" />
+                                        {/* 3. ESTRATEGIA COMPACTA */}
+                                        <section className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700/50 shadow-sm transition-all hover:shadow-md">
+                                            <div className="flex items-center justify-between mb-3">
+                                                <h3 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase flex items-center gap-2">
+                                                    <Icons.TrendingUp size={16} /> Estrategia
+                                                </h3>
+                                                {/* Selector LONG/SHORT Compacto */}
+                                                <div className="flex bg-slate-200 dark:bg-slate-900 p-0.5 rounded-lg scale-90 origin-right">
+                                                    <button onClick={() => setTradeType('LONG')} className={`px-3 py-1 rounded text-[10px] font-bold transition-all ${tradeType === 'LONG' ? 'bg-green-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>LONG</button>
+                                                    <button onClick={() => setTradeType('SHORT')} className={`px-3 py-1 rounded text-[10px] font-bold transition-all ${tradeType === 'SHORT' ? 'bg-red-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>SHORT</button>
                                                 </div>
                                             </div>
-                                            <div className="mt-3">
-                                                <label className="text-xs text-slate-600 dark:text-slate-300 font-bold">Spread (puntos)</label>
-                                                <input type="number" min="0" step="0.01" placeholder="0" value={spread} onChange={(e) => setSpread(e.target.value)} className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded p-2 text-sm font-mono leading-tight mt-1 text-slate-900 dark:text-white focus:border-blue-500 outline-none transition-colors" />
+                                            
+                                            {/* Grid de 3 Columnas para Inputs */}
+                                            <div className="grid grid-cols-3 gap-2">
+                                                <div className="relative group">
+                                                    <label className="absolute -top-1.5 left-2 bg-slate-50 dark:bg-slate-800 px-1 text-[10px] font-bold text-red-500 dark:text-red-400">SL</label>
+                                                    <input type="number" placeholder="Precio" value={stopLoss} onChange={(e) => setStopLoss(e.target.value)} className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2 text-sm font-mono text-center focus:border-red-500 outline-none transition-colors" />
+                                                </div>
+                                                <div className="relative group">
+                                                    <label className="absolute -top-1.5 left-2 bg-slate-50 dark:bg-slate-800 px-1 text-[10px] font-bold text-green-600 dark:text-green-400">TP</label>
+                                                    <input type="number" placeholder="Precio" value={takeProfit} onChange={(e) => setTakeProfit(e.target.value)} className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2 text-sm font-mono text-center focus:border-green-500 outline-none transition-colors" />
+                                                </div>
+                                                <div className="relative group">
+                                                    <label className="absolute -top-1.5 left-2 bg-slate-50 dark:bg-slate-800 px-1 text-[10px] font-bold text-blue-500 dark:text-blue-400">Spread</label>
+                                                    <input type="number" min="0" step="0.01" placeholder="0" value={spread} onChange={(e) => setSpread(e.target.value)} className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2 text-sm font-mono text-center focus:border-blue-500 outline-none transition-colors" />
+                                                </div>
                                             </div>
-                                            <button onClick={handleAutoDetect} disabled={!csvData.length || isAutoDetecting} className="w-full mt-3 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-400 disabled:cursor-not-allowed disabled:hover:bg-slate-400 text-white font-bold py-2 rounded-lg shadow-lg flex items-center justify-center gap-2 transition-all active:scale-95 disabled:active:scale-100">
-                                                {isAutoDetecting ? <Icons.Activity size={16} className="animate-spin" /> : <Icons.Target size={16} />} AUTO-DETECTAR SETUP
-                                            </button>
 
-                                            <details className="group mt-3 border border-slate-200 dark:border-slate-800 rounded overflow-hidden">
-                                                <summary className="flex items-center justify-between p-2 cursor-pointer bg-slate-50 dark:bg-slate-900 text-xs font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors select-none">
-                                                    <span className="flex items-center gap-2"><Icons.Zap size={12} /> ¿Cómo funciona la Auto-Detección?</span>
-                                                    <Icons.ChevronDown size={12} className="transition-transform group-open:rotate-180" />
-                                                </summary>
-                                                <div className="p-3 bg-white dark:bg-slate-950 text-[10px] space-y-2 border-t border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400">
-                                                    <p><strong className="text-slate-700 dark:text-slate-300">1. Análisis de Volatilidad:</strong> Se calcula el ATR (14 periodos) para medir el "ruido" del mercado y adaptar el SL dinámicamente.</p>
-                                                    <p><strong className="text-slate-700 dark:text-slate-300">2. Estructura de Mercado:</strong> Se identifican los Swing Highs y Lows más recientes para anclar el SL en niveles técnicos lógicos.</p>
-                                                    <p><strong className="text-slate-700 dark:text-slate-300">3. Generación de Candidatos:</strong> El sistema prueba múltiples combinaciones de SL (Estructural vs ATR) y TP (Ratios 1:1 a 1:5).</p>
-                                                    <p><strong className="text-slate-700 dark:text-slate-300">4. Validación Estadística:</strong> Se ejecuta un Backtest rápido para cada candidato. Solo se sugiere el que tenga &gt;30 trades históricos y Esperanza Matemática (Edge) positiva.</p>
-                                                </div>
-                                            </details>
+
+
                                             {rrMetrics && (
                                                 <div className="mt-4 space-y-3">
                                                     {/* Fila de Métricas Principales */}
@@ -4506,148 +5437,7 @@
                                                     )}
                                                 </div>
                                             )}
-                                            <details className="group mt-3 border border-slate-200 dark:border-slate-800 rounded overflow-hidden">
-                                                <summary className="flex items-center justify-between p-2 cursor-pointer bg-slate-50 dark:bg-slate-900 text-xs font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors select-none">
-                                                    <span className="flex items-center gap-2"><Icons.HelpCircle size={12} /> Guía de Clasificación</span>
-                                                    <Icons.ChevronDown size={12} className="transition-transform group-open:rotate-180" />
-                                                </summary>
-                                                <div className="p-3 bg-white dark:bg-slate-950 text-[10px] space-y-1.5 border-t border-slate-200 dark:border-slate-800">
-                                                    <div className="flex justify-between items-center">
-                                                        <span className="font-bold text-green-700 dark:text-green-400 flex items-center gap-1"><Icons.ShieldCheck size={10} /> Robusto (Excelente)</span>
-                                                        <span className="text-slate-500">Wilson 95% &gt; BE</span>
-                                                    </div>
-                                                    <div className="flex justify-between items-center">
-                                                        <span className="font-bold text-orange-500 dark:text-orange-400">Especulativo (Trampa)</span>
-                                                        <span className="text-slate-500">Histórico OK, Wilson Mal</span>
-                                                    </div>
-                                                    <div className="p-2 bg-orange-50 dark:bg-orange-900/20 rounded border border-orange-100 dark:border-orange-900/30 text-orange-800 dark:text-orange-200 italic mb-2">
-                                                        Un Edge Especulativo significa que aunque el histórico es bueno, la muestra es muy pequeña para garantizar ganancias futuras según el Wilson Score.
-                                                    </div>
-                                                    <div className="flex justify-between items-center">
-                                                        <span className="font-bold text-slate-600 dark:text-slate-400">Marginal</span>
-                                                        <span className="text-slate-500">Edge ≥ 0%</span>
-                                                    </div>
-                                                    <div className="flex justify-between items-center">
-                                                        <span className="font-bold text-red-500 dark:text-red-400">Esperanza Negativa</span>
-                                                        <span className="text-slate-500">Edge &lt; 0%</span>
-                                                    </div>
-                                                    <div className="pt-2 mt-1 border-t border-slate-100 dark:border-slate-800 text-slate-400 italic">
-                                                        *Edge = WinRate Histórico - WinRate Break-Even
-                                                    </div>
-                                                </div>
-                                            </details>
-                                            <details className="group mt-3 border border-slate-200 dark:border-slate-800 rounded overflow-hidden">
-                                                <summary className="flex items-center justify-between p-2 cursor-pointer bg-slate-50 dark:bg-slate-900 text-xs font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors select-none">
-                                                    <span className="flex items-center gap-2"><Icons.Target size={12} /> Min. Win Rate Referencia</span>
-                                                    <Icons.ChevronDown size={12} className="transition-transform group-open:rotate-180" />
-                                                </summary>
-                                                <div className="p-3 bg-white dark:bg-slate-950 text-[10px] space-y-1.5 border-t border-slate-200 dark:border-slate-800">
-                                                    <div className="grid grid-cols-2 gap-2 pb-1 mb-1 border-b border-slate-100 dark:border-slate-800 font-bold text-slate-400">
-                                                        <span>Ratio R:R</span>
-                                                        <span className="text-right">Min. Win Rate</span>
-                                                    </div>
-                                                    <div className="flex justify-between items-center">
-                                                        <span className="font-mono text-slate-600 dark:text-slate-400">1:1</span>
-                                                        <span className="font-mono font-bold text-slate-700 dark:text-slate-300">50.0%</span>
-                                                    </div>
-                                                    <div className="flex justify-between items-center">
-                                                        <span className="font-mono text-slate-600 dark:text-slate-400">1:1.5</span>
-                                                        <span className="font-mono font-bold text-slate-700 dark:text-slate-300">40.0%</span>
-                                                    </div>
-                                                    <div className="flex justify-between items-center">
-                                                        <span className="font-mono text-slate-600 dark:text-slate-400">1:2</span>
-                                                        <span className="font-mono font-bold text-slate-700 dark:text-slate-300">33.3%</span>
-                                                    </div>
-                                                    <div className="flex justify-between items-center">
-                                                        <span className="font-mono text-slate-600 dark:text-slate-400">1:2.5</span>
-                                                        <span className="font-mono font-bold text-slate-700 dark:text-slate-300">28.6%</span>
-                                                    </div>
-                                                    <div className="flex justify-between items-center">
-                                                        <span className="font-mono text-slate-600 dark:text-slate-400">1:3</span>
-                                                        <span className="font-mono font-bold text-slate-700 dark:text-slate-300">25.0%</span>
-                                                    </div>
-                                                    <div className="flex justify-between items-center">
-                                                        <span className="font-mono text-slate-600 dark:text-slate-400">1:4</span>
-                                                        <span className="font-mono font-bold text-slate-700 dark:text-slate-300">20.0%</span>
-                                                    </div>
-                                                    <div className="flex justify-between items-center">
-                                                        <span className="font-mono text-slate-600 dark:text-slate-400">1:5</span>
-                                                        <span className="font-mono font-bold text-slate-700 dark:text-slate-300">16.7%</span>
-                                                    </div>
-                                                    <div className="pt-2 mt-1 border-t border-slate-100 dark:border-slate-800 text-slate-400 italic">
-                                                        *Mínimo para no perder dinero (Break-Even)
-                                                    </div>
-                                                </div>
-                                            </details>
-                                            <details className="group mt-3 border border-slate-200 dark:border-slate-800 rounded overflow-hidden">
-                                                <summary className="flex items-center justify-between p-2 cursor-pointer bg-slate-50 dark:bg-slate-900 text-xs font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors select-none">
-                                                    <span className="flex items-center gap-2"><Icons.Activity size={12} /> Interpretación del Riesgo de Azar</span>
-                                                    <Icons.ChevronDown size={12} className="transition-transform group-open:rotate-180" />
-                                                </summary>
-                                                <div className="p-3 bg-white dark:bg-slate-950 text-[10px] space-y-2 border-t border-slate-200 dark:border-slate-800">
-                                                    <p className="text-slate-500 italic mb-2">
-                                                        Este porcentaje mide la probabilidad de que tu Edge sea falso (producto de la suerte).
-                                                    </p>
 
-                                                    <div className="space-y-1.5">
-                                                        <div className="flex justify-between items-center p-1 rounded hover:bg-slate-50 dark:hover:bg-slate-900">
-                                                            <span className="font-bold text-emerald-600 dark:text-emerald-400">Menor al 1%</span>
-                                                            <span className="text-slate-600 dark:text-slate-300 text-right">Certeza Institucional<br /><span className="text-[9px] text-slate-400">Extremadamente Robusto</span></span>
-                                                        </div>
-                                                        <div className="flex justify-between items-center p-1 rounded hover:bg-slate-50 dark:hover:bg-slate-900">
-                                                            <span className="font-bold text-green-600 dark:text-green-400">1% - 5%</span>
-                                                            <span className="text-slate-600 dark:text-slate-300 text-right">Científicamente Validado<br /><span className="text-[9px] text-slate-400">Estándar Académico</span></span>
-                                                        </div>
-                                                        <div className="flex justify-between items-center p-1 rounded hover:bg-slate-50 dark:hover:bg-slate-900">
-                                                            <span className="font-bold text-orange-500">5% - 20%</span>
-                                                            <span className="text-slate-600 dark:text-slate-300 text-right">Zona Especulativa<br /><span className="text-[9px] text-slate-400">Requiere Precaución</span></span>
-                                                        </div>
-                                                        <div className="flex justify-between items-center p-1 rounded hover:bg-slate-50 dark:hover:bg-slate-900">
-                                                            <span className="font-bold text-red-500">Mayor al 20%</span>
-                                                            <span className="text-slate-600 dark:text-slate-300 text-right">Ruido de Mercado<br /><span className="text-[9px] text-slate-400">Resultado Aleatorio</span></span>
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/30 rounded text-blue-800 dark:text-blue-200">
-                                                        <strong className="block mb-1">⚠️ IMPORTANTE: Validado ≠ Rentable</strong>
-                                                        Un riesgo bajo (ej. 3.9%) confirma que tu capacidad de predicción es REAL, pero si tu gestión de riesgo (R:R) es mala (ej. ganas $1, pierdes $5), <b>perderás dinero igual</b> aunque aciertes mucho.
-                                                    </div>
-                                                </div>
-                                            </details>
-
-                                            <details className="group mt-3 border border-slate-200 dark:border-slate-800 rounded overflow-hidden">
-                                                <summary className="flex items-center justify-between p-2 cursor-pointer bg-slate-50 dark:bg-slate-900 text-xs font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors select-none">
-                                                    <span className="flex items-center gap-2"><Icons.CheckCircle size={12} /> Interpretación de Calidad de Señal</span>
-                                                    <Icons.ChevronDown size={12} className="transition-transform group-open:rotate-180" />
-                                                </summary>
-                                                <div className="p-3 bg-white dark:bg-slate-950 text-[10px] space-y-2 border-t border-slate-200 dark:border-slate-800">
-                                                    <p className="text-slate-500 italic mb-2">
-                                                        Este puntaje (0-100%) mide la <b>Confluencia Técnica</b>: qué tan "perfecto" es el setup actual según tus filtros activos (Estructura, Volumen, RSI, etc.).
-                                                    </p>
-                                                    <div className="space-y-1.5">
-                                                        <div className="flex justify-between items-center p-1 rounded hover:bg-slate-50 dark:hover:bg-slate-900">
-                                                            <span className="font-bold text-emerald-600 dark:text-emerald-400">90% - 100% (A+)</span>
-                                                            <span className="text-slate-600 dark:text-slate-300 text-right">Confluencia Perfecta<br /><span className="text-[9px] text-slate-400">Setup de Libro ("Unicornio")</span></span>
-                                                        </div>
-                                                        <div className="flex justify-between items-center p-1 rounded hover:bg-slate-50 dark:hover:bg-slate-900">
-                                                            <span className="font-bold text-blue-600 dark:text-blue-400">70% - 89% (A/B)</span>
-                                                            <span className="text-slate-600 dark:text-slate-300 text-right">Confluencia Estándar<br /><span className="text-[9px] text-slate-400">Setup Operable con ruido normal</span></span>
-                                                        </div>
-                                                        <div className="flex justify-between items-center p-1 rounded hover:bg-slate-50 dark:hover:bg-slate-900">
-                                                            <span className="font-bold text-orange-500">Menor a 70%</span>
-                                                            <span className="text-slate-600 dark:text-slate-300 text-right">Baja Calidad<br /><span className="text-[9px] text-slate-400">Falta confirmación técnica</span></span>
-                                                        </div>
-                                                        <div className="flex justify-between items-center p-1 rounded hover:bg-slate-50 dark:hover:bg-slate-900">
-                                                            <span className="font-bold text-slate-500">0% (Base)</span>
-                                                            <span className="text-slate-600 dark:text-slate-300 text-right">Sin Filtros Activos<br /><span className="text-[9px] text-slate-400">Estadística Pura (Base)</span></span>
-                                                        </div>
-                                                    </div>
-                                                    <div className="mt-2 p-2 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-900/30 rounded text-indigo-800 dark:text-indigo-200">
-                                                        <strong className="block mb-1">⚠️ Calidad ≠ Probabilidad</strong>
-                                                        Un trade puede tener <b>Calidad 100%</b> (cumplir todas tus reglas) y aun así perder. La calidad mide tu disciplina y la claridad del contexto, no el futuro.
-                                                    </div>
-                                                </div>
-                                            </details>
                                         </section>
 
                                         {/* 4. FILTROS */}
@@ -4757,6 +5547,10 @@
 
                                             <h4 className="text-xs font-bold text-slate-400 uppercase mt-4 mb-2">Indicadores retail</h4>
                                             <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 cursor-pointer hover:text-slate-800 dark:hover:text-slate-200">
+                                                <input type="checkbox" checked={useCrtFilter} onChange={(e) => setUseCrtFilter(e.target.checked)} className="accent-blue-500" />
+                                                <Icons.BarChart3 size={14} className="text-pink-500" /> CRT (Mismo Rango)
+                                            </label>
+                                            <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 cursor-pointer hover:text-slate-800 dark:hover:text-slate-200">
                                                 <input type="checkbox" checked={useRsiFilter} onChange={(e) => setUseRsiFilter(e.target.checked)} className="accent-blue-500" />
                                                 Buscar RSI Similar (+/- {rsiTolerance})
                                             </label>
@@ -4774,91 +5568,6 @@
                                             </label>
                                             <input type="range" min="5" max="30" value={wickTolerance} onChange={(e) => setWickTolerance(parseInt(e.target.value))} className="w-full accent-blue-500 h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer" />
 
-                                            {/* --- BLOQUE DE CÓDIGO UI PARA EL TOGGLE --- */}
-                                            <div className="bg-slate-100 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-200 dark:border-slate-700/50 mb-4">
-                                                <div className="flex items-center justify-between">
-                                                    <div className="flex flex-col">
-                                                        <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase flex items-center gap-2">
-                                                            {useMacroMode ? <Icons.Map size={14} className="text-purple-500" /> : <Icons.Zap size={14} className="text-orange-500" />}
-                                                            {useMacroMode ? 'Modo Análisis Macro' : 'Modo Intradía Rápido'}
-                                                        </span>
-                                                        <span className="text-[10px] text-slate-500 mt-0.5">
-                                                            {useMacroMode
-                                                                ? 'Límite extendido a 5,000 velas. Ideal para buscar objetivos estructurales lejanos.'
-                                                                : 'Límite estándar de 500 velas. Optimizado para setups del día a día.'}
-                                                        </span>
-                                                    </div>
-
-                                                    <label className="relative inline-flex items-center cursor-pointer">
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={useMacroMode}
-                                                            onChange={(e) => setUseMacroMode(e.target.checked)}
-                                                            className="sr-only peer"
-                                                        />
-                                                        <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
-                                                    </label>
-                                                </div>
-                                            </div>
-
-                                            {/* === WALK-FORWARD ANALYSIS TOGGLE === */}
-                                            <div className={`p-3 rounded-lg border shadow-sm transition-all ${useWalkForward ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-700' : 'bg-slate-100 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700/50'}`}>
-                                                <div className="flex items-center justify-between">
-                                                    <div className="flex flex-col">
-                                                        <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase flex items-center gap-2">
-                                                            <Icons.Split size={14} className={useWalkForward ? 'text-indigo-500' : 'text-slate-400'} />
-                                                            Walk-Forward Analysis
-                                                        </span>
-                                                        <span className="text-[10px] text-slate-500 mt-0.5">
-                                                            {useWalkForward
-                                                                ? `${walkForwardSplit}% entrenamiento / ${100 - walkForwardSplit}% validación`
-                                                                : 'Divide datos para validar overfitting'}
-                                                        </span>
-                                                    </div>
-
-                                                    <label className="relative inline-flex items-center cursor-pointer">
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={useWalkForward}
-                                                            onChange={(e) => setUseWalkForward(e.target.checked)}
-                                                            className="sr-only peer"
-                                                            disabled={csvData.length < 500}
-                                                        />
-                                                        <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-                                                    </label>
-                                                </div>
-                                                {useWalkForward && (
-                                                    <div className="mt-3 animate-fade-in">
-                                                        <div className="flex justify-between text-[10px] mb-1">
-                                                            <span className="text-indigo-600 dark:text-indigo-400 font-bold">In-Sample ({walkForwardSplit}%)</span>
-                                                            <span className="text-orange-600 dark:text-orange-400 font-bold">Out-Sample ({100 - walkForwardSplit}%)</span>
-                                                        </div>
-                                                        <div className="relative h-3 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                                                            <div
-                                                                className="h-full bg-indigo-500 transition-all duration-200"
-                                                                style={{ width: `${walkForwardSplit}%` }}
-                                                            ></div>
-                                                            {/* Vertical split line */}
-                                                            <div
-                                                                className="absolute top-0 bottom-0 w-1 bg-slate-800 dark:bg-white shadow-lg"
-                                                                style={{ left: `calc(${walkForwardSplit}% - 2px)` }}
-                                                            ></div>
-                                                        </div>
-                                                        <input
-                                                            type="range"
-                                                            min="50"
-                                                            max="90"
-                                                            step="5"
-                                                            value={walkForwardSplit}
-                                                            onChange={(e) => setWalkForwardSplit(parseInt(e.target.value))}
-                                                            className="w-full accent-indigo-500 h-2 bg-transparent appearance-none cursor-pointer mt-2"
-                                                        />
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <button data-export-exclude="true" onClick={runSimulation} className="w-full mt-4 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg shadow-lg flex items-center justify-center gap-2 transition-all active:scale-95">
-                                                <Icons.Play size={18} /> EJECUTAR ANÁLISIS
-                                            </button>
                                         </section>
                                     </div>
 
@@ -4875,47 +5584,59 @@
                                             <div className="space-y-8 animate-fade-in">
 
                                                 {/* SCORE PRINCIPAL */}
-                                                <div className="text-center relative">
-                                                    <h2 className="text-sm text-slate-500 font-bold uppercase tracking-widest mb-2">Probabilidad Histórica</h2>
-                                                    <div className={`text-6xl font-black leading-[1.2] screenshot-safe-score ${parseFloat(simResult.winRate) >= 60 ? 'text-green-600 dark:text-green-400' :
-                                                        parseFloat(simResult.winRate) >= 50 ? 'text-orange-500 dark:text-orange-400' : 'text-red-500 dark:text-red-400'
-                                                        }`}>
-                                                        {simResult.winRate}%
-                                                    </div>
-
-                                                    <div data-export-exclude="true" className="absolute right-0 top-0 flex items-center gap-2">
+                                                <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+                                                    
+                                                    {/* --- BARRA DE HERRAMIENTAS DE RESULTADOS --- */}
+                                                    <div className="bg-slate-50 dark:bg-slate-800/50 p-2 flex items-center gap-2 border-b border-slate-200 dark:border-slate-800">
                                                         <button
                                                             onClick={handleCopyAll}
                                                             disabled={!simResult || (simResult && simResult.error) || copyAllStatus === 'copying'}
-                                                            className="bg-slate-900 hover:bg-slate-800 disabled:bg-slate-400 disabled:cursor-not-allowed text-white px-3 py-2 rounded-lg shadow-lg transition-all active:scale-95 disabled:active:scale-100 text-xs font-bold"
-                                                            title="Copiar configuración, filtros y resultados"
+                                                            className="flex-1 bg-white dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 px-3 py-1.5 rounded text-[10px] font-bold shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2"
+                                                            title="Copiar configuración"
                                                         >
-                                                            {copyAllStatus === 'copying' ? 'Copiando…' : copyAllStatus === 'success' ? 'Copiado' : copyAllStatus === 'error' ? 'Error' : 'Copiar todo'}
+                                                            {copyAllStatus === 'copying' ? <Icons.Loader size={12} className="animate-spin" /> : <Icons.Copy size={12} />}
+                                                            {copyAllStatus === 'copying' ? '...' : 'Copiar'}
+                                                        </button>
+                                                        <button
+                                                            onClick={analyzeCurrentSetup}
+                                                            disabled={aiAuditLoading || !simResult || (simResult && simResult.error)}
+                                                            className="flex-1 bg-white dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 text-emerald-600 dark:text-emerald-400 px-3 py-1.5 rounded text-[10px] font-bold shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2"
+                                                            title="Auditoría IA"
+                                                        >
+                                                            {aiAuditLoading ? <Icons.Loader size={12} className="animate-spin" /> : <Icons.Cpu size={12} />}
+                                                            {aiAuditLoading ? '...' : 'Auditar'}
                                                         </button>
                                                         <button
                                                             onClick={openOptimizeModal}
-                                                            className="bg-indigo-600 hover:bg-indigo-500 text-white p-2 rounded-lg shadow-lg transition-all active:scale-95 group"
-                                                            title="Buscar Mejor Combinación de Filtros"
+                                                            className="flex-none bg-indigo-600 hover:bg-indigo-500 text-white p-1.5 rounded shadow-sm transition-all active:scale-95 group"
+                                                            title="Optimizar Filtros"
                                                         >
-                                                            <Icons.Zap size={18} className="group-hover:text-yellow-300 transition-colors" />
+                                                            <Icons.Zap size={14} className="group-hover:text-yellow-300 transition-colors" />
                                                         </button>
                                                     </div>
 
-                                                    <div className="prob-summary text-slate-500 dark:text-slate-400 text-sm mt-3 flex justify-center gap-4">
-                                                        <span className="bg-white dark:bg-slate-900 px-3 py-1 rounded border border-slate-200 dark:border-slate-800 shadow-sm" title="Trades Ganadores">Wins: <b className="text-green-600 dark:text-green-400">{simResult.wins}</b></span>
-                                                        <span className="bg-white dark:bg-slate-900 px-3 py-1 rounded border border-slate-200 dark:border-slate-800 shadow-sm" title="Trades Perdedores">Losses: <b className="text-red-500 dark:text-red-400">{simResult.losses}</b></span>
-                                                        <span className="bg-white dark:bg-slate-900 px-3 py-1 rounded border border-slate-200 dark:border-slate-800 shadow-sm" title="Total de Muestras">Total: <b className="text-blue-600 dark:text-blue-400">{simResult.wins + simResult.losses}</b></span>
-                                                        {simResult.wilsonLower95 && (
-                                                            <span className="bg-white dark:bg-slate-900 px-3 py-1 rounded border border-slate-200 dark:border-slate-800 shadow-sm" title="Límite inferior Wilson 95%">Wilson 95%: <b className="text-slate-800 dark:text-slate-200">{simResult.wilsonLower95}%</b></span>
-                                                        )}
+                                                    <div className="p-6 text-center">
+                                                        <h2 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Probabilidad Histórica</h2>
+                                                        <div className={`text-6xl font-black leading-none tracking-tighter mb-2 drop-shadow-sm ${parseFloat(simResult.winRate) >= 60 ? 'text-emerald-500 dark:text-emerald-400' :
+                                                            parseFloat(simResult.winRate) >= 50 ? 'text-orange-500 dark:text-orange-400' : 'text-red-500 dark:text-red-400'
+                                                            }`}>
+                                                            {simResult.winRate}%
+                                                        </div>
+
+                                                        <div className="prob-summary text-slate-500 dark:text-slate-400 text-xs mt-4 flex flex-wrap justify-center gap-2">
+                                                            <span className="bg-slate-50 dark:bg-slate-800 px-2 py-1 rounded border border-slate-100 dark:border-slate-700" title="Trades Ganadores">W: <b className="text-green-600 dark:text-green-400">{simResult.wins}</b></span>
+                                                            <span className="bg-slate-50 dark:bg-slate-800 px-2 py-1 rounded border border-slate-100 dark:border-slate-700" title="Trades Perdedores">L: <b className="text-red-500 dark:text-red-400">{simResult.losses}</b></span>
+                                                            <span className="bg-slate-50 dark:bg-slate-800 px-2 py-1 rounded border border-slate-100 dark:border-slate-700" title="Total de Muestras">T: <b className="text-blue-600 dark:text-blue-400">{simResult.wins + simResult.losses}</b></span>
+                                                            {simResult.wilsonLower95 && (
+                                                                <span className="bg-slate-50 dark:bg-slate-800 px-2 py-1 rounded border border-slate-100 dark:border-slate-700" title="Límite inferior Wilson 95%">W95: <b className="text-slate-700 dark:text-slate-300">{simResult.wilsonLower95}%</b></span>
+                                                            )}
+                                                        </div>
+                                                        
                                                         {(simResult.htfAligned != null && (simResult.htfAligned + simResult.htfOpposed + simResult.htfUnknown) > 0) && (
-                                                            <span className="bg-white dark:bg-slate-900 px-3 py-1 rounded border border-slate-200 dark:border-slate-800 shadow-sm" title="MTF HTF">HTF: <b className="text-slate-800 dark:text-slate-200">{simResult.htfAligned}</b> / <b className="text-orange-600 dark:text-orange-400">{simResult.htfOpposed}</b> / <b className="text-slate-500">{simResult.htfUnknown}</b></span>
-                                                        )}
-                                                        {(simResult.htfFilteredOut != null && simResult.htfFilteredOut > 0) && (
-                                                            <span className="bg-white dark:bg-slate-900 px-3 py-1 rounded border border-slate-200 dark:border-slate-800 shadow-sm" title="Filtradas por HTF">HTF filtradas: <b className="text-slate-800 dark:text-slate-200">{simResult.htfFilteredOut}</b></span>
-                                                        )}
-                                                        {(simResult.ltfAmbiguous != null && simResult.ltfAmbiguous > 0) && (
-                                                            <span className="bg-white dark:bg-slate-900 px-3 py-1 rounded border border-slate-200 dark:border-slate-800 shadow-sm" title="Ambigüedad intra-vela">Ambiguas: <b className="text-slate-800 dark:text-slate-200">{simResult.ltfAmbiguous}</b> · Resueltas: <b className="text-slate-800 dark:text-slate-200">{simResult.ltfResolved || 0}</b></span>
+                                                            <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800 flex justify-center gap-3 text-[10px] text-slate-400">
+                                                                <span title="Alineado con HTF">HTF ✅: <b className="text-slate-600 dark:text-slate-300">{simResult.htfAligned}</b></span>
+                                                                <span title="Opuesto a HTF">HTF ❌: <b className="text-orange-500 dark:text-orange-400">{simResult.htfOpposed}</b></span>
+                                                            </div>
                                                         )}
                                                     </div>
                                                 </div>
@@ -5003,6 +5724,54 @@
                                                             {parseFloat(simResult.painRatio) < 50 ? "El precio suele ir directo al TP." : "Prepárate para sufrir antes de ganar."}
                                                         </p>
                                                     </div>
+                                                    {(() => {
+                                                        const hz = simResult.reversalHazard;
+                                                        if (!hz) return null;
+                                                        const level = hz.level;
+                                                        const dotClass = level === 'HIGH'
+                                                            ? 'bg-red-500'
+                                                            : level === 'MEDIUM'
+                                                                ? 'bg-yellow-400'
+                                                                : level === 'LOW'
+                                                                    ? 'bg-emerald-500'
+                                                                    : 'bg-slate-400';
+                                                        const levelTextClass = level === 'HIGH'
+                                                            ? 'text-red-600 dark:text-red-400'
+                                                            : level === 'MEDIUM'
+                                                                ? 'text-yellow-600 dark:text-yellow-400'
+                                                                : level === 'LOW'
+                                                                    ? 'text-emerald-600 dark:text-emerald-400'
+                                                                    : 'text-slate-500 dark:text-slate-400';
+
+                                                        const hkText = hz.hkPct != null && isFinite(hz.hkPct) ? `${hz.hkPct.toFixed(0)}%` : '—';
+                                                        const baselineText = hz.baselinePct != null && isFinite(hz.baselinePct) ? `${hz.baselinePct.toFixed(0)}%` : '—';
+                                                        const p90Text = hz.p90Pct != null && isFinite(hz.p90Pct) ? `${hz.p90Pct.toFixed(0)}%` : '—';
+
+                                                        return (
+                                                            <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">
+                                                                <div className="text-xs text-slate-500 uppercase mb-2">Riesgo de Reversión (Hazard)</div>
+                                                                <div className="flex items-center justify-between">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <span className={`inline-block w-2.5 h-2.5 rounded-full ${dotClass}`} />
+                                                                        <span className={`text-sm font-bold ${levelTextClass}`}>{hz.label}</span>
+                                                                    </div>
+                                                                    <div className="font-mono font-bold text-slate-700 dark:text-slate-200">{hkText}</div>
+                                                                </div>
+                                                                <div className="mt-2 flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400">
+                                                                    <span>Racha actual: <b className="text-slate-700 dark:text-slate-200">{hz.kCurrent}</b></span>
+                                                                    <span>h̄: <b className="text-slate-700 dark:text-slate-200">{baselineText}</b> · P90: <b className="text-slate-700 dark:text-slate-200">{p90Text}</b></span>
+                                                                </div>
+                                                                {hz.rawText ? (
+                                                                    <p className="text-[10px] text-slate-500 mt-2">{hz.rawText}</p>
+                                                                ) : (
+                                                                    <p className="text-[10px] text-slate-500 mt-2">Sin suficiente evidencia para calcular el hazard con la racha actual.</p>
+                                                                )}
+                                                                {hz.warning && (
+                                                                    <p className="text-[10px] text-orange-600 dark:text-orange-400 mt-1">{hz.warning}</p>
+                                                                )}
+                                                            </div>
+                                                        );
+                                                    })()}
                                                     <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
                                                         <div className="flex items-center justify-between mb-2">
                                                             <div className="text-xs text-slate-500 uppercase">Duración (Trades Ganadores)</div>
@@ -5190,6 +5959,22 @@
                                                             🎲 Simulación Monte Carlo
                                                         </h3>
                                                         <div className="flex items-center gap-2">
+                                                            <div className="flex items-center gap-1 bg-white dark:bg-slate-900 border border-purple-300 dark:border-purple-700 rounded px-2 py-1" title="Riesgo por operación para la simulación">
+                                                                <span className="text-[10px] text-slate-400 font-bold">RIESGO %</span>
+                                                                <input
+                                                                    type="number"
+                                                                    min="0.1"
+                                                                    max="20"
+                                                                    step="0.1"
+                                                                    value={monteCarloRisk}
+                                                                    onChange={(e) => {
+                                                                        const next = parseFloat(e.target.value);
+                                                                        setMonteCarloRisk(isFinite(next) ? next : 0);
+                                                                    }}
+                                                                    className="w-12 text-xs bg-transparent outline-none text-right font-mono font-bold text-purple-600 dark:text-purple-400"
+                                                                    disabled={isRunningMonteCarlo}
+                                                                />
+                                                            </div>
                                                             <select
                                                                 value={monteCarloSimulations}
                                                                 onChange={(e) => setMonteCarloSimulations(parseInt(e.target.value))}
@@ -5870,7 +6655,24 @@
 
                         </div>
                     </div>
-                    <div className="text-center text-slate-500 dark:text-slate-600 text-xs mt-6">Luis Trading Systems © {new Date().getFullYear()} - All Analysis Local & Private</div>
+                <HelpPanel isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
+                <ToolsDock 
+                    runSimulation={runSimulation} 
+                    openLoadMethod={openLoadMethod}
+                    openSettings={openSettings}
+                    useMacroMode={useMacroMode}
+                    setUseMacroMode={setUseMacroMode}
+                    useWalkForward={useWalkForward}
+                    setUseWalkForward={setUseWalkForward}
+                    walkForwardSplit={walkForwardSplit}
+                    setWalkForwardSplit={setWalkForwardSplit}
+                    csvDataLength={csvData.length}
+                    toggleHelp={() => setIsHelpOpen(!isHelpOpen)}
+                    isHelpOpen={isHelpOpen}
+                    handleAutoDetect={handleAutoDetect}
+                    isAutoDetecting={isAutoDetecting}
+                />
+                     <div className="text-center text-slate-500 dark:text-slate-600 text-xs mt-6">Luis Trading Systems © {new Date().getFullYear()} - All Analysis Local & Private</div>
                 </div>
             );
         };

@@ -162,8 +162,20 @@
         const s = String(raw || '').trim();
         if (!s) return '';
         const upper = s.toUpperCase();
-        if (upper === 'XAUUSD') return 'XAU/USD';
-        return upper;
+
+        // Normalización de pares Forex comunes sin barra para Twelve Data
+        const forexMap = {
+            'XAUUSD': 'XAU/USD',
+            'EURUSD': 'EUR/USD',
+            'GBPUSD': 'GBP/USD',
+            'USDJPY': 'USD/JPY',
+            'AUDUSD': 'AUD/USD',
+            'USDCAD': 'USD/CAD',
+            'USDCHF': 'USD/CHF',
+            'NZDUSD': 'NZD/USD'
+        };
+
+        return forexMap[upper] || upper;
     };
 
     AutoLoad.parseTwelveDatetimeUtc = (raw) => {

@@ -161,6 +161,32 @@ window.FTI_Icons = {
         React.createElement('path', { d: "M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" }),
         React.createElement('circle', { cx: "12", cy: "12", r: "3" })
     ),
+    Loader: (p) => React.createElement(window.FTI_IconBase, p,
+        React.createElement('line', { x1: "12", y1: "2", x2: "12", y2: "6" }),
+        React.createElement('line', { x1: "12", y1: "18", x2: "12", y2: "22" }),
+        React.createElement('line', { x1: "4.93", y1: "4.93", x2: "7.76", y2: "7.76" }),
+        React.createElement('line', { x1: "16.24", y1: "16.24", x2: "19.07", y2: "19.07" }),
+        React.createElement('line', { x1: "2", y1: "12", x2: "6", y2: "12" }),
+        React.createElement('line', { x1: "18", y1: "12", x2: "22", y2: "12" }),
+        React.createElement('line', { x1: "4.93", y1: "19.07", x2: "7.76", y2: "16.24" }),
+        React.createElement('line', { x1: "16.24", y1: "7.76", x2: "19.07", y2: "4.93" })
+    ),
+    Copy: (p) => React.createElement(window.FTI_IconBase, p,
+        React.createElement('rect', { x: "9", y: "9", width: "13", height: "13", rx: "2", ry: "2" }),
+        React.createElement('path', { d: "M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" })
+    ),
+    Cpu: (p) => React.createElement(window.FTI_IconBase, p,
+        React.createElement('rect', { x: "4", y: "4", width: "16", height: "16", rx: "2", ry: "2" }),
+        React.createElement('rect', { x: "9", y: "9", width: "6", height: "6" }),
+        React.createElement('line', { x1: "9", y1: "1", x2: "9", y2: "4" }),
+        React.createElement('line', { x1: "15", y1: "1", x2: "15", y2: "4" }),
+        React.createElement('line', { x1: "9", y1: "20", x2: "9", y2: "23" }),
+        React.createElement('line', { x1: "15", y1: "20", x2: "15", y2: "23" }),
+        React.createElement('line', { x1: "20", y1: "9", x2: "23", y2: "9" }),
+        React.createElement('line', { x1: "20", y1: "14", x2: "23", y2: "14" }),
+        React.createElement('line', { x1: "1", y1: "9", x2: "4", y2: "9" }),
+        React.createElement('line', { x1: "1", y1: "14", x2: "4", y2: "14" })
+    ),
     X: (p) => React.createElement(window.FTI_IconBase, p,
         React.createElement('line', { x1: "18", y1: "6", x2: "6", y2: "18" }),
         React.createElement('line', { x1: "6", y1: "6", x2: "18", y2: "18" })
