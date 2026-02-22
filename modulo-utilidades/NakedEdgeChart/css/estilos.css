@@ -112,13 +112,13 @@ body {
     border-color: #334155;
 }
 
-.dark .card h2, 
+.dark .card h2,
 .dark .card .text-slate-900,
 .dark aside .text-slate-900 {
     color: #f1f5f9;
 }
 
-.dark .card p, 
+.dark .card p,
 .dark .card .text-slate-500,
 .dark aside .text-slate-500,
 .dark aside .text-slate-600 {
@@ -172,4 +172,37 @@ canvas {
 
 .dark ::-webkit-scrollbar-thumb {
     background: #475569;
+}
+
+@media (max-width: 1023px) {
+    .nav-menu {
+        position: static;
+        min-width: 100%;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0;
+        margin-top: 1rem;
+        display: flex !important;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+
+    .dark .nav-menu {
+        background: transparent;
+        border: none;
+        box-shadow: none;
+    }
+}
+
+/* Force black text/icon for active buttons */
+.btn-active-black,
+.btn-active-black * {
+    color: #000000 !important;
+}
+
+.btn-active-black svg,
+.btn-active-black i {
+    stroke: #000000 !important;
 }

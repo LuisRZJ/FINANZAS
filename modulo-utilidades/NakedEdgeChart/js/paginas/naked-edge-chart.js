@@ -228,8 +228,8 @@ const TradeManager = {
         }
         if (tradeExecuteBtn) tradeExecuteBtn.classList.add('hidden');
         if (tradeRREl) tradeRREl.innerText = '--';
-        if (tradeLongBtn) tradeLongBtn.classList.remove('bg-emerald-500', 'text-white', 'border-emerald-500');
-        if (tradeShortBtn) tradeShortBtn.classList.remove('bg-rose-500', 'text-white', 'border-rose-500');
+        if (tradeLongBtn) tradeLongBtn.classList.remove('bg-emerald-500', 'btn-active-black', 'border-emerald-500');
+        if (tradeShortBtn) tradeShortBtn.classList.remove('bg-rose-500', 'btn-active-black', 'border-rose-500');
         if (tradeModal) tradeModal.classList.add('hidden');
         container.style.cursor = 'crosshair';
         drawChart();
@@ -238,12 +238,12 @@ const TradeManager = {
         const isLong = this.direction === 'long';
         if (tradeLongBtn) {
             tradeLongBtn.classList.toggle('bg-emerald-500', isLong);
-            tradeLongBtn.classList.toggle('text-white', isLong);
+            tradeLongBtn.classList.toggle('btn-active-black', isLong);
             tradeLongBtn.classList.toggle('border-emerald-500', isLong);
         }
         if (tradeShortBtn) {
             tradeShortBtn.classList.toggle('bg-rose-500', this.direction === 'short');
-            tradeShortBtn.classList.toggle('text-white', this.direction === 'short');
+            tradeShortBtn.classList.toggle('btn-active-black', this.direction === 'short');
             tradeShortBtn.classList.toggle('border-rose-500', this.direction === 'short');
         }
         if (tradeExecuteBtn) {
@@ -293,14 +293,14 @@ function getRelatedIntervals(base) {
     const idx = AVAILABLE_INTERVALS.indexOf(base);
     let ltfIdx = Math.max(0, idx - 2);
     let htfIdx = Math.min(AVAILABLE_INTERVALS.length - 1, idx + 2);
-    
+
     if (AVAILABLE_INTERVALS[ltfIdx] === base && idx > 0) ltfIdx = idx - 1;
     if (AVAILABLE_INTERVALS[htfIdx] === base && idx < AVAILABLE_INTERVALS.length - 1) htfIdx = idx + 1;
 
-    return { 
-        ltf: AVAILABLE_INTERVALS[ltfIdx], 
-        normal: base, 
-        htf: AVAILABLE_INTERVALS[htfIdx] 
+    return {
+        ltf: AVAILABLE_INTERVALS[ltfIdx],
+        normal: base,
+        htf: AVAILABLE_INTERVALS[htfIdx]
     };
 }
 
@@ -405,7 +405,7 @@ async function fetchFutureCandles(symbol, interval, startTime, endTime) {
 
 async function loadAllTimeframes(endTime) {
     loader.style.display = 'flex';
-    
+
     const intervals = getRelatedIntervals(CONFIG.interval);
     cachedIntervals = intervals;
     const resolvedEndTime = resolveEndTime(endTime, intervals);
@@ -424,9 +424,9 @@ async function loadAllTimeframes(endTime) {
         if (normalData.length === 0) throw new Error("No data");
 
         document.getElementById('last-updated').innerText = `Actualizado: ${new Date().toLocaleTimeString()}`;
-        
+
         switchTimeframe('normal');
-        
+
     } catch (error) {
         console.error('Error:', error);
         loader.innerHTML = "<span class='text-red-500'>Error de conexión</span>";
@@ -439,25 +439,25 @@ function switchTimeframe(mode) {
     currentMode = mode;
     candles = cachedData[mode] || [];
     const currentInterval = cachedIntervals[mode];
-    
+
     intervalBadge.innerText = currentInterval.toUpperCase();
-    
+
     const baseClass = "px-3 py-1 rounded-md transition-all flex items-center";
     const activeClass = "text-slate-900 bg-slate-200 shadow-sm dark:bg-slate-600 dark:text-white font-medium";
     const inactiveClass = "text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800";
-    
+
     const resetBtn = (btn) => btn.className = `${baseClass} ${inactiveClass}`;
     resetBtn(btnLtf);
     resetBtn(btnNormal);
     resetBtn(btnHtf);
-    
+
     const activeBtn = mode === 'ltf' ? btnLtf : (mode === 'normal' ? btnNormal : btnHtf);
     activeBtn.className = `${baseClass} ${activeClass}`;
 
     if (candles.length > 0) {
         const lastCandle = candles[candles.length - 1];
         floatingPrice.innerText = lastCandle.close < 1 ? lastCandle.close.toFixed(6) : lastCandle.close.toFixed(2);
-        
+
         const change = ((lastCandle.close - lastCandle.open) / lastCandle.open) * 100;
         const sign = change >= 0 ? '+' : '';
         floatingChange.innerHTML = `<span class="${change >= 0 ? 'text-green-400' : 'text-red-400'}">${sign}${change.toFixed(2)}%</span> <span class="text-slate-500 dark:text-slate-400 ml-1">en vela ${currentInterval}</span>`;
@@ -481,7 +481,7 @@ async function startSimulation() {
         TradeManager.updateUI();
         return;
     }
-    
+
     simulationEntryTime = normalLastCandle.time.getTime();
     simulationLastTime = simulationEntryTime;
 
@@ -513,7 +513,7 @@ async function startSimulation() {
 
         const lastTime = data.length > 0 ? data[data.length - 1].time.getTime() : simulationEntryTime;
         const startTime = lastTime + intervalToMs(interval);
-        
+
         return fetchFutureCandles(CONFIG.symbol, interval, startTime)
             .then(data => ({ mode, data }));
     });
@@ -687,7 +687,7 @@ function finishSimulation(result, exitPrice, reason, exitTime) {
             exitPrice: null,
             exitTime: durationEndTime || null,
             pnlPct: null
-        }).catch(() => {});
+        }).catch(() => { });
     }
 
     if (!tradeModal) return;
@@ -716,7 +716,7 @@ function finishSimulation(result, exitPrice, reason, exitTime) {
         exitPrice: exitPrice || null,
         exitTime: exitTime || durationEndTime || null,
         pnlPct: Number.isFinite(pnl) ? pnl : null
-    }).catch(() => {});
+    }).catch(() => { });
 
     if (reason === 'ambiguous_ltf') {
         tradeResultStatus.innerText = result === 'win' ? 'WIN (LTF)' : 'LOSS (LTF)';
@@ -1030,7 +1030,10 @@ if (btnLtf && btnNormal && btnHtf) {
 if (tradeLongBtn && tradeShortBtn && tradeExecuteBtn) {
     tradeLongBtn.addEventListener('click', () => TradeManager.setDirection('long'));
     tradeShortBtn.addEventListener('click', () => TradeManager.setDirection('short'));
-    tradeExecuteBtn.addEventListener('click', startSimulation);
+    tradeExecuteBtn.addEventListener('click', () => {
+        closeSidebar();
+        startSimulation();
+    });
 }
 
 if (tradeResultClose) {
@@ -1055,6 +1058,36 @@ if (navToggle && navMenu) {
         link.addEventListener('click', () => navMenu.classList.add('hidden'));
     });
 }
+
+// --- Mobile Sidebar Logic ---
+const appSidebar = document.getElementById('app-sidebar');
+const sidebarOverlay = document.getElementById('sidebar-overlay');
+const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+const mobileMenuClose = document.getElementById('mobile-menu-close');
+
+function openSidebar() {
+    if (!appSidebar || !sidebarOverlay) return;
+    appSidebar.classList.remove('translate-x-full');
+    sidebarOverlay.classList.remove('hidden');
+    // Force reflow
+    void sidebarOverlay.offsetWidth;
+    sidebarOverlay.classList.remove('opacity-0');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeSidebar() {
+    if (!appSidebar || !sidebarOverlay) return;
+    appSidebar.classList.add('translate-x-full');
+    sidebarOverlay.classList.add('opacity-0');
+    setTimeout(() => {
+        sidebarOverlay.classList.add('hidden');
+        document.body.style.overflow = '';
+    }, 300);
+}
+
+if (mobileMenuBtn) mobileMenuBtn.addEventListener('click', openSidebar);
+if (mobileMenuClose) mobileMenuClose.addEventListener('click', closeSidebar);
+if (sidebarOverlay) sidebarOverlay.addEventListener('click', closeSidebar);
 
 updateChartTheme();
 loadAllTimeframes();

@@ -125,7 +125,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 const v = localStorage.getItem(k);
                 if (v !== null) out[k] = v;
             });
-        } catch (e) {}
+        } catch (e) { }
         return out;
     }
 
@@ -162,7 +162,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             localStorage.setItem(DISCORD_WEBHOOK_STORAGE_KEY, url);
-        } catch (e) {}
+        } catch (e) { }
     }
 
     async function estimateUsage() {
@@ -174,7 +174,7 @@ window.addEventListener('DOMContentLoaded', () => {
                     quota: typeof quota === 'number' ? quota : null,
                     source: 'storage-api'
                 };
-            } catch (e) {}
+            } catch (e) { }
         }
 
         try {
@@ -230,7 +230,7 @@ window.addEventListener('DOMContentLoaded', () => {
             localStorage.removeItem('nec_theme_preference');
             localStorage.removeItem('nec_accent_preference');
             localStorage.removeItem(DISCORD_WEBHOOK_STORAGE_KEY);
-        } catch (e) {}
+        } catch (e) { }
 
         setStatus('Borrado');
         await refreshStorageUI();
@@ -427,11 +427,11 @@ window.addEventListener('DOMContentLoaded', () => {
                     if (!it || typeof it !== 'object') return;
                     const v = { ...it };
                     const req = store.put(v);
-                    req.onerror = () => {};
+                    req.onerror = () => { };
                 });
 
                 tx.oncomplete = () => resolve();
-                tx.onerror = () => reject(tx.error || new Error('Error restaurando')); 
+                tx.onerror = () => reject(tx.error || new Error('Error restaurando'));
                 tx.onabort = () => reject(tx.error || new Error('Restauración abortada'));
             });
         } catch (e) {
@@ -459,7 +459,7 @@ window.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             }
-        } catch (e) {}
+        } catch (e) { }
 
         if (window.NECTheme) {
             const stored = window.NECTheme.getStoredTheme();
@@ -516,4 +516,42 @@ window.addEventListener('DOMContentLoaded', () => {
             refreshStorageUI();
         });
     }
+    if (webhookClearBtn) {
+        webhookClearBtn.addEventListener('click', () => {
+            setStoredWebhookUrl('');
+            if (webhookUrlInput) webhookUrlInput.value = '';
+            setWebhookStatus('Eliminado');
+            refreshStorageUI();
+        });
+    }
+
+    // --- Mobile Sidebar Logic ---
+    const appSidebar = document.getElementById('app-sidebar');
+    const sidebarOverlay = document.getElementById('sidebar-overlay');
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const mobileMenuClose = document.getElementById('mobile-menu-close');
+
+    function openSidebar() {
+        if (!appSidebar || !sidebarOverlay) return;
+        appSidebar.classList.remove('translate-x-full');
+        sidebarOverlay.classList.remove('hidden');
+        // Force reflow
+        void sidebarOverlay.offsetWidth;
+        sidebarOverlay.classList.remove('opacity-0');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeSidebar() {
+        if (!appSidebar || !sidebarOverlay) return;
+        appSidebar.classList.add('translate-x-full');
+        sidebarOverlay.classList.add('opacity-0');
+        setTimeout(() => {
+            sidebarOverlay.classList.add('hidden');
+            document.body.style.overflow = '';
+        }, 300);
+    }
+
+    if (mobileMenuBtn) mobileMenuBtn.addEventListener('click', openSidebar);
+    if (mobileMenuClose) mobileMenuClose.addEventListener('click', closeSidebar);
+    if (sidebarOverlay) sidebarOverlay.addEventListener('click', closeSidebar);
 });
