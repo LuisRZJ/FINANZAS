@@ -1,0 +1,117 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 600" width="100%" height="100%">
+  <defs>
+    <!-- Gradientes de máxima exposición (Cielo y Sol) -->
+    <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FF4E50" />
+      <stop offset="40%" stop-color="#FF7B54" />
+      <stop offset="100%" stop-color="#F9D423" />
+    </linearGradient>
+    
+    <radialGradient id="sunGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="1" />
+      <stop offset="20%" stop-color="#FFF2A8" stop-opacity="0.9" />
+      <stop offset="50%" stop-color="#FFB703" stop-opacity="0.4" />
+      <stop offset="100%" stop-color="#FFB703" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Gradientes de la costa (Resistencia y desgaste) -->
+    <linearGradient id="cliffDark" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#1A1A24" />
+      <stop offset="70%" stop-color="#2D2D3A" />
+      <stop offset="100%" stop-color="#0F0F14" />
+    </linearGradient>
+
+    <!-- Gradientes del océano oscuro y la ola turbulenta -->
+    <linearGradient id="seaBase" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#001F3F" />
+      <stop offset="50%" stop-color="#003366" />
+      <stop offset="100%" stop-color="#00509E" />
+    </linearGradient>
+    
+    <linearGradient id="waveGrad" x1="100%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#004E92" />
+      <stop offset="60%" stop-color="#0082C8" />
+      <stop offset="100%" stop-color="#66E2D5" />
+    </linearGradient>
+  </defs>
+
+  <!-- 1. CIELO: El día largo y pesado -->
+  <rect width="1000" height="300" fill="url(#skyGrad)" />
+
+  <!-- 2. EL SOLSTICIO: Sol en su punto máximo -->
+  <!-- Destellos y brillo extendido -->
+  <circle cx="500" cy="150" r="250" fill="url(#sunGlow)" />
+  <circle cx="500" cy="150" r="100" fill="url(#sunGlow)" />
+  <circle cx="500" cy="150" r="45" fill="#FFFFFF" />
+  
+  <!-- Rayos de luz intensa (Máxima exposición) -->
+  <g stroke="#FFFFFF" stroke-opacity="0.15" stroke-width="2">
+    <line x1="500" y1="-50" x2="500" y2="350" />
+    <line x1="300" y1="-50" x2="700" y2="350" />
+    <line x1="700" y1="-50" x2="300" y2="350" />
+    <line x1="250" y1="150" x2="750" y2="150" />
+  </g>
+
+  <!-- 3. EL ECUADOR DEL AÑO: La división exacta -->
+  <!-- Horizonte y océano base -->
+  <rect y="300" width="1000" height="300" fill="url(#seaBase)" />
+  <line x1="0" y1="300" x2="1000" y2="300" stroke="#FFFFFF" stroke-opacity="0.4" stroke-dasharray="10 15" stroke-width="1.5" />
+
+  <!-- Olas de fondo profundo -->
+  <path d="M 0,330 Q 250,310 500,340 T 1000,320 L 1000,600 L 0,600 Z" fill="#002A52" opacity="0.6"/>
+  <path d="M 0,360 Q 300,330 600,370 T 1000,350 L 1000,600 L 0,600 Z" fill="#003D73" opacity="0.7"/>
+
+  <!-- 4. LA COSTA ESCARPADA: Resistencia técnica y mental -->
+  <!-- Sombra base del acantilado -->
+  <path d="M 0,-20 L 180,-20 L 220,60 L 160,140 L 260,250 L 230,340 L 340,430 L 290,520 L 370,620 L 0,620 Z" fill="#0D0D12" />
+  <!-- Cara expuesta del acantilado -->
+  <path d="M 0,0 L 150,0 L 200,80 L 140,150 L 250,250 L 220,320 L 320,400 L 280,480 L 350,600 L 0,600 Z" fill="url(#cliffDark)" />
+  <!-- Aristas filosas iluminadas por el sol abrasador -->
+  <path d="M 150,0 L 200,80 L 140,150 L 250,250 L 220,320 L 320,400 L 280,480 L 350,600 L 330,600 L 260,480 L 300,400 L 200,320 L 230,250 L 120,150 L 180,80 L 130,0 Z" fill="#52433D" opacity="0.7" />
+  <path d="M 250,250 L 280,280 L 220,320 Z" fill="#8A6046" opacity="0.6" />
+  <path d="M 320,400 L 360,450 L 280,480 Z" fill="#8A6046" opacity="0.4" />
+
+  <!-- 5. LA OLA MASIVA: La fuerza del desgaste a mitad de campaña -->
+  <!-- Cuerpo principal de la ola rompiendo -->
+  <path d="M 1000,600 L 1000,400 Q 800,400 650,320 C 500,230 420,150 320,200 C 260,230 230,290 260,370 C 300,300 380,260 480,330 Q 600,410 750,480 Q 900,550 1000,600 Z" fill="url(#waveGrad)" />
+  <!-- Sombras en el túnel de la ola -->
+  <path d="M 480,330 C 380,260 300,300 260,370 C 270,410 320,450 400,420 Q 550,370 750,480 Q 900,550 1000,600 L 1000,550 Q 800,450 600,380 Z" fill="#002244" opacity="0.5" />
+
+  <!-- 6. IMPACTO Y ESPUMA: El choque de elementos -->
+  <!-- Cresta de la ola a punto de caer -->
+  <path d="M 650,320 C 500,230 420,150 320,200 C 290,215 275,240 270,270 C 290,220 340,190 400,240 Q 550,330 700,370 Z" fill="#E0F7FA" opacity="0.9" />
+  
+  <!-- Espuma gruesa chocando contra la roca (Zona de impacto central) -->
+  <path d="M 220,450 C 180,380 220,280 270,220 C 330,150 400,180 380,250 C 360,320 320,260 280,340 C 250,400 300,460 350,500 L 220,550 Z" fill="#FFFFFF" opacity="0.85" />
+  <path d="M 250,420 C 210,350 250,250 300,200 C 350,150 380,200 350,260 C 330,300 300,280 280,330 C 260,380 290,440 320,480 Z" fill="#B2EBF2" opacity="0.7" />
+
+  <!-- 7. GOTAS Y SALPICADURAS: La tensión ambiental -->
+  <g fill="#FFFFFF">
+    <!-- Explosión superior -->
+    <circle cx="300" cy="140" r="12" opacity="0.9" />
+    <circle cx="330" cy="110" r="8" opacity="0.8" />
+    <circle cx="270" cy="160" r="15" opacity="0.7" />
+    <circle cx="360" cy="150" r="6" opacity="0.9" />
+    <circle cx="240" cy="190" r="10" opacity="0.8" />
+    <circle cx="380" cy="120" r="4" />
+    <circle cx="310" cy="80" r="5" opacity="0.6" />
+    <circle cx="280" cy="120" r="9" opacity="0.85" />
+    <circle cx="250" cy="140" r="5" opacity="0.9" />
+    <circle cx="410" cy="170" r="7" opacity="0.7" />
+    <!-- Dispersión lateral hacia el mar -->
+    <circle cx="450" cy="210" r="5" />
+    <circle cx="430" cy="190" r="8" opacity="0.8" />
+    <circle cx="480" cy="230" r="4" opacity="0.6" />
+    <circle cx="510" cy="250" r="3" />
+    <!-- Impactos en la roca -->
+    <circle cx="180" cy="240" r="8" opacity="0.8" />
+    <circle cx="210" cy="210" r="11" opacity="0.9" />
+    <circle cx="160" cy="280" r="6" opacity="0.7" />
+    <circle cx="190" cy="310" r="9" opacity="0.8" />
+  </g>
+
+  <!-- Neblina fina del mar por el impacto -->
+  <path d="M 150,300 Q 250,150 450,250 Q 300,350 150,300 Z" fill="#FFFFFF" opacity="0.15" filter="blur(5px)"/>
+  <path d="M 200,400 Q 350,250 550,350 Q 400,450 200,400 Z" fill="#FFFFFF" opacity="0.1" filter="blur(8px)"/>
+
+</svg>

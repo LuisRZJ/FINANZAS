@@ -331,9 +331,31 @@
                   class="w-full rounded-md border-0 bg-transparent px-1 py-1 text-sm focus:outline-none focus:ring-0"
                   placeholder="0.00">
               </div>
+              <input type="hidden" id="editar-cuenta-dinero-original">
               <p class="text-xs text-gray-500 dark:text-gray-400">
                 Saldo actual de la cuenta.
               </p>
+            </div>
+          </div>
+          <!-- Fecha de ajuste de saldo (visible solo si cambia el saldo) -->
+          <div id="editar-fecha-ajuste-container" class="hidden">
+            <div class="p-4 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 space-y-3">
+              <div class="flex items-start gap-2">
+                <svg class="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" fill="none"
+                  stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                  </path>
+                </svg>
+                <div class="flex-1">
+                  <p class="text-sm font-medium text-amber-800 dark:text-amber-200">Fecha del ajuste de saldo</p>
+                  <p class="text-xs text-amber-700 dark:text-amber-300 mt-0.5">
+                    ¿Cuándo ocurrió realmente este cambio? Útil para migrar datos históricos.
+                  </p>
+                </div>
+              </div>
+              <input type="date" id="editar-fecha-ajuste-saldo"
+                class="w-full rounded-lg border border-amber-300 dark:border-amber-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
             </div>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">

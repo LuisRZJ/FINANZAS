@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plataforma de Backtesting Minimalista</title>
+    <meta name="theme-color" content="#2563eb">
+    <link rel="icon" href="/pwa/logo-app.png">
+    <!-- Fuente Inter de Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Estilos -->
+    <link rel="stylesheet" href="css/estilos.css">
+    <!-- Chart.js para el gráfico -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- PapaParse para el parsing robusto de CSV/TXT -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+</head>
+
+<body>
+
+    <div class="container">
+        <!-- Componente: Header -->
+        <div data-include="components/header.html"></div>
+
+        <!-- Componente: Upload Section -->
+        <div data-include="components/upload.html"></div>
+
+        <div id="loading" class="hidden">Analizando miles de velas...</div>
+        <div id="error-message" class="hidden"></div>
+
+        <!-- Componente: DCA Simulator -->
+        <div data-include="components/dca.html"></div>
+
+        <!-- Componente: Optimizador de Estrategia (Modal) -->
+        <div data-include="components/estrategia.html"></div>
+
+        <!-- Componente: Results Panel -->
+        <div data-include="components/results.html"></div>
+
+        <!-- Componente: Resultados de Estrategia -->
+        <div data-include="components/estrategia-resultados.html"></div>
+    </div>
+
+    <!-- Script principal como módulo -->
+    <script type="module" src="js/app.js"></script>
+</body>
+
+</html>

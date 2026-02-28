@@ -1,0 +1,89 @@
+<section id="results-panel" class="hidden">
+    <!-- Texto dinámico de periodo de tiempo -->
+    <div
+        style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap;">
+        <div id="time-period" class="metric-title" style="font-size: 1rem; color: var(--text-muted); margin: 0;">
+            <!-- Generado por JS -->
+        </div>
+        <button id="open-dca-btn" class="btn-primary" style="padding: 0.6rem 1.25rem;">
+            Simular DCA
+        </button>
+        <button id="open-estrategia-btn" class="btn-primary"
+            style="background: var(--positive); padding: 0.6rem 1.25rem;">
+            🔍 Optimizar Estrategia
+        </button>
+    </div>
+
+    <!-- Métricas Clave -->
+    <div class="results-grid">
+        <div class="card">
+            <div class="metric-title">CAGR (Rentabilidad Anualizada)</div>
+            <div class="metric-value" id="cagr-value">0.00%</div>
+        </div>
+        <div class="card">
+            <div class="metric-title">Retorno Sobre Inversión (ROI) Total</div>
+            <div class="metric-value" id="roi-value">0.00%</div>
+        </div>
+        <div class="card">
+            <div class="metric-title">Maximum Drawdown</div>
+            <div class="metric-value drawdown" id="drawdown-value" style="color: var(--drawdown);">0.00%</div>
+        </div>
+    </div>
+
+    <!-- Resultados DCA -->
+    <div class="card"
+        style="margin-bottom: 2rem; border-color: rgba(59, 130, 246, 0.4); box-shadow: 0 8px 32px rgba(59, 130, 246, 0.1);">
+        <div class="metric-title" style="color: var(--accent); margin-bottom: 1.25rem; font-size: 1rem;">Métricas de
+            Simulación DCA</div>
+        <div class="results-grid" style="margin-bottom: 0;">
+            <div
+                style="background: rgba(0,0,0,0.2); border-radius: var(--radius); border: 1px solid rgba(255,255,255,0.05); padding: 1.25rem; transition: background var(--transition-fast);">
+                <div class="metric-title">Total Invertido (Fiat)</div>
+                <div class="metric-value" id="dca-total-invested" style="font-size: 2rem;">$0.00</div>
+            </div>
+            <div
+                style="background: rgba(0,0,0,0.2); border-radius: var(--radius); border: 1px solid rgba(255,255,255,0.05); padding: 1.25rem; transition: background var(--transition-fast);">
+                <div class="metric-title">Valor del Portafolio</div>
+                <div class="metric-value" id="dca-portfolio-value" style="font-size: 2rem;">$0.00</div>
+            </div>
+            <div
+                style="background: rgba(0,0,0,0.2); border-radius: var(--radius); border: 1px solid rgba(255,255,255,0.05); padding: 1.25rem; transition: background var(--transition-fast);">
+                <div class="metric-title">Retorno (ROI DCA)</div>
+                <div class="metric-value" id="dca-roi" style="font-size: 2rem;">0.00%</div>
+            </div>
+            <div
+                style="background: rgba(0,0,0,0.2); border-radius: var(--radius); border: 1px solid rgba(255,255,255,0.05); padding: 1.25rem; transition: background var(--transition-fast);">
+                <div class="metric-title">CAGR (ROI Anualizado)</div>
+                <div class="metric-value" id="dca-cagr" style="font-size: 2rem;">0.00%</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráfico Escala Logarítmica -->
+    <div class="card" style="margin-bottom: 2rem;">
+        <div class="metric-title">Evolución del Precio (Escala Logarítmica)</div>
+        <div class="chart-container">
+            <canvas id="price-chart"></canvas>
+        </div>
+    </div>
+
+    <!-- Tabla de Retornos Anuales -->
+    <div class="card">
+        <div class="metric-title">Desglose de Rendimientos por Año</div>
+        <div class="data-table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Año</th>
+                        <th>Precio Apertura</th>
+                        <th>Precio Cierre</th>
+                        <th>Rendimiento</th>
+                    </tr>
+                </thead>
+                <tbody id="annual-returns-body">
+                    <!-- Filas generadas por JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>

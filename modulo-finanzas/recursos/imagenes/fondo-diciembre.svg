@@ -1,0 +1,374 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" width="100%" height="100%">
+  <defs>
+    <!-- Gradientes del cielo de invierno -->
+    <linearGradient id="skyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#050a15" />
+      <stop offset="40%" stop-color="#141a30" />
+      <stop offset="100%" stop-color="#2a3b5c" />
+    </linearGradient>
+
+    <!-- Gradiente de la luna -->
+    <radialGradient id="moonGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="1" />
+      <stop offset="30%" stop-color="#e0fbfc" stop-opacity="0.8" />
+      <stop offset="100%" stop-color="#e0fbfc" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Gradientes para las montañas -->
+    <linearGradient id="mountainBack" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1a243b" />
+      <stop offset="100%" stop-color="#0d1323" />
+    </linearGradient>
+    <linearGradient id="mountainFront" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#24344d" />
+      <stop offset="100%" stop-color="#0f1626" />
+    </linearGradient>
+
+    <!-- Gradientes de la nieve iluminada por la luna y el fuego -->
+    <radialGradient id="fireLightSnow" cx="50%" cy="75%" r="60%">
+      <stop offset="0%" stop-color="#e58e26" stop-opacity="0.5" />
+      <stop offset="20%" stop-color="#b7521e" stop-opacity="0.3" />
+      <stop offset="50%" stop-color="#4a628a" stop-opacity="0.1" />
+      <stop offset="100%" stop-color="#162032" stop-opacity="0.8" />
+    </radialGradient>
+
+    <!-- Resplandor del fuego central -->
+    <radialGradient id="fireGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffcc00" stop-opacity="0.9" />
+      <stop offset="30%" stop-color="#ff6600" stop-opacity="0.6" />
+      <stop offset="60%" stop-color="#cc0000" stop-opacity="0.2" />
+      <stop offset="100%" stop-color="#cc0000" stop-opacity="0" />
+    </radialGradient>
+    
+    <!-- Resplandor del oro/capital -->
+    <radialGradient id="goldGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffd700" stop-opacity="0.8" />
+      <stop offset="100%" stop-color="#d4af37" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Filtro de desenfoque para luces y niebla -->
+    <filter id="blurFilter" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" />
+    </filter>
+    <filter id="heavyBlur" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="25" />
+    </filter>
+  </defs>
+
+  <!-- CIELO NOCTURNO -->
+  <rect width="1200" height="675" fill="url(#skyGradient)" />
+
+  <!-- ESTRELLAS -->
+  <g fill="#ffffff" opacity="0.6">
+    <circle cx="150" cy="80" r="1.5" opacity="0.9"/>
+    <circle cx="320" cy="120" r="1" />
+    <circle cx="450" cy="60" r="2" opacity="0.8"/>
+    <circle cx="580" cy="180" r="1" />
+    <circle cx="700" cy="90" r="1.5" />
+    <circle cx="850" cy="150" r="2" opacity="0.5"/>
+    <circle cx="950" cy="50" r="1" />
+    <circle cx="1100" cy="110" r="1.5" />
+    <circle cx="100" cy="220" r="1" />
+    <circle cx="280" cy="260" r="1.5" opacity="0.7"/>
+    <circle cx="500" cy="240" r="1" />
+    <circle cx="780" cy="200" r="2" opacity="0.9"/>
+    <circle cx="1020" cy="230" r="1" />
+    <!-- Constelación pequeña -->
+    <circle cx="600" cy="70" r="1.5" />
+    <circle cx="620" cy="85" r="1" />
+    <circle cx="640" cy="75" r="1.5" />
+    <circle cx="655" cy="100" r="2" />
+  </g>
+
+  <!-- LUNA -->
+  <circle cx="980" cy="140" r="90" fill="url(#moonGlow)" filter="url(#blurFilter)" />
+  <circle cx="980" cy="140" r="40" fill="#ffffff" />
+  <circle cx="970" cy="130" r="10" fill="#e0fbfc" opacity="0.3" />
+  <circle cx="995" cy="155" r="15" fill="#e0fbfc" opacity="0.2" />
+  <circle cx="965" cy="150" r="8" fill="#e0fbfc" opacity="0.4" />
+
+  <!-- MONTAÑAS DE FONDO (Lejanas) -->
+  <g id="mountains-back">
+    <path d="M 0 450 L 120 280 L 250 350 L 400 200 L 550 330 L 750 150 L 900 290 L 1100 180 L 1200 300 L 1200 675 L 0 675 Z" fill="url(#mountainBack)" />
+    <!-- Nieve en picos lejanos -->
+    <path d="M 120 280 L 150 300 L 130 320 L 100 310 Z" fill="#3a506b" opacity="0.7" />
+    <path d="M 400 200 L 440 240 L 410 260 L 380 230 Z" fill="#3a506b" opacity="0.7" />
+    <path d="M 750 150 L 790 200 L 760 230 L 720 200 Z" fill="#3a506b" opacity="0.7" />
+    <path d="M 1100 180 L 1130 220 L 1080 230 Z" fill="#3a506b" opacity="0.7" />
+  </g>
+
+  <!-- MONTAÑAS DE FONDO (Cercanas y dominantes) -->
+  <g id="mountains-front">
+    <path d="M -50 500 L 180 220 L 320 380 L 500 120 L 680 340 L 880 180 L 1050 390 L 1250 250 L 1250 675 L -50 675 Z" fill="url(#mountainFront)" />
+    <!-- Nieve en picos cercanos (iluminada por la luna) -->
+    <path d="M 180 220 L 220 280 L 190 320 L 160 300 L 140 260 Z" fill="#7186a5" opacity="0.8" />
+    <path d="M 180 220 L 150 260 L 170 300 L 190 280 Z" fill="#c4d4e6" opacity="0.9" />
+    
+    <path d="M 500 120 L 550 200 L 520 250 L 480 220 L 450 180 Z" fill="#7186a5" opacity="0.8" />
+    <path d="M 500 120 L 460 170 L 490 220 L 520 180 Z" fill="#c4d4e6" opacity="0.9" />
+    
+    <path d="M 880 180 L 930 250 L 900 290 L 850 260 L 830 230 Z" fill="#7186a5" opacity="0.8" />
+    <path d="M 880 180 L 840 230 L 870 270 L 900 230 Z" fill="#c4d4e6" opacity="0.9" />
+    
+    <path d="M 1250 250 L 1200 300 L 1150 280 Z" fill="#c4d4e6" opacity="0.9" />
+  </g>
+
+  <!-- NIEBLA BASE DE LAS MONTAÑAS -->
+  <path d="M 0 450 Q 300 380 600 420 T 1200 400 L 1200 675 L 0 675 Z" fill="#e0fbfc" opacity="0.1" filter="url(#heavyBlur)" />
+
+  <!-- TERRENO NEVADO (Planos base) -->
+  <path d="M 0 480 Q 400 420 800 460 T 1200 450 L 1200 675 L 0 675 Z" fill="#24344d" />
+  <path d="M 0 520 Q 350 480 700 520 T 1200 500 L 1200 675 L 0 675 Z" fill="#1b283d" />
+  <!-- Capa de nieve con luz del fuego -->
+  <rect x="0" y="450" width="1200" height="225" fill="url(#fireLightSnow)" />
+
+  <!-- FORTIFICACIÓN (Empalizada de fondo) -->
+  <g id="palisades" fill="#080c14">
+    <!-- Izquierda -->
+    <polygon points="20,490 35,450 50,490 50,675 20,675" />
+    <polygon points="45,495 60,440 75,495 75,675 45,675" />
+    <polygon points="70,500 85,460 100,500 100,675 70,675" />
+    <polygon points="95,505 110,455 125,505 125,675 95,675" />
+    <polygon points="120,510 135,470 150,510 150,675 120,675" />
+    <polygon points="145,515 160,480 175,515 175,675 145,675" />
+    <polygon points="170,520 185,490 200,520 200,675 170,675" />
+    
+    <!-- Derecha -->
+    <polygon points="1180,480 1165,440 1150,480 1150,675 1180,675" />
+    <polygon points="1155,485 1140,450 1125,485 1125,675 1155,675" />
+    <polygon points="1130,490 1115,460 1100,490 1100,675 1130,675" />
+    <polygon points="1105,500 1090,455 1075,500 1075,675 1105,675" />
+    <polygon points="1080,510 1065,470 1050,510 1050,675 1080,675" />
+    <polygon points="1055,515 1040,480 1025,515 1025,675 1055,675" />
+    <polygon points="1030,520 1015,490 1000,520 1000,675 1030,675" />
+    <polygon points="1005,525 990,495 975,525 975,675 1005,675" />
+    <polygon points="980,530 965,500 950,530 950,675 980,675" />
+  </g>
+
+  <!-- ILUMINACIÓN DEL FUEGO SOBRE LA EMPALIZADA (Reflejos cálidos) -->
+  <g fill="#b7521e" opacity="0.4">
+    <!-- Luces izquierda -->
+    <polygon points="172,520 185,490 187,490 175,520" />
+    <polygon points="147,515 160,480 162,480 150,515" />
+    <polygon points="122,510 135,470 137,470 125,510" />
+    <!-- Luces derecha -->
+    <polygon points="978,530 965,500 963,500 975,530" />
+    <polygon points="1003,525 990,495 988,495 1000,525" />
+    <polygon points="1028,520 1015,490 1013,490 1025,520" />
+  </g>
+
+  <!-- REFUGIO TEMPORAL (Tienda de campaña) -->
+  <g id="tent">
+    <!-- Sombra/Interior -->
+    <polygon points="200,600 350,400 480,580" fill="#080c12" />
+    <!-- Lona lateral izquierda (Fría) -->
+    <polygon points="100,620 350,400 200,600" fill="#1b2436" />
+    <polygon points="150,610 350,400 200,600" fill="#222e45" opacity="0.5"/>
+    <!-- Lona frontal derecha (Iluminada por el fuego) -->
+    <polygon points="480,580 350,400 550,630" fill="#4a2e20" />
+    <polygon points="480,580 350,400 520,605" fill="#8c4420" opacity="0.8" />
+    <polygon points="480,580 350,400 495,590" fill="#cc6622" opacity="0.6" />
+    <!-- Soportes de madera de la tienda -->
+    <line x1="350" y1="400" x2="340" y2="360" stroke="#080c12" stroke-width="6" stroke-linecap="round" />
+    <line x1="350" y1="400" x2="370" y2="365" stroke="#080c12" stroke-width="5" stroke-linecap="round" />
+    <!-- Cuerdas tensoras -->
+    <line x1="350" y1="400" x2="50" y2="650" stroke="#0f1626" stroke-width="2" />
+    <line x1="350" y1="400" x2="650" y2="660" stroke="#0f1626" stroke-width="2" />
+    <!-- Estacas -->
+    <polygon points="45,645 55,645 50,660" fill="#080c12" />
+    <polygon points="645,655 655,655 650,670" fill="#080c12" />
+  </g>
+
+  <!-- BALANCE DE BAJAS (Armas caídas y cascos como tributo en la nieve) -->
+  <g id="tribute" fill="#0b111a">
+    <!-- Espada clavada en la nieve -->
+    <line x1="300" y1="620" x2="320" y2="550" stroke="#0b111a" stroke-width="4" />
+    <line x1="290" y1="585" x2="330" y2="575" stroke="#0b111a" stroke-width="6" /> <!-- Guarda -->
+    <circle cx="323" cy="540" r="4" fill="#0b111a" /> <!-- Pomo -->
+    <polygon points="310,620 330,620 320,630" fill="#24344d" /> <!-- Montículo de nieve base -->
+    
+    <!-- Escudo dañado apoyado -->
+    <circle cx="380" cy="630" r="25" fill="#141c2b" />
+    <circle cx="380" cy="630" r="8" fill="#080c12" />
+    <path d="M 360 615 L 390 645" stroke="#080c12" stroke-width="2" /> <!-- Grieta -->
+    
+    <!-- Lanzas en el fondo cruzadas -->
+    <line x1="220" y1="570" x2="260" y2="480" stroke="#0b111a" stroke-width="3" />
+    <line x1="260" y1="570" x2="220" y2="480" stroke="#0b111a" stroke-width="3" />
+  </g>
+
+  <!-- CONSOLIDACIÓN DEL CAPITAL (Cofre del tesoro/recursos) -->
+  <g id="capital" transform="translate(750, 560)">
+    <!-- Resplandor del oro saliendo del cofre -->
+    <circle cx="50" cy="15" r="40" fill="url(#goldGlow)" filter="url(#blurFilter)" />
+    
+    <!-- Base del cofre (Madera oscura y metal) -->
+    <polygon points="10,20 90,30 85,60 15,50" fill="#110d0a" />
+    <!-- Tapa del cofre abierta -->
+    <polygon points="10,20 70,-10 90,30" fill="#1a1410" />
+    <!-- Herrajes -->
+    <polygon points="15,20 20,50 25,51 20,21" fill="#05080c" />
+    <polygon points="75,27 80,58 85,59 80,28" fill="#05080c" />
+    
+    <!-- Oro / Recursos brillando en el interior -->
+    <circle cx="40" cy="15" r="6" fill="#ffd700" />
+    <circle cx="50" cy="18" r="8" fill="#ffcc00" />
+    <circle cx="60" cy="14" r="5" fill="#ffb300" />
+    <circle cx="45" cy="22" r="7" fill="#ffea00" />
+    <circle cx="35" cy="10" r="4" fill="#ffcc00" />
+    <circle cx="55" cy="25" r="5" fill="#ffea00" />
+    <polygon points="40,5 50,0 60,10 45,15" fill="#ffd700" opacity="0.8" />
+    
+    <!-- Monedas derramadas en la nieve -->
+    <ellipse cx="20" cy="65" rx="4" ry="2" fill="#ffcc00" />
+    <ellipse cx="30" cy="68" rx="5" ry="2.5" fill="#ffd700" />
+    <ellipse cx="25" cy="72" rx="3" ry="1.5" fill="#ffb300" />
+    <ellipse cx="80" cy="70" rx="4" ry="2" fill="#ffea00" />
+    
+    <!-- Iluminación del fuego en el cofre -->
+    <polygon points="10,20 25,22 20,50 15,50" fill="#b7521e" opacity="0.5" />
+    <polygon points="10,20 70,-10 75,-5 15,25" fill="#cc6622" opacity="0.4" />
+  </g>
+
+  <!-- SILUETAS Y DESCANSO TÁCTICO -->
+  <g id="characters">
+    <!-- Estratega sentado (Balance y recuento) -->
+    <g transform="translate(480, 520)">
+      <!-- Tronco donde se sienta -->
+      <path d="M -30 90 Q 0 85 40 95 L 35 110 Q 0 100 -35 105 Z" fill="#080c12" />
+      <path d="M 40 95 L 35 110 L 45 105 Z" fill="#b7521e" opacity="0.6" /> <!-- Luz del fuego en el tronco -->
+      
+      <!-- Cuerpo -->
+      <path d="M 0 90 Q -20 50 -5 30 Q 15 20 25 40 Q 30 70 15 90 Z" fill="#06090e" />
+      <!-- Capa y capucha -->
+      <path d="M -10 25 Q 0 5 15 10 Q 25 20 25 40 Q 30 70 15 90 Q 0 80 -10 60 Z" fill="#0a0f17" />
+      <!-- Pergamino/Mapa desenrollado -->
+      <path d="M 15 60 L 45 50 L 55 70 L 20 85 Z" fill="#d4c3b3" />
+      <!-- Brazo sosteniendo el mapa -->
+      <path d="M 10 45 L 30 65 L 25 70 L 5 50 Z" fill="#06090e" />
+      
+      <!-- Reflejos del fuego en el estratega -->
+      <path d="M 15 10 Q 25 20 25 40 L 22 40 Q 22 20 12 12 Z" fill="#ff8c00" opacity="0.5" />
+      <path d="M 45 50 L 55 70 L 52 70 L 42 52 Z" fill="#ffaa00" opacity="0.6" /> <!-- Luz en el pergamino -->
+    </g>
+
+    <!-- Guerrero haciendo guardia/descanso táctico -->
+    <g transform="translate(680, 440)">
+      <!-- Lanza larga -->
+      <line x1="30" y1="180" x2="60" y2="20" stroke="#06090e" stroke-width="4" />
+      <polygon points="58,20 62,20 65,-10 55,-10" fill="#06090e" /> <!-- Punta de lanza -->
+      <!-- Reflejo en la lanza -->
+      <line x1="32" y1="178" x2="62" y2="22" stroke="#cc6622" stroke-width="1" opacity="0.8"/>
+      
+      <!-- Cuerpo de pie, apoyado en la lanza -->
+      <path d="M 10 170 Q 15 120 10 80 Q 20 60 40 65 Q 50 100 35 170 Z" fill="#06090e" />
+      <!-- Capa pesada al viento -->
+      <path d="M 15 70 Q -10 90 -20 150 Q 0 160 10 170 Q 15 120 10 80 Z" fill="#0a0f17" />
+      <path d="M 20 60 Q 30 45 40 50 Q 50 65 40 80 Z" fill="#080c12" /> <!-- Cabeza/Casco -->
+      
+      <!-- Reflejos del fuego en el guerrero -->
+      <path d="M 10 80 Q 20 60 40 65 L 38 67 Q 18 62 12 82 Z" fill="#ff6600" opacity="0.4" />
+      <path d="M 40 65 Q 50 100 35 170 L 33 170 Q 48 100 38 67 Z" fill="#cc3300" opacity="0.5" />
+    </g>
+  </g>
+
+  <!-- EL FUEGO DEL CAMPAMENTO (Centro de calor) -->
+  <g id="campfire" transform="translate(600, 580)">
+    <!-- Base de resplandor en la nieve -->
+    <circle cx="0" cy="10" r="120" fill="url(#fireGlow)" filter="url(#blurFilter)" />
+    <circle cx="0" cy="10" r="50" fill="#ffaa00" opacity="0.4" filter="url(#blurFilter)" />
+
+    <!-- Troncos y brasas base -->
+    <path d="M -30 20 L 20 5 L 25 10 L -25 25 Z" fill="#1a0a05" />
+    <path d="M -20 5 L 30 20 L 25 25 L -25 10 Z" fill="#1a0a05" />
+    <path d="M -15 15 L 15 15 L 15 25 L -15 25 Z" fill="#0d0402" />
+    
+    <!-- Brasas calientes -->
+    <circle cx="-10" cy="18" r="4" fill="#ff3300" filter="url(#blurFilter)" />
+    <circle cx="10" cy="15" r="3" fill="#ff6600" />
+    <circle cx="0" cy="20" r="5" fill="#ffcc00" filter="url(#blurFilter)" />
+    <circle cx="-20" cy="12" r="2" fill="#ff3300" />
+    <circle cx="20" cy="10" r="3" fill="#ffaa00" />
+
+    <!-- Llamas -->
+    <!-- Llama roja/naranja oscura (Fondo) -->
+    <path d="M -30 15 Q -40 -10 -20 -30 Q -10 -50 0 -60 Q 10 -40 20 -30 Q 40 -10 30 15 Q 0 30 -30 15 Z" fill="#cc0000" opacity="0.8" filter="url(#blurFilter)" />
+    <!-- Llama naranja (Media) -->
+    <path d="M -20 15 Q -25 -5 -10 -25 Q 0 -45 5 -50 Q 10 -30 15 -20 Q 25 -5 20 15 Q 0 25 -20 15 Z" fill="#ff6600" opacity="0.9" />
+    <!-- Llama amarilla (Centro caliente) -->
+    <path d="M -10 15 Q -15 5 -5 -15 Q 2 -30 5 -35 Q 8 -20 10 -15 Q 15 5 10 15 Q 0 20 -10 15 Z" fill="#ffcc00" />
+    <!-- Llama blanca (Núcleo incandescente) -->
+    <path d="M -5 15 Q -8 10 -2 -5 Q 2 -15 3 -20 Q 4 -10 5 -5 Q 8 10 5 15 Q 0 18 -5 15 Z" fill="#ffffff" />
+
+    <!-- Chispas y pavesas flotantes -->
+    <g fill="#ffcc00" filter="url(#blurFilter)">
+      <circle cx="-15" cy="-40" r="2" />
+      <circle cx="10" cy="-55" r="1.5" />
+      <circle cx="-5" cy="-70" r="2.5" />
+      <circle cx="25" cy="-35" r="1" />
+      <circle cx="-25" cy="-25" r="1.5" />
+      <circle cx="15" cy="-80" r="2" />
+      <circle cx="-10" cy="-90" r="1" />
+      <circle cx="5" cy="-110" r="1.5" />
+      <circle cx="30" cy="-60" r="1" />
+      <circle cx="-35" cy="-50" r="1.5" />
+    </g>
+    <g fill="#ff6600">
+      <circle cx="-12" cy="-45" r="1" />
+      <circle cx="8" cy="-65" r="1" />
+      <circle cx="-8" cy="-85" r="1.5" />
+      <circle cx="18" cy="-45" r="1" />
+      <circle cx="-20" cy="-35" r="1" />
+      <circle cx="12" cy="-100" r="1" />
+    </g>
+  </g>
+
+  <!-- NIEVE CAYENDO (Primer plano y fondo) -->
+  <g id="snowflakes" fill="#ffffff">
+    <!-- Copos desenfocados en primer plano -->
+    <g filter="url(#blurFilter)" opacity="0.4">
+      <circle cx="50" cy="50" r="6" />
+      <circle cx="250" cy="150" r="5" />
+      <circle cx="450" cy="300" r="8" />
+      <circle cx="850" cy="100" r="7" />
+      <circle cx="1050" cy="400" r="6" />
+      <circle cx="1150" cy="200" r="8" />
+      <circle cx="150" cy="550" r="5" />
+      <circle cx="950" cy="600" r="7" />
+    </g>
+    <!-- Copos medianos -->
+    <g opacity="0.6">
+      <circle cx="120" cy="30" r="3" />
+      <circle cx="320" cy="280" r="2.5" />
+      <circle cx="520" cy="120" r="3" />
+      <circle cx="720" cy="380" r="2" />
+      <circle cx="920" cy="50" r="3.5" />
+      <circle cx="1120" cy="250" r="2" />
+      <circle cx="80" cy="420" r="3" />
+      <circle cx="380" cy="500" r="2.5" />
+      <circle cx="680" cy="220" r="3" />
+      <circle cx="880" cy="480" r="2" />
+      <circle cx="1080" cy="550" r="3" />
+    </g>
+    <!-- Copos finos y pequeños -->
+    <g opacity="0.8">
+      <circle cx="40" cy="200" r="1" />
+      <circle cx="180" cy="100" r="1.5" />
+      <circle cx="280" cy="450" r="1" />
+      <circle cx="480" cy="80" r="1.5" />
+      <circle cx="580" cy="350" r="1" />
+      <circle cx="780" cy="150" r="1.5" />
+      <circle cx="980" cy="300" r="1" />
+      <circle cx="1180" cy="100" r="1.5" />
+      <circle cx="220" cy="620" r="1" />
+      <circle cx="420" cy="580" r="1.5" />
+      <circle cx="620" cy="480" r="1" />
+      <circle cx="820" cy="650" r="1.5" />
+      <circle cx="1020" cy="500" r="1" />
+    </g>
+  </g>
+
+  <!-- MARCO OSCURO (Vignette para centrar la atención en el fuego) -->
+  <path d="M 0 0 L 1200 0 L 1200 675 L 0 675 Z M 100 100 Q 600 -50 1100 100 Q 1250 337 1100 575 Q 600 725 100 575 Q -50 337 100 100 Z" fill="#020408" opacity="0.3" filter="url(#heavyBlur)"/>
+
+</svg>

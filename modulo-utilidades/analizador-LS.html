@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,27 +20,30 @@
                             850: '#1e293b',
                             900: '#0f172a',
                         }
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-out forwards',
                     }
                 }
             }
         }
     </script>
     <script>
-        // Script inline para prevenir flash de tema incorrecto
-        (function() {
-            try {
-                const storedTheme = localStorage.getItem('fti_theme_preference');
-                const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                
-                if (storedTheme === 'dark' || ((!storedTheme || storedTheme === 'system') && systemDark)) {
-                    document.documentElement.classList.add('dark');
-                } else {
-                    document.documentElement.classList.remove('dark');
+            // Script inline para prevenir flash de tema incorrecto
+            (function () {
+                try {
+                    const storedTheme = localStorage.getItem('fti_theme_preference');
+                    const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+                    if (storedTheme === 'dark' || ((!storedTheme || storedTheme === 'system') && systemDark)) {
+                        document.documentElement.classList.add('dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                    }
+                } catch (e) {
+                    console.warn('Error accediendo a localStorage para tema:', e);
                 }
-            } catch (e) {
-                console.warn('Error accediendo a localStorage para tema:', e);
-            }
-        })();
+            })();
     </script>
 
     <!-- Font Awesome para iconos -->
@@ -52,265 +56,508 @@
 
     <!-- Estilos del proyecto -->
     <link rel="stylesheet" href="/styles.css">
-    
+
     <style>
-        /* Estilos específicos para el encabezado del analizador-LS.html */
-        header.fade-in {
-            all: unset; /* Resetea todos los estilos heredados */
-            display: block; /* Asegura que el header se comporte como un bloque */
-            text-align: center;
-            margin-bottom: 3rem; /* mb-12 en Tailwind */
-        }
-
-        header.fade-in h1 {
-            all: unset;
-            display: block;
-            font-size: 2.25rem; /* text-4xl en Tailwind */
-            line-height: 2.5rem; /* text-4xl en Tailwind */
-            font-weight: 700; /* font-bold en Tailwind */
-            background-clip: text;
-            -webkit-background-clip: text;
-            color: transparent;
-            background-image: linear-gradient(to right, #2563eb, #4f46e5); /* from-blue-600 to-indigo-800 en Tailwind */
-            margin-bottom: 0.75rem; /* mb-3 en Tailwind */
-        }
-
-        /* Ajuste para título en modo oscuro */
-        .dark header.fade-in h1 {
-            background-image: linear-gradient(to right, #60a5fa, #818cf8) !important;
-        }
-
-        header.fade-in p {
-            all: unset;
-            display: block;
-            font-size: 1.125rem; /* text-lg en Tailwind */
-            line-height: 1.75rem; /* text-lg en Tailwind */
-            color: #4b5563; /* text-gray-600 en Tailwind */
-            max-width: 42rem; /* max-w-2xl en Tailwind */
-            margin-left: auto;
-            margin-right: auto;
-        }
-        
-        /* Texto header modo oscuro */
-        .dark header.fade-in p {
-            color: #94a3b8 !important;
-        }
-
-        /* Animación fade-in */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .fade-in {
-            animation: fadeIn 0.5s ease-in-out;
-        }
-
-
         body {
             font-family: 'Inter', sans-serif;
-            color: #334155; /* Texto oscuro para tema claro */
-            transition: background-color 0.3s ease, color 0.3s ease;
-        }
-        
-        /* Modo oscuro para body */
-        .dark body {
-            color: #f1f5f9;
         }
 
-        .gradient-bg {
-            background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%); /* Fondo claro */
-            transition: background 0.5s ease;
-        }
-        
-        /* Gradiente modo oscuro */
-        .dark .gradient-bg {
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
-        .card-gradient {
-            background: #ffffff; /* Fondo blanco para tarjetas */
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1); /* Sombra más suave */
-            border: 1px solid #cbd5e1; /* Borde sutil */
-            transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
-        }
-        
-        /* Card modo oscuro */
-        .dark .card-gradient {
-            background: #1e293b;
-            border-color: #334155;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        .fade-in {
+            opacity: 0;
+            animation: fadeIn 0.6s ease-out forwards;
         }
 
-        .progress-bar {
+        /* Scrollbar styling for table */
+        .custom-scrollbar::-webkit-scrollbar {
             height: 8px;
-            border-radius: 4px;
-            overflow: hidden;
-            background-color: #e2e8f0; /* Fondo claro para barra de progreso */
-        }
-        
-        .dark .progress-bar {
-            background-color: #334155;
+            width: 8px;
         }
 
-        .progress-fill {
-            height: 100%;
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.02);
             border-radius: 4px;
-            transition: width 0.5s ease;
         }
-        .storage-item {
-            transition: all 0.3s ease;
-            border-left: 3px solid;
+
+        .dark .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
         }
-        .storage-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
         }
-        .dark .storage-item:hover {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #475569;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
         }
     </style>
 </head>
-<body class="gradient-bg min-h-screen text-gray-800 dark:text-gray-100">
-    <div class="container mx-auto px-4 py-8 max-w-5xl">
-        <!-- Header -->
-        <header class="text-center mb-12 fade-in">
-            <h1 class="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-800 mb-3">
-                Analizador de LocalStorage
-            </h1>
-            <p class="text-lg text-gray-600 max-w-2xl mx-auto">
-                Monitorea el uso de almacenamiento local en el navegador y gestiona los datos almacenados
-            </p>
-        </header>
 
-        <!-- Botón Volver al Inicio reposicionado -->
-        <div class="flex justify-center mb-8 fade-in">
-            <a href="/ajustes.html" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-all duration-300 flex items-center">
-                <i class="fa-solid fa-arrow-left"></i>ㅤVolver
-            </a>
+<body
+    class="bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100 min-h-screen flex flex-col transition-colors duration-300">
+
+    <!-- Top Navigation Bar -->
+    <nav
+        class="sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-colors duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center gap-4">
+                    <a href="/ajustes.html"
+                        class="p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 dark:hover:text-slate-200 dark:hover:bg-slate-800 transition-all group flex items-center justify-center">
+                        <i class="fa-solid fa-arrow-left text-lg group-hover:-translate-x-1 transition-transform"></i>
+                    </a>
+                    <div class="flex items-center gap-3">
+                        <div
+                            class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/50 dark:to-indigo-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400 shadow-inner">
+                            <i class="fas fa-database text-lg"></i>
+                        </div>
+                        <h1
+                            class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
+                            Analizador LocalStorage
+                        </h1>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-10">
+
+        <div class="mb-8 fade-in">
+            <p class="text-slate-600 dark:text-slate-400 text-lg max-w-3xl">Monitorea en tiempo real el uso de
+                almacenamiento local en tu navegador y gestiona los datos de sesión de forma segura.</p>
         </div>
 
-        <!-- Dashboard de estadísticas -->
+        <!-- Dashboard Widgets -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <!-- Tarjeta de espacio utilizado -->
-            <div class="card-gradient rounded-2xl p-6 fade-in dark:bg-slate-800 dark:border-slate-700">
-                <div class="flex items-center mb-4">
-                    <div class="bg-blue-100 p-3 rounded-xl mr-4 dark:bg-blue-900/30">
-                        <i class="fas fa-database text-blue-600 text-xl dark:text-blue-400"></i>
-                    </div>
-                    <div>
-                        <h2 class="text-gray-600 text-sm uppercase tracking-wider dark:text-gray-400">Espacio utilizado</h2>
-                        <p class="text-2xl font-bold dark:text-white" id="space-used">0 KB</p>
-                    </div>
+            <!-- Widget 1: Espacio -->
+            <div
+                class="relative overflow-hidden bg-white dark:bg-slate-850 rounded-2xl border border-slate-200 dark:border-slate-700/60 shadow-sm p-6 fade-in group hover:shadow-md transition-all">
+                <div
+                    class="absolute -top-6 -right-6 p-4 opacity-5 group-hover:opacity-10 transition-opacity duration-500 transform group-hover:scale-110">
+                    <i class="fas fa-hdd text-9xl text-blue-600 dark:text-blue-400"></i>
                 </div>
-                <div class="mt-4">
-                    <div class="flex justify-between text-sm mb-2">
-                        <span class="text-gray-600 dark:text-gray-400">de aproximadamente 5 MB disponibles</span>
-                        <span id="storage-percentage" class="dark:text-white">0%</span>
+                <div class="relative z-10">
+                    <div class="flex items-center gap-2 mb-2">
+                        <div class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
+                        <h2 class="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                            Espacio Utilizado</h2>
                     </div>
-                    <div class="progress-bar">
-                        <div id="storage-progress" class="progress-fill bg-gradient-to-r from-blue-400 to-indigo-600"></div>
+                    <div class="flex items-baseline gap-2 mb-6">
+                        <span class="text-4xl lg:text-5xl font-extrabold text-slate-800 dark:text-white tracking-tight"
+                            id="space-used">0 KB</span>
+                        <span class="text-sm text-slate-500 dark:text-slate-400 font-medium whitespace-nowrap">de ~5MB
+                            disp.</span>
+                    </div>
+
+                    <div class="space-y-2">
+                        <div class="flex justify-between text-sm font-semibold">
+                            <span class="text-slate-700 dark:text-slate-300" id="storage-percentage">0%</span>
+                        </div>
+                        <div
+                            class="h-3 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden shadow-inner border border-slate-200/50 dark:border-slate-700/50">
+                            <div id="storage-progress"
+                                class="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all duration-700 ease-out"
+                                style="width: 0%"></div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Tarjeta de número de ítems -->
-            <div class="card-gradient rounded-2xl p-6 fade-in dark:bg-slate-800 dark:border-slate-700">
-                <div class="flex items-center mb-4">
-                    <div class="bg-indigo-100 p-3 rounded-xl mr-4 dark:bg-indigo-900/30">
-                        <i class="fas fa-folder-open text-indigo-600 text-xl dark:text-indigo-400"></i>
-                    </div>
-                    <div>
-                        <h2 class="text-gray-600 text-sm uppercase tracking-wider dark:text-gray-400">Ítems almacenados</h2>
-                        <p class="text-2xl font-bold dark:text-white" id="items-count">0</p>
-                    </div>
+            <!-- Widget 2: Ítems -->
+            <div class="relative overflow-hidden bg-white dark:bg-slate-850 rounded-2xl border border-slate-200 dark:border-slate-700/60 shadow-sm p-6 fade-in group hover:shadow-md transition-all"
+                style="animation-delay: 0.1s">
+                <div
+                    class="absolute -top-6 -right-6 p-4 opacity-5 group-hover:opacity-10 transition-opacity duration-500 transform group-hover:scale-110">
+                    <i class="fas fa-cubes text-9xl text-indigo-600 dark:text-indigo-400"></i>
                 </div>
-                <div class="mt-4">
-                    <div class="flex justify-between text-sm mb-2">
-                        <span class="text-gray-600 dark:text-gray-400">elementos en localStorage</span>
-                        <span id="largest-item" class="dark:text-white">-</span>
+                <div class="relative z-10">
+                    <div class="flex items-center gap-2 mb-2">
+                        <div class="w-2 h-2 rounded-full bg-indigo-500"></div>
+                        <h2 class="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Ítems
+                            Almacenados</h2>
                     </div>
-                    <div class="progress-bar bg-indigo-200 dark:bg-slate-700">
-                        <div id="items-progress" class="progress-fill bg-gradient-to-r from-indigo-400 to-purple-600" style="width: 0%"></div>
+                    <div class="flex items-baseline gap-2 mb-6">
+                        <span class="text-4xl lg:text-5xl font-extrabold text-slate-800 dark:text-white tracking-tight"
+                            id="items-count">0</span>
+                        <span class="text-sm text-slate-500 dark:text-slate-400 font-medium whitespace-nowrap">registros
+                            guardados</span>
                     </div>
-                </div>
-            </div>
-        </div>
 
-        <!-- Botones de acción -->
-        <div class="flex flex-wrap gap-4 mb-8 fade-in">
-            <button id="refresh-btn" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-all duration-300 flex items-center">
-                <i class="fas fa-sync-alt mr-2"></i> Actualizar
-            </button>
-            <button id="clear-btn" class="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-all duration-300 flex items-center">
-                <i class="fas fa-trash mr-2"></i> Limpiar todo
-            </button>
-            <button id="add-data-btn" class="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-all duration-300 flex items-center">
-                <i class="fas fa-plus-circle mr-2"></i> Añadir 10KB de prueba
-            </button>
-            <button id="backup-to-discord" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-all duration-300 flex items-center">
-                <i class="fas fa-cloud-upload-alt mr-2"></i> Respaldar a Discord
-            </button>
-        </div>
-
-        <!-- Lista de ítems -->
-        <div class="card-gradient rounded-2xl p-6 fade-in dark:bg-slate-800 dark:border-slate-700">
-            <h2 class="text-xl font-semibold mb-6 flex items-center dark:text-white">
-                <i class="fas fa-list mr-3 text-blue-600 dark:text-blue-400"></i> Ítems almacenados
-            </h2>
-            
-            <div id="empty-state" class="text-center py-12 px-4">
-                <div class="inline-flex items-center justify-center w-16 h-16 bg-gray-200 rounded-full mb-4 dark:bg-gray-700">
-                    <i class="fas fa-folder-open text-3xl text-gray-500 dark:text-gray-400"></i>
-                </div>
-                <h3 class="text-lg font-medium text-gray-600 mb-2 dark:text-gray-300">No hay elementos en localStorage</h3>
-                <p class="text-gray-500 dark:text-gray-400">Los elementos que almacenes aparecerán aquí</p>
-            </div>
-            
-            <div id="items-container" class="hidden">
-                <div class="grid grid-cols-1 gap-4">
-                    <!-- Los ítems se insertarán aquí mediante JavaScript -->
+                    <div class="space-y-2">
+                        <div class="flex justify-between text-sm font-semibold w-full">
+                            <span class="text-slate-700 dark:text-slate-300 truncate w-full pr-2"
+                                id="largest-item">-</span>
+                        </div>
+                        <div
+                            class="h-3 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden shadow-inner border border-slate-200/50 dark:border-slate-700/50">
+                            <div id="items-progress"
+                                class="h-full rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-700 ease-out"
+                                style="width: 0%"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Información adicional -->
-        <div class="mt-8 text-center text-sm text-gray-600 dark:text-gray-400">
-            <p>Los datos se almacenan solo en tu navegador y no se envían a ningún servidor.</p>
+        <!-- Toolbar de Acciones -->
+        <div class="bg-white dark:bg-slate-850 rounded-2xl border border-slate-200 dark:border-slate-700/60 shadow-sm p-4 mb-8 fade-in flex flex-col sm:flex-row gap-4 items-center justify-between"
+            style="animation-delay: 0.2s">
+            <div class="flex flex-wrap gap-3 w-full sm:w-auto">
+                <button id="refresh-btn"
+                    class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl font-medium transition-colors">
+                    <i class="fas fa-sync-alt"></i> <span class="whitespace-nowrap">Actualizar</span>
+                </button>
+                <button id="add-data-btn"
+                    class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:hover:bg-emerald-900/50 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/60 rounded-xl font-medium transition-colors">
+                    <i class="fas fa-vial"></i> <span class="whitespace-nowrap">Prueba +10KB</span>
+                </button>
+                <button id="backup-to-discord"
+                    class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 text-indigo-700 dark:text-indigo-400 border border-indigo-200/60 dark:border-indigo-800/60 rounded-xl font-medium transition-colors">
+                    <i class="fas fa-cloud-upload-alt"></i> <span class="whitespace-nowrap">Respaldar a Discord</span>
+                </button>
+            </div>
+
+            <button id="clear-btn"
+                class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-red-50 hover:bg-red-100 dark:bg-red-900/30 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400 border border-red-200/60 dark:border-red-800/60 rounded-xl font-medium transition-colors">
+                <i class="fas fa-trash-alt"></i> <span class="whitespace-nowrap">Limpiar Todo</span>
+            </button>
+        </div>
+
+        <!-- Lista de ítems (Data Table Layout) -->
+        <div class="bg-white dark:bg-slate-850 rounded-2xl border border-slate-200 dark:border-slate-700/60 shadow-sm overflow-hidden fade-in flex flex-col"
+            style="animation-delay: 0.3s">
+            <div class="p-5 md:p-6 border-b border-slate-200 dark:border-slate-700/60 flex items-center gap-3">
+                <div
+                    class="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                    <i class="fas fa-list-ul"></i>
+                </div>
+                <h2 class="text-lg font-bold text-slate-800 dark:text-white">
+                    Desglose de Datos
+                </h2>
+            </div>
+
+            <!-- Empty State -->
+            <div id="empty-state" class="text-center py-20 px-4">
+                <div
+                    class="inline-flex items-center justify-center w-20 h-20 bg-slate-50 dark:bg-slate-800/50 rounded-full mb-5 shadow-inner ring-1 ring-slate-200 dark:ring-slate-700">
+                    <i class="fas fa-box-open text-4xl text-slate-400 dark:text-slate-500"></i>
+                </div>
+                <h3 class="text-xl font-bold text-slate-700 dark:text-slate-200 mb-2">Almacenamiento Vacío</h3>
+                <p class="text-slate-500 dark:text-slate-400 max-w-sm mx-auto">No hay elementos guardados en el
+                    LocalStorage de tu navegador actualmente.</p>
+            </div>
+
+            <!-- Items List -->
+            <div id="items-container" class="custom-scrollbar overflow-x-auto">
+                <table class="w-full text-left border-collapse min-w-[700px]">
+                    <thead>
+                        <tr
+                            class="bg-slate-50/80 dark:bg-slate-800/30 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider border-b border-slate-200 dark:border-slate-700/60 font-semibold">
+                            <th class="px-6 py-4 w-1/4">Clave</th>
+                            <th class="px-6 py-4 w-1/2">Valor</th>
+                            <th class="px-6 py-4 w-32">Tamaño</th>
+                            <th class="px-6 py-4 text-right w-24">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="items-list-body" class="divide-y divide-slate-100 dark:divide-slate-700/50">
+                        <!-- Items inyectados vía JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="mt-8 text-center text-sm text-slate-500 dark:text-slate-400 flex items-center justify-center gap-2 fade-in"
+            style="animation-delay: 0.4s">
+            <i class="fas fa-shield-alt text-emerald-500"></i>
+            <p>Los datos se almacenan de forma local y privada en tu navegador.</p>
+        </div>
+
+    </main>
+
+    <!-- Modal para Ver/Editar Contenido -->
+    <div id="view-modal"
+        class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/50 backdrop-blur-sm transition-opacity duration-300 opacity-0">
+        <div
+            class="bg-white dark:bg-slate-850 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] flex flex-col transform transition-transform duration-300 scale-95">
+            <div
+                class="p-5 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50 rounded-t-2xl">
+                <div class="flex items-center gap-3 w-full pr-4">
+                    <h3 class="text-lg font-bold text-slate-800 dark:text-white truncate" id="modal-title">Detalle de
+                        clave</h3>
+                    <span id="edit-badge"
+                        class="hidden inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 border border-amber-200 dark:border-amber-800/50">
+                        Modo Edición
+                    </span>
+                </div>
+                <button id="close-modal-btn"
+                    class="text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-600 rounded-lg w-8 h-8 flex-shrink-0 flex items-center justify-center">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="p-5 overflow-y-auto custom-scrollbar flex-1 relative flex flex-col gap-4">
+                <!-- Modo Vista -->
+                <pre id="modal-content"
+                    class="text-sm font-mono text-slate-700 dark:text-slate-300 whitespace-pre-wrap break-all bg-slate-50 dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-700 selection:bg-blue-200 dark:selection:bg-blue-900/50 min-h-[100px] focus:outline-none"></pre>
+
+                <!-- Modo Edición -->
+                <textarea id="modal-edit-input"
+                    class="hidden w-full flex-1 min-h-[200px] text-sm font-mono text-slate-700 dark:text-slate-300 whitespace-pre-wrap bg-white dark:bg-slate-900 p-4 rounded-xl border-2 border-blue-400 dark:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/20 dark:focus:ring-blue-500/20 custom-scrollbar resize-y"
+                    spellcheck="false"></textarea>
+                <div id="edit-error" class="hidden text-sm text-red-500 flex items-center gap-2">
+                    <i class="fas fa-exclamation-circle"></i> <span>Error JSON inválido</span>
+                </div>
+            </div>
+
+            <div
+                class="p-4 border-t border-slate-200 dark:border-slate-700 flex justify-between items-center bg-white dark:bg-slate-850 rounded-b-2xl">
+                <!-- Controles Izquierda -->
+                <div id="modal-left-actions">
+                    <button id="edit-modal-btn"
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-amber-50 text-amber-600 hover:bg-amber-100 dark:bg-amber-900/30 dark:text-amber-400 dark:hover:bg-amber-900/50 rounded-xl font-medium transition-colors border border-amber-200 dark:border-amber-800/50">
+                        <i class="fas fa-edit"></i> Editar
+                    </button>
+                </div>
+
+                <!-- Controles Derecha -->
+                <div class="flex gap-2">
+                    <!-- Botones Modo Edición -->
+                    <button id="cancel-edit-btn"
+                        class="hidden inline-flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 rounded-xl font-medium transition-colors border border-slate-200 dark:border-slate-700">
+                        Cancelar
+                    </button>
+                    <button id="save-edit-btn"
+                        class="hidden inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 rounded-xl font-medium transition-colors border border-transparent shadow-sm">
+                        <i class="fas fa-save"></i> Guardar
+                    </button>
+
+                    <!-- Botones Modo Vista -->
+                    <button id="copy-modal-btn"
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50 rounded-xl font-medium transition-colors border border-blue-200 dark:border-blue-800/50">
+                        <i class="fas fa-copy"></i> Copiar
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
-     <footer class="text-center py-8 text-gray-500 text-sm border-t border-gray-200 bg-white/30 backdrop-blur-sm dark:bg-slate-900/30 dark:border-slate-700 dark:text-gray-400 transition-colors duration-300">
-        <p>Versión: <span id="appVersion"></span> | Última Actualización: <span id="appDate"></span></p>
+    <footer
+        class="mt-auto py-6 text-center text-slate-500 dark:text-slate-400 text-sm border-t border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm transition-colors duration-300">
+        <p class="font-medium">Versión: <span id="appVersion" class="text-slate-700 dark:text-slate-300"></span> <span
+                class="mx-2 opacity-50">|</span> Última Actualización: <span id="appDate"
+                class="text-slate-700 dark:text-slate-300"></span></p>
     </footer>
 
-     <!-- Scripts -->
+    <!-- Scripts -->
     <script src="/theme.js"></script>
     <script src="/app.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const appVersionElement = document.getElementById('appVersion');
             const appDateElement = document.getElementById('appDate');
-            if (typeof PAGE_VERSION !== 'undefined') {
+            if (typeof PAGE_VERSION !== 'undefined' && appVersionElement) {
                 appVersionElement.textContent = PAGE_VERSION;
             }
-            if (typeof ACT_DATE !== 'undefined') {
+            if (typeof ACT_DATE !== 'undefined' && appDateElement) {
                 appDateElement.textContent = ACT_DATE;
             }
         });
     </script>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const refreshBtn = document.getElementById('refresh-btn');
             const clearBtn = document.getElementById('clear-btn');
             const addDataBtn = document.getElementById('add-data-btn');
             const itemsContainer = document.getElementById('items-container');
+            const itemsListBody = document.getElementById('items-list-body');
             const emptyState = document.getElementById('empty-state');
             const spaceUsed = document.getElementById('space-used');
             const itemsCount = document.getElementById('items-count');
             const storageProgress = document.getElementById('storage-progress');
             const storagePercentage = document.getElementById('storage-percentage');
             const largestItem = document.getElementById('largest-item');
+
+            // Elementos del Modal
+            const viewModal = document.getElementById('view-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalContent = document.getElementById('modal-content');
+            const modalEditInput = document.getElementById('modal-edit-input');
+            const editBadge = document.getElementById('edit-badge');
+            const editError = document.getElementById('edit-error');
+
+            const closeModalBtn = document.getElementById('close-modal-btn');
+            const copyModalBtn = document.getElementById('copy-modal-btn');
+            const editModalBtn = document.getElementById('edit-modal-btn');
+            const saveEditBtn = document.getElementById('save-edit-btn');
+            const cancelEditBtn = document.getElementById('cancel-edit-btn');
+            const modalLeftActions = document.getElementById('modal-left-actions');
+
+            let currentModalKey = '';
+            let currentOriginalValue = '';
+
+            function setModalMode(mode) {
+                if (mode === 'edit') {
+                    // Pasar a edición
+                    modalContent.classList.add('hidden');
+                    modalEditInput.classList.remove('hidden');
+                    editBadge.classList.remove('hidden');
+                    editBadge.classList.add('inline-flex');
+
+                    editModalBtn.classList.add('hidden');
+                    copyModalBtn.classList.add('hidden');
+                    saveEditBtn.classList.remove('hidden');
+                    saveEditBtn.classList.add('inline-flex');
+                    cancelEditBtn.classList.remove('hidden');
+                    cancelEditBtn.classList.add('inline-flex');
+
+                    editError.classList.add('hidden');
+                    modalEditInput.value = currentOriginalValue;
+
+                    // Formato bonito si es JSON
+                    try {
+                        const parsed = JSON.parse(currentOriginalValue);
+                        modalEditInput.value = JSON.stringify(parsed, null, 2);
+                    } catch (e) { }
+
+                    setTimeout(() => modalEditInput.focus(), 50);
+                } else {
+                    // Pasar a vista
+                    modalContent.classList.remove('hidden');
+                    modalEditInput.classList.add('hidden');
+                    editBadge.classList.add('hidden');
+                    editBadge.classList.remove('inline-flex');
+
+                    editModalBtn.classList.remove('hidden');
+                    copyModalBtn.classList.remove('hidden');
+                    saveEditBtn.classList.add('hidden');
+                    saveEditBtn.classList.remove('inline-flex');
+                    cancelEditBtn.classList.add('hidden');
+                    cancelEditBtn.classList.remove('inline-flex');
+
+                    editError.classList.add('hidden');
+                }
+            }
+
+            function openModal(key, value) {
+                currentModalKey = key;
+                currentOriginalValue = value;
+                modalTitle.textContent = key;
+
+                try {
+                    const parsed = JSON.parse(value);
+                    modalContent.textContent = JSON.stringify(parsed, null, 2);
+                } catch (e) {
+                    modalContent.textContent = value;
+                }
+
+                setModalMode('view');
+
+                viewModal.classList.remove('hidden');
+                void viewModal.offsetWidth;
+                viewModal.classList.remove('opacity-0');
+                viewModal.querySelector('div').classList.remove('scale-95');
+                viewModal.querySelector('div').classList.add('scale-100');
+            }
+
+            function closeModal() {
+                viewModal.classList.add('opacity-0');
+                viewModal.querySelector('div').classList.remove('scale-100');
+                viewModal.querySelector('div').classList.add('scale-95');
+                setTimeout(() => {
+                    viewModal.classList.add('hidden');
+                    setModalMode('view'); // reset
+                }, 300);
+            }
+
+            closeModalBtn.addEventListener('click', closeModal);
+            viewModal.addEventListener('click', (e) => {
+                // Solo cerrar si damos clic al fondo oscuro y NO estamos en modo edición
+                if (e.target === viewModal && editBadge.classList.contains('hidden')) {
+                    closeModal();
+                }
+            });
+
+            // Lógica de Copiar
+            copyModalBtn.addEventListener('click', () => {
+                navigator.clipboard.writeText(modalContent.textContent).then(() => {
+                    const originalHtml = copyModalBtn.innerHTML;
+                    copyModalBtn.innerHTML = '<i class="fas fa-check"></i>';
+                    copyModalBtn.classList.replace('text-blue-600', 'text-emerald-600');
+                    copyModalBtn.classList.replace('dark:text-blue-400', 'dark:text-emerald-400');
+
+                    setTimeout(() => {
+                        copyModalBtn.innerHTML = originalHtml;
+                        copyModalBtn.classList.replace('text-emerald-600', 'text-blue-600');
+                        copyModalBtn.classList.replace('dark:text-emerald-400', 'dark:text-blue-400');
+                    }, 2000);
+                });
+            });
+
+            // Lógica de Edición
+            editModalBtn.addEventListener('click', () => setModalMode('edit'));
+            cancelEditBtn.addEventListener('click', () => {
+                if (modalEditInput.value !== currentOriginalValue && !confirm('¿Descartar los cambios?')) return;
+                setModalMode('view');
+            });
+
+            saveEditBtn.addEventListener('click', () => {
+                let newValue = modalEditInput.value;
+
+                // Si el original era JSON válido o intentan guardar JSON, verificar la sintaxis
+                try {
+                    const wasJson = (() => { try { JSON.parse(currentOriginalValue); return true; } catch (e) { return false; } })();
+                    if (wasJson || (newValue.trim().startsWith('{') || newValue.trim().startsWith('['))) {
+                        // Comprobar formato y minificar para guardado real (opcional, dejamos tal cual si es válido)
+                        JSON.parse(newValue);
+                    }
+                } catch (e) {
+                    editError.classList.remove('hidden');
+                    editError.querySelector('span').textContent = 'JSON inválido: ' + e.message;
+                    return;
+                }
+
+                try {
+                    localStorage.setItem(currentModalKey, newValue);
+                    currentOriginalValue = newValue;
+
+                    // Actualizar vista del modal
+                    try {
+                        const parsed = JSON.parse(newValue);
+                        modalContent.textContent = JSON.stringify(parsed, null, 2);
+                    } catch (e) {
+                        modalContent.textContent = newValue;
+                    }
+
+                    setModalMode('view');
+                    updateStorageInfo(); // Refrescar lista principal
+                } catch (e) {
+                    editError.classList.remove('hidden');
+                    editError.querySelector('span').textContent = 'Error al guardar (¿Límite excedido?)';
+                }
+            });
 
             // Función para calcular el tamaño de una cadena en bytes
             function getSize(str) {
@@ -334,75 +581,106 @@
                 let count = 0;
                 let maxItemSize = 0;
                 let maxItemKey = '';
-                
+
                 // Limpiar contenedor de ítems
-                itemsContainer.querySelector('.grid').innerHTML = '';
-                
+                itemsListBody.innerHTML = '';
+
                 for (let i = 0; i < localStorage.length; i++) {
                     const key = localStorage.key(i);
                     const value = localStorage.getItem(key);
                     const size = getSize(value);
                     totalSize += size;
                     count++;
-                    
+
                     // Encontrar el ítem más grande
                     if (size > maxItemSize) {
                         maxItemSize = size;
                         maxItemKey = key;
                     }
-                    
-                    // Crear elemento de la lista
-                    const itemElement = document.createElement('div');
-                    itemElement.className = 'storage-item bg-gray-50 p-4 rounded-lg border-l-4 border-blue-500 shadow-sm dark:bg-slate-700/50 dark:border-blue-500';
-                    
-                    itemElement.innerHTML = `
-                        <div class="flex justify-between items-start mb-2">
-                            <div class="font-medium truncate max-w-[60%] text-gray-900 dark:text-gray-100" title="${key}">${key}</div>
-                            <div class="text-blue-600 font-mono dark:text-blue-400">${formatSize(size)}</div>
-                        </div>
-                        <div class="text-sm text-gray-600 mb-3 truncate dark:text-gray-400" title="${value}">${value.length > 100 ? value.substring(0, 100) + '...' : value}</div>
-                        <button class="delete-btn px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs rounded transition-colors duration-200" data-key="${key}">
-                            <i class="fas fa-trash mr-1"></i> Eliminar
-                        </button>
+
+                    const truncatedValue = value.length > 80 ? value.substring(0, 80) + '...' : value;
+
+                    // Crear elemento de tabla
+                    const tr = document.createElement('tr');
+                    tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group';
+
+                    tr.innerHTML = `
+                        <td class="px-6 py-4">
+                            <div class="font-mono text-sm font-medium text-slate-800 dark:text-slate-200 truncate max-w-[200px]" title="${key}">
+                                ${key}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm text-slate-500 dark:text-slate-400 truncate max-w-[300px]" title="${value}">
+                                ${truncatedValue}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 border border-blue-200 dark:border-blue-800/50">
+                                ${formatSize(size)}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-right whitespace-nowrap">
+                            <button class="view-btn p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 dark:hover:text-blue-400 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 mr-1" data-key="${key}" title="Ver contenido completo">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="delete-btn p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 dark:hover:text-red-400 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-red-500" data-key="${key}" title="Eliminar ítem">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
                     `;
-                    
-                    itemsContainer.querySelector('.grid').appendChild(itemElement);
+
+                    itemsListBody.appendChild(tr);
                 }
-                
+
                 // Añadir event listeners a los botones de eliminar
                 document.querySelectorAll('.delete-btn').forEach(btn => {
-                    btn.addEventListener('click', function() {
+                    btn.addEventListener('click', function () {
                         const key = this.getAttribute('data-key');
                         localStorage.removeItem(key);
                         updateStorageInfo();
                     });
                 });
-                
+
+                // Añadir event listeners a los botones de ver
+                document.querySelectorAll('.view-btn').forEach(btn => {
+                    btn.addEventListener('click', function () {
+                        const key = this.getAttribute('data-key');
+                        const value = localStorage.getItem(key);
+                        if (value !== null) {
+                            openModal(key, value);
+                        }
+                    });
+                });
+
                 // Actualizar métricas
                 spaceUsed.textContent = formatSize(totalSize);
                 itemsCount.textContent = count;
-                
+
                 // Actualizar barra de progreso (5MB máximo)
                 const percentage = Math.min((totalSize / (5 * 1024 * 1024)) * 100, 100);
                 storageProgress.style.width = percentage + '%';
                 storagePercentage.textContent = percentage.toFixed(1) + '%';
-                
+
                 // Actualizar información del ítem más grande
                 if (maxItemKey) {
-                    largestItem.textContent = `Mayor: ${formatSize(maxItemSize)}`;
+                    const largestText = `Mayor: ${maxItemKey} (${formatSize(maxItemSize)})`;
+                    largestItem.textContent = largestText;
+                    largestItem.title = largestText;
                 } else {
                     largestItem.textContent = '-';
+                    largestItem.title = '';
                 }
-                
+
                 // Cambiar color de la barra de progreso según el uso
                 if (percentage > 90) {
-                    storageProgress.style.background = 'linear-gradient(to right, #dc2626, #ea580c)'; /* Rojo a naranja */
+                    storageProgress.className = 'h-full rounded-full bg-gradient-to-r from-red-500 to-orange-500 transition-all duration-700 ease-out';
                 } else if (percentage > 70) {
-                    storageProgress.style.background = 'linear-gradient(to right, #facc15, #eab308)'; /* Amarillo a ámbar */
+                    storageProgress.className = 'h-full rounded-full bg-gradient-to-r from-yellow-500 to-amber-500 transition-all duration-700 ease-out';
                 } else {
-                    storageProgress.style.background = 'linear-gradient(to right, #3b82f6, #4f46e5)'; /* Azul a índigo */
+                    storageProgress.className = 'h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all duration-700 ease-out';
                 }
-                
+
                 // Mostrar estado vacío o la lista de ítems
                 if (count === 0) {
                     itemsContainer.classList.add('hidden');
@@ -410,28 +688,34 @@
                 } else {
                     itemsContainer.classList.remove('hidden');
                     emptyState.classList.add('hidden');
-                    
+
                     // Actualizar barra de progreso de ítems (máximo 100 ítems como referencia)
                     const itemsPercentage = Math.min((count / 100) * 100, 100);
-                    document.getElementById('items-progress').style.width = itemsPercentage + '%';
+                    const progressEl = document.getElementById('items-progress');
+                    if (progressEl) progressEl.style.width = itemsPercentage + '%';
                 }
             }
 
             // Event listeners para los botones
-            refreshBtn.addEventListener('click', updateStorageInfo);
-            
-            clearBtn.addEventListener('click', function() {
-                if (confirm('¿Estás seguro de que quieres eliminar todos los elementos del localStorage?')) {
+            refreshBtn.addEventListener('click', () => {
+                const icon = refreshBtn.querySelector('i');
+                icon.classList.add('animate-spin');
+                updateStorageInfo();
+                setTimeout(() => icon.classList.remove('animate-spin'), 500);
+            });
+
+            clearBtn.addEventListener('click', function () {
+                if (confirm('¿Estás seguro de que quieres eliminar todos los elementos del localStorage? Esta acción no se puede deshacer.')) {
                     localStorage.clear();
                     updateStorageInfo();
                 }
             });
-            
-            addDataBtn.addEventListener('click', function() {
+
+            addDataBtn.addEventListener('click', function () {
                 try {
                     // Generar datos de prueba de aproximadamente 10KB
                     const key = `test_data_${Date.now()}`;
-                    // 10KB ≈ 10240 caracteres (cada carácter es aproximadamente 1 byte)
+                    // 10KB ≈ 10240 caracteres
                     const data = 'x'.repeat(10240);
                     localStorage.setItem(key, data);
                     updateStorageInfo();
@@ -442,15 +726,15 @@
 
             // Inicializar
             updateStorageInfo();
-            
+
             // Actualizar automáticamente cuando cambie el localStorage
             window.addEventListener('storage', updateStorageInfo);
-            
+
             // Para detectar cambios en la misma página
             setInterval(updateStorageInfo, 1000);
         });
     </script>
-<script>
+    <script>
         document.addEventListener('DOMContentLoaded', () => {
             const backupToDiscordBtn = document.getElementById('backup-to-discord');
 
@@ -611,11 +895,20 @@
                 }
             };
 
-            backupToDiscordBtn.addEventListener('click', async () => {
-                backupToDiscordBtn.disabled = true;
-                try { await backupToDiscord(); } finally { backupToDiscordBtn.disabled = false; }
-            });
+            if (backupToDiscordBtn) {
+                backupToDiscordBtn.addEventListener('click', async () => {
+                    const icon = backupToDiscordBtn.querySelector('i');
+                    const originalClass = icon.className;
+                    icon.className = 'fas fa-circle-notch animate-spin';
+                    backupToDiscordBtn.disabled = true;
+                    try { await backupToDiscord(); } finally {
+                        backupToDiscordBtn.disabled = false;
+                        icon.className = originalClass;
+                    }
+                });
+            }
         });
     </script>
 </body>
+
 </html>

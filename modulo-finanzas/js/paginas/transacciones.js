@@ -273,9 +273,76 @@ function actualizarLabelMes() {
   label.textContent = filtroFecha.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })
 }
 
+// === Fondo Estacional ===
+let fondoEstacionalOverlay = null
+
+function actualizarFondoEstacional() {
+  // Leer preferencia de cookie (activado por defecto)
+  const cookieMatch = document.cookie.match(/(?:^|; )gtr_fondos_dinamicos=([^;]*)/)
+  const fondosActivos = cookieMatch ? cookieMatch[1] === 'true' : true
+
+  const mesActual = filtroFecha.getMonth() // 0 = Enero, 1 = Febrero
+
+  // Mapa de fondos por mes
+  const fondosPorMes = {
+    0: 'recursos/imagenes/fondo-enero.svg',
+    1: 'recursos/imagenes/fondo-febrero.svg',
+    2: 'recursos/imagenes/fondo-marzo.svg',
+    3: 'recursos/imagenes/fondo-abril.svg',
+    4: 'recursos/imagenes/fondo-mayo.svg',
+    5: 'recursos/imagenes/fondo-junio.svg',
+    6: 'recursos/imagenes/fondo-julio.svg',
+    7: 'recursos/imagenes/fondo-agosto.svg',
+    8: 'recursos/imagenes/fondo-septiembre.svg',
+    9: 'recursos/imagenes/fondo-octubre.svg',
+    10: 'recursos/imagenes/fondo-noviembre.svg',
+    11: 'recursos/imagenes/fondo-diciembre.svg'
+  }
+
+  const fondoAsignado = fondosPorMes[mesActual]
+  const debeMostrarFondo = fondosActivos && fondoAsignado
+
+  if (debeMostrarFondo) {
+    // Activar fondo
+    document.body.style.backgroundImage = `url("${fondoAsignado}")`
+    document.body.style.backgroundSize = 'cover'
+    document.body.style.backgroundPosition = 'center bottom'
+    document.body.style.backgroundRepeat = 'no-repeat'
+    document.body.style.backgroundAttachment = 'fixed'
+
+    // Crear overlay si no existe
+    if (!fondoEstacionalOverlay) {
+      fondoEstacionalOverlay = document.createElement('div')
+      fondoEstacionalOverlay.id = 'fondo-estacional-overlay'
+      fondoEstacionalOverlay.style.cssText = 'position:fixed;inset:0;z-index:0;pointer-events:none;transition:opacity 0.5s ease;'
+      document.body.prepend(fondoEstacionalOverlay)
+
+      // Elevar contenido sobre el overlay
+      const header = document.querySelector('header')
+      const main = document.querySelector('main')
+      if (header) { header.style.position = 'relative'; header.style.zIndex = '50'; }
+      if (main) { main.style.position = 'relative'; main.style.zIndex = '1'; }
+    }
+
+    // Adaptar overlay al tema actual
+    const isDark = document.documentElement.classList.contains('dark')
+    fondoEstacionalOverlay.style.background = isDark
+      ? 'rgba(17, 24, 39, 0.35)'
+      : 'rgba(249, 250, 251, 0.82)'
+    fondoEstacionalOverlay.style.opacity = '1'
+  } else {
+    // Desactivar fondo
+    document.body.style.backgroundImage = ''
+    if (fondoEstacionalOverlay) {
+      fondoEstacionalOverlay.style.opacity = '0'
+    }
+  }
+}
+
 function cambiarMes(delta) {
   filtroFecha.setMonth(filtroFecha.getMonth() + delta)
   actualizarLabelMes()
+  actualizarFondoEstacional()
   renderHistorial()
 }
 
@@ -975,6 +1042,7 @@ function init() {
   ejecutarPendientes() // Procesar operaciones cuya fecha ya pasó
   generarInstanciasRecurrentes() // Generar instancias de recurrencias pendientes
   actualizarLabelMes() // Init Label
+  actualizarFondoEstacional() // Fondo estacional
   renderHistorial()
 }
 

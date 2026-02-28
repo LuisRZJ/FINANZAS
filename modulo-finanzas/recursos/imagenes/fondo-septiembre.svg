@@ -1,0 +1,135 @@
+<svg viewBox="0 0 1000 600" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Fondos y Gradientes -->
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#070f1a" />
+      <stop offset="50%" stop-color="#0d1b2a" />
+      <stop offset="100%" stop-color="#02060d" />
+    </linearGradient>
+    
+    <linearGradient id="copperLeaf" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#d97736" />
+      <stop offset="100%" stop-color="#8c4a23" />
+    </linearGradient>
+
+    <linearGradient id="deadWeight" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#475569" />
+      <stop offset="100%" stop-color="#1e293b" />
+    </linearGradient>
+
+    <!-- Grid Táctico -->
+    <pattern id="tacticalGrid" width="50" height="50" patternUnits="userSpaceOnUse">
+      <path d="M 50 0 L 0 0 0 50" fill="none" stroke="#1e293b" stroke-width="0.5" opacity="0.6"/>
+      <circle cx="0" cy="0" r="1" fill="#38bdf8" opacity="0.3" />
+    </pattern>
+
+    <!-- Formas base -->
+    <path id="leaf" d="M0,0 C15,-15 25,-5 25,10 C10,25 0,15 0,0 Z" />
+    <polygon id="projectNode" points="0,-12 12,0 0,12 -12,0" />
+    
+    <!-- Filtro de Resplandor para el corte -->
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Fondo -->
+  <rect width="1000" height="600" fill="url(#bgGradient)" />
+  <rect width="1000" height="600" fill="url(#tacticalGrid)" />
+
+  <!-- Líneas de datos de fondo (Estrategia) -->
+  <path d="M0,450 Q250,420 500,500 T1000,450" fill="none" stroke="#1e293b" stroke-width="2" opacity="0.5"/>
+  <path d="M0,500 Q300,550 600,480 T1000,520" fill="none" stroke="#0f172a" stroke-width="4" opacity="0.8"/>
+
+  <!-- Bosque (Árboles Angulares / Corporativos) -->
+  <!-- Árbol Izquierdo (Sólido, mantenido) -->
+  <path d="M150,600 L170,300 L100,180 L105,175 L165,280 L160,120 L167,120 L172,270 L230,150 L235,155 L180,290 L200,600 Z" fill="#0f172a"/>
+  
+  <!-- Árbol Derecho (Secundario) -->
+  <path d="M850,600 L870,350 L810,240 L815,235 L865,330 L880,200 L885,200 L875,340 L930,220 L935,225 L885,350 L900,600 Z" fill="#0b1320"/>
+
+  <!-- Árbol Central (El objetivo de la reestructuración) -->
+  <path d="M480,600 L500,280 L400,150 L406,145 L495,260 L490,80 L498,80 L505,250 M510,265 L580,140 L585,145 L515,275 L530,600 Z" fill="#1e293b"/>
+  
+  <!-- Rama cortada (Cayendo) -->
+  <g transform="translate(30, 80) rotate(15, 550, 200)">
+    <path d="M505,250 L570,100 L576,105 L512,258 Z" fill="#1e293b" opacity="0.7"/>
+  </g>
+
+  <!-- Línea de Corte Táctico (Frialdad) -->
+  <line x1="470" y1="260" x2="550" y2="230" stroke="#00f0ff" stroke-width="3" filter="url(#glow)" />
+  <circle cx="510" cy="245" r="4" fill="#ffffff" filter="url(#glow)"/>
+  
+  <!-- Puntos de mira / Targets Tácticos -->
+  <g stroke="#38bdf8" stroke-width="1" opacity="0.6">
+    <path d="M 400 150 L 410 150 M 405 145 L 405 155" />
+    <path d="M 580 140 L 590 140 M 585 135 L 585 145" />
+    <path d="M 700 350 L 710 350 M 705 345 L 705 355" />
+  </g>
+
+  <!-- HOJAS COBRIZAS (Proyectos / Rentabilidad) -->
+  <!-- Hojas en los árboles (Las que se quedan) -->
+  <use href="#leaf" x="100" y="170" fill="url(#copperLeaf)" transform="rotate(-20, 100, 170) scale(0.8)"/>
+  <use href="#leaf" x="160" y="115" fill="#ea580c" transform="rotate(40, 160, 115) scale(1)"/>
+  <use href="#leaf" x="230" y="150" fill="url(#copperLeaf)" transform="rotate(70, 230, 150) scale(0.9)"/>
+  <use href="#leaf" x="490" y="75" fill="#ea580c" transform="rotate(-10, 490, 75) scale(1.1)"/>
+  <use href="#leaf" x="810" y="235" fill="url(#copperLeaf)" transform="rotate(-40, 810, 235) scale(0.8)"/>
+
+  <!-- Hojas y Nodos Desprendiéndose (Caída táctica) -->
+  <!-- Nivel superior cayendo -->
+  <use href="#leaf" x="440" y="180" fill="url(#copperLeaf)" transform="rotate(35, 440, 180) scale(0.9)" opacity="0.9"/>
+  <use href="#leaf" x="550" y="160" fill="#ea580c" transform="rotate(110, 550, 160) scale(1)" opacity="0.8"/>
+  <use href="#projectNode" x="580" y="210" fill="url(#copperLeaf)" opacity="0.7"/>
+  <use href="#leaf" x="480" y="290" fill="url(#copperLeaf)" transform="rotate(60, 480, 290) scale(0.8)" opacity="0.8"/>
+
+  <!-- Nivel medio (Peso muerto en proceso) -->
+  <use href="#leaf" x="520" y="320" fill="url(#copperLeaf)" transform="rotate(15, 520, 320) scale(1)" opacity="0.7"/>
+  <use href="#projectNode" x="460" y="360" fill="url(#deadWeight)" opacity="0.8" transform="rotate(25, 460, 360)"/>
+  <use href="#leaf" x="590" y="340" fill="#b87333" transform="rotate(85, 590, 340) scale(0.9)" opacity="0.6"/>
+  <use href="#leaf" x="650" y="280" fill="url(#copperLeaf)" transform="rotate(130, 650, 280) scale(0.7)" opacity="0.5"/>
+  <use href="#projectNode" x="630" y="390" fill="url(#copperLeaf)" opacity="0.6" transform="rotate(45, 630, 390)"/>
+  <use href="#leaf" x="410" y="400" fill="url(#deadWeight)" transform="rotate(-20, 410, 400) scale(1.2)" opacity="0.5"/>
+
+  <!-- Nivel inferior (Proyectos muertos descartados) -->
+  <use href="#leaf" x="550" y="450" fill="url(#deadWeight)" transform="rotate(45, 550, 450) scale(1)" opacity="0.4"/>
+  <use href="#projectNode" x="700" y="480" fill="url(#deadWeight)" opacity="0.3" transform="rotate(15, 700, 480)"/>
+  <use href="#leaf" x="480" y="520" fill="#334155" transform="rotate(80, 480, 520) scale(0.8)" opacity="0.3"/>
+  <use href="#leaf" x="620" y="500" fill="url(#deadWeight)" transform="rotate(110, 620, 500) scale(0.9)" opacity="0.4"/>
+  <use href="#projectNode" x="580" y="550" fill="#1e293b" opacity="0.2"/>
+  <use href="#leaf" x="750" y="540" fill="#1e293b" transform="rotate(25, 750, 540) scale(1)" opacity="0.2"/>
+
+  <!-- Rastro de partículas (Datos eliminados) -->
+  <circle cx="530" cy="270" r="2" fill="#38bdf8" opacity="0.8"/>
+  <circle cx="545" cy="290" r="1.5" fill="#38bdf8" opacity="0.6"/>
+  <circle cx="525" cy="330" r="1" fill="#38bdf8" opacity="0.4"/>
+  <circle cx="560" cy="370" r="2" fill="#38bdf8" opacity="0.3"/>
+  <circle cx="510" cy="420" r="1.5" fill="#38bdf8" opacity="0.2"/>
+
+  <!-- TEXTO ESTRATÉGICO -->
+  <g transform="translate(60, 80)">
+    <!-- Etiqueta superior -->
+    <rect x="0" y="-15" width="80" height="2" fill="#00f0ff" />
+    <text x="0" y="10" fill="#00f0ff" font-family="monospace" font-size="12" font-weight="bold" letter-spacing="3">FASE 04 //</text>
+    
+    <!-- Título Principal -->
+    <text x="0" y="50" fill="#f8fafc" font-family="'Segoe UI', Arial, sans-serif" font-size="36" font-weight="900" letter-spacing="1">REESTRUCTURACIÓN</text>
+    <text x="0" y="90" fill="#b87333" font-family="'Segoe UI', Arial, sans-serif" font-size="36" font-weight="900" letter-spacing="1">ESTRATÉGICA.</text>
+    
+    <!-- Párrafo descriptivo -->
+    <text x="0" y="140" fill="#94a3b8" font-family="'Segoe UI', Arial, sans-serif" font-size="16" font-weight="400">El <tspan fill="#e2e8f0" font-weight="600">otoño táctico</tspan> te exige frialdad para podar</text>
+    <text x="0" y="165" fill="#94a3b8" font-family="'Segoe UI', Arial, sans-serif" font-size="16" font-weight="400">los proyectos muertos y descartar el <tspan fill="#ea580c" font-weight="600">peso muerto</tspan></text>
+    <text x="0" y="190" fill="#94a3b8" font-family="'Segoe UI', Arial, sans-serif" font-size="16" font-weight="400">que no dio rentabilidad.</text>
+  </g>
+
+  <!-- Marco táctico (Bordes) -->
+  <rect x="20" y="20" width="960" height="560" fill="none" stroke="#1e293b" stroke-width="1" />
+  <path d="M 20 40 L 20 20 L 40 20" fill="none" stroke="#38bdf8" stroke-width="2" />
+  <path d="M 980 40 L 980 20 L 960 20" fill="none" stroke="#38bdf8" stroke-width="2" />
+  <path d="M 20 560 L 20 580 L 40 580" fill="none" stroke="#38bdf8" stroke-width="2" />
+  <path d="M 980 560 L 980 580 L 960 580" fill="none" stroke="#38bdf8" stroke-width="2" />
+
+</svg>

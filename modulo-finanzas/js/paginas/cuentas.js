@@ -798,6 +798,30 @@ function abrirModalEdicion(c) {
   document.getElementById('editar-cuenta-desc').value = c.descripcion || ''
   document.getElementById('editar-cuenta-color').value = c.color || '#0ea5e9'
   document.getElementById('editar-cuenta-dinero').value = c.dinero ?? 0
+  document.getElementById('editar-cuenta-dinero-original').value = c.dinero ?? 0
+
+  // Configurar campo de fecha de ajuste de saldo
+  const ajusteContainer = document.getElementById('editar-fecha-ajuste-container')
+  const ajusteInput = document.getElementById('editar-fecha-ajuste-saldo')
+  if (ajusteContainer) ajusteContainer.classList.add('hidden')
+  if (ajusteInput) {
+    // min = fecha de creación de la cuenta
+    if (c.creadaEn) {
+      const fechaCreacion = new Date(c.creadaEn)
+      const minAño = fechaCreacion.getFullYear()
+      const minMes = String(fechaCreacion.getMonth() + 1).padStart(2, '0')
+      const minDia = String(fechaCreacion.getDate()).padStart(2, '0')
+      ajusteInput.min = `${minAño}-${minMes}-${minDia}`
+    }
+    // max = hoy
+    const hoy = new Date()
+    const maxAño = hoy.getFullYear()
+    const maxMes = String(hoy.getMonth() + 1).padStart(2, '0')
+    const maxDia = String(hoy.getDate()).padStart(2, '0')
+    const hoyStr = `${maxAño}-${maxMes}-${maxDia}`
+    ajusteInput.max = hoyStr
+    ajusteInput.value = hoyStr
+  }
 
   // Llenar fecha de creación (usando fecha local, no UTC)
   const fechaInput = document.getElementById('editar-cuenta-fecha-creacion')
@@ -869,6 +893,23 @@ function cerrarModalEdicion() {
 function handleEditar() {
   const form = document.getElementById('form-editar-cuenta')
   if (!form) return
+
+  // Listener para mostrar/ocultar el campo de fecha de ajuste cuando cambia el saldo
+  const dineroInput = document.getElementById('editar-cuenta-dinero')
+  const dineroOriginal = document.getElementById('editar-cuenta-dinero-original')
+  const ajusteContainer = document.getElementById('editar-fecha-ajuste-container')
+  if (dineroInput && dineroOriginal && ajusteContainer) {
+    dineroInput.addEventListener('input', () => {
+      const actual = parseFloat(dineroInput.value || '0')
+      const original = parseFloat(dineroOriginal.value || '0')
+      if (actual !== original) {
+        ajusteContainer.classList.remove('hidden')
+      } else {
+        ajusteContainer.classList.add('hidden')
+      }
+    })
+  }
+
   form.addEventListener('submit', (e) => {
     e.preventDefault()
     const id = document.getElementById('editar-cuenta-id').value
@@ -878,7 +919,27 @@ function handleEditar() {
     const dinero = parseFloat(document.getElementById('editar-cuenta-dinero').value || '0')
     const creadaEn = document.getElementById('editar-cuenta-fecha-creacion')?.value || null
 
-    actualizarCuenta(id, { nombre, descripcion, color, dinero, creadaEn })
+    // Si el saldo cambió, usar la fecha del ajuste para el historial
+    const originalVal = parseFloat(document.getElementById('editar-cuenta-dinero-original')?.value || '0')
+    let fechaHistorial = undefined
+    if (dinero !== originalVal) {
+      const fechaAjuste = document.getElementById('editar-fecha-ajuste-saldo')?.value
+      if (fechaAjuste) {
+        // Verificar si la fecha es hoy
+        const hoy = new Date()
+        const hoyStr = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`
+        if (fechaAjuste === hoyStr) {
+          // Fecha de hoy: usar hora exacta actual
+          fechaHistorial = new Date().toISOString()
+        } else {
+          // Fecha pasada: usar mediodía hora local
+          const [a, m, d] = fechaAjuste.split('-').map(Number)
+          fechaHistorial = new Date(a, m - 1, d, 12, 0, 0).toISOString()
+        }
+      }
+    }
+
+    actualizarCuenta(id, { nombre, descripcion, color, dinero, creadaEn, fechaHistorial })
     renderLista()
     cerrarModalEdicion()
   })

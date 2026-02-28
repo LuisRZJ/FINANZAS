@@ -1,0 +1,191 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" width="100%" height="100%">
+  <defs>
+    <!-- Gradientes de fondo (Cielo helado y amanecer de energía) -->
+    <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#070b19" />
+      <stop offset="50%" stop-color="#14213d" />
+      <stop offset="100%" stop-color="#2a4365" />
+    </linearGradient>
+
+    <!-- Gradientes para los muros de hielo estático -->
+    <linearGradient id="iceWallLeft" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#8bb1d6" />
+      <stop offset="70%" stop-color="#d9e6f2" />
+      <stop offset="100%" stop-color="#ffffff" />
+    </linearGradient>
+    
+    <linearGradient id="iceWallRight" x1="100%" y1="0%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#8bb1d6" />
+      <stop offset="70%" stop-color="#d9e6f2" />
+      <stop offset="100%" stop-color="#ffffff" />
+    </linearGradient>
+
+    <!-- Gradientes para la profundidad del río violento -->
+    <linearGradient id="waterDeep" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#001a33" />
+      <stop offset="40%" stop-color="#00509e" />
+      <stop offset="100%" stop-color="#00a8e8" />
+    </linearGradient>
+
+    <linearGradient id="waterFlow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00b4d8" />
+      <stop offset="50%" stop-color="#48cae4" />
+      <stop offset="100%" stop-color="#caf0f8" />
+    </linearGradient>
+
+    <linearGradient id="energyCore" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="20%" stop-color="#90e0ef" />
+      <stop offset="100%" stop-color="#0077b6" stop-opacity="0" />
+    </linearGradient>
+
+    <!-- Filtro de resplandor para la energía fluyendo de golpe -->
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+    
+    <filter id="glowIntense" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="15" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Fondo: El cielo helado -->
+  <rect width="1200" height="800" fill="url(#skyGrad)" />
+
+  <!-- Montañas lejanas de hielo (Inercia de fondo) -->
+  <path d="M0 400 L150 250 L280 320 L450 180 L550 280 L700 150 L850 300 L1000 200 L1200 350 L1200 800 L0 800 Z" fill="#1b2a47" opacity="0.6"/>
+  <path d="M0 450 L120 320 L250 380 L400 250 L520 330 L650 210 L800 350 L950 260 L1200 420 L1200 800 L0 800 Z" fill="#253a5e" opacity="0.8"/>
+
+  <!-- ========================================== -->
+  <!-- LA RUPTURA Y EL RÍO VIOLENTO (Fondo a Frente)-->
+  <!-- ========================================== -->
+  
+  <!-- Base oscura del abismo abierto -->
+  <path d="M 580 200 L 620 200 L 950 800 L 250 800 Z" fill="#000b18" />
+
+  <!-- Torrente principal del río violento (Momentum) -->
+  <path d="M 590 220 Q 550 400 200 800 L 1000 800 Q 650 400 610 220 Z" fill="url(#waterDeep)" />
+
+  <!-- Corrientes turbulentas fluyendo de golpe (Capas medias) -->
+  <path d="M 595 230 C 580 350, 400 500, 150 800 L 350 800 C 500 550, 580 400, 600 230 Z" fill="url(#waterFlow)" opacity="0.8" />
+  <path d="M 605 230 C 620 350, 800 500, 1050 800 L 850 800 C 700 550, 620 400, 600 230 Z" fill="url(#waterFlow)" opacity="0.7" />
+  
+  <path d="M 600 240 C 590 450, 350 600, 250 800 L 500 800 C 550 600, 600 500, 605 240 Z" fill="#00b4d8" opacity="0.6" />
+  <path d="M 600 240 C 610 450, 850 600, 950 800 L 700 800 C 650 600, 600 500, 595 240 Z" fill="#48cae4" opacity="0.5" />
+
+  <!-- ========================================== -->
+  <!-- LOS GLACIARES CEDIENDO (Muros laterales)   -->
+  <!-- ========================================== -->
+  
+  <!-- Muro de Hielo Izquierdo cediendo -->
+  <path d="M 0 0 L 500 0 L 530 50 L 510 100 L 560 180 L 540 220 L 480 300 L 500 350 L 380 450 L 410 520 L 250 680 L 280 750 L 150 800 L 0 800 Z" fill="url(#iceWallLeft)" />
+  <!-- Sombras y cortes poligonales del glaciar izquierdo -->
+  <path d="M 0 50 L 450 50 L 480 180 L 420 300 L 320 450 L 150 650 L 0 700 Z" fill="#a9c6e2" opacity="0.5" />
+  <path d="M 500 0 L 530 50 L 510 100 L 560 180 L 480 180 Z" fill="#ffffff" />
+  <path d="M 480 300 L 500 350 L 380 450 L 420 300 Z" fill="#e0eefa" />
+  <!-- Grietas internas rompiendo la inercia (Izquierda) -->
+  <polyline points="200,800 250,650 180,550 300,400 250,250 400,100 380,0" fill="none" stroke="#070b19" stroke-width="3" opacity="0.4" />
+  <polyline points="350,450 420,550 380,680" fill="none" stroke="#003049" stroke-width="4" opacity="0.5" />
+
+  <!-- Muro de Hielo Derecho cediendo -->
+  <path d="M 1200 0 L 700 0 L 670 50 L 690 100 L 640 180 L 660 220 L 720 300 L 700 350 L 820 450 L 790 520 L 950 680 L 920 750 L 1050 800 L 1200 800 Z" fill="url(#iceWallRight)" />
+  <!-- Sombras y cortes poligonales del glaciar derecho -->
+  <path d="M 1200 50 L 750 50 L 720 180 L 780 300 L 880 450 L 1050 650 L 1200 700 Z" fill="#a9c6e2" opacity="0.5" />
+  <path d="M 700 0 L 670 50 L 690 100 L 640 180 L 720 180 Z" fill="#ffffff" />
+  <path d="M 720 300 L 700 350 L 820 450 L 780 300 Z" fill="#e0eefa" />
+  <!-- Grietas internas rompiendo la inercia (Derecha) -->
+  <polyline points="1000,800 950,650 1020,550 900,400 950,250 800,100 820,0" fill="none" stroke="#070b19" stroke-width="3" opacity="0.4" />
+  <polyline points="850,450 780,550 820,680" fill="none" stroke="#003049" stroke-width="4" opacity="0.5" />
+
+  <!-- ========================================== -->
+  <!-- CAOS EN EL AGUA: Hielo Destrozado Fluyendo -->
+  <!-- ========================================== -->
+
+  <!-- Bloques gigantes arrastrados por la corriente (Geometría vs Fluidez) -->
+  <!-- Bloque central cayendo -->
+  <g transform="translate(560, 260) rotate(15) scale(0.6)">
+    <polygon points="0,0 80,-20 120,40 60,90 -20,60" fill="#ffffff" />
+    <polygon points="0,0 80,-20 60,30 -10,20" fill="#e0eefa" />
+    <polygon points="80,-20 120,40 60,90 60,30" fill="#a9c6e2" />
+  </g>
+
+  <!-- Bloque medio izquierdo -->
+  <g transform="translate(380, 480) rotate(-25) scale(1.2)">
+    <polygon points="10,10 90,-10 140,50 80,110 -10,70" fill="#ffffff" filter="drop-shadow(5px 15px 10px rgba(0,48,73,0.6))" />
+    <polygon points="10,10 90,-10 70,40 0,30" fill="#f0f6fc" />
+    <polygon points="90,-10 140,50 80,110 70,40" fill="#b1c6d9" />
+  </g>
+
+  <!-- Bloque masivo frontal derecho (El espectador casi es golpeado) -->
+  <g transform="translate(800, 620) rotate(40) scale(1.8)">
+    <polygon points="0,20 120,-30 180,60 90,140 -20,90" fill="#ffffff" filter="drop-shadow(-10px 20px 15px rgba(0,48,73,0.8))" />
+    <polygon points="0,20 120,-30 100,50 -10,40" fill="#e0eefa" />
+    <polygon points="120,-30 180,60 90,140 100,50" fill="#8bb1d6" />
+  </g>
+
+  <!-- Fragmentos de hielo saltando por la violencia del río -->
+  <polygon points="500,350 520,340 540,370 510,390" fill="#ffffff" opacity="0.9" />
+  <polygon points="680,380 710,360 740,400 700,420" fill="#ffffff" opacity="0.8" />
+  <polygon points="300,600 350,570 380,620 320,660" fill="#e0eefa" opacity="0.9" />
+  <polygon points="450,750 500,710 540,770 470,820" fill="#ffffff" />
+  <polygon points="750,550 820,510 860,580 780,620" fill="#ffffff" opacity="0.85" />
+  <polygon points="950,780 1000,730 1050,800" fill="#e0eefa" />
+
+  <!-- ========================================== -->
+  <!-- ENERGÍA PURA: Curvas de Momentum y Espuma  -->
+  <!-- ========================================== -->
+
+  <!-- Núcleo de energía fluyendo de golpe desde la ruptura -->
+  <path d="M 590 200 C 580 250, 520 400, 350 800 L 850 800 C 680 400, 620 250, 610 200 Z" fill="url(#energyCore)" filter="url(#glowIntense)" opacity="0.8" />
+
+  <!-- Líneas dinámicas de fuerza (Vectores de corriente indomable) -->
+  <g fill="none" stroke-linecap="round" filter="url(#glow)">
+    <!-- Corrientes centrales rápidas -->
+    <path d="M 595 220 Q 560 380 420 800" stroke="#ffffff" stroke-width="6" opacity="0.9" />
+    <path d="M 605 220 Q 640 380 780 800" stroke="#ffffff" stroke-width="6" opacity="0.9" />
+    
+    <path d="M 585 240 Q 510 400 250 800" stroke="#90e0ef" stroke-width="4" opacity="0.7" />
+    <path d="M 615 240 Q 690 400 950 800" stroke="#90e0ef" stroke-width="4" opacity="0.7" />
+
+    <!-- Latigazos del agua (Momentum caótico) -->
+    <path d="M 550 350 C 450 500, 600 650, 350 800" stroke="#caf0f8" stroke-width="5" opacity="0.8" />
+    <path d="M 650 350 C 750 500, 600 650, 850 800" stroke="#caf0f8" stroke-width="5" opacity="0.8" />
+    
+    <path d="M 500 450 C 350 600, 550 700, 450 800" stroke="#ffffff" stroke-width="3" opacity="0.6" />
+    <path d="M 700 450 C 850 600, 650 700, 750 800" stroke="#ffffff" stroke-width="3" opacity="0.6" />
+  </g>
+
+  <!-- Salpicaduras y explosiones de agua al chocar con el hielo -->
+  <g fill="#ffffff" filter="url(#glow)">
+    <!-- Choque con el bloque medio -->
+    <ellipse cx="400" cy="450" rx="30" ry="8" transform="rotate(-15 400 450)" opacity="0.8"/>
+    <ellipse cx="360" cy="470" rx="20" ry="5" transform="rotate(-30 360 470)" opacity="0.6"/>
+    <circle cx="340" cy="440" r="4" />
+    <circle cx="450" cy="420" r="6" />
+    <circle cx="430" cy="460" r="3" />
+
+    <!-- Choque con el bloque frontal derecho -->
+    <ellipse cx="800" cy="600" rx="50" ry="12" transform="rotate(20 800 600)" opacity="0.9"/>
+    <ellipse cx="750" cy="630" rx="30" ry="8" transform="rotate(45 750 630)" opacity="0.7"/>
+    <ellipse cx="860" cy="580" rx="40" ry="10" transform="rotate(-10 860 580)" opacity="0.8"/>
+    <circle cx="720" cy="590" r="7" />
+    <circle cx="700" cy="610" r="5" />
+    <circle cx="890" cy="540" r="8" />
+    <circle cx="850" cy="530" r="4" />
+
+    <!-- Rápido central en el frente -->
+    <ellipse cx="600" cy="750" rx="60" ry="15" opacity="0.7"/>
+    <ellipse cx="500" cy="780" rx="80" ry="10" transform="rotate(-10 500 780)" opacity="0.6"/>
+    <ellipse cx="700" cy="780" rx="80" ry="10" transform="rotate(10 700 780)" opacity="0.6"/>
+    <circle cx="580" cy="720" r="6" />
+    <circle cx="620" cy="710" r="8" />
+    <circle cx="550" cy="740" r="5" />
+    <circle cx="650" cy="730" r="7" />
+  </g>
+
+  <!-- Brillos finales de energía estallando desde el punto de ruptura -->
+  <circle cx="600" cy="220" r="15" fill="#ffffff" filter="url(#glowIntense)" opacity="0.9"/>
+  <path d="M 600 200 L 605 240 L 600 260 L 595 240 Z" fill="#ffffff" filter="url(#glow)"/>
+</svg>

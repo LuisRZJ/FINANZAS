@@ -22,21 +22,27 @@ export function crearCuenta(payload) {
     const [año, mes, dia] = payload.creadaEn.split('-').map(Number)
     fechaCreacion = new Date(año, mes - 1, dia, 12, 0, 0).toISOString()
   }
+  const dineroInicial = Number.isFinite(payload?.dinero) ? Number(payload.dinero) : 0;
+  let mensajeCreacion = payload?.esSubcuenta ? 'Subcuenta creada' : 'Cuenta creada';
+  if (dineroInicial > 0) {
+    mensajeCreacion += ` con saldo inicial de $${dineroInicial}`;
+  }
+
   const cuenta = {
     id: uid(),
     nombre: String(payload?.nombre || '').trim(),
     descripcion: String(payload?.descripcion || '').trim(),
     color: String(payload?.color || '#0ea5e9'),
-    dinero: Number.isFinite(payload?.dinero) ? Number(payload.dinero) : 0,
+    dinero: dineroInicial,
     parentId: payload?.parentId || null,
     esSubcuenta: Boolean(payload?.esSubcuenta),
     creadaEn: fechaCreacion,
     actualizadaEn: now,
     historial: [
       {
-        fecha: now,
+        fecha: fechaCreacion,
         tipo: 'creacion',
-        mensaje: payload?.esSubcuenta ? 'Subcuenta creada' : 'Cuenta creada'
+        mensaje: mensajeCreacion
       }
     ]
   }
@@ -92,12 +98,32 @@ export function actualizarCuenta(id, payload) {
   const now = new Date().toISOString()
   const historial = Array.isArray(prev.historial) ? [...prev.historial] : []
 
+  // Si cambió la fecha de creación, sincronizar el evento original de 'creacion'
+  if (nuevaCreadaEn !== prev.creadaEn) {
+    const idxCreacion = historial.findIndex(h => h.tipo === 'creacion')
+    if (idxCreacion !== -1) {
+      historial[idxCreacion] = { ...historial[idxCreacion], fecha: nuevaCreadaEn }
+    }
+  }
+
   if (cambios.length > 0) {
     historial.push({
       fecha: payload?.fechaHistorial || now,
       tipo: 'modificacion',
       mensaje: cambios.join('. ')
     })
+  }
+
+  // Si el ajuste es retroactivo, no rejuvenecer actualizadaEn
+  let nuevaActualizadaEn = now
+  if (payload?.fechaHistorial) {
+    const fechaHist = new Date(payload.fechaHistorial)
+    const fechaNow = new Date(now)
+    if (fechaHist < fechaNow) {
+      // Mantener el mayor entre la fecha previa y la retroactiva
+      const prevActualizada = prev.actualizadaEn ? new Date(prev.actualizadaEn) : new Date(0)
+      nuevaActualizadaEn = fechaHist > prevActualizada ? payload.fechaHistorial : prev.actualizadaEn
+    }
   }
 
   const next = {
@@ -107,7 +133,7 @@ export function actualizarCuenta(id, payload) {
     color: nuevoColor,
     dinero: nuevoDinero,
     creadaEn: nuevaCreadaEn,
-    actualizadaEn: now,
+    actualizadaEn: nuevaActualizadaEn,
     historial: historial
   }
   list[idx] = next

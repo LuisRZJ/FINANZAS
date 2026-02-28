@@ -464,7 +464,7 @@
 
             // Cálculo de Finanzas Personales (Balance y Presupuesto)
             React.useEffect(() => {
-                const calculateFinancials = () => {
+                const calculateFinancials = async () => {
                     try {
                         // 1. Cuentas y Balance Actual
                         // Leemos de 'gtr-cuentas' que es la clave usada por el módulo de finanzas
@@ -516,38 +516,60 @@
                         }
 
                         // 3. Presupuesto Mensual
+                        // Intentar ejecutar la revisión de periodos para asegurar que el presupuesto esté al día
+                        try {
+                            const { revisarPeriodosPresupuesto } = await import('./modulo-finanzas/js/servicios/presupuestos.js');
+                            revisarPeriodosPresupuesto();
+                        } catch (e) {
+                            console.warn("No se pudo importar el servicio de presupuestos para la revisión automática", e);
+                        }
+
                         const budgetRaw = localStorage.getItem('gtr-presupuestos');
                         let budgetPlan = null;
                         try { budgetPlan = JSON.parse(budgetRaw); } catch (e) { }
 
-                        // Adaptar estructura de presupuestos si es diferente (asumimos similar por ahora o 0)
-                        const budgetTotal = budgetPlan ? (Number(budgetPlan.totalAmount || budgetPlan.total || 0)) : 0;
-
-                        // Calcular gasto del mes actual
-                        const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-
-                        const monthOps = Array.isArray(operations) ? operations.filter(op => {
-                            const fechaStr = op.fecha.includes('T') ? op.fecha : op.fecha + 'T00:00:00';
-                            const opDate = new Date(fechaStr);
-                            const opMonthKey = `${opDate.getFullYear()}-${String(opDate.getMonth() + 1).padStart(2, '0')}`;
-                            return opMonthKey === currentMonthKey && op.tipo === 'gasto' && op.estado === 'pagado';
-                        }) : [];
-
-                        const budgetSpent = monthOps.reduce((acc, op) => acc + (Number(op.cantidad) || 0), 0);
-
+                        // Extraer datos del presupuesto general
+                        const general = budgetPlan?.general;
+                        const budgetTotal = general ? (Number(general.monto || 0)) : 0;
+                        
+                        let budgetSpent = 0;
                         let budgetPercent = 0;
-                        if (budgetTotal > 0) {
-                            budgetPercent = Math.min(100, (budgetSpent / budgetTotal) * 100);
+                        let budgetRemaining = 0;
+                        let isBudgetActive = false;
+
+                        if (general && general.fechaInicio && general.fechaFin) {
+                            const inicio = new Date(general.fechaInicio + 'T00:00:00');
+                            const fin = new Date(general.fechaFin + 'T23:59:59');
+                            const hoy = new Date();
+
+                            // Verificar si el presupuesto actual es válido para hoy
+                            if (hoy >= inicio && hoy <= fin) {
+                                isBudgetActive = true;
+                                
+                                // Calcular gasto SOLO dentro del periodo del presupuesto
+                                const periodOps = Array.isArray(operations) ? operations.filter(op => {
+                                    const fechaStr = op.fecha.includes('T') ? op.fecha : op.fecha + 'T00:00:00';
+                                    const opDate = new Date(fechaStr);
+                                    return opDate >= inicio && opDate <= fin && op.tipo === 'gasto' && op.estado === 'pagado';
+                                }) : [];
+
+                                budgetSpent = periodOps.reduce((acc, op) => acc + (Number(op.cantidad) || 0), 0);
+                                
+                                if (budgetTotal > 0) {
+                                    budgetPercent = Math.min(100, (budgetSpent / budgetTotal) * 100);
+                                }
+                                budgetRemaining = budgetTotal - budgetSpent;
+                            }
                         }
 
                         setFinancials({
                             totalBalance: currentBalance,
                             balanceChange: changePercent,
                             changeDirection: changePercent >= 0 ? 'up' : 'down',
-                            budgetTotal,
+                            budgetTotal: isBudgetActive ? budgetTotal : 0,
                             budgetSpent,
                             budgetPercent,
-                            budgetRemaining: budgetTotal - budgetSpent,
+                            budgetRemaining,
                             currency: budgetPlan?.currency || 'MXN'
                         });
 
@@ -643,7 +665,7 @@
                     color: 'text-green-600',
                     submodules: [
                         { title: 'Terminal Principal', icon: <Activity size={16} />, href: 'modulo-trading/index.html' },
-                        { title: 'Backtesting Forex', icon: <LayoutGrid size={16} />, href: 'modulo-trading/backtesting/inicio.html' },
+                        { title: 'Backtesting Forex', icon: <LayoutGrid size={16} />, href: 'modulo-trading/backtest-est/index.html' },
                         { title: 'Diario FTT', icon: <LayoutGrid size={16} />, href: 'modulo-trading/registros-ftt.html' }
                     ]
                 },
@@ -753,9 +775,9 @@
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between h-full hover:border-blue-100 transition-colors dark:bg-slate-900 dark:border-slate-800">
                                 <div className="flex justify-between items-start mb-4">
-                                    <div className="p-2 bg-blue-50 rounded-lg text-blue-600 dark:bg-blue-900/20 dark:text-blue-300">
+                                    <a href="modulo-finanzas/index.html" title="Ir a Finanzas Personales" className="p-2 bg-blue-50 rounded-lg text-blue-600 dark:bg-blue-900/20 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/40 hover:scale-105 transition-all shadow-sm block">
                                         <Wallet size={24} />
-                                    </div>
+                                    </a>
                                     <span className={`text-xs font-bold px-2 py-1 rounded-full ${financials.changeDirection === 'up' ? 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-300' : 'bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-300'}`}>
                                         {financials.changeDirection === 'up' ? '+' : ''}{financials.balanceChange.toFixed(1)}% vs mes anterior
                                     </span>

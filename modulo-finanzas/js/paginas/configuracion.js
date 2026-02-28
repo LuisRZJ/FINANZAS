@@ -1100,6 +1100,20 @@ function init() {
   renderTodas()
   inicializarPanelDatos()
   inicializarAuth()
+
+  // Toggle de fondos dinámicos (cookie)
+  const toggleFondos = document.getElementById('toggle-fondos-dinamicos')
+  if (toggleFondos) {
+    // Leer cookie
+    const cookieMatch = document.cookie.match(/(?:^|; )gtr_fondos_dinamicos=([^;]*)/)
+    const valorActual = cookieMatch ? cookieMatch[1] === 'true' : true // Activado por defecto
+    toggleFondos.checked = valorActual
+
+    toggleFondos.addEventListener('change', () => {
+      const expires = new Date(Date.now() + 10 * 365 * 24 * 60 * 60 * 1000).toUTCString()
+      document.cookie = `gtr_fondos_dinamicos=${toggleFondos.checked}; expires=${expires}; path=/; SameSite=Lax`
+    })
+  }
 }
 
 document.addEventListener('DOMContentLoaded', init)

@@ -1,0 +1,42 @@
+<dialog id="dca-modal">
+    <div class="card" style="width: 90vw; max-width: 800px; position: relative;">
+
+        <button id="close-dca-btn"
+            style="position: absolute; top: 1.25rem; right: 1.25rem; background: transparent; border: none; color: var(--text-muted); font-size: 1.75rem; cursor: pointer; padding: 0.5rem; line-height: 1; transition: color var(--transition-fast);">&times;</button>
+
+        <div class="metric-title" style="margin-bottom: 1.5rem; color: var(--accent); font-size: 1.25rem;">Simulador
+            Dollar Cost Averaging (DCA)</div>
+
+        <div
+            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+            <div>
+                <label for="dca-initial"
+                    style="display: block; color: var(--text-muted); font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem;">Capital
+                    Inicial (MXN)</label>
+                <input type="number" id="dca-initial" placeholder="ej. 0" min="0" step="100" class="input-glass">
+            </div>
+            <div>
+                <label for="dca-recurring"
+                    style="display: block; color: var(--text-muted); font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem;">Aportación
+                    Recurrente (MXN)</label>
+                <input type="number" id="dca-recurring" placeholder="ej. 1000" min="0" step="100" class="input-glass">
+            </div>
+            <div>
+                <label for="dca-frequency"
+                    style="display: block; color: var(--text-muted); font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem;">Frecuencia</label>
+                <select id="dca-frequency" class="input-glass">
+                    <option value="daily">Diaria</option>
+                    <option value="weekly">Semanal</option>
+                    <option value="biweekly">Quincenal</option>
+                    <option value="monthly" selected>Mensual</option>
+                </select>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; margin-top: 1rem;">
+            <button id="apply-dca-btn" class="btn-primary" style="padding: 0.85rem 2rem;">
+                Cerrar Controles
+            </button>
+        </div>
+    </div>
+</dialog>

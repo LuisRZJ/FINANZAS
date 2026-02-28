@@ -1,0 +1,90 @@
+<section class="upload-section">
+    <!-- Tabs Header -->
+    <div class="tabs-header" style="display: flex; gap: 1rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color);">
+        <button class="tab-btn active" data-tab="local"
+            style="background: none; border: none; color: var(--text-primary); padding: 0.75rem 1.5rem; cursor: pointer; border-bottom: 2px solid var(--accent); font-weight: 600; font-size: 0.95rem; transition: color var(--transition-fast);">
+            📁 Cargar Archivo Local
+        </button>
+        <button class="tab-btn" data-tab="binance"
+            style="background: none; border: none; color: var(--text-muted); padding: 0.75rem 1.5rem; cursor: pointer; border-bottom: 2px solid transparent; font-weight: 600; font-size: 0.95rem; transition: color var(--transition-fast);">
+            🌐 Descargar de Binance
+        </button>
+    </div>
+
+    <!-- Tab Content: Local File -->
+    <div id="tab-local" class="tab-content active">
+        <div class="drop-zone" id="drop-zone">
+            <span class="drop-zone-icon">📁</span>
+            <span class="drop-zone-text">Arrastra y suelta tu archivo de datos aquí, o haz clic para
+                seleccionarlo.<br />(Asume columnas Fecha/Date y Cierre/Close)</span>
+            <input type="file" id="file-upload" accept=".csv, .txt">
+        </div>
+    </div>
+
+    <!-- Tab Content: Binance Auto-Download -->
+    <div id="tab-binance" class="tab-content hidden" class="card" style="padding: 1.5rem; background: var(--card-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid var(--border-color); border-radius: var(--radius-lg); box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);">
+        <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem;">
+            Descarga datos históricos (OHLC) directamente desde Binance de forma gratuita. No requiere API Key.
+        </p>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+            <div>
+                <label style="display: block; color: var(--text-muted); font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem;">Activo (Símbolo)</label>
+                <input type="text" id="binance-symbol" placeholder="ej. BTCUSDT" value="BTCUSDT" class="input-glass" style="text-transform: uppercase;">
+            </div>
+            <div>
+                <label style="display: block; color: var(--text-muted); font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem;">Intervalo de Velas</label>
+                <select id="binance-interval" class="input-glass">
+                    <option value="15m">15 Minutos</option>
+                    <option value="1h">1 Hora</option>
+                    <option value="4h">4 Horas</option>
+                    <option value="1d" selected>1 Día</option>
+                    <option value="1w">1 Semana</option>
+                </select>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+            <div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <label style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600;">Fecha de Inicio</label>
+                    <button id="btn-autodetect-start" style="background: none; border: none; color: var(--accent); font-size: 0.75rem; font-weight: 600; cursor: pointer; text-decoration: underline; transition: color var(--transition-fast);">Autodetectar Inicio</button>
+                </div>
+                <input type="date" id="binance-start" value="2021-01-01" class="input-glass">
+            </div>
+            <div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <label style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600;">Fecha de Fin</label>
+                    <label style="color: var(--text-primary); font-size: 0.8rem; display: flex; align-items: center; gap: 0.4rem; cursor: pointer; user-select: none;">
+                        <input type="checkbox" id="binance-until-now" checked style="accent-color: var(--accent);"> Hasta hoy
+                    </label>
+                </div>
+                <input type="date" id="binance-end" disabled class="input-glass" style="opacity: 0.4; cursor: not-allowed;">
+            </div>
+        </div>
+
+        <!-- Progress Bar for Downloading -->
+        <div id="binance-progress-container" class="hidden" style="margin-bottom: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem;">
+                <span id="binance-progress-status" style="color: var(--text-muted); font-size: 0.8rem;">Conectando a
+                    Binance...</span>
+                <span id="binance-progress-text"
+                    style="color: var(--accent); font-size: 0.8rem; font-weight: 500;">0%</span>
+            </div>
+            <div style="width: 100%; height: 6px; background: var(--bg-color); border-radius: 3px; overflow: hidden;">
+                <div id="binance-progress-bar"
+                    style="width: 0%; height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.15s ease;">
+                </div>
+            </div>
+        </div>
+
+        <!-- Estimation Info -->
+        <div id="binance-estimation" class="hidden"
+            style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: var(--radius); padding: 1rem; margin-bottom: 1.5rem; text-align: center; color: var(--text-primary); font-size: 0.9rem; backdrop-filter: blur(4px); box-shadow: 0 4px 12px rgba(59, 130, 246, 0.05);">
+        </div>
+
+        <button id="btn-download-binance" class="btn-primary" style="width: 100%; padding: 1rem; font-size: 1.05rem;">
+            ⬇️ Descargar Datos y Ejecutar Backtest
+        </button>
+    </div>
+</section>

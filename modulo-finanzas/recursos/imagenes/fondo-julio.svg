@@ -1,0 +1,188 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600" width="100%" height="100%">
+    <defs>
+        <!-- Degradados para el cielo abrasador -->
+        <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#E64A19" />
+            <stop offset="35%" stop-color="#FF8F00" />
+            <stop offset="70%" stop-color="#FFD54F" />
+            <stop offset="100%" stop-color="#FFF9C4" />
+        </linearGradient>
+
+        <!-- Degradado para el sol gigante -->
+        <radialGradient id="sunGrad" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="1" />
+            <stop offset="30%" stop-color="#FFF59D" stop-opacity="0.9" />
+            <stop offset="70%" stop-color="#FFCA28" stop-opacity="0.4" />
+            <stop offset="100%" stop-color="#FF9800" stop-opacity="0" />
+        </radialGradient>
+
+        <!-- Degradados de las dunas para dar profundidad y calor -->
+        <linearGradient id="duneBack" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#D84315" />
+            <stop offset="100%" stop-color="#BF360C" />
+        </linearGradient>
+        <linearGradient id="duneMid" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#EF6C00" />
+            <stop offset="100%" stop-color="#E65100" />
+        </linearGradient>
+        <linearGradient id="duneFront" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#F57C00" />
+            <stop offset="100%" stop-color="#EF6C00" />
+        </linearGradient>
+        
+        <!-- Degradado para la sombra de las crestas -->
+        <linearGradient id="ridgeShadow" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#3E2723" stop-opacity="0.3" />
+            <stop offset="100%" stop-color="#3E2723" stop-opacity="0" />
+        </linearGradient>
+
+        <!-- Filtro de resplandor para el sol -->
+        <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="15" result="blur" />
+            <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+            </feMerge>
+        </filter>
+
+        <!-- Filtro de distorsión para el espejismo -->
+        <filter id="mirageDistort">
+            <feTurbulence type="fractalNoise" baseFrequency="0.08" numOctaves="2" result="noise" />
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale="8" xChannelSelector="R" yChannelSelector="G" />
+        </filter>
+        
+        <linearGradient id="mirageFade" x1="0%" y1="100%" x2="0%" y2="0%">
+            <stop offset="0%" stop-color="#E0F7FA" stop-opacity="0" />
+            <stop offset="50%" stop-color="#81D4FA" stop-opacity="0.5" />
+            <stop offset="100%" stop-color="#B3E5FC" stop-opacity="0" />
+        </linearGradient>
+    </defs>
+
+    <!-- FONDO: Cielo implacable -->
+    <rect width="1200" height="600" fill="url(#skyGrad)" />
+
+    <!-- SOL: Mediodía exacto, cenital y asfixiante -->
+    <circle cx="600" cy="180" r="160" fill="url(#sunGrad)" filter="url(#glow)" />
+    <circle cx="600" cy="180" r="60" fill="#FFFFFF" filter="url(#glow)" />
+
+    <!-- EL ESPEJISMO: Oasis ilusorio en la distancia -->
+    <g transform="translate(800, 260)" filter="url(#mirageDistort)" opacity="0.6">
+        <!-- Agua falsa -->
+        <ellipse cx="100" cy="30" rx="80" ry="15" fill="url(#mirageFade)" />
+        <ellipse cx="130" cy="35" rx="60" ry="10" fill="#4DD0E1" opacity="0.3" />
+        <!-- Palmeras distorsionadas -->
+        <path d="M 80 30 Q 85 15 80 0 Q 95 10 105 5 Q 95 20 85 30 Z" fill="#00695C" opacity="0.4" />
+        <path d="M 120 32 Q 120 15 110 -5 Q 130 5 145 0 Q 135 15 125 32 Z" fill="#00695C" opacity="0.3" />
+    </g>
+
+    <!-- DUNAS: Paisaje árido -->
+    
+    <!-- Duna de fondo -->
+    <path d="M -50 350 Q 250 250 550 320 T 1250 280 L 1250 600 L -50 600 Z" fill="url(#duneBack)" />
+    <!-- Sombra de la cresta fondo -->
+    <path d="M 550 320 Q 900 300 1250 280 L 1250 600 L 550 600 Z" fill="url(#ridgeShadow)" />
+
+    <!-- Duna media -->
+    <path d="M -50 420 Q 350 320 700 440 T 1250 380 L 1250 600 L -50 600 Z" fill="url(#duneMid)" />
+    <!-- Sombra de la cresta media -->
+    <path d="M -50 420 Q 350 320 700 440 L 700 600 L -50 600 Z" fill="url(#ridgeShadow)" />
+
+    <!-- HUELLAS: Gestión milimétrica (cálculo perfecto, sin desvíos) -->
+    <g fill="#5D4037" opacity="0.4">
+        <!-- Camino recto, espaciado perfecto hacia el horizonte -->
+        <ellipse cx="615" cy="460" rx="4" ry="1.5" transform="rotate(-15 615 460)" />
+        <ellipse cx="600" cy="468" rx="4.5" ry="1.5" transform="rotate(-15 600 468)" />
+        <ellipse cx="580" cy="478" rx="5" ry="1.8" transform="rotate(-15 580 478)" />
+        <ellipse cx="560" cy="489" rx="5.5" ry="2" transform="rotate(-15 560 489)" />
+        <ellipse cx="538" cy="502" rx="6" ry="2.2" transform="rotate(-15 538 502)" />
+        <ellipse cx="512" cy="517" rx="6.5" ry="2.5" transform="rotate(-15 512 517)" />
+        <ellipse cx="484" cy="534" rx="7" ry="2.8" transform="rotate(-15 484 534)" />
+    </g>
+
+    <!-- Duna frontal -->
+    <path d="M -50 600 L -50 520 Q 250 450 500 560 T 1250 480 L 1250 600 Z" fill="url(#duneFront)" />
+
+    <!-- LOS DÉBILES BUSCAN LA SOMBRA: Árbol seco y figura exhausta -->
+    <g transform="translate(180, 440)">
+        <!-- Sombra del mediodía: muy corta y oscura debajo del árbol -->
+        <ellipse cx="20" cy="10" rx="45" ry="12" fill="#3E2723" opacity="0.5" />
+        
+        <!-- Tronco y ramas retorcidas -->
+        <path d="M 15 10 Q 20 -20 10 -50 Q 5 -70 -10 -90 M 10 -50 Q 25 -65 40 -80 M 20 -20 Q 35 -30 55 -35 M -5 -75 Q -20 -80 -35 -70 M 30 -65 Q 40 -50 60 -45" stroke="#3E2723" stroke-width="6" stroke-linecap="round" fill="none" />
+        <path d="M -10 -90 Q -15 -100 -5 -110 M 40 -80 Q 45 -90 55 -95 M 55 -35 Q 65 -40 75 -35 M -35 -70 Q -45 -65 -50 -55" stroke="#3E2723" stroke-width="3" stroke-linecap="round" fill="none" />
+        
+        <!-- Figura acurrucada rindiéndose bajo la sombra -->
+        <path d="M 25 5 Q 15 -5 5 5 Q 10 12 25 10 Z" fill="#212121" opacity="0.8" />
+        <circle cx="8" cy="2" r="4" fill="#212121" opacity="0.8" />
+    </g>
+
+    <!-- EL CAMINANTE: Protagonista en marcha, resistiendo la etapa -->
+    <g transform="translate(635, 435)">
+        <!-- Sombra cenital (mediodía) - Muy pegada a los pies -->
+        <ellipse cx="0" cy="15" rx="12" ry="4" fill="#3E2723" opacity="0.6" />
+        
+        <!-- Cuerpo encorvado contra el calor -->
+        <path d="M 0 -25 Q -5 -15 2 0" stroke="#212121" stroke-width="4" stroke-linecap="round" fill="none" />
+        <!-- Piernas en movimiento -->
+        <path d="M 2 0 L -3 12 M 2 0 L 8 10" stroke="#212121" stroke-width="3.5" stroke-linecap="round" fill="none" />
+        <!-- Brazo sosteniendo bastón -->
+        <path d="M -2 -20 L 5 -10 L 15 -5" stroke="#212121" stroke-width="3" stroke-linecap="round" fill="none" />
+        <!-- Bastón -->
+        <line x1="12" y1="-15" x2="18" y2="14" stroke="#4E342E" stroke-width="2" stroke-linecap="round" />
+        <!-- Cabeza con turbante/sombrero para el sol -->
+        <circle cx="2" cy="-28" r="4.5" fill="#212121" />
+        <path d="M -3 -29 Q 2 -34 7 -28 L 5 -20 Z" fill="#212121" />
+    </g>
+
+    <!-- METÁFORA DE GESTIÓN MILIMÉTRICA DE RECURSOS -->
+    <!-- Reloj de arena enterrado en la arena (El tiempo y el capital se agotan) -->
+    <g transform="translate(950, 520)">
+        <!-- Sombra del reloj -->
+        <ellipse cx="0" cy="25" rx="20" ry="6" fill="#3E2723" opacity="0.4" />
+        
+        <!-- Estructura del reloj de arena -->
+        <polygon points="-15,-30 15,-30 15,30 -15,30" fill="none" stroke="#5D4037" stroke-width="2" />
+        <!-- Cristal superior -->
+        <path d="M -12 -28 Q 0 -10 0 0 Q 0 -10 12 -28 Z" fill="#FFF" opacity="0.3" />
+        <!-- Cristal inferior (semienterrado) -->
+        <path d="M -12 28 Q 0 10 0 0 Q 0 10 12 28 Z" fill="#FFF" opacity="0.3" />
+        
+        <!-- Arena superior (casi vacía) -->
+        <path d="M -6 -15 Q 0 -5 0 0 Q 0 -5 6 -15 Z" fill="#FFB300" opacity="0.8" />
+        <!-- Hilo de arena cayendo -->
+        <line x1="0" y1="0" x2="0" y2="20" stroke="#FFB300" stroke-width="1.5" />
+        <!-- Arena inferior (capital acumulado/gastado) -->
+        <path d="M -10 25 Q 0 10 10 25 Z" fill="#FFB300" opacity="0.8" />
+    </g>
+
+    <!-- OVERLAY: HUD / Elementos de "Gestión" y precisión (Contraste con el desierto) -->
+    <g opacity="0.4">
+        <!-- Regla milimétrica en el borde inferior -->
+        <line x1="0" y1="590" x2="1200" y2="590" stroke="#FFFFFF" stroke-width="1" />
+        <!-- Marcas de la regla (Bucle simulado visualmente para SVG estático) -->
+        <path d="
+            M 50 590 L 50 580 M 100 590 L 100 575 M 150 590 L 150 580 M 200 590 L 200 575 
+            M 250 590 L 250 580 M 300 590 L 300 575 M 350 590 L 350 580 M 400 590 L 400 575
+            M 450 590 L 450 580 M 500 590 L 500 575 M 550 590 L 550 580 M 600 590 L 600 575
+            M 650 590 L 650 580 M 700 590 L 700 575 M 750 590 L 750 580 M 800 590 L 800 575
+            M 850 590 L 850 580 M 900 590 L 900 575 M 950 590 L 950 580 M 1000 590 L 1000 575
+            M 1050 590 L 1050 580 M 1100 590 L 1100 575 M 1150 590 L 1150 580" 
+            stroke="#FFFFFF" stroke-width="1" />
+
+        <!-- Coordenadas tácticas / Análisis de entorno en la esquina superior izquierda -->
+        <text x="30" y="40" font-family="monospace" font-size="12" fill="#FFFFFF" letter-spacing="1">SYS.STATUS: ETAPA DE SUPERVIVENCIA</text>
+        <text x="30" y="60" font-family="monospace" font-size="10" fill="#FFFFFF">TEMP_EXT: CRÍTICA (MEDIODÍA SOLAR)</text>
+        <text x="30" y="75" font-family="monospace" font-size="10" fill="#FFFFFF">BURN_RATE: MÁXIMO</text>
+        <text x="30" y="90" font-family="monospace" font-size="10" fill="#FFFFFF">RECURSOS: LIMITADOS (GESTIÓN MILIMÉTRICA)</text>
+        
+        <!-- Retícula sutil en el cielo -->
+        <path d="M 600 0 L 600 180 M 400 180 L 800 180" stroke="#FFFFFF" stroke-width="0.5" stroke-dasharray="5, 5" />
+        <circle cx="600" cy="180" r="220" stroke="#FFFFFF" stroke-width="0.5" stroke-dasharray="2, 8" fill="none" />
+    </g>
+
+    <!-- TEXTO PRINCIPAL DEL CONCEPTO -->
+    <g transform="translate(40, 550)">
+        <text x="0" y="0" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-weight="800" font-size="32" fill="#FFFFFF" opacity="0.9" letter-spacing="3">SUPERVIVENCIA</text>
+        <text x="2" y="20" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-weight="400" font-size="14" fill="#FFFFFF" opacity="0.7" letter-spacing="1">GESTIÓN MILIMÉTRICA DE RECURSOS Y CAPITAL</text>
+    </g>
+</svg>

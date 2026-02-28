@@ -1,0 +1,148 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 600" width="100%" height="100%">
+  <defs>
+    <!-- Filtro para crear el efecto de aire pesado, polvo y fatiga visual -->
+    <filter id="pesadezPolvo" x="0%" y="0%" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="4" result="noise" />
+      <feColorMatrix type="matrix" values="1 0 0 0 0  0 0.9 0 0 0  0 0.8 0 0 0  0 0 0 0.15 0" in="noise" result="coloredNoise" />
+      <feBlend in="SourceGraphic" in2="coloredNoise" mode="multiply" />
+    </filter>
+
+    <!-- Resplandor sofocante de un sol oculto -->
+    <filter id="brumaCalor">
+      <feGaussianBlur stdDeviation="25" />
+    </filter>
+
+    <!-- Gradiente del cielo de plomo (opresivo y pesado) -->
+    <linearGradient id="cieloPlomo" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#34373d" />
+      <stop offset="40%" stop-color="#5a5e65" />
+      <stop offset="80%" stop-color="#808282" />
+      <stop offset="100%" stop-color="#9a968d" />
+    </linearGradient>
+
+    <!-- Gradiente de la sabana árida en la distancia -->
+    <linearGradient id="tierraFondo" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#695c51" />
+      <stop offset="100%" stop-color="#4a3e35" />
+    </linearGradient>
+
+    <!-- Gradiente del suelo en primer plano (tierra quemada y seca) -->
+    <linearGradient id="tierraFrente" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#4a3e35" />
+      <stop offset="50%" stop-color="#3b2f26" />
+      <stop offset="100%" stop-color="#1f1813" />
+    </linearGradient>
+
+    <!-- Gradiente del rastro de persistencia -->
+    <linearGradient id="rastroPolvo" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#8a7c6f" stop-opacity="0.2" />
+      <stop offset="100%" stop-color="#8a7c6f" stop-opacity="0.6" />
+    </linearGradient>
+
+    <!-- Gradiente de bruma de calor inamovible en el horizonte -->
+    <linearGradient id="brumaHorizonte" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#9a968d" stop-opacity="0" />
+      <stop offset="80%" stop-color="#9a968d" stop-opacity="0.8" />
+      <stop offset="100%" stop-color="#9a968d" stop-opacity="0.9" />
+    </linearGradient>
+  </defs>
+
+  <g filter="url(#pesadezPolvo)">
+    <!-- CIELO DE PLOMO -->
+    <rect width="1000" height="600" fill="url(#cieloPlomo)" />
+
+    <!-- SOL OPRESIVO (Calor sin brillo, fatiga) -->
+    <circle cx="500" cy="180" r="140" fill="#b0aea7" filter="url(#brumaCalor)" opacity="0.6" />
+    <circle cx="500" cy="180" r="60" fill="#d1cfc8" filter="url(#brumaCalor)" opacity="0.8" />
+
+    <!-- HORIZONTE LEJANO (Montañas / Mesetas pesadas y planas) -->
+    <path d="M 0 280 L 150 275 L 250 282 L 400 270 L 550 278 L 700 265 L 850 275 L 1000 280 L 1000 600 L 0 600 Z" fill="#524d48" opacity="0.5" />
+    <path d="M 0 290 L 200 285 L 350 295 L 480 288 L 600 296 L 750 285 L 900 292 L 1000 288 L 1000 600 L 0 600 Z" fill="url(#tierraFondo)" opacity="0.8" />
+
+    <!-- BRUMA INAMOVIBLE SOBRE EL HORIZONTE -->
+    <rect x="0" y="240" width="1000" height="80" fill="url(#brumaHorizonte)" />
+
+    <!-- SUELO MEDIO Y PRIMER PLANO -->
+    <path d="M 0 310 Q 250 305 500 315 T 1000 305 L 1000 600 L 0 600 Z" fill="url(#tierraFrente)" />
+
+    <!-- EL CAMINO DE LA PERSISTENCIA (Sinuoso, profundo, desgastante) -->
+    <path d="M 480 310 C 510 330, 440 370, 470 420 C 500 470, 350 540, 320 600 L 500 600 C 530 540, 680 470, 650 420 C 620 370, 540 330, 510 310 Z" fill="url(#rastroPolvo)" />
+    
+    <!-- Huellas difusas en el camino (El avance lento) -->
+    <g fill="#2b231c" opacity="0.4">
+      <ellipse cx="495" cy="320" rx="3" ry="1" transform="rotate(-10 495 320)" />
+      <ellipse cx="488" cy="326" rx="3.5" ry="1.2" transform="rotate(-5 488 326)" />
+      <ellipse cx="483" cy="336" rx="4" ry="1.5" transform="rotate(5 483 336)" />
+      <ellipse cx="470" cy="345" rx="4.5" ry="1.8" transform="rotate(15 470 345)" />
+      <ellipse cx="468" cy="358" rx="5" ry="2" transform="rotate(20 468 358)" />
+      <ellipse cx="452" cy="372" rx="6" ry="2.5" transform="rotate(25 452 372)" />
+      <ellipse cx="455" cy="388" rx="7" ry="2.8" transform="rotate(10 455 388)" />
+      <ellipse cx="440" cy="405" rx="8" ry="3" transform="rotate(5 440 405)" />
+      <ellipse cx="448" cy="425" rx="9" ry="3.5" transform="rotate(-10 448 425)" />
+      <ellipse cx="430" cy="445" rx="10" ry="4" transform="rotate(-15 430 445)" />
+      <ellipse cx="445" cy="470" rx="11" ry="4.5" transform="rotate(-25 445 470)" />
+      <ellipse cx="420" cy="500" rx="13" ry="5" transform="rotate(-30 420 500)" />
+      <ellipse cx="440" cy="535" rx="15" ry="6" transform="rotate(-20 440 535)" />
+      <ellipse cx="410" cy="570" rx="18" ry="7" transform="rotate(-10 410 570)" />
+    </g>
+
+    <!-- GRIETAS DE SEQUÍA EN EL PRIMER PLANO (Terreno que no perdona) -->
+    <g stroke="#140f0c" stroke-width="1.5" fill="none" opacity="0.8">
+      <!-- Sector Izquierdo -->
+      <path d="M 0 450 L 50 440 L 120 460 L 150 510 L 120 600" />
+      <path d="M 50 440 L 80 400 L 160 380 L 220 410" />
+      <path d="M 120 460 L 200 450 L 250 480 L 220 550 L 250 600" />
+      <path d="M 150 510 L 80 540 L 0 530" />
+      <path d="M 200 450 L 280 430 L 320 460" />
+      <path d="M 160 380 L 150 340 L 200 320" />
+      <path d="M 220 550 L 150 580 L 160 600" />
+      
+      <!-- Sector Derecho -->
+      <path d="M 1000 420 L 920 430 L 850 410 L 780 440 L 750 500 L 800 550 L 750 600" />
+      <path d="M 920 430 L 880 480 L 930 540 L 1000 530" />
+      <path d="M 850 410 L 820 370 L 750 360 L 700 390" />
+      <path d="M 780 440 L 700 450 L 660 480" />
+      <path d="M 750 500 L 680 510 L 650 550 L 680 600" />
+      <path d="M 880 480 L 820 500" />
+      <path d="M 930 540 L 900 600" />
+    </g>
+
+    <!-- ROCAS PESADAS (El peso de la tierra) -->
+    <path d="M 150 310 L 180 305 L 210 312 L 200 320 L 140 318 Z" fill="#29231f" opacity="0.9" />
+    <path d="M 750 315 L 790 308 L 840 316 L 820 325 L 740 322 Z" fill="#211c18" opacity="0.9" />
+    <path d="M 85 405 L 115 390 L 155 398 L 135 415 L 70 412 Z" fill="#1f1813" opacity="0.95" />
+    <path d="M 850 460 L 910 430 L 970 445 L 940 480 L 830 475 Z" fill="#17120e" />
+
+    <!-- MALEZA MUERTA (Trazos rectos, aire estancado, inmovilidad) -->
+    <g stroke="#5e5042" stroke-width="1.5" stroke-linecap="round" fill="none">
+      <!-- Izquierda -->
+      <path d="M 220 350 L 220 330 M 222 350 L 225 335 M 218 350 L 215 338" />
+      <path d="M 90 480 L 90 450 M 93 480 L 98 455 M 87 480 L 82 460" />
+      <path d="M 300 420 L 300 395 M 303 420 L 308 400 M 297 420 L 292 405" />
+      <!-- Derecha -->
+      <path d="M 680 360 L 680 340 M 683 360 L 687 345 M 677 360 L 674 348" />
+      <path d="M 820 520 L 820 480 M 824 520 L 830 485 M 816 520 L 810 490" />
+    </g>
+
+    <!-- EL ÁRBOL DE LA PERSISTENCIA (Muerto pero de pie, quebrado pero firme, anclado al suelo) -->
+    <g fill="#120e0b">
+      <!-- Raíces aferradas -->
+      <path d="M 760 420 L 740 435 L 755 420 Z" />
+      <path d="M 780 425 L 810 440 L 780 422 Z" />
+      <!-- Tronco retorcido y masivo -->
+      <path d="M 750 425 C 765 370, 745 320, 760 260 C 768 230, 785 190, 775 160 L 760 165 C 765 195, 750 235, 745 260 C 730 320, 750 370, 735 425 Z" />
+      <!-- Ramas quebradas (Líneas bruscas, esfuerzo, nada cede) -->
+      <path d="M 752 300 C 720 290, 680 270, 650 250 L 648 255 C 675 275, 715 295, 750 306 Z" />
+      <path d="M 680 268 L 665 235 L 670 232 L 684 265 Z" />
+      
+      <path d="M 755 240 C 785 220, 830 210, 860 190 L 862 195 C 832 215, 785 228, 758 248 Z" />
+      <path d="M 810 216 L 830 170 L 825 168 L 805 212 Z" />
+      
+      <path d="M 768 180 C 740 160, 710 130, 690 100 L 686 103 C 706 133, 736 165, 765 185 Z" />
+      <path d="M 720 140 L 700 110 L 705 106 L 725 136 Z" />
+      
+      <path d="M 770 162 C 790 140, 800 100, 810 70 L 815 72 C 805 102, 795 142, 775 165 Z" />
+    </g>
+
+  </g>
+</svg>

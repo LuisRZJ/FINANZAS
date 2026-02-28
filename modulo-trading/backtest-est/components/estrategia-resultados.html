@@ -1,0 +1,203 @@
+<section id="estrategia-results" class="hidden">
+
+    <!-- Info del split y combinaciones -->
+    <div style="text-align: center; margin-bottom: 1.5rem;">
+        <p id="split-info" style="color: var(--text-muted); font-size: 0.85rem;">--</p>
+    </div>
+
+    <!-- ═══ GRÁFICO COMPARATIVO CAGR ═══ -->
+    <div class="card" style="margin-bottom: 2rem; padding: 1.25rem;">
+        <div class="metric-title" style="color: var(--accent); margin-bottom: 0.25rem; font-size: 1.1rem;">
+            📊 Comparativa CAGR — Todas las Estrategias
+        </div>
+        <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 1rem;">
+            Retorno anualizado (CAGR Test) de cada estrategia, agrupada por categoría. Refleja el rendimiento en datos
+            no vistos. La línea
+            punteada muestra el CAGR de la estrategia DCA como referencia.
+        </p>
+        <div style="position: relative; height: 320px;">
+            <canvas id="cagr-comparison-chart"></canvas>
+        </div>
+    </div>
+
+    <!-- ═══ TOP MEJOR VALIDADAS ═══ -->
+    <div class="card"
+        style="margin-bottom: 2rem; border-color: rgba(16, 185, 129, 0.4); box-shadow: 0 8px 32px rgba(16, 185, 129, 0.1);">
+        <div class="metric-title"
+            style="color: var(--positive); margin-bottom: 0.5rem; font-size: 1.15rem; text-shadow: 0 0 10px var(--positive-glow);">
+            ✅ Top 5 — Mejores Estrategias Validadas
+        </div>
+        <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem;">
+            Estrategias super-estrella: Las 5 que consiguen el mayor ROI superando exitosamente la fase de Test
+            Out-of-Sample sin caer en sobreoptimización grave.
+        </p>
+        <div class="data-table-container">
+            <table class="data-table ranking-table" id="table-validated">
+                <thead></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ═══ TOP BALANCEADO (Principal) ═══ -->
+    <div class="card"
+        style="margin-bottom: 2rem; border-color: rgba(59, 130, 246, 0.4); box-shadow: 0 8px 32px rgba(59, 130, 246, 0.1);">
+        <div class="metric-title"
+            style="color: var(--accent); margin-bottom: 0.5rem; font-size: 1.15rem; text-shadow: 0 0 10px var(--accent-glow);">
+            ⚖️ Top 5 — Estrategias Balanceadas
+        </div>
+        <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem;">
+            Clasificadas por un score global que premia el ROI, penaliza fuertemente el Drawdown y considera la
+            consistencia (Win Rate).
+        </p>
+        <div class="data-table-container">
+            <table class="data-table ranking-table" id="table-balanced">
+                <thead></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ═══ TOP ROI ═══ -->
+    <div class="card" style="margin-bottom: 2rem;">
+        <div class="metric-title" style="color: var(--accent); margin-bottom: 0.5rem;">
+            📈 Top 5 — Mayor ROI
+        </div>
+        <div class="data-table-container">
+            <table class="data-table ranking-table" id="table-roi">
+                <thead></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ═══ TOP MENOR DRAWDOWN ═══ -->
+    <div class="card" style="margin-bottom: 2rem;">
+        <div class="metric-title" style="color: var(--drawdown); margin-bottom: 0.5rem;">
+            🛡️ Top 5 — Menor Drawdown
+        </div>
+        <div class="data-table-container">
+            <table class="data-table ranking-table" id="table-lowdd">
+                <thead></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ═══ TOP WIN RATE ═══ -->
+    <div class="card" style="margin-bottom: 2rem;">
+        <div class="metric-title" style="color: var(--accent); margin-bottom: 0.5rem;">
+            🎯 Top 5 — Mayor Win Rate
+        </div>
+        <div class="data-table-container">
+            <table class="data-table ranking-table" id="table-winrate">
+                <thead></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ═══ TOP PROFIT FACTOR ═══ -->
+    <div class="card" style="margin-bottom: 2rem;">
+        <div class="metric-title" style="color: var(--positive); margin-bottom: 0.5rem;">
+            💰 Top 5 — Mayor Profit Factor
+        </div>
+        <div class="data-table-container">
+            <table class="data-table ranking-table" id="table-pf">
+                <thead></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ═══ BUSCADOR DE ESTRATEGIA ESPECÍFICA ═══ -->
+    <div class="card"
+        style="margin-bottom: 2rem; border-color: rgba(139, 92, 246, 0.4); box-shadow: 0 8px 32px rgba(139, 92, 246, 0.1);">
+        <div class="metric-title"
+            style="color: #8b5cf6; margin-bottom: 0.5rem; font-size: 1.15rem; text-shadow: 0 0 10px rgba(139, 92, 246, 0.3);">
+            🔎 Buscador de Estrategia
+        </div>
+        <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem;">
+            Consulta el rendimiento de cualquier combinación de medias móviles dentro del rango configurado, incluso si
+            no aparece en los rankings.
+        </p>
+
+        <div
+            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+            <div>
+                <label
+                    style="display: block; color: var(--text-muted); font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem;">MA
+                    Rápida (Tipo)</label>
+                <select id="search-fast-type" class="input-glass">
+                    <option value="SMA">SMA</option>
+                    <option value="EMA">EMA</option>
+                </select>
+            </div>
+            <div>
+                <label
+                    style="display: block; color: var(--text-muted); font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem;">Periodo
+                    Rápido</label>
+                <select id="search-fast-period" class="input-glass">
+                    <!-- Opciones generadas por JS -->
+                </select>
+            </div>
+            <div>
+                <label
+                    style="display: block; color: var(--text-muted); font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem;">MA
+                    Lenta (Tipo)</label>
+                <select id="search-slow-type" class="input-glass">
+                    <option value="SMA">SMA</option>
+                    <option value="EMA">EMA</option>
+                </select>
+            </div>
+            <div>
+                <label
+                    style="display: block; color: var(--text-muted); font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem;">Periodo
+                    Lento</label>
+                <select id="search-slow-period" class="input-glass">
+                    <!-- Opciones generadas por JS -->
+                </select>
+            </div>
+            <div>
+                <label
+                    style="display: block; color: var(--text-muted); font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem;">Modo
+                    de Salida</label>
+                <select id="search-exit-mode" class="input-glass">
+                    <!-- Opciones generadas por JS -->
+                </select>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+            <button id="btn-search-strategy" class="btn-primary" style="padding: 0.75rem 2rem; font-size: 0.95rem;">
+                🔍 Buscar Estrategia
+            </button>
+            <span id="search-status" style="color: var(--text-muted); font-size: 0.85rem;"></span>
+        </div>
+
+        <!-- Resultados de la búsqueda -->
+        <div id="search-result-container" class="hidden"
+            style="margin-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 1.5rem;">
+            <div class="metric-title" style="color: #8b5cf6; margin-bottom: 1rem;">Resultado de la Búsqueda</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                <!-- Train -->
+                <div
+                    style="background: rgba(0,0,0,0.2); border-radius: var(--radius); border: 1px solid rgba(255,255,255,0.05); padding: 1.25rem;">
+                    <div class="metric-title" style="color: var(--accent); font-size: 0.9rem;">📊 Train (In-Sample)
+                    </div>
+                    <div id="search-train-metrics" style="margin-top: 0.75rem; font-size: 0.9rem; line-height: 2;">
+                    </div>
+                </div>
+                <!-- Test -->
+                <div
+                    style="background: rgba(0,0,0,0.2); border-radius: var(--radius); border: 1px solid rgba(255,255,255,0.05); padding: 1.25rem;">
+                    <div class="metric-title" style="color: var(--positive); font-size: 0.9rem;">✅ Test (Out-of-Sample)
+                    </div>
+                    <div id="search-test-metrics" style="margin-top: 0.75rem; font-size: 0.9rem; line-height: 2;"></div>
+                </div>
+            </div>
+            <div id="search-verdict" style="margin-top: 1rem; text-align: center; font-size: 0.9rem;"></div>
+        </div>
+    </div>
+
+</section>

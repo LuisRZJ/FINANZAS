@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600" width="100%" height="100%">
+    <defs>
+        <!-- Gradiente del cielo gris acero -->
+        <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#2a323a"/>
+            <stop offset="55%" stop-color="#56626d"/>
+            <stop offset="100%" stop-color="#8a95a1"/>
+        </linearGradient>
+        
+        <!-- Gradiente para la niebla que aísla el ruido -->
+        <linearGradient id="mist" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#f0f4f8" stop-opacity="0"/>
+            <stop offset="100%" stop-color="#f0f4f8" stop-opacity="0.85"/>
+        </linearGradient>
+    </defs>
+
+    <!-- Fondo: El cielo de acero -->
+    <rect width="1200" height="600" fill="url(#sky)"/>
+
+    <!-- Elemento central: Enfoque interno y absoluto (geometría sutil en el cielo) -->
+    <circle cx="600" cy="200" r="140" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.08"/>
+    <circle cx="600" cy="200" r="90" fill="#ffffff" opacity="0.03"/>
+    <circle cx="600" cy="200" r="2" fill="#ffffff" opacity="0.6"/>
+    <line x1="600" y1="40" x2="600" y2="360" stroke="#ffffff" stroke-width="0.5" opacity="0.05"/>
+    <line x1="440" y1="200" x2="760" y2="200" stroke="#ffffff" stroke-width="0.5" opacity="0.05"/>
+
+    <!-- Montañas distantes: Austeridad y terreno hostil -->
+    <path d="M-50,450 L100,320 L250,390 L450,250 L600,380 L800,210 L950,350 L1150,280 L1250,400 L1250,600 L-50,600 Z" fill="#3e4852" opacity="0.7"/>
+    <path d="M-50,500 L150,370 L300,430 L500,310 L700,440 L900,280 L1050,410 L1250,330 L1250,600 L-50,600 Z" fill="#2d353c" opacity="0.9"/>
+
+    <!-- Capa de niebla para amortiguar cualquier "ruido" -->
+    <rect x="0" y="320" width="1200" height="280" fill="url(#mist)"/>
+
+    <!-- Tundra (Planicies de hielo, silencio externo) -->
+    <path d="M-50,480 Q250,460 600,500 T1250,480 L1250,600 L-50,600 Z" fill="#cdd5dc"/>
+    <path d="M-50,530 Q350,490 700,540 T1250,510 L1250,600 L-50,600 Z" fill="#e2e8ec"/>
+    <path d="M-50,580 Q450,550 800,590 T1250,570 L1250,650 L-50,650 Z" fill="#ffffff"/>
+
+    <!-- Monolitos geométricos en primer plano: Planificación y ejecución táctica inamovible -->
+    
+    <!-- Monolito principal (Derecha) -->
+    <polygon points="850,650 920,360 990,650" fill="#171b1e"/>
+    <polygon points="920,360 990,650 945,650" fill="#0d0f11"/> <!-- Lado de la sombra -->
+    
+    <!-- Monolito secundario (Izquierda) -->
+    <polygon points="180,650 240,430 310,650" fill="#1c2227"/>
+    <polygon points="240,430 310,650 265,650" fill="#121518"/>
+
+    <!-- Monolito pequeño en la media distancia -->
+    <polygon points="630,550 645,490 665,550" fill="#252c32"/>
+    <polygon points="645,490 665,550 652,550" fill="#181c20"/>
+
+</svg>

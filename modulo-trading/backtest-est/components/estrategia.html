@@ -1,0 +1,171 @@
+<dialog id="estrategia-modal">
+    <div class="card" style="width: 90vw; max-width: 750px; position: relative;">
+
+        <button id="close-estrategia-btn"
+            style="position: absolute; top: 1.25rem; right: 1.25rem; background: transparent; border: none; color: var(--text-muted); font-size: 1.75rem; cursor: pointer; padding: 0.5rem; line-height: 1; transition: color var(--transition-fast);">&times;</button>
+
+        <div class="metric-title" style="margin-bottom: 0.5rem; color: var(--accent); font-size: 1.25rem;">
+            Optimizador de Estrategia (Cruce de Medias)
+        </div>
+        <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem;">
+            Busca por fuerza bruta la mejor combinación de medias móviles. El dataset se divide en Train/Test para
+            evitar sobreoptimización.
+        </p>
+
+        <!-- ═══ Parámetros de Medias Móviles ═══ -->
+        <div
+            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+            <div>
+                <label
+                    style="display: block; color: var(--text-muted); font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem;">Periodo
+                    Mínimo</label>
+                <input type="number" id="opt-min-period" value="5" min="2" step="1" class="input-glass">
+            </div>
+            <div>
+                <label
+                    style="display: block; color: var(--text-muted); font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem;">Periodo
+                    Máximo</label>
+                <input type="number" id="opt-max-period" value="200" min="10" step="1" class="input-glass">
+            </div>
+            <div>
+                <label
+                    style="display: block; color: var(--text-muted); font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem;">Paso</label>
+                <input type="number" id="opt-step" value="5" min="1" step="1" class="input-glass">
+            </div>
+            <div>
+                <label
+                    style="display: block; color: var(--text-muted); font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem;">Tipo
+                    de Media</label>
+                <select id="opt-ma-type" class="input-glass">
+                    <option value="both" selected>SMA + EMA (Puros)</option>
+                    <option value="auto">Automático (Todos + Mixtos)</option>
+                    <option value="SMA">Solo SMA</option>
+                    <option value="EMA">Solo EMA</option>
+                </select>
+            </div>
+            <div>
+                <label
+                    style="display: block; color: var(--text-muted); font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem;">Split
+                    Train / Test</label>
+                <select id="opt-train-ratio" class="input-glass">
+                    <option value="0.5">50% / 50%</option>
+                    <option value="0.6">60% / 40%</option>
+                    <option value="0.7" selected>70% / 30%</option>
+                    <option value="0.8">80% / 20%</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- ═══ Gestión de Riesgo ═══ -->
+        <div
+            style="background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 2rem;">
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                <span style="font-size: 1.2rem;">💰</span>
+                <span style="color: var(--drawdown); font-weight: 700; font-size: 1rem;">Gestión de Riesgo</span>
+            </div>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">
+                Fracción del capital total que se arriesga en cada operación.
+                El retorno compuesto se calcula sobre este porcentaje, no sobre el 100% del portafolio.
+            </p>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                <div>
+                    <label
+                        style="display: block; color: var(--text-muted); font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem;">Capital
+                        Inicial Simulado</label>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="color: var(--text-muted); font-size: 1rem;">$</span>
+                        <input type="number" id="opt-capital" value="100000" min="100" step="1000" class="input-glass"
+                            style="font-size: 1.1rem; font-weight: 700; text-align: center; color: var(--accent);">
+                    </div>
+                    <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.4rem;">MXN. Se usa para
+                        mostrar los resultados en valor monetario.</p>
+                </div>
+                <div>
+                    <label
+                        style="display: block; color: var(--text-muted); font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem;">Riesgo
+                        por Trade</label>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <input type="number" id="opt-risk-per-trade" value="2" min="0.1" max="100" step="0.5"
+                            class="input-glass"
+                            style="width: 100px; font-size: 1.1rem; font-weight: 700; text-align: center; color: var(--drawdown);">
+                        <span style="color: var(--text-muted); font-size: 0.9rem; font-weight: 500;">%</span>
+                    </div>
+                    <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.4rem;">% del capital en riesgo
+                        por operación.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ Estrategia de Cierre ═══ -->
+        <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 1.5rem; margin-bottom: 2rem;">
+            <div class="metric-title" style="margin-bottom: 0.75rem; color: var(--drawdown); font-size: 1rem;">
+                🎯 Estrategia de Cierre
+            </div>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.25rem;">
+                Elige cómo se cierran las operaciones. "Ambos" prueba los dos modos y compite entre ellos para
+                encontrar cuál es superior.
+            </p>
+
+            <div style="display: grid; grid-template-columns: 1fr; gap: 1rem; margin-bottom: 1.25rem;">
+                <div>
+                    <label
+                        style="display: block; color: var(--text-muted); font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem;">Modo
+                        de Cierre</label>
+                    <select id="opt-exit-mode" class="input-glass">
+                        <option value="both" selected>🔄 Ambos (Clásico + R:R Fijo)</option>
+                        <option value="classic">📊 Solo Clásico (Cruce Inverso)</option>
+                        <option value="fixed">🎯 Solo R:R Fijo (SL & TP)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Parámetros R:R Fijo (solo visible si no es 'classic') -->
+            <div id="fixed-rr-params"
+                style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: var(--radius); border: 1px solid rgba(255,255,255,0.05);">
+                <div>
+                    <label
+                        style="display: block; color: var(--text-muted); font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem;">🕯️
+                        Velas para SL</label>
+                    <input type="number" id="opt-sl-candles" value="5" min="1" step="1" class="input-glass"
+                        style="font-weight: 600;">
+                    <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.5rem; line-height: 1.4;">
+                        Al entrar en un trade, el SL se coloca en el mínimo de las últimas X velas.
+                    </p>
+                </div>
+                <div>
+                    <label
+                        style="display: block; color: var(--text-muted); font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem;">📐
+                        Ratio R:R</label>
+                    <input type="number" id="opt-rr" value="2" min="0.10" step="0.10" class="input-glass"
+                        style="font-weight: 600;">
+                    <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.5rem; line-height: 1.4;">
+                        TP = distancia al SL × R:R. Ej: R:R 2 → si SL está a 1%, TP estará a 2%.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Barra de progreso -->
+        <div id="opt-progress-container" class="hidden" style="margin-bottom: 1rem;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem;">
+                <span style="color: var(--text-muted); font-size: 0.8rem;">Progreso de optimización</span>
+                <span id="opt-progress-text"
+                    style="color: var(--accent); font-size: 0.8rem; font-weight: 500;">0%</span>
+            </div>
+            <div style="width: 100%; height: 6px; background: var(--bg-color); border-radius: 3px; overflow: hidden;">
+                <div id="opt-progress-bar"
+                    style="width: 0%; height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.15s ease;">
+                </div>
+            </div>
+        </div>
+
+        <!-- Estimación de combinaciones -->
+        <p id="opt-combo-estimate" style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem;"></p>
+
+        <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+            <button id="run-optimization-btn" class="btn-primary" style="padding: 0.85rem 2rem; font-size: 1rem;">
+                🔍 Buscar Mejor Estrategia
+            </button>
+        </div>
+    </div>
+</dialog>
