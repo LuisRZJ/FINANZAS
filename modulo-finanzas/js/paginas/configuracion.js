@@ -663,8 +663,9 @@ async function inicializarPanelDatos() {
           const cuentasExistentes = (await leer(STORAGE_KEYS.cuentas)) || []
           const etiquetasExistentes = (await leer(STORAGE_KEYS.etiquetas)) || []
           const operacionesExistentes = (await leer(STORAGE_KEYS.operaciones)) || []
+          const metasExistentes = (await leer(STORAGE_KEYS.metas)) || []
           
-          const resultado = await procesarCSVBudge(text, cuentasExistentes, etiquetasExistentes, operacionesExistentes)
+          const resultado = await procesarCSVBudge(text, cuentasExistentes, etiquetasExistentes, operacionesExistentes, metasExistentes)
           
           const modalImport = document.getElementById('modal-importacion')
           const btnCombinar = document.getElementById('btn-import-combinar')
@@ -686,10 +687,11 @@ async function inicializarPanelDatos() {
           
           btnCombinar.onclick = async () => {
             modalImport.classList.add('hidden')
-            // Guardar solo las nuevas
-            await escribir(STORAGE_KEYS.cuentas, [...cuentasExistentes, ...resultado.nuevasCuentas])
+            // Guardar con la DB mezclada
+            await escribir(STORAGE_KEYS.cuentas, resultado.cuentasFinales)
             await escribir(STORAGE_KEYS.etiquetas, [...etiquetasExistentes, ...resultado.nuevasEtiquetas])
             await escribir(STORAGE_KEYS.operaciones, [...operacionesExistentes, ...resultado.nuevasOperaciones])
+            await escribir(STORAGE_KEYS.metas, [...metasExistentes, ...resultado.nuevasMetas])
             
             if (msgEl) msgEl.textContent = 'Datos combinados correctamente. Recarga la página para ver los cambios.'
             if (usageEl) usageEl.textContent = await calcularUsoAlmacenamiento()
@@ -697,13 +699,17 @@ async function inicializarPanelDatos() {
           
           btnReemplazar.onclick = async () => {
             modalImport.classList.add('hidden')
-            // Borrar todo e insertar lo del CSV
+            // Borrar todo
             const keys = Object.values(STORAGE_KEYS)
             for (const k of keys) await eliminar(k)
             
-            await escribir(STORAGE_KEYS.cuentas, resultado.nuevasCuentas)
-            await escribir(STORAGE_KEYS.etiquetas, resultado.nuevasEtiquetas)
-            await escribir(STORAGE_KEYS.operaciones, resultado.nuevasOperaciones)
+            // Re-procesar en limpio para no mezclar con la caché local
+            const resultadoLimpio = await procesarCSVBudge(text, [], [], [], [])
+            
+            await escribir(STORAGE_KEYS.cuentas, resultadoLimpio.cuentasFinales)
+            await escribir(STORAGE_KEYS.etiquetas, resultadoLimpio.nuevasEtiquetas)
+            await escribir(STORAGE_KEYS.operaciones, resultadoLimpio.nuevasOperaciones)
+            await escribir(STORAGE_KEYS.metas, resultadoLimpio.nuevasMetas)
             
             if (msgEl) msgEl.textContent = 'Datos reemplazados correctamente. Recarga la página para ver los cambios.'
             if (usageEl) usageEl.textContent = await calcularUsoAlmacenamiento()
