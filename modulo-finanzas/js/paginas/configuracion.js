@@ -660,9 +660,9 @@ async function inicializarPanelDatos() {
         
         if (file.name.toLowerCase().endsWith('.csv')) {
           // Lógica para CSV
-          const cuentasExistentes = (await leer(STORAGE_KEYS.CUENTAS)) || []
-          const etiquetasExistentes = (await leer(STORAGE_KEYS.ETIQUETAS)) || []
-          const operacionesExistentes = (await leer(STORAGE_KEYS.OPERACIONES)) || []
+          const cuentasExistentes = (await leer(STORAGE_KEYS.cuentas)) || []
+          const etiquetasExistentes = (await leer(STORAGE_KEYS.etiquetas)) || []
+          const operacionesExistentes = (await leer(STORAGE_KEYS.operaciones)) || []
           
           const resultado = await procesarCSVBudge(text, cuentasExistentes, etiquetasExistentes, operacionesExistentes)
           
@@ -687,9 +687,9 @@ async function inicializarPanelDatos() {
           btnCombinar.onclick = async () => {
             modalImport.classList.add('hidden')
             // Guardar solo las nuevas
-            await escribir(STORAGE_KEYS.CUENTAS, [...cuentasExistentes, ...resultado.nuevasCuentas])
-            await escribir(STORAGE_KEYS.ETIQUETAS, [...etiquetasExistentes, ...resultado.nuevasEtiquetas])
-            await escribir(STORAGE_KEYS.OPERACIONES, [...operacionesExistentes, ...resultado.nuevasOperaciones])
+            await escribir(STORAGE_KEYS.cuentas, [...cuentasExistentes, ...resultado.nuevasCuentas])
+            await escribir(STORAGE_KEYS.etiquetas, [...etiquetasExistentes, ...resultado.nuevasEtiquetas])
+            await escribir(STORAGE_KEYS.operaciones, [...operacionesExistentes, ...resultado.nuevasOperaciones])
             
             if (msgEl) msgEl.textContent = 'Datos combinados correctamente. Recarga la página para ver los cambios.'
             if (usageEl) usageEl.textContent = await calcularUsoAlmacenamiento()
@@ -701,9 +701,9 @@ async function inicializarPanelDatos() {
             const keys = Object.values(STORAGE_KEYS)
             for (const k of keys) await eliminar(k)
             
-            await escribir(STORAGE_KEYS.CUENTAS, resultado.nuevasCuentas)
-            await escribir(STORAGE_KEYS.ETIQUETAS, resultado.nuevasEtiquetas)
-            await escribir(STORAGE_KEYS.OPERACIONES, resultado.nuevasOperaciones)
+            await escribir(STORAGE_KEYS.cuentas, resultado.nuevasCuentas)
+            await escribir(STORAGE_KEYS.etiquetas, resultado.nuevasEtiquetas)
+            await escribir(STORAGE_KEYS.operaciones, resultado.nuevasOperaciones)
             
             if (msgEl) msgEl.textContent = 'Datos reemplazados correctamente. Recarga la página para ver los cambios.'
             if (usageEl) usageEl.textContent = await calcularUsoAlmacenamiento()
