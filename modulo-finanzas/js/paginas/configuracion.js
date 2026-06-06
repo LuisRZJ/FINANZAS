@@ -1,7 +1,7 @@
 import { listarEtiquetas, crearEtiqueta, actualizarEtiqueta, eliminarEtiqueta } from '../servicios/etiquetas.js'
 import { contarOperacionesPorEtiqueta, limpiarReferenciaEtiqueta, eliminarOperacionesPorEtiqueta } from '../servicios/operaciones.js'
 import { STORAGE_KEYS } from '../sistema/constantes.js'
-import { iniciarSesion, registrar, cerrarSesion, obtenerUsuarioActual } from '../servicios/auth.js'
+import { estaAutenticadoEnNube, guardarPasswordNube, cerrarSesionNube } from '../servicios/auth.js'
 import { respaldarDatos, restaurarDatos } from '../servicios/sincronizacion.js'
 
 function renderSeccion(tipo, containerId) {
@@ -890,12 +890,10 @@ function inicializarPanelDatos() {
 async function inicializarAuth() {
   const guestEl = document.getElementById('auth-guest')
   const userEl = document.getElementById('auth-user')
-  const userEmailEl = document.getElementById('user-email')
   const authMsgEl = document.getElementById('auth-message')
   const syncMsgEl = document.getElementById('sync-message')
 
   const formLogin = document.getElementById('form-login')
-  const formRegister = document.getElementById('form-register')
   const btnLogout = document.getElementById('btn-logout')
   const btnBackup = document.getElementById('btn-backup-cloud')
   const btnRestore = document.getElementById('btn-restore-cloud')
@@ -907,11 +905,10 @@ async function inicializarAuth() {
   }
 
   async function updateAuthUI() {
-    const user = await obtenerUsuarioActual()
-    if (user) {
+    const autenticado = estaAutenticadoEnNube()
+    if (autenticado) {
       if (guestEl) guestEl.classList.add('hidden')
       if (userEl) userEl.classList.remove('hidden')
-      if (userEmailEl) userEmailEl.textContent = user.email
     } else {
       if (guestEl) guestEl.classList.remove('hidden')
       if (userEl) userEl.classList.add('hidden')
@@ -921,49 +918,26 @@ async function inicializarAuth() {
   // Inicializar UI
   await updateAuthUI()
 
-  // Login
+  // Guardar Password (Login simulado)
   if (formLogin) {
     formLogin.addEventListener('submit', async (e) => {
       e.preventDefault()
-      const email = formLogin.querySelector('[name="email"]').value
-      const password = formLogin.querySelector('[name="password"]').value
+      const inputPwd = document.getElementById('input-cloud-password')
+      if (!inputPwd) return
 
-      showMessage(authMsgEl, 'Iniciando sesión...', false)
-      const { user, error } = await iniciarSesion(email, password)
-
-      if (error) {
-        showMessage(authMsgEl, error, true)
-      } else {
-        showMessage(authMsgEl, '¡Sesión iniciada!', false)
-        formLogin.reset()
-        await updateAuthUI()
-      }
+      const password = inputPwd.value
+      guardarPasswordNube(password)
+      
+      showMessage(authMsgEl, 'Contraseña de Nube guardada por 15 días.', false)
+      formLogin.reset()
+      await updateAuthUI()
     })
   }
 
-  // Registro
-  if (formRegister) {
-    formRegister.addEventListener('submit', async (e) => {
-      e.preventDefault()
-      const email = formRegister.querySelector('[name="email"]').value
-      const password = formRegister.querySelector('[name="password"]').value
-
-      showMessage(authMsgEl, 'Registrando...', false)
-      const { user, error } = await registrar(email, password)
-
-      if (error) {
-        showMessage(authMsgEl, error, true)
-      } else {
-        showMessage(authMsgEl, 'Cuenta creada. Revisa tu email para confirmar.', false)
-        formRegister.reset()
-      }
-    })
-  }
-
-  // Logout
+  // Revocar acceso (Logout)
   if (btnLogout) {
     btnLogout.addEventListener('click', async () => {
-      await cerrarSesion()
+      cerrarSesionNube()
       await updateAuthUI()
       showMessage(syncMsgEl, '', false)
     })

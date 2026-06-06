@@ -8,7 +8,6 @@
   <meta name="theme-color" content="#2563eb">
   <title>Configuración — GTR Finanzas</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/sistema/theme.js"></script>
   <link rel="stylesheet" href="css/estilos.css">
 </head>
@@ -201,38 +200,22 @@
         </div>
 
         <div class="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-4 shadow-sm">
-          <!-- Estado no autenticado -->
+          <!-- Estado no autenticado (sin contraseña o caducada) -->
           <div id="auth-guest" class="space-y-4">
             <p class="text-sm text-gray-600 dark:text-gray-400">
-              Inicia sesión o regístrate para sincronizar tus datos con la nube.
+              Para sincronizar tus datos con la nube a través de GitHub, necesitas ingresar la Contraseña Maestra de Sincronización. Esta se guardará por 15 días.
             </p>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <!-- Login -->
-              <div class="space-y-3">
-                <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300">Iniciar Sesión</h3>
-                <form id="form-login" class="space-y-2">
-                  <input type="email" name="email" required placeholder="Correo electrónico"
-                    class="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 px-3 py-2 text-sm">
-                  <input type="password" name="password" required placeholder="Contraseña" minlength="6"
-                    class="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 px-3 py-2 text-sm">
-                  <button type="submit" class="w-full btn btn-primary text-sm">Iniciar Sesión</button>
-                </form>
+            <form id="form-login" class="space-y-3">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Contraseña de la Nube</label>
+                <input type="password" id="input-cloud-password" required placeholder="Contraseña Maestra"
+                  class="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 outline-none">
               </div>
-
-              <!-- Registro -->
-              <div class="space-y-3">
-                <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300">Crear Cuenta</h3>
-                <form id="form-register" class="space-y-2">
-                  <input type="email" name="email" required placeholder="Correo electrónico"
-                    class="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 px-3 py-2 text-sm">
-                  <input type="password" name="password" required placeholder="Contraseña (mínimo 6)" minlength="6"
-                    class="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 px-3 py-2 text-sm">
-                  <button type="submit" class="w-full btn btn-secondary text-sm">Registrarse</button>
-                </form>
-              </div>
-            </div>
-
+              <button type="submit" class="w-full inline-flex justify-center items-center px-4 py-2 rounded-md text-sm font-medium bg-primary-600 text-white hover:bg-primary-700 transition-colors">
+                Autorizar Sesión (15 días)
+              </button>
+            </form>
             <div id="auth-message" class="text-sm text-center"></div>
           </div>
 
@@ -240,12 +223,15 @@
           <div id="auth-user" class="hidden space-y-4">
             <div class="flex items-center justify-between flex-wrap gap-2">
               <div>
-                <p class="text-sm text-gray-600 dark:text-gray-400">Sesión iniciada como:</p>
-                <p id="user-email" class="font-medium text-gray-900 dark:text-gray-100"></p>
+                <p class="text-sm text-gray-600 dark:text-gray-400">Conexión a la nube:</p>
+                <p class="font-medium text-green-600 dark:text-green-400 flex items-center gap-1">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                  Autorizada
+                </p>
               </div>
               <button id="btn-logout" type="button"
-                class="px-3 py-2 rounded-md text-sm font-medium border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
-                Cerrar Sesión
+                class="px-3 py-2 rounded-md text-sm font-medium border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                Revocar Acceso
               </button>
             </div>
 
@@ -253,11 +239,11 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <button id="btn-backup-cloud" type="button"
-                class="inline-flex justify-center items-center px-4 py-3 rounded-md text-sm font-medium bg-green-600 text-white hover:bg-green-700">
+                class="inline-flex justify-center items-center px-4 py-3 rounded-md text-sm font-medium bg-green-600 text-white hover:bg-green-700 transition-colors">
                 ☁️ Subir Respaldo a la Nube
               </button>
               <button id="btn-restore-cloud" type="button"
-                class="inline-flex justify-center items-center px-4 py-3 rounded-md text-sm font-medium bg-blue-600 text-white hover:bg-blue-700">
+                class="inline-flex justify-center items-center px-4 py-3 rounded-md text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors">
                 ⬇️ Restaurar desde la Nube
               </button>
             </div>

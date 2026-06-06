@@ -1,97 +1,54 @@
-// Servicio de Autenticación con Supabase
-import { getSupabase } from '../sistema/supabaseClient.js'
+// Servicio de Autenticación Local para la Nube
+const EXPIRATION_DAYS = 15;
+const MS_PER_DAY = 1000 * 60 * 60 * 24;
 
 /**
- * Registrar un nuevo usuario
- * @param {string} email
- * @param {string} password
- * @returns {Promise<{user: object|null, error: string|null}>}
+ * Verifica si la contraseña maestra local existe y no ha caducado
+ * @returns {boolean}
  */
-export async function registrar(email, password) {
-    const supabase = getSupabase()
-    if (!supabase) {
-        return { user: null, error: 'Supabase no está disponible' }
+export function estaAutenticadoEnNube() {
+    const pwd = localStorage.getItem('fti_cloud_password');
+    const dateStr = localStorage.getItem('fti_cloud_password_date');
+
+    if (!pwd || !dateStr) return false;
+
+    const date = parseInt(dateStr, 10);
+    if (isNaN(date)) return false;
+
+    const now = Date.now();
+    const diffDays = (now - date) / MS_PER_DAY;
+
+    // Si pasaron más de 15 días, consideramos que caducó
+    if (diffDays > EXPIRATION_DAYS) {
+        return false;
     }
 
-    const { data, error } = await supabase.auth.signUp({
-        email,
-        password
-    })
-
-    if (error) {
-        return { user: null, error: error.message }
-    }
-
-    return { user: data.user, error: null }
+    return true;
 }
 
 /**
- * Iniciar sesión
- * @param {string} email
- * @param {string} password
- * @returns {Promise<{user: object|null, error: string|null}>}
+ * Obtener la contraseña actual (si es válida)
+ * @returns {string|null}
  */
-export async function iniciarSesion(email, password) {
-    const supabase = getSupabase()
-    if (!supabase) {
-        return { user: null, error: 'Supabase no está disponible' }
-    }
-
-    const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-    })
-
-    if (error) {
-        return { user: null, error: error.message }
-    }
-
-    return { user: data.user, error: null }
+export function obtenerPasswordNube() {
+    if (!estaAutenticadoEnNube()) return null;
+    return localStorage.getItem('fti_cloud_password');
 }
 
 /**
- * Cerrar sesión
- * @returns {Promise<{error: string|null}>}
+ * Guardar nueva contraseña ingresada en el prompt/modal
+ * @param {string} password 
  */
-export async function cerrarSesion() {
-    const supabase = getSupabase()
-    if (!supabase) {
-        return { error: 'Supabase no está disponible' }
-    }
-
-    const { error } = await supabase.auth.signOut()
-
-    if (error) {
-        return { error: error.message }
-    }
-
-    return { error: null }
+export function guardarPasswordNube(password) {
+    if (!password) return;
+    localStorage.setItem('fti_cloud_password', password);
+    localStorage.setItem('fti_cloud_password_date', Date.now().toString());
 }
 
 /**
- * Obtener el usuario actual
- * @returns {Promise<object|null>}
+ * Cerrar sesión en la nube (borrar password local)
  */
-export async function obtenerUsuarioActual() {
-    const supabase = getSupabase()
-    if (!supabase) {
-        return null
-    }
-
-    const { data: { user } } = await supabase.auth.getUser()
-    return user
-}
-
-/**
- * Escuchar cambios en el estado de autenticación
- * @param {function} callback - Función que recibe (event, session)
- * @returns {object} - Subscription para poder desuscribirse
- */
-export function onAuthStateChange(callback) {
-    const supabase = getSupabase()
-    if (!supabase) {
-        return { data: { subscription: { unsubscribe: () => { } } } }
-    }
-
-    return supabase.auth.onAuthStateChange(callback)
+export function cerrarSesionNube() {
+    localStorage.removeItem('fti_cloud_password');
+    localStorage.removeItem('fti_cloud_password_date');
 }

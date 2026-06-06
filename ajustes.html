@@ -168,6 +168,7 @@
             const [discordWebhook, setDiscordWebhook] = useState('');
             const [twelveDataKey, setTwelveDataKey] = useState('');
             const [googleAiKey, setGoogleAiKey] = useState('');
+            const [syncPassword, setSyncPassword] = useState('');
             const [saveIntegrationsSuccess, setSaveIntegrationsSuccess] = useState(false);
 
             const utilityShortcuts = [
@@ -237,12 +238,23 @@
                 setDiscordWebhook(localStorage.getItem('fti_discord_webhook') || '');
                 setTwelveDataKey(localStorage.getItem('fti_twelvedata_key') || '');
                 setGoogleAiKey(localStorage.getItem('fti_googleai_key') || '');
+                setSyncPassword(localStorage.getItem('fti_cloud_password') || '');
             }, []);
 
             const saveIntegrations = () => {
                 localStorage.setItem('fti_discord_webhook', discordWebhook);
                 localStorage.setItem('fti_twelvedata_key', twelveDataKey);
                 localStorage.setItem('fti_googleai_key', googleAiKey);
+                
+                if (syncPassword) {
+                    localStorage.setItem('fti_cloud_password', syncPassword);
+                    // Actualizar fecha cada vez que se guarda
+                    localStorage.setItem('fti_cloud_password_date', Date.now().toString());
+                } else {
+                    localStorage.removeItem('fti_cloud_password');
+                    localStorage.removeItem('fti_cloud_password_date');
+                }
+
                 setSaveIntegrationsSuccess(true);
                 setTimeout(() => setSaveIntegrationsSuccess(false), 2000);
             };
@@ -541,6 +553,11 @@
                                     <div className="md:col-span-2 lg:col-span-3">
                                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">WebHook Discord (Alertas Críticas)</label>
                                         <input type="text" value={discordWebhook} onChange={(e) => setDiscordWebhook(e.target.value)} placeholder="https://discord.com/api/webhooks/..." className="w-full px-4 py-2 rounded-lg border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all dark:bg-slate-800 dark:border-slate-700 dark:text-white" />
+                                    </div>
+                                    <div className="md:col-span-2 lg:col-span-3">
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Contraseña de Nube (Sync GitHub)</label>
+                                        <input type="password" value={syncPassword} onChange={(e) => setSyncPassword(e.target.value)} placeholder="Contraseña Maestra para la Nube" className="w-full px-4 py-2 rounded-lg border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all dark:bg-slate-800 dark:border-slate-700 dark:text-white" />
+                                        <p className="text-xs text-gray-500 mt-1 dark:text-gray-400">Esta contraseña caduca a los 15 días por seguridad.</p>
                                     </div>
                                     <div className="md:col-span-1 lg:col-span-1">
                                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">API KEY TwelveData</label>
