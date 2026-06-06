@@ -4,6 +4,7 @@ import { STORAGE_KEYS } from '../sistema/constantes.js'
 import { estaAutenticadoEnNube, guardarPasswordNube, cerrarSesionNube } from '../servicios/auth.js'
 import { respaldarDatos, restaurarDatos } from '../servicios/sincronizacion.js'
 import { leer, escribir, eliminar } from '../servicios/almacenamiento.js'
+import { procesarCSVBudge } from '../servicios/migracion.js'
 
 async function renderSeccion(tipo, containerId) {
   const cont = document.getElementById(containerId)
@@ -656,19 +657,74 @@ async function inicializarPanelDatos() {
     reader.onload = async (ev) => {
       try {
         const text = ev.target?.result
-        const data = JSON.parse(text)
-        await restaurarDesdeSnapshot(data)
-        if (msgEl) {
-          msgEl.textContent = 'Datos restaurados correctamente. Recarga la página para ver los cambios.'
-        }
-        if (usageEl) {
-          usageEl.textContent = await calcularUsoAlmacenamiento()
+        
+        if (file.name.toLowerCase().endsWith('.csv')) {
+          // Lógica para CSV
+          const cuentasExistentes = (await leer(STORAGE_KEYS.CUENTAS)) || []
+          const etiquetasExistentes = (await leer(STORAGE_KEYS.ETIQUETAS)) || []
+          const operacionesExistentes = (await leer(STORAGE_KEYS.OPERACIONES)) || []
+          
+          const resultado = await procesarCSVBudge(text, cuentasExistentes, etiquetasExistentes, operacionesExistentes)
+          
+          const modalImport = document.getElementById('modal-importacion')
+          const btnCombinar = document.getElementById('btn-import-combinar')
+          const btnReemplazar = document.getElementById('btn-import-reemplazar')
+          const btnCancelar = document.getElementById('btn-import-cancelar')
+          
+          document.getElementById('modal-importacion-mensaje').textContent = 
+            `Se han procesado ${resultado.totalProcesadasCSV} filas. Se encontraron ${resultado.nuevasOperaciones.length} nuevas operaciones (no duplicadas). ¿Cómo deseas importarlas?`
+          
+          modalImport.classList.remove('hidden')
+          
+          // Funciones locales para manejar clics
+          const cerrarModalImport = () => {
+            modalImport.classList.add('hidden')
+            if (inputImport) inputImport.value = ''
+          }
+          
+          btnCancelar.onclick = cerrarModalImport
+          
+          btnCombinar.onclick = async () => {
+            modalImport.classList.add('hidden')
+            // Guardar solo las nuevas
+            await escribir(STORAGE_KEYS.CUENTAS, [...cuentasExistentes, ...resultado.nuevasCuentas])
+            await escribir(STORAGE_KEYS.ETIQUETAS, [...etiquetasExistentes, ...resultado.nuevasEtiquetas])
+            await escribir(STORAGE_KEYS.OPERACIONES, [...operacionesExistentes, ...resultado.nuevasOperaciones])
+            
+            if (msgEl) msgEl.textContent = 'Datos combinados correctamente. Recarga la página para ver los cambios.'
+            if (usageEl) usageEl.textContent = await calcularUsoAlmacenamiento()
+          }
+          
+          btnReemplazar.onclick = async () => {
+            modalImport.classList.add('hidden')
+            // Borrar todo e insertar lo del CSV
+            const keys = Object.values(STORAGE_KEYS)
+            for (const k of keys) await eliminar(k)
+            
+            await escribir(STORAGE_KEYS.CUENTAS, resultado.nuevasCuentas)
+            await escribir(STORAGE_KEYS.ETIQUETAS, resultado.nuevasEtiquetas)
+            await escribir(STORAGE_KEYS.OPERACIONES, resultado.nuevasOperaciones)
+            
+            if (msgEl) msgEl.textContent = 'Datos reemplazados correctamente. Recarga la página para ver los cambios.'
+            if (usageEl) usageEl.textContent = await calcularUsoAlmacenamiento()
+          }
+          
+        } else {
+          // Lógica para JSON normal
+          const data = JSON.parse(text)
+          await restaurarDesdeSnapshot(data)
+          if (msgEl) {
+            msgEl.textContent = 'Datos restaurados correctamente. Recarga la página para ver los cambios.'
+          }
+          if (usageEl) {
+            usageEl.textContent = await calcularUsoAlmacenamiento()
+          }
+          if (inputImport) inputImport.value = ''
         }
       } catch (err) {
         if (msgEl) {
           msgEl.textContent = 'Error al importar respaldo: ' + (err.message || String(err))
         }
-      } finally {
         if (inputImport) inputImport.value = ''
       }
     }

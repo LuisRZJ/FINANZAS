@@ -1,0 +1,767 @@
+Format version,Period,User ID
+1,01-01-2025..30-12-2025,c0675SB56ge2DX7aKURP4Ai4JnA3
+
+###
+
+Date,Payment,Is paid,Amount,Currency,Account,Category,Subcategory,Goal,Description
+01-01-2025,Compra de poder computacional en la app BTC Mining,true,-219,MXN,Google Play ,Inversión,Bitcoin Mining,,
+02-01-2025,Pago de Bitcoin Mining ,true,1.72,MXN,Wallet Muun,Inversión,Bitcoin Mining,,
+03-01-2025,Transferencia a Cwallet  (Out),true,-252.50,MXN,NCwallet ,Transferencia,,,
+03-01-2025,Transferencia a Cwallet  (In),true,252.50,MXN,Cwallet ,Transferencia,,,
+03-01-2025,Compra en CT Pool,true,-247.36,MXN,Cwallet ,Inversión,CryptoTab Pool,,
+03-01-2025,Pago de ecosistema CryptoTab ,true,16.24,MXN,NCwallet ,Inversión,CryptoTab Browser,,
+09-01-2025,Por responder encuesta de Google ,true,4.46,MXN,Google Play ,Recompensas,,,
+09-01-2025,Pago CT Pool ,true,38.02,MXN,NCwallet ,Inversión,CryptoTab Pool,,
+10-01-2025,Por responder encuesta de Google ,true,1,MXN,Google Play ,Recompensas,,,
+10-01-2025,Pago CryptoTab Browser,true,19.67,MXN,NCwallet ,Inversión,CryptoTab Browser,,
+12-01-2025,Compra de aplicación | Escuela,true,-29,MXN,Google Play ,Play Store,Compras,,
+12-01-2025,Canjeó de puntos por saldo,true,20,MXN,Google Play ,Recompensas,,,
+12-01-2025,Pago de ecosistema ROBOX,true,4.14,MXN,NCwallet ,Inversión,ROBOX,,
+13-01-2025,Transferencia a Google Play  (In),true,200,MXN,Google Play ,Transferencia,,,
+13-01-2025,Transferencia a Google Play  (Out),true,-200,MXN,Monedero físico ,Transferencia,,,
+13-01-2025,Compra de Hashrate en app de minería ,true,-129,MXN,Google Play ,Inversión,,,
+13-01-2025,Semanal,true,200,MXN,Monedero físico ,Salario,,,
+13-01-2025,Compra de Hashrate en app de minería,true,-69,MXN,Google Play ,Inversión,,,
+13-01-2025,Pago de Bitcoin Mining ,true,13.59,MXN,Wallet Muun,Inversión,Bitcoin Mining,,
+14-01-2025,Renovación de suscripción en CryptoTab,true,-109.65,MXN,Google Play ,Inversión,CryptoTab browser ,,
+15-01-2025,Transferencia a Cwallet  (In),true,35.69,MXN,Cwallet ,Transferencia,,,
+15-01-2025,Transferencia a Cwallet  (Out),true,-35.69,MXN,Wallet Muun,Transferencia,,,
+16-01-2025,Pago CryptoTab Pool,true,41.63,MXN,NCwallet ,Inversión,CryptoTab Pool,,
+17-01-2025,Pago CryptoTab Browser,true,21.71,MXN,NCwallet ,Inversión,CryptoTab Browser,,
+19-01-2025,Renovación de suscripción a Todoist,true,-65,MXN,Google Play ,Play Store,Suscripciones,,
+20-01-2025,Semanal ,true,200,MXN,Monedero físico ,Salario,,,
+21-01-2025,Transferencia a Google Play  (Out),true,-200,MXN,Monedero físico ,Transferencia,,,
+21-01-2025,Transferencia a RedotPay (Out),true,-200,MXN,Cwallet ,Transferencia,,,
+21-01-2025,Transferencia a Google Play  (In),true,200,MXN,Google Play ,Transferencia,,,
+21-01-2025,Transferencia a Cwallet  (Out),true,-182.62,MXN,NCwallet ,Transferencia,,,
+21-01-2025,Bono por crear cuenta ,true,100,MXN,RedotPay,Recompensas,,,
+21-01-2025,Transferencia a RedotPay (In),true,200,MXN,RedotPay,Transferencia,,,
+21-01-2025,Transferencia a Cwallet  (In),true,182.62,MXN,Cwallet ,Transferencia,,,
+21-01-2025,Compra de tarjeta Crypto ,true,-200,MXN,RedotPay,Inversión,,,
+21-01-2025,Pago CryptoTab Pool ,true,34.83,MXN,NCwallet ,Inversión,CryptoTab Pool,,
+21-01-2025,Pago CryptoTab Browser,true,13.06,MXN,NCwallet ,Inversión,CryptoTab Browser,,
+22-01-2025,Compra de 450 créditos en Exaroton,true,-97.88,MXN,RedotPay,CMD,,,
+22-01-2025,Compra de Boost X5 en ROBOX ,true,-75,MXN,Google Play ,Inversión,ROBOX,,
+22-01-2025,Compra de Boost X10 en ROBOX,true,-149,MXN,Google Play ,Inversión,ROBOX,,
+22-01-2025,Pago de ecosistema ROBOX,true,4.09,MXN,NCwallet ,Inversión,ROBOX,,
+23-01-2025,Para la compra de cuadernos,true,200,MXN,Monedero físico ,Salario,,,
+23-01-2025,Compra de 3 cuadernos,true,-111,MXN,Monedero físico ,Educación,,,
+23-01-2025,Comida,true,-10,MXN,Monedero físico ,Comida,,,
+24-01-2025,Para la compra de libros ,true,700,MXN,Monedero físico ,Salario,,,
+24-01-2025,Compra de algunos libros,true,-460,MXN,Monedero físico ,Educación,,,
+24-01-2025,Comida,true,-15,MXN,Monedero físico ,Comida,,,
+25-01-2025,Pago de Bitcoin Mining ,true,10.51,MXN,Wallet Muun,Inversión,Bitcoin Mining,,
+26-01-2025,Pago de ecosistema ROBOX ,true,16.42,MXN,NCwallet ,Inversión,ROBOX,,
+27-01-2025,Para la compra de libros ,true,200,MXN,Monedero físico ,Salario,,,
+27-01-2025,Semanal ,true,200,MXN,Monedero físico ,Salario,,,
+27-01-2025,Compra de licencia permanente para esta app,true,-139,MXN,Google Play ,Play Store,Compras,,
+27-01-2025,Transferencia a Google Play  (Out),true,-200,MXN,Monedero físico ,Transferencia,,,
+27-01-2025,Transferencia a Google Play  (In),true,200,MXN,Google Play ,Transferencia,,,
+27-01-2025,Renovación de suscripción trimestral CT Max,true,-42,MXN,Google Play ,Inversión,CryptoTab browser ,,
+28-01-2025,Compra de cinta plateada,true,-29,MXN,Monedero físico ,Educación,,,
+29-01-2025,Compra de un libro ,true,-130,MXN,Monedero físico ,Educación,,,
+29-01-2025,Compra de folder,true,-25,MXN,Monedero físico ,Educación,,,
+29-01-2025,Pago CryptoTab Pool,true,41.96,MXN,NCwallet ,Inversión,CryptoTab Pool,,
+29-01-2025,Pago CryptoTab Browser,true,20.98,MXN,NCwallet ,Inversión,CryptoTab Browser,,
+29-01-2025,Pago de ROBOX Fit ,true,2.06,MXN,NCwallet ,Inversión,ROBOX,,
+30-01-2025,Transferencia a Cuenta personal  (Out),true,-200,MXN,Monedero físico ,Transferencia,,,
+30-01-2025,Transferencia a Cuenta personal  (In),true,200,MXN,BBVA,Transferencia,,,
+31-01-2025,Comida,true,-19,MXN,BBVA,Comida,,,
+01-02-2025,Pago ROBOX ,true,20,MXN,NCwallet ,Inversión,ROBOX,,
+02-02-2025,Pago de Bitcoin Mining ,true,10.24,MXN,Wallet Muun,Inversión,Bitcoin Mining,,
+03-02-2025,Pago de ROBOX ,true,18.11,MXN,NCwallet ,Inversión,ROBOX,,
+04-02-2025,Semanal,true,300,MXN,BBVA,Salario,,,
+04-02-2025,Refresco ,true,-19,MXN,BBVA,Comida,,,
+05-02-2025,Pago CryptoTab Pool,true,40.13,MXN,NCwallet ,Inversión,CryptoTab Pool,,
+05-02-2025,Pago CryptoTab browser ,true,20.07,MXN,NCwallet ,Inversión,CryptoTab Browser,,
+05-02-2025,Pago ROBOX Fit,true,2.05,MXN,NCwallet ,Inversión,ROBOX,,
+05-02-2025,Transferencia a Monedero físico  (In),true,300,MXN,Monedero físico ,Transferencia,,,
+05-02-2025,Transferencia a Monedero físico  (Out),true,-300,MXN,BBVA,Transferencia,,,
+06-02-2025,Compra de libro,true,-230,MXN,Monedero físico ,Educación,,,
+07-02-2025,Pago ROBOX,true,17.37,MXN,NCwallet ,Inversión,ROBOX,,
+09-02-2025,Transferencia a NCwallet  (Out),true,-16.87,MXN,Cwallet ,Transferencia,,,
+09-02-2025,Transferencia a NCwallet  (In),true,16.87,MXN,NCwallet ,Transferencia,,,
+10-02-2025,Compra de libro,true,-300,MXN,Monedero físico ,Educación,,,
+10-02-2025,Semanal ,true,71.19,MXN,BBVA,Salario,,,
+10-02-2025,Semanal ,true,200,MXN,Monedero físico ,Salario,,,
+10-02-2025,Café,true,-29,MXN,BBVA,Comida,,,
+11-02-2025,Pago ROBOX,true,15.83,MXN,NCwallet ,Inversión,ROBOX,,
+11-02-2025,Pago CryptoTab Pool,true,29.46,MXN,NCwallet ,Inversión,CryptoTab Pool,,
+11-02-2025,Cortauñas ,true,-20,MXN,Monedero físico ,Salud,,,
+11-02-2025,Transferencia a MetaMask (Out),true,-262.89,MXN,NCwallet ,Transferencia,,,
+11-02-2025,Transferencia a MetaMask (In),true,262.89,MXN,MetaMask,Transferencia,,,
+11-02-2025,Transferencia a Exnova (In),true,210,MXN,Exnova (1era cuenta),Transferencia,,,
+11-02-2025,Transferencia a Exnova (Out),true,-210,MXN,MetaMask,Transferencia,,,
+11-02-2025,Comida | 3 productos,true,-36,MXN,Monedero físico ,Comida,,,
+12-02-2025,Ganancias del día ,true,37,MXN,Exnova (1era cuenta),Trading ,Exnova,,
+12-02-2025,Reposición objeto laboratorio,true,-23,MXN,Monedero físico ,Educación,,,
+13-02-2025,Pago CryptoTab Browser,true,19.80,MXN,NCwallet ,Inversión,CryptoTab Browser,,
+13-02-2025,Ampliación de almacenamiento en Google | 30GB,true,-5,MXN,Google Play ,Play Store,Suscripciones,,
+13-02-2025,Pago de Bitcoin Mining,true,9.70,MXN,Wallet Muun,Inversión,Bitcoin Mining,,
+13-02-2025,Pago de ROBOX Fit,true,2.04,MXN,NCwallet ,Inversión,ROBOX,,
+13-02-2025,Agua,true,-26,MXN,BBVA,Comida,,,
+14-02-2025,Pago de Bitcoin Mining,true,0.20,MXN,Wallet Muun,Inversión,Bitcoin Mining,,
+14-02-2025,Ganancias del día,true,44,MXN,Exnova (1era cuenta),Trading ,Exnova,,
+15-02-2025,Pago ROBOX,true,15.64,MXN,NCwallet ,Inversión,ROBOX,,
+15-02-2025,Transferencia a Cwallet  (In),true,258.62,MXN,Cwallet ,Transferencia,,,
+15-02-2025,Transferencia a Cwallet  (Out),true,-258.62,MXN,Exnova (1era cuenta),Transferencia,,,
+16-02-2025,Transferencia a Cwallet  (Out),true,-41.10,MXN,MetaMask,Transferencia,,,
+16-02-2025,Transferencia a Cwallet  (In),true,41.10,MXN,Cwallet ,Transferencia,,,
+16-02-2025,Transferencia a Google Play  (Out),true,-100,MXN,Monedero físico ,Transferencia,,,
+16-02-2025,Transferencia a Google Play  (In),true,100,MXN,Google Play ,Transferencia,,,
+16-02-2025,Transferencia a Cwallet  (In),true,25.77,MXN,Cwallet ,Transferencia,,,
+16-02-2025,Transferencia a Cwallet  (Out),true,-25.77,MXN,Wallet Muun,Transferencia,,,
+17-02-2025,Semanal,true,200,MXN,Monedero físico ,Salario,,,
+17-02-2025,Transferencia a Google Play  (Out),true,-200,MXN,Monedero físico ,Transferencia,,,
+17-02-2025,Transferencia a Google Play  (In),true,200,MXN,Google Play ,Transferencia,,,
+17-02-2025,Compra nivel 1 minería,true,-115,MXN,Google Play ,Inversión,Bit tycoon,,
+17-02-2025,Compra nivel 2 minería,true,-165,MXN,Google Play ,Inversión,Bit tycoon,,
+18-02-2025,Pago CryptoTab Pool,true,38.37,MXN,NCwallet ,Inversión,CryptoTab Pool,,
+18-02-2025,Transferencia a NCwallet  (Out),true,-2,MXN,Cwallet ,Transferencia,,,
+18-02-2025,Transferencia a NCwallet  (In),true,2,MXN,NCwallet ,Transferencia,,,
+19-02-2025,Pago ROBOX,true,17.39,MXN,NCwallet ,Inversión,ROBOX,,
+19-02-2025,Pago CryptoTab Browser,true,19.67,MXN,NCwallet ,Inversión,CryptoTab Browser,,
+19-02-2025,Engargolado de manual de química,true,-33,MXN,Monedero físico ,Educación,,,
+19-02-2025,Lentes de seguridad,true,-29.50,MXN,Monedero físico ,Educación,,,
+20-02-2025,Comida,true,-15,MXN,Monedero físico ,Comida,,,
+20-02-2025,Pago ROBOX Fit,true,2.03,MXN,NCwallet ,Inversión,ROBOX,,
+21-02-2025,Transferencia a Exnova (In),true,200,MXN,Exnova (1era cuenta),Transferencia,,,
+21-02-2025,Transferencia a Exnova (Out),true,-200,MXN,Cwallet ,Transferencia,,,
+21-02-2025,Ingresos del día,true,44,MXN,Exnova (1era cuenta),Trading ,Exnova,,
+22-02-2025,Transporte,true,-10,MXN,Tarjeta tren,Transporte,,,
+22-02-2025,Recarga pequeña,true,3,MXN,Tarjeta tren,Recompensas,,,
+23-02-2025,Pago ROBOX,true,14.31,MXN,NCwallet ,Inversión,ROBOX,,
+24-02-2025,Transferencia a NCwallet  (Out),true,-112.18,MXN,Cwallet ,Transferencia,,,
+24-02-2025,Transferencia a NCwallet  (In),true,112.18,MXN,NCwallet ,Transferencia,,,
+24-02-2025,Semanal,true,200,MXN,Monedero físico ,Salario,,,
+24-02-2025,Transferencia a Google Play  (Out),true,-100,MXN,Monedero físico ,Transferencia,,,
+24-02-2025,Transferencia a Google Play  (In),true,100,MXN,Google Play ,Transferencia,,,
+25-02-2025,Pago CryptoTab Pool,true,36,MXN,NCwallet ,Inversión,CryptoTab Pool,,
+26-02-2025,Pago CryptoTab Browser,true,17.60,MXN,NCwallet ,Inversión,CryptoTab Browser,,
+27-02-2025,Pago ROBOX Fit,true,2.05,MXN,NCwallet ,Inversión,ROBOX,,
+27-02-2025,Recompensas,true,20,MXN,Monedero físico ,Recompensas,,,
+28-02-2025,Comida,true,-15,MXN,Monedero físico ,Comida,,,
+28-02-2025,Pago CryptoTab Pool,true,17.31,MXN,NCwallet ,Inversión,CryptoTab Pool,,
+28-02-2025,Pago CryptoTab Browser,true,5.19,MXN,NCwallet ,Inversión,CryptoTab Browser,,
+01-03-2025,Transferencia a Cwallet  (Out),true,-303.19,MXN,NCwallet ,Transferencia,,,
+01-03-2025,Transferencia a Cwallet  (In),true,303.19,MXN,Cwallet ,Transferencia,,,
+01-03-2025,Transferencia a Exnova (In),true,200,MXN,Exnova (1era cuenta),Transferencia,,,
+01-03-2025,Transferencia a Exnova (Out),true,-200,MXN,Cwallet ,Transferencia,,,
+01-03-2025,Ganancias del día,true,22.50,MXN,Exnova (1era cuenta),Trading ,Exnova,,
+02-03-2025,Transferencia a Cwallet  (Out),true,-360.50,MXN,Exnova (1era cuenta),Transferencia,,,
+02-03-2025,Transferencia a Cwallet  (In),true,360.50,MXN,Cwallet ,Transferencia,,,
+02-03-2025,Ganancias del día,true,21.50,MXN,Exnova (1era cuenta),Trading ,Exnova,,
+02-03-2025,Transferencia a RedotPay (In),true,303.07,MXN,RedotPay,Transferencia,,,
+02-03-2025,Transferencia a RedotPay (Out),true,-303.07,MXN,Cwallet ,Transferencia,,,
+02-03-2025,Renovación de suscripción 25k H/s | Trimestral,true,-276.25,MXN,RedotPay,Inversión,CryptoTab Pool,,
+03-03-2025,Semanal,true,200,MXN,Monedero físico ,Salario,,,
+03-03-2025,Transferencia a Google Play  (In),true,200,MXN,Google Play ,Transferencia,,,
+03-03-2025,Transferencia a Google Play  (Out),true,-200,MXN,Monedero físico ,Transferencia,,,
+03-03-2025,Compra de más poder computacional,true,-219,MXN,Google Play ,Inversión,Bitcoin Mining,,
+03-03-2025,3 hojas de colores,true,-3,MXN,Monedero físico ,Educación,,,
+03-03-2025,Cashback por compra,true,29.06,MXN,NCwallet ,Recompensas,,,
+05-03-2025,Transferencia a NCwallet  (In),true,121.77,MXN,NCwallet ,Transferencia,,,
+05-03-2025,Transferencia a NCwallet  (Out),true,-121.77,MXN,Cwallet ,Transferencia,,,
+06-03-2025,Pago CryptoTab Pool,true,36.56,MXN,NCwallet ,Inversión,CryptoTab Pool,,
+06-03-2025,Pago CryptoTab browser,true,16.42,MXN,NCwallet ,Inversión,CryptoTab Browser,,
+06-03-2025,Pago Bitcoin Mining,true,17.84,MXN,Wallet Muun,Inversión,Bitcoin Mining,,
+06-03-2025,Renovación de suscripción CT Lite,true,-106.24,MXN,NCwallet ,Inversión,CryptoTab browser ,,X15 | Trimestral
+06-03-2025,Cashback por compra,true,11.77,MXN,NCwallet ,Recompensas,,,
+07-03-2025,Refresco,true,-19,MXN,Monedero físico ,Comida,,,
+10-03-2025,Semanal,true,21.58,MXN,BBVA,Salario,,,
+10-03-2025,Transferencia a Google Play  (Out),true,-200,MXN,Monedero físico ,Transferencia,,,
+10-03-2025,Transferencia a Google Play  (In),true,200,MXN,Google Play ,Transferencia,,,
+10-03-2025,Canje de puntos,true,20,MXN,Google Play ,Recompensas,,,
+10-03-2025,Semanal,true,200,MXN,Monedero físico ,Salario,,,
+10-03-2025,Compra de X15 en CT Lite | 6 meses,true,-174.25,MXN,Google Play ,Inversión,CryptoTab browser ,,
+12-03-2025,Pago CryptoTab Pool,true,33.77,MXN,NCwallet ,Inversión,CryptoTab Pool,,
+13-03-2025,Google one | 30GB de memoria,true,-17,MXN,Google Play ,Play Store,Suscripciones,,
+14-03-2025,Pago CryptoTab Browser,true,25.17,MXN,NCwallet ,Inversión,CryptoTab Browser,,
+16-03-2025,Canje de puntos de Google play points,true,2,MXN,Google Play ,Recompensas,,,
+17-03-2025,Semanal,true,200,MXN,Monedero físico ,Salario,,,
+17-03-2025,Transferencia a Google Play  (In),true,200,MXN,Google Play ,Transferencia,,,
+17-03-2025,Transferencia a Google Play  (Out),true,-200,MXN,Monedero físico ,Transferencia,,,
+17-03-2025,Compra de suscripción X10 en CryptoTab Pro | Trimestral,true,-352.75,MXN,Google Play ,Inversión,CryptoTab browser ,,
+17-03-2025,Cashback por compra,true,22.71,MXN,NCwallet ,Recompensas,,,
+19-03-2025,Pago CryptoTab Browser,true,25.18,MXN,NCwallet ,Inversión,CryptoTab Browser,,
+20-03-2025,Pago CryptoTab Pool,true,33.89,MXN,NCwallet ,Inversión,CryptoTab Pool,,
+23-03-2025,Pago CryptoTab browser,true,34.07,MXN,NCwallet ,Inversión,CryptoTab Browser,,"2,000 SAT"
+24-03-2025,Semanal,true,200,MXN,Monedero físico ,Salario,,,
+24-03-2025,Recompensas,true,20,MXN,Monedero físico ,Recompensas,,,
+24-03-2025,1 boleto tren,true,-10,MXN,Monedero físico ,Transporte,,,
+26-03-2025,Pago CryptoTab Pool,true,34.88,MXN,NCwallet ,Inversión,CryptoTab Pool,,"2,000 SAT"
+26-03-2025,Compra de suscripción X15 CT Lite | 6 meses,true,-161.81,MXN,NCwallet ,Inversión,CryptoTab browser ,,
+26-03-2025,Cashback por compra,true,20.54,MXN,NCwallet ,Recompensas,,,
+27-03-2025,Agua,true,-19,MXN,BBVA,Comida,,,
+28-03-2025,Pago Bitcoin Mining,true,16.96,MXN,Wallet Muun,Inversión,Bitcoin Mining,,"1,000 SAT"
+28-03-2025,Transferencia a Google Play  (Out),true,-220,MXN,Monedero físico ,Transferencia,,,
+28-03-2025,Transferencia a Google Play  (In),true,220,MXN,Google Play ,Transferencia,,,
+29-03-2025,Pago CryptoTab Browser,true,51.39,MXN,NCwallet ,Inversión,CryptoTab Browser,,"3,000 SAT"
+29-03-2025,Ganancias de la semana,true,5.76,MXN,Exnova (1era cuenta),Trading ,Exnova,,Afectadas por un modelo de trading diferente. Trading convencional usando señales
+31-03-2025,Bono sin depósito,true,102.22,MXN,Iq Option | luis213465rivas@gmail.com,Recompensas,,,
+31-03-2025,Semanal,true,200,MXN,Monedero físico ,Salario,,,
+31-03-2025,Transferencia a Google Play  (Out),true,-215,MXN,Monedero físico ,Transferencia,,,
+31-03-2025,Transferencia a Google Play  (In),true,215,MXN,Google Play ,Transferencia,,,
+31-03-2025,"Compra de suscripción 20,000 H/s",true,-432.65,MXN,Google Play ,Inversión,CryptoTab browser ,,CT Max | Trimestral | Google Play
+31-03-2025,Pago CryptoTab Pool,true,27.54,MXN,NCwallet ,Inversión,CryptoTab Pool,,"1,608 SAT"
+31-03-2025,Pago CryptoTab Browser,true,20.13,MXN,NCwallet ,Inversión,CryptoTab Browser,,"1,175 SAT"
+31-03-2025,Cashback por compra,true,57.28,MXN,NCwallet ,Recompensas,,,
+02-04-2025,Pago CT Browser,true,3.86,MXN,NCwallet ,Inversión,CryptoTab Browser,,217 SAT
+03-04-2025,Renovación de suscripción a otra app de gestor de gastos ,true,-60.71,MXN,RedotPay,Play Store,Suscripciones,,
+03-04-2025,Transferencia a RedotPay (In),true,82.83,MXN,RedotPay,Transferencia,,,
+03-04-2025,Transferencia a RedotPay (Out),true,-82.83,MXN,NCwallet ,Transferencia,,,
+07-04-2025,Semanal,true,200,MXN,Monedero físico ,Salario,,,
+07-04-2025,Pago CT Browser,true,49.79,MXN,NCwallet ,Inversión,CryptoTab Browser,,"Pago 3,000 SAT"
+07-04-2025,Pago CT Pool,true,16.22,MXN,NCwallet ,Inversión,CryptoTab Pool,,"1,000 SAT"
+08-04-2025,Pago de impresiones,true,-5,MXN,Monedero físico ,Educación,,,
+08-04-2025,Pago CT Browser,true,47.88,MXN,NCwallet ,Inversión,CryptoTab Browser,,"Pago 3,000 SAT"
+10-04-2025,Transferencia a Google Play  (Out),true,-270,MXN,Monedero físico ,Transferencia,,,
+10-04-2025,Pago CT Pool,true,16.53,MXN,NCwallet ,Inversión,CryptoTab Pool,,"Pago 1,000 SAT"
+10-04-2025,Canje de puntos por saldo,true,10,MXN,Google Play ,Recompensas,,,
+10-04-2025,Pago Bit Tycoon,true,33.13,MXN,Trust Wallet,Inversión,Bit tycoon,,"Pago 2,000 SAT"
+10-04-2025,Transferencia a Google Play  (In),true,270,MXN,Google Play ,Transferencia,,,
+11-04-2025,Ganancias de la semana,true,1.24,MXN,Exnova (1era cuenta),Trading ,Exnova,,Semana de pruebas de estrategias y scripts en cuenta real.
+11-04-2025,Ganancias de la semana,true,4.53,MXN,Iq Option | luis213465rivas@gmail.com,Trading ,IQ Option,,Prueba de estrategias en cuenta real.
+11-04-2025,Nueva suscripción CT Browser,true,-276.25,MXN,Google Play ,Inversión,CryptoTab browser ,,Compra de suscripción X15 CT Lite | 12 meses | Pago con saldo de Google Play
+11-04-2025,Cashback por compra,true,33.41,MXN,NCwallet ,Recompensas,,,
+12-04-2025,Transferencia a Cwallet  (In),true,101.56,MXN,Cwallet ,Transferencia,,,
+12-04-2025,Transferencia a Cwallet  (Out),true,-101.56,MXN,NCwallet ,Transferencia,,,
+13-04-2025,Pago CT Browser,true,67.70,MXN,NCwallet ,Inversión,CryptoTab Browser,,"Pago 4,000 SAT"
+13-04-2025,Recompensas,true,50,MXN,Monedero físico ,Recompensas,,,
+13-04-2025,Comida,true,-15,MXN,Monedero físico ,Comida,,,
+13-04-2025,Transferencia a RedotPay (In),true,101.01,MXN,RedotPay,Transferencia,,,
+13-04-2025,Transferencia a RedotPay (Out),true,-101.01,MXN,Cwallet ,Transferencia,,,
+13-04-2025,Suscripción Google One,true,-17,MXN,RedotPay,Play Store,Suscripciones,,
+14-04-2025,CT Browser Lite,true,-109.65,MXN,RedotPay,Inversión,CryptoTab browser ,,"Renovación de suscripción 5,000 H/s en CT Lite | Trimestral"
+14-04-2025,CT Browser Lite,true,-265.17,MXN,NCwallet ,Inversión,CryptoTab browser ,,"Compra de suscripción 4,500 H/s en CT Lite | anual | pago con cripto"
+14-04-2025,Por responder encuesta de Google,true,2.43,MXN,Google Play ,Recompensas,,,
+15-04-2025,Cashback por compra,true,38.45,MXN,NCwallet ,Recompensas,,,
+17-04-2025,Pago de app en deshuso,true,3.67,MXN,Wallet Muun,Inversión,Bitcoin Mining,,
+18-04-2025,Pago CT Browser,true,67.85,MXN,NCwallet ,Inversión,CryptoTab Browser,,"Pago 4,000 SAT"
+18-04-2025,Pago CT Pool,true,16.84,MXN,NCwallet ,Inversión,CryptoTab Pool,,"Pago 1,000 SAT"
+19-04-2025,Pago Bitcoin Mining,true,16.69,MXN,Wallet Muun,Inversión,Bitcoin Mining,,"Pago 1,000 SAT"
+23-04-2025,Pago CT Browser,true,73.64,MXN,NCwallet ,Inversión,CryptoTab Browser,,"Pago 4,000 SAT"
+25-04-2025,Ganancias de la semana,true,17.57,MXN,Exnova (1era cuenta),Trading ,Exnova,,"Ganancias de la semana | Operaciones asistidas con scripts de estrategias rentables. Se busca ir aumentando gradualmente el capital para seguir adelante.
+"
+26-04-2025,Pago CT Pool,true,18.49,MXN,NCwallet ,Inversión,CryptoTab Pool,,"Pago 1,000 SAT"
+27-04-2025,Transferencia a RedotPay (Out),true,-122.25,MXN,NCwallet ,Transferencia,,,
+27-04-2025,Transferencia a RedotPay (In),true,122.25,MXN,RedotPay,Transferencia,,,
+28-04-2025,Semanal,true,200,MXN,Monedero físico ,Salario,,,
+28-04-2025,Pago CT Browser,true,73.80,MXN,NCwallet ,Inversión,CryptoTab Browser,,"Pago 4,000 SAT"
+28-04-2025,CT Browser Max,true,-119.57,MXN,RedotPay,Inversión,CryptoTab browser ,,Renovación de acceso CT Max | Anual
+05-05-2025,Semanal,true,200,MXN,Monedero físico ,Salario,,,
+06-05-2025,Pago Bit Tycoon,true,40.88,MXN,Trust Wallet,Inversión,Bit tycoon,,"Pago 2,000 SAT"
+06-05-2025,Transferencia a Google Play  (Out),true,-400,MXN,Monedero físico ,Transferencia,,,
+06-05-2025,Transferencia a Google Play  (In),true,400,MXN,Google Play ,Transferencia,,,
+06-05-2025,Por responder encuesta de Google,true,2.50,MXN,Google Play ,Recompensas,,,
+06-05-2025,Pago CT Browser,true,93.13,MXN,NCwallet ,Inversión,CryptoTab Browser,,"Pago 5,000 H/s"
+06-05-2025,CT Pool,true,-140.25,MXN,Google Play ,Inversión,CryptoTab Pool,,"Compra de suscripción 15,000 H/s | Trimestral | Saldo Google Play"
+06-05-2025,CT Pool,true,-254.15,MXN,Google Play ,Inversión,CryptoTab Pool,,"Compra de suscripción 15,000 H/s | 6 meses | Saldo Google Play"
+09-05-2025,Por responder encuesta de Google,true,3.68,MXN,Google Play ,Recompensas,,,
+10-05-2025,Transferencia a RedotPay (In),true,58.32,MXN,RedotPay,Transferencia,,,
+10-05-2025,Transferencia a RedotPay (Out),true,-58.32,MXN,NCwallet ,Transferencia,,,
+12-05-2025,Semanal,true,200,MXN,Monedero físico ,Salario,,,
+12-05-2025,Pago CT Pool,true,40.30,MXN,NCwallet ,Inversión,CryptoTab Pool,,"Pago 2,000 SAT"
+13-05-2025,Pago CT Browser,true,101.23,MXN,NCwallet ,Inversión,CryptoTab Browser,,"Pago 5,000 SAT"
+13-05-2025,Compra en CT Max,true,-384.40,MXN,NCwallet ,Inversión,CryptoTab browser ,,"Compra de suscripción 20,000 H/s en CT Max | Trimestral | Pago con cripto"
+13-05-2025,Renovación Google One,true,-17,MXN,RedotPay,Play Store,Suscripciones,,
+16-05-2025,Ingresos de la semana ,true,22.54,MXN,Exnova (1era cuenta),Trading ,Exnova,,"• Incremento: $22.54
+• ROI: 147.56%"
+19-05-2025,Renta de bata de laboratorio,true,-12,MXN,Monedero físico ,Educación,,,
+19-05-2025,Semanal,true,200,MXN,Monedero físico ,Salario,,,
+19-05-2025,Pago CT Browser,true,102.14,MXN,NCwallet ,Inversión,CryptoTab Browser,,"Pago 5,000 SAT"
+19-05-2025,Pago Bitcoin Mining,true,40.40,MXN,Wallet Muun,Inversión,Bitcoin Mining,,"Pago 2,000 SAT"
+19-05-2025,Transferencia a Google Play  (In),true,400,MXN,Google Play ,Transferencia,,,
+19-05-2025,Transferencia a Google Play  (Out),true,-400,MXN,Monedero físico ,Transferencia,,,
+20-05-2025,Suscripción CT Farm,true,-412.25,MXN,Google Play ,Inversión,CryptoTab Farm,,"Compra de suscripción 47,000 H/s | Trimestral | Saldo Google Play"
+20-05-2025,Pago CT Pool,true,41.16,MXN,NCwallet ,Inversión,CryptoTab Pool,,"Pago 2,000 SAT"
+21-05-2025,Transferencia a Cwallet  (In),true,103.75,MXN,Cwallet ,Transferencia,,,
+21-05-2025,Transferencia a Cwallet  (Out),true,-103.75,MXN,Wallet Muun,Transferencia,,,
+21-05-2025,Transferencia a Trust Wallet (In),true,4,MXN,Trust Wallet,Transferencia,,,
+21-05-2025,Transferencia a Trust Wallet (Out),true,-4,MXN,Cwallet ,Transferencia,,,
+21-05-2025,Transferencia a Cwallet  (In),true,82.23,MXN,Cwallet ,Transferencia,,,
+21-05-2025,Transferencia a Cwallet  (Out),true,-82.23,MXN,Trust Wallet,Transferencia,,,
+21-05-2025,Transferencia a NCwallet  (Out),true,-191.57,MXN,Cwallet ,Transferencia,,,
+21-05-2025,Transferencia a NCwallet  (In),true,191.57,MXN,NCwallet ,Transferencia,,,
+23-05-2025,Ganancias de la semana,true,3.89,MXN,Exnova (1era cuenta),Trading ,Exnova,,"Con un ROI de aproximadamente superior al 15%. (dato del saldo en la imagen no representativo, solo datos de ganancia y ROI)"
+26-05-2025,Semanal,true,200,MXN,Monedero físico ,Salario,,,
+26-05-2025,Pago CT Browser,true,105.09,MXN,NCwallet ,Inversión,CryptoTab Browser,,"Pago 5,000 SAT"
+26-05-2025,Semanal,true,28.79,MXN,BBVA,Salario,,,
+27-05-2025,Transferencia a Exnova (Out),true,-200,MXN,Monedero físico ,Transferencia,,,
+27-05-2025,Transferencia a Exnova (In),true,200,MXN,Exnova (1era cuenta),Transferencia,,,
+28-05-2025,Pago CT Pool,true,41.80,MXN,NCwallet ,Inversión,CryptoTab Pool,,"Pago 2,000 SAT"
+28-05-2025,Pago CT Farm,true,41.80,MXN,NCwallet ,Inversión,CryptoTab Farm,,"Pago 2,000 SAT"
+30-05-2025,Comida,true,-15,MXN,Monedero físico ,Comida,,,
+31-05-2025,Pago CT Pool,true,16.98,MXN,NCwallet ,Inversión,CryptoTab Pool,,Pago 840 SAT
+31-05-2025,Pago CT Farm,true,18.50,MXN,NCwallet ,Inversión,CryptoTab Farm,,Pago 915 SAT
+31-05-2025,Pago CT Browser,true,90.31,MXN,NCwallet ,Inversión,CryptoTab Browser,,"Pago 4,467 SAT"
+01-06-2025,Compra membresía de VisualPolitik,true,-9,MXN,Google Play ,Play Store,Suscripciones,,Mensual
+01-06-2025,Compra membresía de VisualEconomik,true,-9,MXN,RedotPay,Play Store,Suscripciones,,Mensual
+02-06-2025,Transferencia a RedotPay (In),true,278.57,MXN,RedotPay,Transferencia,,,
+02-06-2025,Transferencia a RedotPay (Out),true,-278.57,MXN,NCwallet ,Transferencia,,,
+02-06-2025,Renovación de suscripción CT Pool,true,-276.25,MXN,RedotPay,Inversión,CryptoTab Pool,,"25,000 H/s | Trimestral"
+02-06-2025,Semanal,true,200,MXN,Monedero físico ,Salario,,,
+04-06-2025,Pago Bitcoin Mining,true,19.94,MXN,Wallet Muun,Inversión,Bitcoin Mining,,"Pago 1,000 SAT"
+05-06-2025,Pago CT Pool,true,13.80,MXN,NCwallet ,Inversión,CryptoTab Pool,,Pago 693 SAT
+06-06-2025,Renovación de suscripción CT Lite,true,-81.34,MXN,NCwallet ,Inversión,CryptoTab browser ,,"4,500 H/s | Trimestral"
+07-06-2025,Pago CT Browser,true,99.77,MXN,NCwallet ,Inversión,CryptoTab Browser,,"Pago 5,000 SAT"
+08-06-2025,Por responder encuesta de Google,true,1,MXN,Google Play ,Recompensas,,,
+09-06-2025,Por responder encuesta de Google,true,3.94,MXN,Google Play ,Recompensas,,,
+10-06-2025,Transferencia a Google Play  (Out),true,-100,MXN,Monedero físico ,Transferencia,,,
+10-06-2025,Transferencia a Google Play  (In),true,100,MXN,Google Play ,Transferencia,,,
+10-06-2025,Compra | Eliminar anuncios en app,true,-89,MXN,Google Play ,Play Store,Compras,,Descargador
+13-06-2025,Pago CT Pool,true,39.90,MXN,NCwallet ,Inversión,CryptoTab Pool,,"Pago 2,000 SAT"
+13-06-2025,Pago CT Browser,true,99.51,MXN,NCwallet ,Inversión,CryptoTab Browser,,"Pago 5,000 SAT"
+13-06-2025,Pago CT Farm,true,39.90,MXN,NCwallet ,Inversión,CryptoTab Farm,,"Pago 2,000 SAT"
+13-06-2025,Por responder encuesta de Google,true,1.65,MXN,Google Play ,Recompensas,,,
+16-06-2025,Transferencia a RedotPay (In),true,378.20,MXN,RedotPay,Transferencia,,,
+16-06-2025,Transferencia a RedotPay (Out),true,-378.20,MXN,NCwallet ,Transferencia,,,
+17-06-2025,Renovación de suscripción CT Pro,true,-352.75,MXN,RedotPay,Inversión,CryptoTab browser ,,"15,000 H/s | Trimestral"
+20-06-2025,Pago CT Farm,true,39.32,MXN,NCwallet ,Inversión,CryptoTab Farm,,"Pago 2,000 SAT"
+20-06-2025,Pago CT Browser,true,101.07,MXN,NCwallet ,Inversión,CryptoTab Browser,,"Pago 5,141 SAT"
+22-06-2025,Pago CT Pool,true,39.63,MXN,NCwallet ,Inversión,CryptoTab Pool,,"Pago 2,000 SAT"
+24-06-2025,Pago Bitcoin Mining,true,9.94,MXN,Wallet Muun,Inversión,Bitcoin Mining,,Pago 500 SAT
+26-06-2025,Transferencia a Cuenta personal  (Out),true,-200,MXN,Exnova (1era cuenta),Transferencia,,,
+26-06-2025,Transferencia a Cuenta personal  (In),true,200,MXN,BBVA,Transferencia,,,
+27-06-2025,Pago CT Pool,true,20.26,MXN,NCwallet ,Inversión,CryptoTab Pool,,"Pago 1,000 SAT"
+27-06-2025,Pago CT Farm ,true,40.52,MXN,NCwallet ,Inversión,CryptoTab Farm,,"Pago 2,000 SAT"
+27-06-2025,Pago CT Browser,true,101.33,MXN,NCwallet ,Inversión,CryptoTab Browser,,"Pago 5,002 SAT"
+27-06-2025,Ganancias de la semana,true,0.89,MXN,Exnova (1era cuenta),Trading ,Exnova,,
+28-06-2025,Por responder encuesta de Google,true,3.89,MXN,Google Play ,Recompensas,,,
+01-07-2025,Renovación de suscripción CT Max,true,-347.65,MXN,RedotPay,Inversión,CryptoTab browser ,,"20,000 H/s | Trimestral"
+01-07-2025,Renovación de membresía de VisualEconomik,true,-9,MXN,RedotPay,Play Store,Suscripciones,,YouTube | Mensual
+01-07-2025,Transferencia a RedotPay (In),true,356.96,MXN,RedotPay,Transferencia,,,
+01-07-2025,Transferencia a RedotPay (Out),true,-356.96,MXN,NCwallet ,Transferencia,,,
+01-07-2025,Compra de suscripción Google One,true,-17,MXN,RedotPay,Play Store,Suscripciones,,Mensual
+01-07-2025,Compra de suscripción CT Pro,true,-254.54,MXN,NCwallet ,Inversión,CryptoTab browser ,,"15,000 H/s | Trimestral"
+01-07-2025,Renovación de membresía de VisualPolitik,true,-9,MXN,RedotPay,Play Store,Suscripciones,,YouTube | Mensual
+04-07-2025,Ganancias de la semana,true,0.96,MXN,Exnova (1era cuenta),Trading ,Exnova,,
+04-07-2025,Pago CT Farm,true,40.23,MXN,NCwallet ,Inversión,CryptoTab Farm,,"Pago 2,000 SAT"
+04-07-2025,Pago CT Browser,true,108.28,MXN,NCwallet ,Inversión,CryptoTab Browser,,"Pago 5,384 SAT"
+05-07-2025,Transferencia a Monedero físico  (Out),true,-200,MXN,BBVA,Transferencia,,,
+05-07-2025,Transferencia a Monedero físico  (In),true,200,MXN,Monedero físico ,Transferencia,,,
+08-07-2025,Pago CT Pool,true,40.45,MXN,NCwallet ,Inversión,CryptoTab Pool,,"Pago 2,000 SAT"
+10-07-2025,Pago CT Browser ,true,110.27,MXN,NCwallet ,Inversión,CryptoTab Browser,,"Pago 5,000 SAT"
+11-07-2025,Transferencia a Google Play  (Out),true,-200,MXN,Monedero físico ,Transferencia,,,
+11-07-2025,Transferencia a Google Play  (In),true,200,MXN,Google Play ,Transferencia,,,
+12-07-2025,Por responder encuesta de Google,true,2.07,MXN,Google Play ,Recompensas,,,
+12-07-2025,Pago Bitcoin Mining,true,21.68,MXN,Wallet Muun,Inversión,Bitcoin Mining,,"Pago 1,000 SAT"
+14-07-2025,Renovación de suscripción CT Lite,true,-109.65,MXN,Google Play ,Inversión,CryptoTab browser ,,"4,500 H/s | Trimestral"
+16-07-2025,Por responder encuesta de Google,true,1.69,MXN,Google Play ,Recompensas,,,
+18-07-2025,Pago CT Farm,true,44.07,MXN,NCwallet ,Inversión,CryptoTab Farm,,"2,000 SAT"
+18-07-2025,Pago CT Browser,true,143.19,MXN,NCwallet ,Inversión,CryptoTab Browser,,"6,502 SAT"
+19-07-2025,Pago CT Pool,true,44.25,MXN,NCwallet ,Inversión,CryptoTab Pool,,"2,000 SAT"
+24-07-2025,Pago CT Pool,true,22.15,MXN,NCwallet ,Inversión,CryptoTab Pool,,"Pago 1,000 SAT"
+25-07-2025,Pago CT Farm,true,43.06,MXN,NCwallet ,Inversión,CryptoTab Farm,,"Pago 2,000 SAT"
+25-07-2025,Pago CT Browser,true,118.90,MXN,NCwallet ,Inversión,CryptoTab Browser,,"Pago 5,523 SAT"
+25-07-2025,Ganancias de la semana,true,1.94,MXN,Exnova (1era cuenta),Trading ,Exnova,,
+30-07-2025,Pago CT Pool,true,22.13,MXN,NCwallet ,Inversión,CryptoTab Pool,,"1,000 SAT"
+30-07-2025,Pago CT Farm,true,22.13,MXN,NCwallet ,Inversión,CryptoTab Farm,,"1,000 SAT"
+30-07-2025,Transferencia a RedotPay (In),true,11,USD,RedotPay,Transferencia,,,
+30-07-2025,Transferencia a RedotPay (Out),true,-11,USD,NCwallet ,Transferencia,,,
+01-08-2025,Renovación de membresía de VisualEconomik,true,-9,MXN,RedotPay,Play Store,Suscripciones,,YouTube | Mensual
+01-08-2025,Renovación suscripción Google One,true,-17,MXN,RedotPay,Play Store,Suscripciones,,
+01-08-2025,Pago CT Browser,true,107.50,MXN,NCwallet ,Inversión,CryptoTab Browser,,"5,000 SAT"
+01-08-2025,Renovación de suscripción CT Max,true,-317.58,MXN,NCwallet ,Inversión,CryptoTab browser ,,"20,000 H/s | Trimestral"
+01-08-2025,Renovación de membresía de VisualPolitik,true,-9,MXN,RedotPay,Play Store,Suscripciones,,YouTube | Mensual
+02-08-2025,Compra Hosting bot discord,true,-8.65,MXN,RedotPay,CMD,Hosting bots discord,,Plan mensual
+05-08-2025,Pago CT Pool,true,21.21,MXN,NCwallet ,Inversión,CryptoTab Pool,,"1,000 SAT"
+05-08-2025,Pago CT Farm,true,21.21,MXN,NCwallet ,Inversión,CryptoTab Farm,,"1,000 SAT"
+06-08-2025,Renovación de suscripción CT Pool,true,-140.25,MXN,RedotPay,Inversión,CryptoTab Pool,,"15,000 H/s | Trimestral"
+06-08-2025,Pago CT Browser ,true,107.24,MXN,NCwallet ,Inversión,CryptoTab Browser,,"5,000 SAT"
+08-08-2025,Canje de puntos,true,2,MXN,Google Play ,Recompensas,,,100 puntos
+08-08-2025,Ganancias de la semana,true,0.72,MXN,Exnova (1era cuenta),Trading ,Exnova,,
+10-08-2025,Pago CT Pool,true,21.68,MXN,NCwallet ,Inversión,CryptoTab Pool,,"1,000 SAT"
+10-08-2025,Pago Bitcoin Mining,true,21.83,MXN,Wallet Muun,Inversión,Bitcoin Mining,,"1,000 SAT"
+11-08-2025,Pago CT Farm,true,22.27,MXN,NCwallet ,Inversión,CryptoTab Farm,,"Pago 1,000 SAT"
+11-08-2025,Semanal,true,200,MXN,Monedero físico ,Salario,,,
+11-08-2025,Transferencia a Google Play  (Out),true,-200,MXN,Monedero físico ,Transferencia,,,
+11-08-2025,Transferencia a Google Play  (In),true,200,MXN,Google Play ,Transferencia,,,
+12-08-2025,Pago CT Browser,true,110.87,MXN,NCwallet ,Inversión,CryptoTab Browser,,"Pago 5,000 SAT"
+17-08-2025,Pago CT Pool,true,22.02,MXN,NCwallet ,Inversión,CryptoTab Pool,,"1,000 SAT"
+17-08-2025,Pago CT Farm,true,22.02,MXN,NCwallet ,Inversión,CryptoTab Farm,,"1,000 SAT"
+18-08-2025,Semanal,true,200,MXN,Monedero físico ,Salario,,,
+18-08-2025,Para compra de libros,true,1000,MXN,Monedero físico ,Salario,,,
+18-08-2025,Pago CT Browser,true,109.21,MXN,NCwallet ,Inversión,CryptoTab Browser,,"5,000 SAT"
+18-08-2025,Transferencia a Google Play  (Out),true,-200,MXN,Monedero físico ,Transferencia,,,
+18-08-2025,Transferencia a Google Play  (In),true,200,MXN,Google Play ,Transferencia,,,
+20-08-2025,Canje de puntos,true,30,MXN,Google Play ,Recompensas,,,"1,500 puntos = 30MXN"
+20-08-2025,Compra de poder computacional,true,-43,MXN,Google Play ,Inversión,Tap Mining,,200 GH/s
+23-08-2025,Pago Tap Mining,true,0.42,MXN,Speed Wallet,Inversión,Tap Mining,,20 SAT
+24-08-2025,Pago CT Pool,true,20.86,MXN,Cwallet ,Inversión,CryptoTab Pool,,"1,000 SAT"
+25-08-2025,Semanal,true,200,MXN,Monedero físico ,Salario,,,
+25-08-2025,Pago CT Browser,true,102.45,MXN,NCwallet ,Inversión,CryptoTab Browser,,"5,001 SAT"
+26-08-2025,Transferencia a Google Play  (Out),true,-200,MXN,Monedero físico ,Transferencia,,,
+26-08-2025,Transferencia a Google Play  (In),true,200,MXN,Google Play ,Transferencia,,,
+27-08-2025,Compra de 4/5 libros,true,-925,MXN,Monedero físico ,Educación,,,210+285+220+210 = 925
+29-08-2025,Pago CT Pool,true,20.24,MXN,NCwallet ,Inversión,CryptoTab Pool,,"1,000 SAT"
+29-08-2025,Dulce,true,-4,MXN,Monedero físico ,Comida,,,
+30-08-2025,Transferencia a RedotPay (Out),true,-690.26,MXN,NCwallet ,Transferencia,,,
+30-08-2025,Transferencia a RedotPay (In),true,690.26,MXN,RedotPay,Transferencia,,,
+30-08-2025,Compra libro,true,-130,MXN,Monedero físico ,Educación,,,"Matemáticas, el último que faltaba."
+31-08-2025,🥤,true,-18,MXN,Monedero físico ,Comida,,,
+01-09-2025,Renovación de suscripción CT Farm,true,-327.25,MXN,RedotPay,Inversión,CryptoTab Farm,,"47,000 H/s | Trimestral"
+01-09-2025,Renovación de suscripción Google One,true,-17,MXN,RedotPay,Play Store,Suscripciones,,
+01-09-2025,Renovación de membresía de VisualEconomik,true,-9,MXN,RedotPay,Play Store,Suscripciones,,YouTube | Mensual
+01-09-2025,Semanal,true,200,MXN,Monedero físico ,Salario,,,
+01-09-2025,Pago CT Browser,true,101.44,MXN,NCwallet ,Inversión,CryptoTab Browser,,"5,000 SAT"
+01-09-2025,Renovación de suscripción CT Pool,true,-174.25,MXN,RedotPay,Inversión,CryptoTab Pool,,"25,000 H/s | Trimestral"
+01-09-2025,Bonificación por compra CryptoTab,true,0.02,MXN,NCwallet ,Recompensas,,,
+01-09-2025,Renovación de membresía de VisualPolitik,true,-9,MXN,RedotPay,Play Store,Suscripciones,,YouTube | Mensual
+03-09-2025,Pago CT Pool,true,20.73,MXN,NCwallet ,Inversión,CryptoTab Pool,,"1,000 SAT"
+03-09-2025,Pago CT Farm,true,20.73,MXN,NCwallet ,Inversión,CryptoTab Farm,,"1,000 SAT"
+04-09-2025,Transferencia a Google Play  (Out),true,-200,MXN,Monedero físico ,Transferencia,,,
+04-09-2025,Transferencia a Google Play  (In),true,200,MXN,Google Play ,Transferencia,,,
+04-09-2025,Pago Bitcoin Mining,true,27.73,MXN,Wallet Muun,Inversión,Bitcoin Mining,,"1,000 SAT"
+05-09-2025,Transferencia a Wallet Muun (Out),true,-0.35,MXN,Speed Wallet,Transferencia,,,Prueba de usabilidad
+05-09-2025,Transferencia a Wallet Muun (In),true,0.35,MXN,Wallet Muun,Transferencia,,,Prueba de usabilidad
+05-09-2025,Transferencia a Cwallet  (In),true,95.85,MXN,Cwallet ,Transferencia,,,
+05-09-2025,Transferencia a Cwallet  (Out),true,-95.85,MXN,Wallet Muun,Transferencia,,,
+05-09-2025,Transferencia a Olymptrade (In),true,93.47,MXN,Olymptrade,Transferencia,,,
+05-09-2025,Transferencia a Olymptrade (Out),true,-93.47,MXN,Cwallet ,Transferencia,,,
+07-09-2025,Pago CT Browser,true,103.84,MXN,NCwallet ,Inversión,CryptoTab Browser,,"5,000 SAT"
+08-09-2025,Transferencia a Google Play  (In),true,200,MXN,Google Play ,Transferencia,,,
+08-09-2025,Semanal,true,200,MXN,Monedero físico ,Salario,,,
+08-09-2025,Compra de más poder de minado,true,-1099,MXN,Google Play ,Inversión,Tap Mining,,1 Th/s + 1 adicional por promoción
+08-09-2025,Transferencia a Google Play  (Out),true,-200,MXN,Monedero físico ,Transferencia,,,
+08-09-2025,Pago CT Pool,true,20.99,MXN,NCwallet ,Inversión,CryptoTab Pool,,"1,000 SAT"
+08-09-2025,Pago CT Farm,true,20.99,MXN,NCwallet ,Inversión,CryptoTab Farm,,"1,000 SAT"
+10-09-2025,Renovación de suscripción CT Lite,true,-118.15,MXN,RedotPay,Inversión,CryptoTab browser ,,"4,500 H/s | Semestral"
+13-09-2025,Pago CT Farm,true,21.37,MXN,NCwallet ,Inversión,CryptoTab Farm,,"1,000 SAT"
+14-09-2025,Pago CT Pool,true,21.03,MXN,NCwallet ,Inversión,CryptoTab Pool,,"1,000 SAT"
+15-09-2025,Pago CT Browser,true,105.80,MXN,NCwallet ,Inversión,CryptoTab Browser,,"Pago 5,000 SAT"
+15-09-2025,Pago Tap Mining,true,21,MXN,Speed Wallet,Inversión,Tap Mining,,"1,000 SAT"
+16-09-2025,Prueba gratuita de Google One AI,true,0,MXN,BBVA,Play Store,Suscripciones,,"Un año, se cancelará días antes de la renovación."
+17-09-2025,Renovación de suscripción CT Pro,true,-216.75,MXN,RedotPay,Inversión,CryptoTab browser ,,"15,000 H/s | Trimestral"
+17-09-2025,Reembolso de suscripción Google One ,true,8.50,MXN,RedotPay,Otro,,,Por cambio de suscripción a Google One AI anual
+17-09-2025,Transferencia a RedotPay (In),true,204.58,MXN,RedotPay,Transferencia,,,
+17-09-2025,Transferencia a RedotPay (Out),true,-204.58,MXN,NCwallet ,Transferencia,,,
+18-09-2025,Comida,true,-17.50,MXN,Monedero físico ,Comida,,,
+18-09-2025,Pago CT Farm ,true,21.55,MXN,NCwallet ,Inversión,CryptoTab Farm,,"1,000 SAT"
+18-09-2025,Semanal,true,200,MXN,Monedero físico ,Salario,,,
+20-09-2025,Comida,true,-30,MXN,Monedero físico ,Comida,,,
+20-09-2025,Pago CT Pool,true,21.31,MXN,NCwallet ,Inversión,CryptoTab Pool,,"1,000 SAT"
+22-09-2025,Semanal,true,200,MXN,Monedero físico ,Salario,,,
+22-09-2025,Pago CT Browser,true,103.49,MXN,NCwallet ,Inversión,CryptoTab Browser,,"5,000 SAT"
+23-09-2025,Transferencia a Google Play  (In),true,200,MXN,Google Play ,Transferencia,,,
+23-09-2025,Transferencia a Google Play  (Out),true,-200,MXN,Monedero físico ,Transferencia,,,
+24-09-2025,Pago CT Farm,true,20.58,MXN,NCwallet ,Inversión,CryptoTab Farm,,"1,000 SAT"
+25-09-2025,Pago CT Pool,true,20.46,MXN,NCwallet ,Inversión,CryptoTab Pool,,"1,000 SAT"
+26-09-2025,Ganancias de la semana,true,2.93,MXN,Exnova (1era cuenta),Trading ,Exnova,,
+26-09-2025,Ganancias de la semana,true,1.10,MXN,Olymptrade,Trading ,Olymptrade,,
+26-09-2025,Compra más potencia de minado,true,-43,MXN,Google Play ,Inversión,Tap Mining,,100 Gh/s * 2 | Promoción
+29-09-2025,Pago CT Farm,true,21.01,MXN,NCwallet ,Inversión,CryptoTab Farm,,"1,000 SAT"
+29-09-2025,Pago CT Browser,true,105.06,MXN,NCwallet ,Inversión,CryptoTab Browser,,"5,000 SAT"
+29-09-2025,Semanal,true,200,MXN,Monedero físico ,Salario,,,
+30-09-2025,Compra de más poder de minado,true,-43,MXN,Google Play ,Inversión,Tap Mining,,100 Gh/s * 2 | Oferta
+30-09-2025,Pago CT Pool,true,20.71,MXN,NCwallet ,Inversión,CryptoTab Pool,,"1,000 SAT"
+30-09-2025,Transferencia a RedotPay (Out),true,-549.56,MXN,NCwallet ,Transferencia,,,
+30-09-2025,Transferencia a RedotPay (In),true,549.56,MXN,RedotPay,Transferencia,,,
+01-10-2025,Renovación de suscripción CT Max,true,-347.65,MXN,RedotPay,Inversión,CryptoTab browser ,,"20,000 H/s | Trimestral"
+01-10-2025,Compra Hosting bot discord,true,-9.12,MXN,RedotPay,CMD,Hosting bots discord,,Plan mensual
+01-10-2025,Compra hosting bot Trading,true,-9.12,MXN,RedotPay,Inversión,,,Bot de alertas trading.
+01-10-2025,Renovación de membresía de VisualEconomik,true,-9,MXN,RedotPay,Play Store,Suscripciones,,YouTube | Mensual
+01-10-2025,Transferencia a Google Play  (Out),true,-200,MXN,Monedero físico ,Transferencia,,,
+01-10-2025,Transferencia a Google Play  (In),true,200,MXN,Google Play ,Transferencia,,,
+01-10-2025,Compra de más poder de minado,true,-43,MXN,Google Play ,Inversión,Tap Mining,,100 Gh/s * 2 | Promoción
+01-10-2025,Renovación de membresía de VisualPolitik,true,-9,MXN,RedotPay,Play Store,Suscripciones,,YouTube | Mensual
+03-10-2025,Ganancias de la semana,true,2.21,MXN,Olymptrade,Trading ,Olymptrade,,
+03-10-2025,Ganancias de la semana,true,0.57,MXN,Exnova (1era cuenta),Trading ,Exnova,,
+03-10-2025,Pago BTC Mining,true,0.45,MXN,Speed Wallet,Inversión,Bitcoin Mining,,20 SAT
+03-10-2025,Pago BTC Mining,true,67,MXN,Speed Wallet,Inversión,Bitcoin Mining,,"2,980 SAT"
+05-10-2025,Pago CT Farm,true,22.58,MXN,NCwallet ,Inversión,CryptoTab Farm,,"1,000 SAT"
+06-10-2025,Semanal,true,150,MXN,Monedero físico ,Salario,,,
+07-10-2025,Pago CT Pool,true,22.37,MXN,NCwallet ,Inversión,CryptoTab Pool,,"1,000 SAT"
+09-10-2025,Pago CT Browser,true,111.69,MXN,NCwallet ,Inversión,CryptoTab Browser,,"5,000 SAT"
+10-10-2025,Pago Tap Mining,true,0.44,MXN,Speed Wallet,Inversión,Tap Mining,,20 SAT
+11-10-2025,Pago CT Pool ,true,20.90,MXN,NCwallet ,Inversión,CryptoTab Pool,,"1,000 SAT"
+11-10-2025,Pago Tap Mining,true,20,MXN,Speed Wallet,Inversión,Tap Mining,,"1,000 SAT"
+11-10-2025,Transferencia a Cwallet  (Out),true,-97,MXN,Speed Wallet,Transferencia,,,
+11-10-2025,Transferencia a Cwallet  (In),true,97,MXN,Cwallet ,Transferencia,,,
+13-10-2025,Semanal,true,200,MXN,Monedero físico ,Salario,,,
+13-10-2025,Transferencia a Olymptrade (Out),true,-92.17,MXN,Cwallet ,Transferencia,,,
+13-10-2025,Transferencia a Olymptrade (In),true,92.17,MXN,Olymptrade,Transferencia,,,
+13-10-2025,Pago CT Farm,true,20.90,MXN,NCwallet ,Inversión,CryptoTab Farm,,"1,000 SAT"
+14-10-2025,Transferencia a Google Play  (In),true,200,MXN,Google Play ,Transferencia,,,
+14-10-2025,Transferencia a Google Play  (Out),true,-200,MXN,Monedero físico ,Transferencia,,,
+15-10-2025,Pago CT Browser,true,61.72,MXN,NCwallet ,Inversión,CryptoTab Browser,,"3,000 SAT"
+17-10-2025,Pago CT Farm,true,19.58,MXN,NCwallet ,Inversión,CryptoTab Farm,,"1,000 SAT"
+17-10-2025,Ganancias de la semana,true,4.23,MXN,Olymptrade,Trading ,Olymptrade,,
+20-10-2025,Pago CT Pool,true,20.27,MXN,NCwallet ,Inversión,CryptoTab Pool,,"1,000 SAT"
+20-10-2025,Semanal,true,100,MXN,Monedero físico ,Salario,,,
+20-10-2025,Transferencia a Google Play  (In),true,120,MXN,Google Play ,Transferencia,,,
+20-10-2025,Transferencia a Google Play  (Out),true,-120,MXN,Monedero físico ,Transferencia,,,
+21-10-2025,Pago CT Browser,true,61.97,MXN,NCwallet ,Inversión,CryptoTab Browser,,"3,000 SAT"
+21-10-2025,Pago Tap Mining,true,19,MXN,Speed Wallet,Inversión,Tap Mining,,"1,000 SAT"
+22-10-2025,Pago CT Farm,true,20.06,MXN,NCwallet ,Inversión,CryptoTab Farm,,"1,000 SAT"
+25-10-2025,Pago CT Pool,true,20.59,MXN,NCwallet ,Inversión,CryptoTab Pool,,"1,000 SAT"
+27-10-2025,Semanal,true,200,MXN,Monedero físico ,Salario,,,
+27-10-2025,Pago CT Browser,true,62.77,MXN,NCwallet ,Inversión,CryptoTab Browser,,"3,000 SAT"
+27-10-2025,Pago Tap Mining,true,20,MXN,Speed Wallet,Inversión,Tap Mining,,"1,000 SAT"
+28-10-2025,Pago CT Farm,true,20.84,MXN,NCwallet ,Inversión,CryptoTab Farm,,"1,000 SAT"
+28-10-2025,Transferencia a DolarApp (Out),true,-18.45,MXN,Cwallet ,Transferencia,,,
+28-10-2025,Transferencia a DolarApp (In),true,18.45,MXN,DolarApp,Transferencia,,,
+28-10-2025,Transferencia a Google Play  (Out),true,-200,MXN,Monedero físico ,Transferencia,,,
+28-10-2025,Transferencia a Google Play  (In),true,200,MXN,Google Play ,Transferencia,,,
+29-10-2025,Transferencia a RedotPay (Out),true,-55.69,MXN,NCwallet ,Transferencia,,,
+29-10-2025,Transferencia a RedotPay (In),true,55.69,MXN,RedotPay,Transferencia,,,
+29-10-2025,Transferencia a Cwallet  (Out),true,-174.09,MXN,Olymptrade,Transferencia,,,
+29-10-2025,Transferencia a Cwallet  (In),true,174.09,MXN,Cwallet ,Transferencia,,,
+29-10-2025,Transferencia a DolarApp (Out),true,-96.08,MXN,Cwallet ,Transferencia,,,
+29-10-2025,Transferencia a DolarApp (In),true,96.08,MXN,DolarApp,Transferencia,,,
+29-10-2025,Compra de tarjeta física,true,-92.22,MXN,DolarApp,Inversión,,,
+31-10-2025,Transferencia a Monedero físico  (In),true,68,MXN,Monedero físico ,Transferencia,,,
+31-10-2025,Transferencia a Monedero físico  (Out),true,-68,MXN,BBVA,Transferencia,,,
+31-10-2025,Recarga tarjeta tren,true,-12,MXN,Monedero físico ,Transporte,,,
+01-11-2025,Renovación de suscripción CT Max,true,-263.77,MXN,NCwallet ,Inversión,CryptoTab browser ,,"20,000 H/s | Trimestral"
+01-11-2025,Renovación de membresía de VisualEconomik,true,-9,MXN,DolarApp,Play Store,Suscripciones,,YouTube | Mensual
+01-11-2025,Compra de hosting bot de señales trading,true,-9.21,MXN,DolarApp,Inversión,,,Glacier Hosting | Por un mes
+01-11-2025,Compra de suscripción CT Browser Lite,true,-213.84,MXN,NCwallet ,Inversión,CryptoTab browser ,,"4,500 H/s, pago con cripto, plazo de dos años."
+01-11-2025,Renovación de membresía de VisualPolitik,true,-9,MXN,DolarApp,Play Store,Suscripciones,,YouTube | Mensual
+02-11-2025,Compra Hosting bot discord,true,-8.38,MXN,DolarApp,CMD,Hosting bots discord,,Bot de la CMD | Plan mensual
+02-11-2025,Transferencia a DolarApp (Out),true,-18.56,MXN,Cwallet ,Transferencia,,,
+02-11-2025,Transferencia a DolarApp (In),true,18.56,MXN,DolarApp,Transferencia,,,
+02-11-2025,Canje de puntos por saldo,true,20,MXN,Google Play ,Recompensas,,,"1,000 PTS"
+02-11-2025,Compra de suscripción CT Pool,true,-806.65,MXN,Google Play ,Inversión,CryptoTab Pool,,"50,000 H/s | Anual | Pago con saldo Google Play"
+03-11-2025,Bonificación por compra,true,9.68,MXN,NCwallet ,Recompensas,,,550 HSH
+03-11-2025,Semanal,true,200,MXN,Monedero físico ,Salario,,,
+03-11-2025,Pago BTC Mining,true,29.24,MXN,Speed Wallet,Inversión,Bitcoin Mining,,"1,500 SAT"
+03-11-2025,Pago CT Pool,true,19.74,MXN,NCwallet ,Inversión,CryptoTab Pool,,"1,000 SAT"
+03-11-2025,Pago CT Browser ,true,59.29,MXN,NCwallet ,Inversión,CryptoTab Browser,,"3,000 SAT"
+03-11-2025,Pago Tap Mining,true,39,MXN,Speed Wallet,Inversión,Tap Mining,,"2,000 SAT"
+04-11-2025,Transferencia a Cwallet  (Out),true,-108,MXN,Speed Wallet,Transferencia,,,
+04-11-2025,Pago CT Farm,true,18.85,MXN,NCwallet ,Inversión,CryptoTab Farm,,"1,000 SAT"
+04-11-2025,Transferencia a Cwallet  (In),true,108,MXN,Cwallet ,Transferencia,,,
+05-11-2025,Transferencia a RedotPay (Out),true,-55.79,MXN,NCwallet ,Transferencia,,,
+05-11-2025,Transferencia a RedotPay (In),true,55.79,MXN,RedotPay,Transferencia,,,
+05-11-2025,Compra suscripción CT Pool,true,-279.65,MXN,RedotPay,Inversión,CryptoTab Pool,,"Compra de suscripción 25,000 H/s Semestral"
+07-11-2025,Pago CT Pool,true,37.94,MXN,NCwallet ,Inversión,CryptoTab Pool,,"2,000 SAT"
+08-11-2025,Pago CT Browser,true,56.32,MXN,NCwallet ,Inversión,CryptoTab Browser,,"3,000 SAT"
+09-11-2025,Transferencia a BBVA (In),true,120,MXN,BBVA,Transferencia,,,
+09-11-2025,Transferencia a BBVA (Out),true,-120,MXN,Monedero físico ,Transferencia,,,
+09-11-2025,Transferencia a DolarApp (Out),true,-100,MXN,BBVA,Transferencia,,,
+09-11-2025,Transferencia a DolarApp (In),true,100,MXN,DolarApp,Transferencia,,,
+09-11-2025,Transferencia a Dolar App | Inversiones (Out),true,-55.38,MXN,DolarApp,Transferencia,,,
+09-11-2025,Transferencia a Dolar App | Inversiones (In),true,55.38,MXN,Dolar App | Inversiones,Transferencia,,,
+10-11-2025,Salario,true,200,MXN,Monedero físico ,Salario,,,
+10-11-2025,Pago CT Farm,true,19.50,MXN,NCwallet ,Inversión,CryptoTab Farm,,"1,000 SAT"
+10-11-2025,Transferencia a BBVA (In),true,300,MXN,BBVA,Transferencia,,,
+10-11-2025,Transferencia a BBVA (Out),true,-300,MXN,Monedero físico ,Transferencia,,,
+10-11-2025,Transferencia a DolarApp (Out),true,-147,MXN,Cwallet ,Transferencia,,,
+10-11-2025,Transferencia a DolarApp (In),true,147,MXN,DolarApp,Transferencia,,,
+10-11-2025,Transferencia a BBVA (Out),true,-50,MXN,DolarApp,Transferencia,,,
+10-11-2025,Transferencia a BBVA (In),true,50,MXN,BBVA,Transferencia,,,
+10-11-2025,Transferencia a BBVA (Out),true,-145.99,MXN,DolarApp,Transferencia,,,
+10-11-2025,Transferencia a BBVA (In),true,145.99,MXN,BBVA,Transferencia,,,
+10-11-2025,Compra de agua,true,-10,MXN,BBVA,Comida,,,
+10-11-2025,Transferencia a Binance (In),true,51,MXN,Binance,Transferencia,,,
+10-11-2025,Transferencia a Binance (Out),true,-51,MXN,BBVA,Transferencia,,,
+10-11-2025,Transferencia a Cwallet  (Out),true,-257.41,MXN,NCwallet ,Transferencia,,,
+10-11-2025,Transferencia a Cwallet  (In),true,257.41,MXN,Cwallet ,Transferencia,,,
+10-11-2025,Transferencia a Cwallet  (Out),true,-51,MXN,Binance,Transferencia,,,
+10-11-2025,Transferencia a Cwallet  (In),true,51,MXN,Cwallet ,Transferencia,,,
+10-11-2025,"Compra de plan 50,000 H/s Trimestral",true,-305.08,MXN,Cwallet ,Inversión,CryptoTab Pool,,Pago con cripto
+11-11-2025,Transferencia a BBVA (In),true,100,MXN,BBVA,Transferencia,,,
+11-11-2025,Transferencia a BBVA (Out),true,-100,MXN,Monedero físico ,Transferencia,,,
+11-11-2025,Transferencia a BBVA (In),true,50,MXN,BBVA,Transferencia,,,
+11-11-2025,Transferencia a BBVA (Out),true,-50,MXN,Monedero físico ,Transferencia,,,
+11-11-2025,Transferencia a Binance (In),true,65,MXN,Binance,Transferencia,,,
+11-11-2025,Transferencia a Binance (Out),true,-65,MXN,BBVA,Transferencia,,,
+11-11-2025,Transferencia a Polymarket (Out),true,-62.30,MXN,Binance,Transferencia,,,
+11-11-2025,Transferencia a Polymarket (In),true,62.30,MXN,Polymarket,Transferencia,,,
+11-11-2025,Transferencia a Binance (In),true,7.32,MXN,Binance,Transferencia,,,
+11-11-2025,Transferencia a Binance (Out),true,-7.32,MXN,Polymarket,Transferencia,,,
+11-11-2025,Compra de artículos en línea,true,-292.88,MXN,BBVA,Electrónica,,,Temu
+12-11-2025,Transferencia a IQ Option | soporteclubgaming@gmail.co (In),true,200,MXN,IQ Option | soporteclubgaming@gmail.com,Transferencia,,,
+12-11-2025,Transferencia a IQ Option | soporteclubgaming@gmail.co (Out),true,-200,MXN,BBVA,Transferencia,,,
+12-11-2025,Bono de depósito,true,100,MXN,IQ Option | soporteclubgaming@gmail.com,Recompensas,,,Del 50% con vencimiento si en determinada fecha límite no se cumple con un volumen de dinero mínimo en las operaciones. 
+12-11-2025,Transferencia a BBVA (In),true,40,MXN,BBVA,Transferencia,,,
+12-11-2025,Transferencia a BBVA (Out),true,-40,MXN,Monedero físico ,Transferencia,,,
+13-11-2025,Transferencia a BBVA (In),true,20,MXN,BBVA,Transferencia,,,
+13-11-2025,Transferencia a BBVA (Out),true,-20,MXN,Monedero físico ,Transferencia,,,
+13-11-2025,Transferencia para cubrir ciertos costos de compra,true,150,MXN,BBVA,Recompensas,,,Compra en Temu
+13-11-2025,Transferencia a BBVA (In),true,100,MXN,BBVA,Transferencia,,,
+13-11-2025,Transferencia a BBVA (Out),true,-100,MXN,Monedero físico ,Transferencia,,,
+13-11-2025,Compra de 6 hojas blancas y tijeras,true,-35,MXN,BBVA,Educación,,,
+14-11-2025,Pago CT Pool,true,52.15,MXN,NCwallet ,Inversión,CryptoTab Pool,,"3,000 SAT"
+14-11-2025,Pago CT Browser,true,52.15,MXN,NCwallet ,Inversión,CryptoTab Browser,,"3,000 SAT"
+14-11-2025,Transferencia a BBVA (Out),true,-40,MXN,Monedero físico ,Transferencia,,,
+14-11-2025,Transferencia a BBVA (In),true,40,MXN,BBVA,Transferencia,,,
+15-11-2025,1/2 | Pago bebida,true,-20,MXN,Monedero físico ,Comida,,,
+15-11-2025,2/2 Pago bebida ,true,-4.50,MXN,BBVA,Comida,,,
+15-11-2025,Transferencia a Binance (In),true,120,MXN,Binance,Transferencia,,,
+15-11-2025,Transferencia a Binance (Out),true,-120,MXN,BBVA,Transferencia,,,
+15-11-2025,Transferencia a Cwallet  (In),true,124.47,MXN,Cwallet ,Transferencia,,,
+15-11-2025,Transferencia a Cwallet  (Out),true,-124.47,MXN,Binance,Transferencia,,,
+15-11-2025,Transferencia a Olymptrade (Out),true,-92.62,MXN,Cwallet ,Transferencia,,,
+15-11-2025,Transferencia a Olymptrade (In),true,92.62,MXN,Olymptrade,Transferencia,,,
+16-11-2025,Ganancias de la semana,true,0.55,MXN,Olymptrade,Trading ,Olymptrade,,
+16-11-2025,Pago CT Farm,true,17.29,MXN,NCwallet ,Inversión,CryptoTab Farm,,"1,000 SAT"
+16-11-2025,Por responder encuesta,true,2.25,MXN,Google Play ,Recompensas,,,
+17-11-2025,Transferencia a DolarApp (In),true,38.45,MXN,DolarApp,Transferencia,,,
+17-11-2025,Transferencia a DolarApp (Out),true,-38.45,MXN,Cwallet ,Transferencia,,,
+17-11-2025,Transferencia a Dolar App | Inversiones (Out),true,-38.45,MXN,DolarApp,Transferencia,,,
+17-11-2025,Transferencia a Dolar App | Inversiones (In),true,38.45,MXN,Dolar App | Inversiones,Transferencia,,,
+17-11-2025,Transferencia a Cwallet  (Out),true,-92.62,MXN,Olymptrade,Transferencia,,,
+17-11-2025,Transferencia a Cwallet  (In),true,92.62,MXN,Cwallet ,Transferencia,,,
+17-11-2025,Transferencia a Binance (In),true,92.62,MXN,Binance,Transferencia,,,
+17-11-2025,Transferencia a Binance (Out),true,-92.62,MXN,Cwallet ,Transferencia,,,
+17-11-2025,Transferencia a DolarApp (In),true,40,MXN,DolarApp,Transferencia,,,
+17-11-2025,Transferencia a DolarApp (Out),true,-40,MXN,Binance,Transferencia,,,
+18-11-2025,Semanal,true,200,MXN,Monedero físico ,Salario,,,
+18-11-2025,Pago CT Pool,true,51.22,MXN,NCwallet ,Inversión,CryptoTab Pool,,"3,000 SAT"
+18-11-2025,Transferencia a BBVA (In),true,200,MXN,BBVA,Transferencia,,,
+18-11-2025,Transferencia a BBVA (Out),true,-200,MXN,Monedero físico ,Transferencia,,,
+19-11-2025,Pago CT Browser,true,49.05,MXN,NCwallet ,Inversión,CryptoTab Browser,,"3,001 SAT"
+20-11-2025,Compra de artículos en reposición de los dañados,true,-101.50,MXN,BBVA,Electrónica,,,se usarán como futuros repuestos cuando llegue el pedido bueno. 
+21-11-2025,Ganancias de la semana,true,16.35,MXN,IQ Option | soporteclubgaming@gmail.com,Trading ,IQ Option,,−0.57+0.03+8.19+8.70=16.35
+22-11-2025,Pago CT Farm,true,15.61,MXN,NCwallet ,Inversión,CryptoTab Farm,,"1,000 SAT"
+23-11-2025,Pago CT Pool,true,48.19,MXN,NCwallet ,Inversión,CryptoTab Pool,,"3,000 SAT"
+24-11-2025,Galletas,true,-15,MXN,BBVA,Comida,,,
+24-11-2025,Semanal,true,100,MXN,Monedero físico ,Salario,,,1/2
+24-11-2025,Pago CT Browser,true,56.21,MXN,NCwallet ,Inversión,CryptoTab Browser,,"3,500 SAT"
+24-11-2025,Transferencia a BBVA (Out),true,-100,MXN,Monedero físico ,Transferencia,,,
+24-11-2025,Transferencia a BBVA (In),true,100,MXN,BBVA,Transferencia,,,
+25-11-2025,Senanal,true,100,MXN,Monedero físico ,Salario,,,2/2
+28-11-2025,Pago CT Pool,true,50.01,MXN,NCwallet ,Inversión,CryptoTab Pool,,"3,000 SAT"
+28-11-2025,Transferencia a Cwallet  (In),true,52.67,MXN,Cwallet ,Transferencia,,,
+28-11-2025,Transferencia a Cwallet  (Out),true,-52.67,MXN,Binance,Transferencia,,,
+28-11-2025,Transferencia a Walbi (In),true,52,MXN,Walbi,Transferencia,,,
+28-11-2025,Transferencia a Walbi (Out),true,-52,MXN,Cwallet ,Transferencia,,,
+29-11-2025,Pago CT Farm,true,16.82,MXN,NCwallet ,Inversión,CryptoTab Farm,,"1,000 SAT"
+30-11-2025,Pago CT Browser,true,50.30,MXN,NCwallet ,Inversión,CryptoTab Browser,,"Pago 3,000 SAT"
+30-11-2025,Transferencia a BBVA (In),true,70,MXN,BBVA,Transferencia,,,
+30-11-2025,Transferencia a BBVA (Out),true,-70,MXN,Monedero físico ,Transferencia,,,
+30-11-2025,Compra de sopa,true,-10,MXN,DolarApp,Comida,,,
+30-11-2025,Operación BTC ↗️,true,-3.28,MXN,Walbi,Perdidas de inversiones,Trading,,
+30-11-2025,Transferencia a Cwallet  (In),true,512.17,MXN,Cwallet ,Transferencia,,,
+30-11-2025,Transferencia a Cwallet  (Out),true,-512.17,MXN,NCwallet ,Transferencia,,,
+01-12-2025,Transferencia a Binance (In),true,491.12,MXN,Binance,Transferencia,,,
+01-12-2025,Transferencia a Binance (Out),true,-491.12,MXN,BBVA,Transferencia,,,
+01-12-2025,Renovación de membresía de VisualEconomik,true,-9,MXN,Google Play ,Play Store,Suscripciones,,YouTube | Mensual
+01-12-2025,Transferencia a Binance (In),true,512.12,MXN,Binance,Transferencia,,,
+01-12-2025,Transferencia a Binance (Out),true,-512.12,MXN,Cwallet ,Transferencia,,,
+01-12-2025,Renovación de suscripción CT Pool,true,-274.91,MXN,Binance,Inversión,CryptoTab Pool,,"50,000 H/s | Trimestral"
+01-12-2025,Renovación de suscripción CT Farm,true,-260.80,MXN,Binance,Inversión,CryptoTab Farm,,"47,000 H/s | Trimestral"
+01-12-2025,Suscripción CT Farm,true,-259.78,MXN,Binance,Inversión,CryptoTab Farm,,"47,000 H/s | Trimestral"
+01-12-2025,Suscripción CT Browser,true,-175,MXN,Binance,Inversión,CryptoTab browser ,,"15,000 H/s | Trimestral"
+01-12-2025,Semanal,true,200,MXN,Monedero físico ,Salario,,,
+01-12-2025,Transferencia a BBVA (In),true,200,MXN,BBVA,Transferencia,,,
+01-12-2025,Transferencia a BBVA (Out),true,-200,MXN,Monedero físico ,Transferencia,,,
+01-12-2025,Operación BTC ↗️,true,0.88,MXN,Walbi,Trading ,Walbi,,
+01-12-2025,Renovación de membresía de VisualPolitik,true,-9,MXN,DolarApp,Play Store,Suscripciones,,YouTube | Mensual
+01-12-2025,Pago BTC Mining,true,15.90,MXN,Speed Wallet,Inversión,Bitcoin Mining,,
+02-12-2025,Pago Tap Mining,true,42.09,MXN,Speed Wallet,Inversión,Tap Mining,,"2,500 SAT"
+02-12-2025,Bonificación por compra,true,9,MXN,NCwallet ,Recompensas,,,En HashCoin
+03-12-2025,Pago CT Pool,true,50.76,MXN,NCwallet ,Inversión,CryptoTab Pool,,"3,000 SAT"
+03-12-2025,Transferencia a Binance (Out),true,-54.98,MXN,Polymarket,Transferencia,,,
+03-12-2025,Transferencia a Binance (In),true,54.98,MXN,Binance,Transferencia,,,
+03-12-2025,Transferencia a Binance (In),true,58,MXN,Binance,Transferencia,,,
+03-12-2025,Transferencia a Binance (Out),true,-58,MXN,Speed Wallet,Transferencia,,,
+03-12-2025,Transferencia a BBVA (Out),true,-111.24,MXN,Binance,Transferencia,,,
+03-12-2025,Transferencia a BBVA (In),true,111.24,MXN,BBVA,Transferencia,,,
+03-12-2025,Transferencia a BBVA (Out),true,-250,MXN,Monedero físico ,Transferencia,,,Transferencia de emergencia para asegurar suficiente liquidez para diferentes objetivos. 
+03-12-2025,Transferencia a BBVA (In),true,250,MXN,BBVA,Transferencia,,,Transferencia de emergencia para asegurar suficiente liquidez para diferentes objetivos. 
+03-12-2025,Transferencia a Binance (Out),true,-561.24,MXN,BBVA,Transferencia,,,
+03-12-2025,Transferencia a Binance (In),true,561.24,MXN,Binance,Transferencia,,,
+03-12-2025,Transferencia a Cwallet  (In),true,45.50,MXN,Cwallet ,Transferencia,,,
+03-12-2025,Transferencia a Cwallet  (Out),true,-45.50,MXN,Binance,Transferencia,,,
+03-12-2025,Transferencia a DolarApp (Out),true,-45.50,MXN,Cwallet ,Transferencia,,,
+03-12-2025,Transferencia a DolarApp (In),true,45.50,MXN,DolarApp,Transferencia,,,
+03-12-2025,Compra de más poder de minado,true,-38.23,MXN,DolarApp,Inversión,Cloud Power Miner,,200 GH/s en total
+03-12-2025,Transferencia a IQ Option | soporteclubgaming@gmail.com (In),true,200,MXN,IQ Option | soporteclubgaming@gmail.com,Transferencia,,,
+03-12-2025,Transferencia a IQ Option | soporteclubgaming@gmail.com (Out),true,-200,MXN,Binance,Transferencia,,,
+04-12-2025,Transferencia a Binance (Out),true,-413.27,MXN,IQ Option | soporteclubgaming@gmail.com,Transferencia,,,
+04-12-2025,Transferencia a Binance (In),true,413.27,MXN,Binance,Transferencia,,,
+04-12-2025,Transferencia a Olymptrade (Out),true,-273.85,MXN,Binance,Transferencia,,,
+04-12-2025,Transferencia a Olymptrade (In),true,273.85,MXN,Olymptrade,Transferencia,,,
+04-12-2025,Bono por depósito,true,82.20,MXN,Olymptrade,Recompensas,,,
+05-12-2025,Operación BRENT ↗️,true,1.51,MXN,Olymptrade,Trading ,Olymptrade,,
+05-12-2025,Pago CT Browser,true,48.63,MXN,NCwallet ,Inversión,CryptoTab Browser,,"3,000 SAT"
+06-12-2025,Pago CT Farm,true,32.65,MXN,NCwallet ,Inversión,CryptoTab Farm,,"2,000 SAT"
+08-12-2025,Operación AUD/USD ↗️,true,-3.81,MXN,Olymptrade,Perdidas de inversiones,Trading,,
+08-12-2025,Pago CT Pool,true,49.03,MXN,NCwallet ,Inversión,CryptoTab Pool,,"3,000 SAT"
+08-12-2025,Transferencia a Cwallet  (In),true,54,MXN,Cwallet ,Transferencia,,,
+08-12-2025,Transferencia a Cwallet  (Out),true,-54,MXN,Binance,Transferencia,,,
+08-12-2025,Transferencia a DolarApp (In),true,54,MXN,DolarApp,Transferencia,,,
+08-12-2025,Transferencia a DolarApp (Out),true,-54,MXN,Cwallet ,Transferencia,,,
+08-12-2025,Suscripción Trae AI,true,-54.72,MXN,DolarApp,Servicios digitales,Editores de código,,Mensual
+09-12-2025,Operación Bitcoin ↘️,true,-12.20,MXN,Olymptrade,Perdidas de inversiones,Trading,,
+10-12-2025,Pago CT Browser,true,49.01,MXN,NCwallet ,Inversión,CryptoTab Browser,,"3,000 SAT"
+10-12-2025,Operación AUD/JPY ↗️,true,1.53,MXN,Olymptrade,Trading ,Olymptrade,,
+11-12-2025,Operación Oro ↗️,true,0.66,MXN,Olymptrade,Trading ,Olymptrade,,
+11-12-2025,Operación CHF/JPY ↗️,true,0.87,MXN,Olymptrade,Trading ,Olymptrade,,
+11-12-2025,Operación Bitcoin ↗️,true,-0.44,MXN,Olymptrade,Perdidas de inversiones,Trading,,
+14-12-2025,Pago CT Pool,true,47.75,MXN,NCwallet ,Inversión,CryptoTab Pool,,"3,000 SAT"
+15-12-2025,Operación Bitcoin ↗️,true,-9.98,MXN,Olymptrade,Perdidas de inversiones,Trading,,
+15-12-2025,Pago CT Farm,true,31.04,MXN,NCwallet ,Inversión,CryptoTab Farm,,"2,000 SAT"
+15-12-2025,Operación Ethereum ↘️,true,0.30,MXN,Olymptrade,Trading ,Olymptrade,,
+15-12-2025,Cancelación del bono,true,-82.20,MXN,Olymptrade,Otro,,,
+16-12-2025,Pago CT Browser,true,47.28,MXN,NCwallet ,Inversión,CryptoTab Browser,,"3,000 SAT"
+16-12-2025,Transferencia a Cwallet  (In),true,252.44,MXN,Cwallet ,Transferencia,,,
+16-12-2025,Transferencia a Cwallet  (Out),true,-252.44,MXN,Olymptrade,Transferencia,,,
+16-12-2025,Transferencia a Walbi (In),true,85.60,MXN,Walbi,Transferencia,,,
+16-12-2025,Transferencia a Walbi (Out),true,-85.60,MXN,Cwallet ,Transferencia,,,
+16-12-2025,Transferencia a Cwallet  (Out),true,-131.54,MXN,Walbi,Transferencia,,,
+16-12-2025,Transferencia a Cwallet  (In),true,131.54,MXN,Cwallet ,Transferencia,,,
+16-12-2025,Transferencia a Exnova  (2da cuenta) (Out),true,-200,MXN,Cwallet ,Transferencia,,,
+16-12-2025,Transferencia a Exnova  (2da cuenta) (In),true,200,MXN,Exnova  (2da cuenta),Transferencia,,,
+18-12-2025,Operación BTC ↘️,true,0.90,MXN,Exnova  (2da cuenta),Trading ,Exnova,,
+19-12-2025,Por responder encuesta de Google,true,1,MXN,Google Play ,Recompensas,,,
+19-12-2025,Pago CT Pool,true,47.40,MXN,NCwallet ,Inversión,CryptoTab Pool,,"3,000 SAT "
+19-12-2025,Transferencia a Binance (In),true,64.50,MXN,Binance,Transferencia,,,
+19-12-2025,Transferencia a Binance (Out),true,-64.50,MXN,Cwallet ,Transferencia,,,
+21-12-2025,Pago CT Farm,true,31.86,MXN,NCwallet ,Inversión,CryptoTab Farm,,"2,000 SAT"
+21-12-2025,Pago CT Browser,true,47.79,MXN,NCwallet ,Inversión,CryptoTab Browser,,"3,000 SAT"
+21-12-2025,Transferencia a BBVA (Out),true,-200,MXN,Ahorros dispersos,Transferencia,,,
+21-12-2025,Transferencia a BBVA (In),true,200,MXN,BBVA,Transferencia,,,
+21-12-2025,Transferencia a DolarApp (In),true,200,MXN,DolarApp,Transferencia,,,
+21-12-2025,Transferencia a DolarApp (Out),true,-200,MXN,BBVA,Transferencia,,,
+21-12-2025,Transferencia a Dolar App | Inversiones (In),true,200,MXN,Dolar App | Inversiones,Transferencia,,,
+21-12-2025,Transferencia a Dolar App | Inversiones (Out),true,-200,MXN,DolarApp,Transferencia,,,
+25-12-2025,Por responder encuesta de Google,true,4.28,MXN,Google Play ,Recompensas,,,
+25-12-2025,Compra de hosting bot de señales trading,true,-8.06,MXN,DolarApp,Inversión,,,Plan mensual
+28-12-2025,Pago CT Pool,true,47.18,MXN,NCwallet ,Inversión,CryptoTab Pool,,"3,000 SAT"
+28-12-2025,Pago CT Browser,true,47.18,MXN,NCwallet ,Inversión,CryptoTab Browser,,"3,001 SAT"
+30-12-2025,Pago CT Pool,true,47.57,MXN,NCwallet ,Inversión,CryptoTab Pool,,"3,000 SAT"
+
+###
+
+Account,Account Balance,Available Balance,Credit Limit,Currency,Is savings,Description
+Monedero físico ,84.50,84.50,0,MXN,false,Cartera 💶
+DolarApp,37.17,37.17,0,MXN,false,
+BBVA,0,0,0,MXN,false,
+Google Play ,7.65,7.65,0,MXN,false,El saldo en la app de Google Play 
+Bitrefill,0.39,0.39,0,MXN,false,Plataforma de compras con crypto
+RedotPay,2.52,2.52,0,MXN,false,Billetera Crypto
+NCwallet ,665,665,0,MXN,false,El saldo es inestable y puede variar en la app oficial
+Cwallet ,0,0,0,MXN,false,El saldo en este wallet 
+MetaMask,9.62,9.62,0,MXN,false,
+Binance,395.79,395.79,0,MXN,false,
+OKX,0,0,0,MXN,false,Broker cripto
+Tarjeta tren,4,4,0,MXN,false,
+Edge Wallet,0.20,0.20,0,MXN,false,
+Speed Wallet,0.40,0.40,0,MXN,false,
+Trust Wallet,0,0,0,MXN,false,Wallet de criptomonedas
+Wallet Muun,0,0,0,MXN,false,Una wallet necesaria para pasar de lightning a cuenta normal
+Olymptrade,0,0,0,MXN,false,Cuenta de Trading
+Iq Option | luis213465rivas@gmail.com,21.07,21.07,0,MXN,false,⚠️ Ya no es posible pasar el KYC con esta cuenta porque el proceso de hizo con la otra cuenta para probar el QTrading Bot
+IQ Option | soporteclubgaming@gmail.com,0,0,0,MXN,false,Cuenta dedicada para las operaciones del QTRADING BOT
+Exnova  (2da cuenta),200.90,200.90,0,MXN,false,Cuenta creada con el correo: luis.rivas1328@alumnos.udg.mx
+Exnova (1era cuenta),11.48,11.48,0,MXN,false,⚠️ Cuenta baneada por la eliminación. Creada con el correo: luis213465rivas@gmail.com
+Walbi,0,0,0,MXN,false,Plataforma de trading
+Pocket Option,16.33,16.33,0,MXN,false,
+Polymarket,0,0,0,MXN,false,Cuenta de pronósticos sobre diferentes cosas
+Dolar App | Inversiones,274.88,274.88,0,MXN,false,
+Ahorros dispersos,25,25,0,MXN,true,Los que están por varios lugares 
+Alcancía,1,1,0,MXN,false,La alcancía física 
+
+###
+
+Goal,Required sum,Required sum currency,Accumulated sum,Accumulated sum currency,Planned expense date,Category,Subcategory,Description
+Ahorro para un sueldo normal ,70000,MXN,37.10,USD,30-12-2025,Criptomonedas,,Acumulado a través del ecosistema CryptoTab 
+Compra y mantenimiento inicial HST,350,MXN,0,MXN,02-02-2025,Regalos,,
+Ahorro - Monedero físico (2),300,MXN,50,MXN,03-12-2025,Casa,,Recuperación
+Ahorro - Monedero físico ,300,MXN,300,MXN,25-12-2024,Inversión,,
+Conseguir fondos para la tarjeta Crypto,10,USD,10,USD,28-01-2025,Inversión,,La cantidad que se solicita para poder aplicar a tener la tarjeta desde RedotPay.
+Recuperar el dinero gastado de los ahorros dispersos ,200,MXN,225,MXN,26-12-2024,Casa,,Revisar el balance para más información 

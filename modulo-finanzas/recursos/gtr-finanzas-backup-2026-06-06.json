@@ -1,0 +1,5042 @@
+{
+  "version": 1,
+  "exportadoEn": "2026-06-06T23:01:08.195Z",
+  "datos": {
+    "gtr-cuentas": [
+      {
+        "id": "cta_a4srcluakypmkkosciw",
+        "nombre": "Cartera",
+        "descripcion": "Monedero físico",
+        "color": "#0ea5e9",
+        "dinero": 68.30000000000001,
+        "parentId": null,
+        "esSubcuenta": false,
+        "creadaEn": "2024-10-05T18:00:00.000Z",
+        "actualizadaEn": "2026-05-17T05:22:18.860Z",
+        "historial": [
+          {
+            "fecha": "2024-10-05T18:00:00.000Z",
+            "tipo": "creacion",
+            "mensaje": "Cuenta creada"
+          },
+          {
+            "fecha": "2025-02-09T18:00:00.000Z",
+            "tipo": "modificacion",
+            "mensaje": "Saldo ajustado de 290 a 300"
+          }
+        ]
+      },
+      {
+        "id": "cta_mdxdv69rujmml005avg",
+        "nombre": "Google Play",
+        "descripcion": "Saldo cuenta Google Play",
+        "color": "#ffc400",
+        "dinero": 347.52,
+        "parentId": null,
+        "esSubcuenta": false,
+        "creadaEn": "2024-10-07T18:00:00.000Z",
+        "actualizadaEn": "2026-05-17T05:17:30.027Z",
+        "historial": [
+          {
+            "fecha": "2024-10-07T18:00:00.000Z",
+            "tipo": "creacion",
+            "mensaje": "Cuenta creada"
+          },
+          {
+            "fecha": "2024-12-25T18:00:00.000Z",
+            "tipo": "modificacion",
+            "mensaje": "Saldo ajustado de 47.78 a 29.78"
+          }
+        ]
+      },
+      {
+        "id": "cta_gk93uqeqr4ml2zzfzu",
+        "nombre": "Tarjeta tren",
+        "descripcion": "De estudiante",
+        "color": "#0000ff",
+        "dinero": 0,
+        "parentId": null,
+        "esSubcuenta": false,
+        "creadaEn": "2024-10-07T18:00:00.000Z",
+        "actualizadaEn": "2026-05-17T05:15:06.111Z",
+        "historial": [
+          {
+            "fecha": "2024-10-07T18:00:00.000Z",
+            "tipo": "creacion",
+            "mensaje": "Cuenta creada"
+          },
+          {
+            "fecha": "2025-02-21T18:00:00.000Z",
+            "tipo": "modificacion",
+            "mensaje": "Saldo ajustado de 3 a 10"
+          }
+        ]
+      },
+      {
+        "id": "cta_cvx2rncgximl30hlk9",
+        "nombre": "CWallet",
+        "descripcion": "Cuenta cripto",
+        "color": "#99ff00",
+        "dinero": 18.24000000000001,
+        "parentId": null,
+        "esSubcuenta": false,
+        "creadaEn": "2024-10-07T18:00:00.000Z",
+        "actualizadaEn": "2026-05-17T05:18:27.477Z",
+        "historial": [
+          {
+            "fecha": "2024-10-07T18:00:00.000Z",
+            "tipo": "creacion",
+            "mensaje": "Cuenta creada"
+          },
+          {
+            "fecha": "2024-12-12T18:00:00.000Z",
+            "tipo": "modificacion",
+            "mensaje": "Saldo ajustado de 43.34000000000001 a 23.66"
+          },
+          {
+            "fecha": "2024-12-30T18:00:00.000Z",
+            "tipo": "modificacion",
+            "mensaje": "Saldo ajustado de 24.01 a 35.19"
+          }
+        ]
+      },
+      {
+        "id": "cta_4mokviphqpyml30o8v4",
+        "nombre": "NCWallet",
+        "descripcion": "",
+        "color": "#ffb300",
+        "dinero": 352.56,
+        "parentId": null,
+        "esSubcuenta": false,
+        "creadaEn": "2024-10-07T18:00:00.000Z",
+        "actualizadaEn": "2026-05-17T05:23:41.567Z",
+        "historial": [
+          {
+            "fecha": "2024-10-07T18:00:00.000Z",
+            "tipo": "creacion",
+            "mensaje": "Cuenta creada"
+          },
+          {
+            "fecha": "2024-12-06T18:00:00.000Z",
+            "tipo": "modificacion",
+            "mensaje": "Saldo ajustado de -64.88 a 4.2"
+          },
+          {
+            "fecha": "2025-01-03T18:00:00.000Z",
+            "tipo": "modificacion",
+            "mensaje": "Saldo ajustado de 218.71999999999997 a 260"
+          },
+          {
+            "fecha": "2025-01-20T18:00:00.000Z",
+            "tipo": "modificacion",
+            "mensaje": "Saldo ajustado de 148.91000000000003 a 183"
+          }
+        ]
+      },
+      {
+        "id": "cta_rli14fh0bbml30saqu",
+        "nombre": "Ahorros dispersos",
+        "descripcion": "En físico",
+        "color": "#a8a8a8",
+        "dinero": 220.27999999999997,
+        "parentId": null,
+        "esSubcuenta": false,
+        "creadaEn": "2024-10-07T18:00:00.000Z",
+        "actualizadaEn": "2026-03-23T04:38:56.871Z",
+        "historial": [
+          {
+            "fecha": "2024-10-07T18:00:00.000Z",
+            "tipo": "creacion",
+            "mensaje": "Cuenta creada"
+          }
+        ]
+      },
+      {
+        "id": "cta_md7ub5h8t0mml30vjgk",
+        "nombre": "Wallet Muun",
+        "descripcion": "",
+        "color": "#0ea5e9",
+        "dinero": 5.190000000000001,
+        "parentId": null,
+        "esSubcuenta": false,
+        "creadaEn": "2024-10-07T18:00:00.000Z",
+        "actualizadaEn": "2026-05-17T04:02:39.085Z",
+        "historial": [
+          {
+            "fecha": "2024-10-07T18:00:00.000Z",
+            "tipo": "creacion",
+            "mensaje": "Cuenta creada"
+          },
+          {
+            "fecha": "2025-01-14T18:00:00.000Z",
+            "tipo": "modificacion",
+            "mensaje": "Saldo ajustado de 30.16 a 36"
+          }
+        ]
+      },
+      {
+        "id": "cta_kvyxk1myp98ml30zbxq",
+        "nombre": "MetaMask",
+        "descripcion": "",
+        "color": "#ff5900",
+        "dinero": 11.789999999999985,
+        "parentId": null,
+        "esSubcuenta": false,
+        "creadaEn": "2024-10-07T18:00:00.000Z",
+        "actualizadaEn": "2026-05-17T03:58:09.893Z",
+        "historial": [
+          {
+            "fecha": "2024-10-07T18:00:00.000Z",
+            "tipo": "creacion",
+            "mensaje": "Cuenta creada"
+          },
+          {
+            "fecha": "2024-12-06T18:00:00.000Z",
+            "tipo": "modificacion",
+            "mensaje": "Saldo ajustado de -1.6600000000000108 a 0"
+          }
+        ]
+      },
+      {
+        "id": "cta_hojdu915r6tml3126rn",
+        "nombre": "Edge Wallet",
+        "descripcion": "",
+        "color": "#04d400",
+        "dinero": 0.2,
+        "parentId": null,
+        "esSubcuenta": false,
+        "creadaEn": "2024-10-07T18:00:00.000Z",
+        "actualizadaEn": "2026-03-23T04:17:21.160Z",
+        "historial": [
+          {
+            "fecha": "2024-10-07T18:00:00.000Z",
+            "tipo": "creacion",
+            "mensaje": "Cuenta creada"
+          }
+        ]
+      },
+      {
+        "id": "cta_xiizprxkrml3157sc",
+        "nombre": "Bitrefill",
+        "descripcion": "",
+        "color": "#ff0000",
+        "dinero": 0.39,
+        "parentId": null,
+        "esSubcuenta": false,
+        "creadaEn": "2024-10-07T18:00:00.000Z",
+        "actualizadaEn": "2026-02-01T00:56:00.673Z",
+        "historial": [
+          {
+            "fecha": "2024-10-07T18:00:00.000Z",
+            "tipo": "creacion",
+            "mensaje": "Cuenta creada"
+          },
+          {
+            "fecha": "2024-10-20T18:00:00.000Z",
+            "tipo": "modificacion",
+            "mensaje": "Saldo ajustado de 0 a 0.39"
+          }
+        ]
+      },
+      {
+        "id": "cta_p9i7mbggkfsml316u7o",
+        "nombre": "Alcancía",
+        "descripcion": "En físico",
+        "color": "#ff0073",
+        "dinero": 0,
+        "parentId": null,
+        "esSubcuenta": false,
+        "creadaEn": "2024-10-07T18:00:00.000Z",
+        "actualizadaEn": "2026-03-23T04:38:56.870Z",
+        "historial": [
+          {
+            "fecha": "2024-10-07T18:00:00.000Z",
+            "tipo": "creacion",
+            "mensaje": "Cuenta creada"
+          },
+          {
+            "fecha": "2026-02-01T00:57:37.212Z",
+            "tipo": "modificacion",
+            "mensaje": "Color cambiado"
+          }
+        ]
+      },
+      {
+        "id": "cta_crr836t4zv5mlzufwsr",
+        "nombre": "DolarApp",
+        "descripcion": "",
+        "color": "#00ff00",
+        "dinero": 0,
+        "parentId": null,
+        "esSubcuenta": false,
+        "creadaEn": "2024-10-07T18:00:00.000Z",
+        "actualizadaEn": "2026-02-24T00:04:46.139Z",
+        "historial": [
+          {
+            "fecha": "2024-10-07T18:00:00.000Z",
+            "tipo": "creacion",
+            "mensaje": "Cuenta creada"
+          }
+        ]
+      },
+      {
+        "id": "cta_jtdvy8slrkmlzuh7v7",
+        "nombre": "BBVA",
+        "descripcion": "",
+        "color": "#0000ff",
+        "dinero": 178.19,
+        "parentId": null,
+        "esSubcuenta": false,
+        "creadaEn": "2024-10-07T18:00:00.000Z",
+        "actualizadaEn": "2026-05-17T03:48:48.763Z",
+        "historial": [
+          {
+            "fecha": "2024-10-07T18:00:00.000Z",
+            "tipo": "creacion",
+            "mensaje": "Cuenta creada"
+          }
+        ]
+      },
+      {
+        "id": "cta_unbpvidzlemlzuk4gw",
+        "nombre": "RedotPay",
+        "descripcion": "",
+        "color": "#ff0000",
+        "dinero": 2.1200000000000045,
+        "parentId": null,
+        "esSubcuenta": false,
+        "creadaEn": "2024-10-07T18:00:00.000Z",
+        "actualizadaEn": "2026-05-15T03:57:08.834Z",
+        "historial": [
+          {
+            "fecha": "2024-10-07T18:00:00.000Z",
+            "tipo": "creacion",
+            "mensaje": "Cuenta creada"
+          }
+        ]
+      },
+      {
+        "id": "cta_8o8efr277zemlzun2l6",
+        "nombre": "Binance",
+        "descripcion": "",
+        "color": "#ffcc00",
+        "dinero": 0,
+        "parentId": null,
+        "esSubcuenta": false,
+        "creadaEn": "2024-10-07T18:00:00.000Z",
+        "actualizadaEn": "2026-02-24T00:10:20.245Z",
+        "historial": [
+          {
+            "fecha": "2024-10-07T18:00:00.000Z",
+            "tipo": "creacion",
+            "mensaje": "Cuenta creada"
+          }
+        ]
+      },
+      {
+        "id": "cta_mro9l7wjibmlzupkmb",
+        "nombre": "OKX",
+        "descripcion": "",
+        "color": "#000000",
+        "dinero": 0,
+        "parentId": null,
+        "esSubcuenta": false,
+        "creadaEn": "2024-10-07T18:00:00.000Z",
+        "actualizadaEn": "2026-02-24T00:12:16.924Z",
+        "historial": [
+          {
+            "fecha": "2024-10-07T18:00:00.000Z",
+            "tipo": "creacion",
+            "mensaje": "Cuenta creada"
+          }
+        ]
+      },
+      {
+        "id": "cta_1ac8nsatbdfmlzurm8a",
+        "nombre": "Speed Wallet",
+        "descripcion": "",
+        "color": "#0ea5e9",
+        "dinero": 0,
+        "parentId": null,
+        "esSubcuenta": false,
+        "creadaEn": "2024-10-07T18:00:00.000Z",
+        "actualizadaEn": "2026-02-24T00:13:52.330Z",
+        "historial": [
+          {
+            "fecha": "2024-10-07T18:00:00.000Z",
+            "tipo": "creacion",
+            "mensaje": "Cuenta creada"
+          }
+        ]
+      },
+      {
+        "id": "cta_uhhx4smd5oimlzut7hk",
+        "nombre": "Trust Wallet",
+        "descripcion": "",
+        "color": "#0ea5e9",
+        "dinero": 0,
+        "parentId": null,
+        "esSubcuenta": false,
+        "creadaEn": "2024-10-07T18:00:00.000Z",
+        "actualizadaEn": "2026-02-24T00:15:06.536Z",
+        "historial": [
+          {
+            "fecha": "2024-10-07T18:00:00.000Z",
+            "tipo": "creacion",
+            "mensaje": "Cuenta creada"
+          }
+        ]
+      },
+      {
+        "id": "cta_g9vo20ufsj4mlzuui25",
+        "nombre": "OlympTrade",
+        "descripcion": "",
+        "color": "#00ff00",
+        "dinero": 0,
+        "parentId": null,
+        "esSubcuenta": false,
+        "creadaEn": "2024-10-07T18:00:00.000Z",
+        "actualizadaEn": "2026-02-24T00:16:06.890Z",
+        "historial": [
+          {
+            "fecha": "2024-10-07T18:00:00.000Z",
+            "tipo": "creacion",
+            "mensaje": "Cuenta creada"
+          }
+        ]
+      },
+      {
+        "id": "cta_vhn50hwy3qrmlzuxsuw",
+        "nombre": "IQ Option",
+        "descripcion": "Cuenta: luis213465rivas@gmail.com",
+        "color": "#ff8400",
+        "dinero": 0,
+        "parentId": null,
+        "esSubcuenta": false,
+        "creadaEn": "2024-10-07T18:00:00.000Z",
+        "actualizadaEn": "2026-02-24T00:18:40.852Z",
+        "historial": [
+          {
+            "fecha": "2024-10-07T18:00:00.000Z",
+            "tipo": "creacion",
+            "mensaje": "Cuenta creada"
+          }
+        ]
+      },
+      {
+        "id": "cta_5iiv0rou1bxmlzuz2nn",
+        "nombre": "IQ Option",
+        "descripcion": "Cuenta: soporteclubgaming@gmail.com",
+        "color": "#ff7b00",
+        "dinero": 0,
+        "parentId": null,
+        "esSubcuenta": false,
+        "creadaEn": "2024-10-07T18:00:00.000Z",
+        "actualizadaEn": "2026-02-24T00:19:40.211Z",
+        "historial": [
+          {
+            "fecha": "2024-10-07T18:00:00.000Z",
+            "tipo": "creacion",
+            "mensaje": "Cuenta creada"
+          }
+        ]
+      },
+      {
+        "id": "cta_dex4x0sc4zmlzv1xn6",
+        "nombre": "Exnova",
+        "descripcion": "Cuenta: luis213465rivas@gmail.com",
+        "color": "#949494",
+        "dinero": 276.38,
+        "parentId": null,
+        "esSubcuenta": false,
+        "creadaEn": "2024-10-07T18:00:00.000Z",
+        "actualizadaEn": "2026-05-17T05:11:51.279Z",
+        "historial": [
+          {
+            "fecha": "2024-10-07T18:00:00.000Z",
+            "tipo": "creacion",
+            "mensaje": "Cuenta creada"
+          },
+          {
+            "fecha": "2026-02-24T00:28:35.477Z",
+            "tipo": "modificacion",
+            "mensaje": "Color cambiado"
+          }
+        ]
+      },
+      {
+        "id": "cta_u7zkyuykrbmlzv2zt8",
+        "nombre": "Exnova",
+        "descripcion": "Cuenta: Luis.rivas1328@alumnos.udg.mx",
+        "color": "#969696",
+        "dinero": 0,
+        "parentId": null,
+        "esSubcuenta": false,
+        "creadaEn": "2024-10-07T18:00:00.000Z",
+        "actualizadaEn": "2026-02-24T00:28:44.971Z",
+        "historial": [
+          {
+            "fecha": "2024-10-07T18:00:00.000Z",
+            "tipo": "creacion",
+            "mensaje": "Cuenta creada"
+          },
+          {
+            "fecha": "2026-02-24T00:28:44.971Z",
+            "tipo": "modificacion",
+            "mensaje": "Color cambiado"
+          }
+        ]
+      },
+      {
+        "id": "cta_s63wft6oxmmlzv53wy",
+        "nombre": "Walbi",
+        "descripcion": "",
+        "color": "#000000",
+        "dinero": 0,
+        "parentId": null,
+        "esSubcuenta": false,
+        "creadaEn": "2024-10-07T18:00:00.000Z",
+        "actualizadaEn": "2026-02-24T00:24:21.775Z",
+        "historial": [
+          {
+            "fecha": "2024-10-07T18:00:00.000Z",
+            "tipo": "creacion",
+            "mensaje": "Cuenta creada"
+          }
+        ]
+      },
+      {
+        "id": "cta_qbkqcql838mlzv64n8",
+        "nombre": "Pocket Option",
+        "descripcion": "",
+        "color": "#0ea5e9",
+        "dinero": 0,
+        "parentId": null,
+        "esSubcuenta": false,
+        "creadaEn": "2024-10-07T18:00:00.000Z",
+        "actualizadaEn": "2026-02-24T00:25:09.380Z",
+        "historial": [
+          {
+            "fecha": "2024-10-07T18:00:00.000Z",
+            "tipo": "creacion",
+            "mensaje": "Cuenta creada"
+          }
+        ]
+      },
+      {
+        "id": "cta_41of7b9iwqumlzv8cst",
+        "nombre": "PolyMarket",
+        "descripcion": "",
+        "color": "#0ea5e9",
+        "dinero": 0,
+        "parentId": null,
+        "esSubcuenta": false,
+        "creadaEn": "2024-10-07T18:00:00.000Z",
+        "actualizadaEn": "2026-02-24T00:26:53.261Z",
+        "historial": [
+          {
+            "fecha": "2024-10-07T18:00:00.000Z",
+            "tipo": "creacion",
+            "mensaje": "Cuenta creada"
+          }
+        ]
+      },
+      {
+        "id": "cta_vrh4jtrriprmlzv9qar",
+        "nombre": "DolarApp / Inversiones",
+        "descripcion": "",
+        "color": "#028700",
+        "dinero": 0,
+        "parentId": null,
+        "esSubcuenta": false,
+        "creadaEn": "2024-10-07T18:00:00.000Z",
+        "actualizadaEn": "2026-02-24T00:27:57.411Z",
+        "historial": [
+          {
+            "fecha": "2024-10-07T18:00:00.000Z",
+            "tipo": "creacion",
+            "mensaje": "Cuenta creada"
+          }
+        ]
+      }
+    ],
+    "gtr-etiquetas": [
+      {
+        "id": "tag_enqfjyk80imkkmrd16",
+        "nombre": "Supermercado",
+        "color": "#ef4444",
+        "tipo": "gasto",
+        "icono": "🛒",
+        "padreId": null,
+        "creadaEn": "2026-01-19T03:53:28.499Z",
+        "actualizadaEn": "2026-01-19T03:53:28.499Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T03:53:28.499Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          }
+        ]
+      },
+      {
+        "id": "tag_kbdydzm9xdmkkmry9c",
+        "nombre": "Ropa",
+        "color": "#00aaff",
+        "tipo": "gasto",
+        "icono": "👕",
+        "padreId": null,
+        "creadaEn": "2026-01-19T03:53:56.016Z",
+        "actualizadaEn": "2026-01-19T03:53:56.016Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T03:53:56.016Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          }
+        ]
+      },
+      {
+        "id": "tag_achxz780u1bmkkmsitw",
+        "nombre": "Casa",
+        "color": "#9e6400",
+        "tipo": "gasto",
+        "icono": "🏡",
+        "padreId": null,
+        "creadaEn": "2026-01-19T03:54:22.676Z",
+        "actualizadaEn": "2026-01-19T03:54:22.676Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T03:54:22.676Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          }
+        ]
+      },
+      {
+        "id": "tag_vlx5ry24g3smkkmt0fs",
+        "nombre": "Entretenimiento",
+        "color": "#ff00ff",
+        "tipo": "gasto",
+        "icono": "🎥",
+        "padreId": null,
+        "creadaEn": "2026-01-19T03:54:45.496Z",
+        "actualizadaEn": "2026-01-19T03:54:45.496Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T03:54:45.496Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          }
+        ]
+      },
+      {
+        "id": "tag_6mx858ic12mmkkmtm2r",
+        "nombre": "Transporte",
+        "color": "#0000ff",
+        "tipo": "gasto",
+        "icono": "🚃",
+        "padreId": null,
+        "creadaEn": "2026-01-19T03:55:13.539Z",
+        "actualizadaEn": "2026-01-19T03:55:13.539Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T03:55:13.539Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          }
+        ]
+      },
+      {
+        "id": "tag_19e7yqr2p4xmkkmusg4",
+        "nombre": "Regalos",
+        "color": "#ff5500",
+        "tipo": "gasto",
+        "icono": "🎁",
+        "padreId": null,
+        "creadaEn": "2026-01-19T03:56:08.452Z",
+        "actualizadaEn": "2026-01-19T03:56:08.452Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T03:56:08.452Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          }
+        ]
+      },
+      {
+        "id": "tag_jkuik3qoq5jmkkmvdl0",
+        "nombre": "Viaje",
+        "color": "#00ffff",
+        "tipo": "gasto",
+        "icono": "✈️",
+        "padreId": null,
+        "creadaEn": "2026-01-19T03:56:35.844Z",
+        "actualizadaEn": "2026-01-19T03:56:35.844Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T03:56:35.844Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          }
+        ]
+      },
+      {
+        "id": "tag_jgsy6xylwpmkkmw3ov",
+        "nombre": "Inversión",
+        "color": "#00a608",
+        "tipo": "gasto",
+        "icono": "📈",
+        "padreId": null,
+        "creadaEn": "2026-01-19T03:57:09.679Z",
+        "actualizadaEn": "2026-01-19T03:57:09.679Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T03:57:09.679Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          }
+        ]
+      },
+      {
+        "id": "tag_w75qjdd7i6mkkmwwx9",
+        "nombre": "CryptoTab Browser",
+        "color": "#00ffff",
+        "tipo": "gasto",
+        "icono": "🌐",
+        "padreId": "tag_jgsy6xylwpmkkmw3ov",
+        "creadaEn": "2026-01-19T03:57:47.564Z",
+        "actualizadaEn": "2026-01-19T03:57:47.564Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T03:57:47.564Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          }
+        ]
+      },
+      {
+        "id": "tag_ha9mjajnp1kmkkmxgf2",
+        "nombre": "CryptoTab Pool",
+        "color": "#ef4444",
+        "tipo": "gasto",
+        "icono": "🪣",
+        "padreId": "tag_jgsy6xylwpmkkmw3ov",
+        "creadaEn": "2026-01-19T03:58:12.815Z",
+        "actualizadaEn": "2026-01-19T03:59:59.883Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T03:58:12.815Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          },
+          {
+            "fecha": "2026-01-19T03:59:59.883Z",
+            "tipo": "modificacion",
+            "mensaje": "Icono cambiado a 🪣"
+          }
+        ]
+      },
+      {
+        "id": "tag_zlv3a3nboc9mkkmzau2",
+        "nombre": "CryptoTab Farm",
+        "color": "#ff9900",
+        "tipo": "gasto",
+        "icono": "📶",
+        "padreId": "tag_jgsy6xylwpmkkmw3ov",
+        "creadaEn": "2026-01-19T03:59:38.906Z",
+        "actualizadaEn": "2026-01-19T03:59:38.906Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T03:59:38.906Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          }
+        ]
+      },
+      {
+        "id": "tag_hmlj7d60jdmkkn0a5l",
+        "nombre": "CryptoTab NFT",
+        "color": "#ff00ff",
+        "tipo": "gasto",
+        "icono": "🖼",
+        "padreId": "tag_jgsy6xylwpmkkmw3ov",
+        "creadaEn": "2026-01-19T04:00:24.678Z",
+        "actualizadaEn": "2026-01-19T04:00:24.678Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T04:00:24.678Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          }
+        ]
+      },
+      {
+        "id": "tag_ueev0izrpwmkknn73q",
+        "nombre": "ROBOX",
+        "color": "#ffca85",
+        "tipo": "gasto",
+        "icono": "💲",
+        "padreId": "tag_jgsy6xylwpmkkmw3ov",
+        "creadaEn": "2026-01-19T04:18:13.812Z",
+        "actualizadaEn": "2026-01-19T04:19:34.435Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T04:18:13.812Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          },
+          {
+            "fecha": "2026-01-19T04:18:26.893Z",
+            "tipo": "modificacion",
+            "mensaje": "Icono cambiado a H"
+          },
+          {
+            "fecha": "2026-01-19T04:19:34.435Z",
+            "tipo": "modificacion",
+            "mensaje": "Icono cambiado a 💲"
+          }
+        ]
+      },
+      {
+        "id": "tag_fsli3f4uio4mkknqbew",
+        "nombre": "Bitcoin Mining",
+        "color": "#0000ff",
+        "tipo": "gasto",
+        "icono": "🪙",
+        "padreId": "tag_jgsy6xylwpmkkmw3ov",
+        "creadaEn": "2026-01-19T04:20:39.366Z",
+        "actualizadaEn": "2026-01-19T04:20:39.366Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T04:20:39.366Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          }
+        ]
+      },
+      {
+        "id": "tag_i1qbnnc8y8imkknqxsr",
+        "nombre": "Tap Mining",
+        "color": "#a200ad",
+        "tipo": "gasto",
+        "icono": "🪙",
+        "padreId": "tag_jgsy6xylwpmkkmw3ov",
+        "creadaEn": "2026-01-19T04:21:08.378Z",
+        "actualizadaEn": "2026-01-19T04:21:08.378Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T04:21:08.378Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          }
+        ]
+      },
+      {
+        "id": "tag_afbys25j6apmkknrbmo",
+        "nombre": "Cloud Power Miner",
+        "color": "#000000",
+        "tipo": "gasto",
+        "icono": "🪙",
+        "padreId": "tag_jgsy6xylwpmkkmw3ov",
+        "creadaEn": "2026-01-19T04:21:26.303Z",
+        "actualizadaEn": "2026-01-19T04:21:26.303Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T04:21:26.303Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          }
+        ]
+      },
+      {
+        "id": "tag_8bo811cwo7bmkknrtd3",
+        "nombre": "Bit Tycoon",
+        "color": "#616161",
+        "tipo": "gasto",
+        "icono": "🪙",
+        "padreId": "tag_jgsy6xylwpmkkmw3ov",
+        "creadaEn": "2026-01-19T04:21:49.287Z",
+        "actualizadaEn": "2026-01-19T04:21:49.287Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T04:21:49.287Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          }
+        ]
+      },
+      {
+        "id": "tag_v4kv48dmbfjmkknt2cr",
+        "nombre": "Rendimientos DolarApp",
+        "color": "#00ff00",
+        "tipo": "gasto",
+        "icono": "💵",
+        "padreId": "tag_jgsy6xylwpmkkmw3ov",
+        "creadaEn": "2026-01-19T04:22:47.595Z",
+        "actualizadaEn": "2026-01-19T04:22:47.595Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T04:22:47.595Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          }
+        ]
+      },
+      {
+        "id": "tag_ekq0f6b7aeamkknu4tl",
+        "nombre": "Perdidas de inversiones",
+        "color": "#ef4444",
+        "tipo": "gasto",
+        "icono": "📉",
+        "padreId": null,
+        "creadaEn": "2026-01-19T04:23:37.449Z",
+        "actualizadaEn": "2026-01-19T04:23:37.449Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T04:23:37.449Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          }
+        ]
+      },
+      {
+        "id": "tag_v3aar0ngsgqmkknv2yq",
+        "nombre": "Trading",
+        "color": "#ff7b00",
+        "tipo": "gasto",
+        "icono": "⚖️",
+        "padreId": "tag_ekq0f6b7aeamkknu4tl",
+        "creadaEn": "2026-01-19T04:24:21.697Z",
+        "actualizadaEn": "2026-01-19T04:24:21.697Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T04:24:21.697Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          }
+        ]
+      },
+      {
+        "id": "tag_j1j2uomsq0qmkknvm4o",
+        "nombre": "Mercados de predicción",
+        "color": "#00aaff",
+        "tipo": "gasto",
+        "icono": "🧭",
+        "padreId": "tag_ekq0f6b7aeamkknu4tl",
+        "creadaEn": "2026-01-19T04:24:46.536Z",
+        "actualizadaEn": "2026-01-19T04:24:46.536Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T04:24:46.536Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          }
+        ]
+      },
+      {
+        "id": "tag_6p4v5ze4jrkmkknwkzt",
+        "nombre": "Comunidad",
+        "color": "#ffe26e",
+        "tipo": "gasto",
+        "icono": "🌐",
+        "padreId": null,
+        "creadaEn": "2026-01-19T04:25:31.721Z",
+        "actualizadaEn": "2026-01-19T04:25:31.721Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T04:25:31.721Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          }
+        ]
+      },
+      {
+        "id": "tag_cpoadvu0g39mkknx2ws",
+        "nombre": "Hosting servidor Minecraft",
+        "color": "#00ff00",
+        "tipo": "gasto",
+        "icono": "🌎",
+        "padreId": "tag_6p4v5ze4jrkmkknwkzt",
+        "creadaEn": "2026-01-19T04:25:54.940Z",
+        "actualizadaEn": "2026-01-19T04:25:54.940Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T04:25:54.940Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          }
+        ]
+      },
+      {
+        "id": "tag_qclnk4qlmgsmkknxqud",
+        "nombre": "Hosting bots",
+        "color": "#00ffff",
+        "tipo": "gasto",
+        "icono": "👾",
+        "padreId": "tag_6p4v5ze4jrkmkknwkzt",
+        "creadaEn": "2026-01-19T04:26:25.957Z",
+        "actualizadaEn": "2026-01-19T04:26:25.957Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T04:26:25.957Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          }
+        ]
+      },
+      {
+        "id": "tag_t1p6ys9quhbmkknyryo",
+        "nombre": "Educación",
+        "color": "#008c05",
+        "tipo": "gasto",
+        "icono": "🎒",
+        "padreId": null,
+        "creadaEn": "2026-01-19T04:27:14.064Z",
+        "actualizadaEn": "2026-01-19T04:27:14.064Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T04:27:14.064Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          }
+        ]
+      },
+      {
+        "id": "tag_ufduw2pgzcsmkknzwz2",
+        "nombre": "Comida",
+        "color": "#ff0000",
+        "tipo": "gasto",
+        "icono": "🌮",
+        "padreId": "tag_enqfjyk80imkkmrd16",
+        "creadaEn": "2026-01-19T04:28:07.214Z",
+        "actualizadaEn": "2026-01-19T05:29:06.118Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T04:28:07.214Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          },
+          {
+            "fecha": "2026-01-19T05:28:45.306Z",
+            "tipo": "modificacion",
+            "mensaje": "Nombre cambiado de \"Comida\" a \"Comida.\""
+          },
+          {
+            "fecha": "2026-01-19T05:29:06.118Z",
+            "tipo": "modificacion",
+            "mensaje": "Nombre cambiado de \"Comida.\" a \"Comida\". Color cambiado"
+          }
+        ]
+      },
+      {
+        "id": "tag_5jrytbdlx2cmkko1qt8",
+        "nombre": "Play Store",
+        "color": "#ffff00",
+        "tipo": "gasto",
+        "icono": "🛍",
+        "padreId": null,
+        "creadaEn": "2026-01-19T04:29:32.540Z",
+        "actualizadaEn": "2026-01-19T04:29:46.888Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T04:29:32.540Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          },
+          {
+            "fecha": "2026-01-19T04:29:46.888Z",
+            "tipo": "modificacion",
+            "mensaje": "Icono cambiado a 🛍"
+          }
+        ]
+      },
+      {
+        "id": "tag_cm697wb4bnumkko2nqp",
+        "nombre": "Compra",
+        "color": "#00ff00",
+        "tipo": "gasto",
+        "icono": "🛍",
+        "padreId": "tag_5jrytbdlx2cmkko1qt8",
+        "creadaEn": "2026-01-19T04:30:15.215Z",
+        "actualizadaEn": "2026-01-19T04:30:53.172Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T04:30:15.215Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          },
+          {
+            "fecha": "2026-01-19T04:30:53.172Z",
+            "tipo": "modificacion",
+            "mensaje": "Icono cambiado a 🛍"
+          }
+        ]
+      },
+      {
+        "id": "tag_syumowazbogmkko2vw9",
+        "nombre": "Suscripción",
+        "color": "#0000ff",
+        "tipo": "gasto",
+        "icono": "🕑",
+        "padreId": "tag_5jrytbdlx2cmkko1qt8",
+        "creadaEn": "2026-01-19T04:30:25.785Z",
+        "actualizadaEn": "2026-01-19T04:30:48.705Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T04:30:25.785Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          },
+          {
+            "fecha": "2026-01-19T04:30:48.705Z",
+            "tipo": "modificacion",
+            "mensaje": "Icono cambiado a 🕑"
+          }
+        ]
+      },
+      {
+        "id": "tag_l33dq672zbmkko4xxj",
+        "nombre": "Servicios digitales",
+        "color": "#008cff",
+        "tipo": "gasto",
+        "icono": "💠",
+        "padreId": null,
+        "creadaEn": "2026-01-19T04:32:01.735Z",
+        "actualizadaEn": "2026-01-19T04:32:01.735Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T04:32:01.735Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          }
+        ]
+      },
+      {
+        "id": "tag_k06dqnvxplmkko5gby",
+        "nombre": "Editores de código",
+        "color": "#00ff00",
+        "tipo": "gasto",
+        "icono": ">_",
+        "padreId": "tag_l33dq672zbmkko4xxj",
+        "creadaEn": "2026-01-19T04:32:25.582Z",
+        "actualizadaEn": "2026-01-19T04:32:25.582Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T04:32:25.582Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          }
+        ]
+      },
+      {
+        "id": "tag_3s4ez44d9clmkko6azp",
+        "nombre": "Electrónica",
+        "color": "#d9d500",
+        "tipo": "gasto",
+        "icono": "⚡",
+        "padreId": null,
+        "creadaEn": "2026-01-19T04:33:05.317Z",
+        "actualizadaEn": "2026-01-19T04:33:05.317Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T04:33:05.317Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          }
+        ]
+      },
+      {
+        "id": "tag_bvwffalqvlemkko721f",
+        "nombre": "Deporte",
+        "color": "#ef4444",
+        "tipo": "gasto",
+        "icono": "🏎",
+        "padreId": null,
+        "creadaEn": "2026-01-19T04:33:40.362Z",
+        "actualizadaEn": "2026-01-19T04:33:40.362Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T04:33:40.362Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          }
+        ]
+      },
+      {
+        "id": "tag_okd42qhn2ddmkko7i3l",
+        "nombre": "Restaurante",
+        "color": "#ff0000",
+        "tipo": "gasto",
+        "icono": "🍔",
+        "padreId": null,
+        "creadaEn": "2026-01-19T04:34:01.185Z",
+        "actualizadaEn": "2026-01-19T04:34:08.147Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T04:34:01.185Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          },
+          {
+            "fecha": "2026-01-19T04:34:08.147Z",
+            "tipo": "modificacion",
+            "mensaje": "Color cambiado"
+          }
+        ]
+      },
+      {
+        "id": "tag_02jjb93kes8ymkko8578",
+        "nombre": "Salud",
+        "color": "#00ffff",
+        "tipo": "gasto",
+        "icono": "⚕️",
+        "padreId": null,
+        "creadaEn": "2026-01-19T04:34:31.124Z",
+        "actualizadaEn": "2026-01-19T04:34:36.741Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T04:34:31.124Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          },
+          {
+            "fecha": "2026-01-19T04:34:36.741Z",
+            "tipo": "modificacion",
+            "mensaje": "Color cambiado"
+          }
+        ]
+      },
+      {
+        "id": "tag_dmunnilk6bbmkko8v6p",
+        "nombre": "Comunicaciones",
+        "color": "#c400ff",
+        "tipo": "gasto",
+        "icono": "📺",
+        "padreId": null,
+        "creadaEn": "2026-01-19T04:35:04.801Z",
+        "actualizadaEn": "2026-01-19T04:35:04.801Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T04:35:04.801Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          }
+        ]
+      },
+      {
+        "id": "tag_9avcx0wvgbimkko9e5b",
+        "nombre": "Otro",
+        "color": "#5c5c5c",
+        "tipo": "gasto",
+        "icono": "🧾",
+        "padreId": null,
+        "creadaEn": "2026-01-19T04:35:29.375Z",
+        "actualizadaEn": "2026-01-19T04:35:29.375Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T04:35:29.375Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          }
+        ]
+      },
+      {
+        "id": "tag_sis61i5wirmkkobff0",
+        "nombre": "Salario",
+        "color": "#22c55e",
+        "tipo": "ingreso",
+        "icono": "💵",
+        "padreId": null,
+        "creadaEn": "2026-01-19T04:37:04.332Z",
+        "actualizadaEn": "2026-01-19T04:37:04.332Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T04:37:04.332Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          }
+        ]
+      },
+      {
+        "id": "tag_70hf47jyh5rmkkobxgv",
+        "nombre": "Inversión",
+        "color": "#00ff9d",
+        "tipo": "ingreso",
+        "icono": "📈",
+        "padreId": null,
+        "creadaEn": "2026-01-19T04:37:27.726Z",
+        "actualizadaEn": "2026-01-19T04:37:27.726Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T04:37:27.726Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          }
+        ]
+      },
+      {
+        "id": "tag_n159utsu3dmkkoc8r2",
+        "nombre": "Criptomonedas",
+        "color": "#ff9d00",
+        "tipo": "ingreso",
+        "icono": "🪙",
+        "padreId": null,
+        "creadaEn": "2026-01-19T04:37:42.350Z",
+        "actualizadaEn": "2026-01-19T04:37:42.350Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T04:37:42.350Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          }
+        ]
+      },
+      {
+        "id": "tag_khu54c99xcmkkoclca",
+        "nombre": "Trading",
+        "color": "#ff0000",
+        "tipo": "ingreso",
+        "icono": "⚖️",
+        "padreId": null,
+        "creadaEn": "2026-01-19T04:37:58.666Z",
+        "actualizadaEn": "2026-01-19T04:37:58.666Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T04:37:58.666Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          }
+        ]
+      },
+      {
+        "id": "tag_h0pa9hcfyhmkkod8ob",
+        "nombre": "Recompensas",
+        "color": "#b8ff45",
+        "tipo": "ingreso",
+        "icono": "🎁",
+        "padreId": null,
+        "creadaEn": "2026-01-19T04:38:28.907Z",
+        "actualizadaEn": "2026-01-19T04:38:28.907Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T04:38:28.907Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          }
+        ]
+      },
+      {
+        "id": "tag_v9fkpwvfddmkkodlyj",
+        "nombre": "Regalos",
+        "color": "#ff0000",
+        "tipo": "ingreso",
+        "icono": "🎁",
+        "padreId": null,
+        "creadaEn": "2026-01-19T04:38:46.123Z",
+        "actualizadaEn": "2026-01-19T04:38:46.123Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T04:38:46.123Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          }
+        ]
+      },
+      {
+        "id": "tag_mbv7ha1jcaimkkoe89v",
+        "nombre": "Negocio",
+        "color": "#0000ff",
+        "tipo": "ingreso",
+        "icono": "🏢",
+        "padreId": null,
+        "creadaEn": "2026-01-19T04:39:15.043Z",
+        "actualizadaEn": "2026-01-19T04:39:15.043Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T04:39:15.043Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          }
+        ]
+      },
+      {
+        "id": "tag_6rh3kyn6hwmkkoehj2",
+        "nombre": "Otro",
+        "color": "#636363",
+        "tipo": "ingreso",
+        "icono": "🧾",
+        "padreId": null,
+        "creadaEn": "2026-01-19T04:39:27.038Z",
+        "actualizadaEn": "2026-01-19T04:39:27.038Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T04:39:27.038Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          }
+        ]
+      },
+      {
+        "id": "tag_26qrhld7pb2mkkofc49",
+        "nombre": "Exnova",
+        "color": "#004cd9",
+        "tipo": "ingreso",
+        "icono": "",
+        "padreId": "tag_khu54c99xcmkkoclca",
+        "creadaEn": "2026-01-19T04:40:06.681Z",
+        "actualizadaEn": "2026-01-19T04:40:06.681Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T04:40:06.681Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          }
+        ]
+      },
+      {
+        "id": "tag_pcaaenajp3nmkkofl0h",
+        "nombre": "OlympTrade",
+        "color": "#00ff00",
+        "tipo": "ingreso",
+        "icono": "",
+        "padreId": "tag_khu54c99xcmkkoclca",
+        "creadaEn": "2026-01-19T04:40:18.209Z",
+        "actualizadaEn": "2026-01-19T04:40:18.209Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T04:40:18.209Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          }
+        ]
+      },
+      {
+        "id": "tag_szjv2x4szbamkkofwc4",
+        "nombre": "IQ Option",
+        "color": "#ff6200",
+        "tipo": "ingreso",
+        "icono": "",
+        "padreId": "tag_khu54c99xcmkkoclca",
+        "creadaEn": "2026-01-19T04:40:32.884Z",
+        "actualizadaEn": "2026-01-19T04:40:32.884Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T04:40:32.884Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          }
+        ]
+      },
+      {
+        "id": "tag_fjzpz0jn1m5mkkog771",
+        "nombre": "Walbi",
+        "color": "#000000",
+        "tipo": "ingreso",
+        "icono": "",
+        "padreId": "tag_khu54c99xcmkkoclca",
+        "creadaEn": "2026-01-19T04:40:46.957Z",
+        "actualizadaEn": "2026-01-19T04:40:46.957Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T04:40:46.957Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          }
+        ]
+      },
+      {
+        "id": "tag_knqwlge2zekmkkogfit",
+        "nombre": "Pocket Option",
+        "color": "#0000ff",
+        "tipo": "ingreso",
+        "icono": "",
+        "padreId": "tag_khu54c99xcmkkoclca",
+        "creadaEn": "2026-01-19T04:40:57.749Z",
+        "actualizadaEn": "2026-01-19T04:40:57.749Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T04:40:57.749Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          }
+        ]
+      },
+      {
+        "id": "tag_t30d6xswuu9mkkoitiu",
+        "nombre": "CryptoTab Browser",
+        "color": "#009dff",
+        "tipo": "ingreso",
+        "icono": "🌐",
+        "padreId": "tag_70hf47jyh5rmkkobxgv",
+        "creadaEn": "2026-01-19T04:42:49.206Z",
+        "actualizadaEn": "2026-02-01T21:24:10.402Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T04:42:49.206Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          },
+          {
+            "fecha": "2026-02-01T21:24:10.402Z",
+            "tipo": "modificacion",
+            "mensaje": "Movida a nueva etiqueta padre"
+          }
+        ]
+      },
+      {
+        "id": "tag_yv8iheg2q6mkkojawb",
+        "nombre": "CryptoTab Pool",
+        "color": "#ff9900",
+        "tipo": "ingreso",
+        "icono": "🪣",
+        "padreId": "tag_70hf47jyh5rmkkobxgv",
+        "creadaEn": "2026-01-19T04:43:11.723Z",
+        "actualizadaEn": "2026-02-01T21:24:13.923Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T04:43:11.723Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          },
+          {
+            "fecha": "2026-02-01T21:24:13.923Z",
+            "tipo": "modificacion",
+            "mensaje": "Movida a nueva etiqueta padre"
+          }
+        ]
+      },
+      {
+        "id": "tag_l5g15vjgddlmkkojodm",
+        "nombre": "CryptoTab Farm",
+        "color": "#ffdd00",
+        "tipo": "ingreso",
+        "icono": "📶",
+        "padreId": "tag_70hf47jyh5rmkkobxgv",
+        "creadaEn": "2026-01-19T04:43:29.194Z",
+        "actualizadaEn": "2026-02-01T21:24:17.652Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T04:43:29.194Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          },
+          {
+            "fecha": "2026-02-01T21:24:17.652Z",
+            "tipo": "modificacion",
+            "mensaje": "Movida a nueva etiqueta padre"
+          }
+        ]
+      },
+      {
+        "id": "tag_6zwih5v8dmcmkkojzug",
+        "nombre": "CryptoTab NFT",
+        "color": "#ff00ff",
+        "tipo": "ingreso",
+        "icono": "🖼",
+        "padreId": "tag_70hf47jyh5rmkkobxgv",
+        "creadaEn": "2026-01-19T04:43:44.056Z",
+        "actualizadaEn": "2026-02-01T21:24:21.327Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T04:43:44.056Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          },
+          {
+            "fecha": "2026-02-01T21:24:21.327Z",
+            "tipo": "modificacion",
+            "mensaje": "Movida a nueva etiqueta padre"
+          }
+        ]
+      },
+      {
+        "id": "tag_ylvq7cbafwpmkkokm3h",
+        "nombre": "ROBOX",
+        "color": "#ffc66b",
+        "tipo": "ingreso",
+        "icono": "💲",
+        "padreId": "tag_70hf47jyh5rmkkobxgv",
+        "creadaEn": "2026-01-19T04:44:12.893Z",
+        "actualizadaEn": "2026-02-01T21:24:25.287Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T04:44:12.893Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          },
+          {
+            "fecha": "2026-02-01T21:24:25.287Z",
+            "tipo": "modificacion",
+            "mensaje": "Movida a nueva etiqueta padre"
+          }
+        ]
+      },
+      {
+        "id": "tag_1gv1em5r6utmkkolfnw",
+        "nombre": "Bitcoin Mining",
+        "color": "#0000ff",
+        "tipo": "ingreso",
+        "icono": "🪙",
+        "padreId": "tag_70hf47jyh5rmkkobxgv",
+        "creadaEn": "2026-01-19T04:44:51.212Z",
+        "actualizadaEn": "2026-02-01T21:24:28.912Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T04:44:51.212Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          },
+          {
+            "fecha": "2026-02-01T21:24:28.912Z",
+            "tipo": "modificacion",
+            "mensaje": "Movida a nueva etiqueta padre"
+          }
+        ]
+      },
+      {
+        "id": "tag_e9qbx4a9voemkkolorf",
+        "nombre": "Tap Mining",
+        "color": "#b700ff",
+        "tipo": "ingreso",
+        "icono": "🪙",
+        "padreId": "tag_70hf47jyh5rmkkobxgv",
+        "creadaEn": "2026-01-19T04:45:03.003Z",
+        "actualizadaEn": "2026-02-01T21:24:32.555Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T04:45:03.003Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          },
+          {
+            "fecha": "2026-02-01T21:24:32.555Z",
+            "tipo": "modificacion",
+            "mensaje": "Movida a nueva etiqueta padre"
+          }
+        ]
+      },
+      {
+        "id": "tag_7spfl34boomkkolwu4",
+        "nombre": "Cloud Power Miner",
+        "color": "#000000",
+        "tipo": "ingreso",
+        "icono": "🪙",
+        "padreId": "tag_70hf47jyh5rmkkobxgv",
+        "creadaEn": "2026-01-19T04:45:13.468Z",
+        "actualizadaEn": "2026-02-01T21:24:36.314Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T04:45:13.468Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          },
+          {
+            "fecha": "2026-02-01T21:24:36.314Z",
+            "tipo": "modificacion",
+            "mensaje": "Movida a nueva etiqueta padre"
+          }
+        ]
+      },
+      {
+        "id": "tag_g2s51orc3pnmkkom76o",
+        "nombre": "Bit Tycoon",
+        "color": "#5c5c5c",
+        "tipo": "ingreso",
+        "icono": "🪙",
+        "padreId": "tag_70hf47jyh5rmkkobxgv",
+        "creadaEn": "2026-01-19T04:45:26.880Z",
+        "actualizadaEn": "2026-02-01T21:24:39.941Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T04:45:26.880Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          },
+          {
+            "fecha": "2026-02-01T21:24:39.941Z",
+            "tipo": "modificacion",
+            "mensaje": "Movida a nueva etiqueta padre"
+          }
+        ]
+      },
+      {
+        "id": "tag_cbk8zdcttbhmkkoml4j",
+        "nombre": "Crypto Sense",
+        "color": "#ffff00",
+        "tipo": "ingreso",
+        "icono": "🪙",
+        "padreId": "tag_70hf47jyh5rmkkobxgv",
+        "creadaEn": "2026-01-19T04:45:44.947Z",
+        "actualizadaEn": "2026-02-01T21:24:43.280Z",
+        "historial": [
+          {
+            "fecha": "2026-01-19T04:45:44.947Z",
+            "tipo": "creacion",
+            "mensaje": "Etiqueta creada"
+          },
+          {
+            "fecha": "2026-02-01T21:24:43.280Z",
+            "tipo": "modificacion",
+            "mensaje": "Movida a nueva etiqueta padre"
+          }
+        ]
+      }
+    ],
+    "gtr-operaciones": [
+      {
+        "id": "op_wukepft6bkmkkp3j43",
+        "tipo": "ingreso",
+        "nombre": "Ingreso semanal",
+        "descripcion": "",
+        "etiquetaId": "tag_sis61i5wirmkkobff0",
+        "cantidad": 200,
+        "fecha": "2024-10-07T00:00",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-01-19T04:58:55.491Z"
+      },
+      {
+        "id": "op_ex2m83krs68mkkp4urr",
+        "tipo": "gasto",
+        "nombre": "Pago semanal trenes",
+        "descripcion": "",
+        "etiquetaId": "tag_6mx858ic12mmkkmtm2r",
+        "cantidad": 50,
+        "fecha": "2024-10-07T00:01",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-01-19T04:59:57.255Z"
+      },
+      {
+        "id": "op_9n53ir6mp9tmkkp6asc",
+        "tipo": "gasto",
+        "nombre": "Comida",
+        "descripcion": "",
+        "etiquetaId": "tag_enqfjyk80imkkmrd16",
+        "cantidad": 50,
+        "fecha": "2024-10-07T00:02",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-01-19T05:01:04.668Z"
+      },
+      {
+        "id": "op_uz1orf1qs7tmkkp7tpm",
+        "tipo": "ingreso",
+        "nombre": "Ingreso semanal",
+        "descripcion": "",
+        "etiquetaId": "tag_sis61i5wirmkkobff0",
+        "cantidad": 200,
+        "fecha": "2024-10-14T00:00",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-01-19T05:02:15.850Z"
+      },
+      {
+        "id": "op_jlks57p1fzrmkkp9vq9",
+        "tipo": "gasto",
+        "nombre": "Pago semanal trenes",
+        "descripcion": "",
+        "etiquetaId": "tag_6mx858ic12mmkkmtm2r",
+        "cantidad": 50,
+        "fecha": "2024-10-14T00:01",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-01-19T05:03:51.776Z"
+      },
+      {
+        "id": "op_iqo8yc7evdnmkkpdhcv",
+        "tipo": "gasto",
+        "nombre": "Comida",
+        "descripcion": "",
+        "etiquetaId": "tag_enqfjyk80imkkmrd16",
+        "cantidad": 50,
+        "fecha": "2024-10-14T00:02",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-01-19T05:06:39.775Z"
+      },
+      {
+        "id": "op_fyu6r9qa0chmkkpeywf",
+        "tipo": "gasto",
+        "nombre": "Compra multiplicador X15 CT Lite",
+        "descripcion": "",
+        "etiquetaId": "tag_w75qjdd7i6mkkmwwx9",
+        "cantidad": 109,
+        "fecha": "2024-10-14T11:17",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-01-19T05:07:49.166Z"
+      },
+      {
+        "id": "op_g1pqkfphremkkpiy8e",
+        "tipo": "gasto",
+        "nombre": "Suscripción Todoist",
+        "descripcion": "",
+        "etiquetaId": "tag_syumowazbogmkko2vw9",
+        "cantidad": 65,
+        "fecha": "2024-10-19T23:37",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-01-19T05:10:54.926Z"
+      },
+      {
+        "id": "op_d9371pewnu4mkkpk9qn",
+        "tipo": "ingreso",
+        "nombre": "Ingreso semanal",
+        "descripcion": "",
+        "etiquetaId": "tag_sis61i5wirmkkobff0",
+        "cantidad": 200,
+        "fecha": "2024-10-21T00:00",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-01-19T05:11:56.495Z"
+      },
+      {
+        "id": "op_ihm9ag0h0cmkkpmeep",
+        "tipo": "gasto",
+        "nombre": "Pago semanal trenes",
+        "descripcion": "",
+        "etiquetaId": "tag_6mx858ic12mmkkmtm2r",
+        "cantidad": 50,
+        "fecha": "2024-10-21T00:01",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-01-19T05:13:35.856Z"
+      },
+      {
+        "id": "op_8a6rnfh65rhmkkpnjbk",
+        "tipo": "gasto",
+        "nombre": "Comida",
+        "descripcion": "",
+        "etiquetaId": "tag_enqfjyk80imkkmrd16",
+        "cantidad": 50,
+        "fecha": "2024-10-21T00:02",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-01-19T05:14:28.880Z"
+      },
+      {
+        "id": "op_a2djhs6xr17mkkpshjh",
+        "tipo": "gasto",
+        "nombre": "Compra de acceso a CT Max",
+        "descripcion": "",
+        "etiquetaId": "tag_w75qjdd7i6mkkmwwx9",
+        "cantidad": 45,
+        "fecha": "2024-10-24T11:17",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-01-19T05:18:19.853Z",
+        "actualizadaEn": "2026-01-29T18:10:01.774Z"
+      },
+      {
+        "id": "op_cq3rnl1fhp4mkkptwtx",
+        "tipo": "ingreso",
+        "nombre": "Ingreso semanal",
+        "descripcion": "",
+        "etiquetaId": "tag_sis61i5wirmkkobff0",
+        "cantidad": 200,
+        "fecha": "2024-10-28T00:00",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-01-19T05:19:26.325Z",
+        "actualizadaEn": "2026-01-19T05:19:40.967Z"
+      },
+      {
+        "id": "op_ukno7dg0gsamkkpvp6a",
+        "tipo": "gasto",
+        "nombre": "Pago semanal trenes",
+        "descripcion": "",
+        "etiquetaId": "tag_6mx858ic12mmkkmtm2r",
+        "cantidad": 50,
+        "fecha": "2024-10-28T00:01",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-01-19T05:20:49.714Z"
+      },
+      {
+        "id": "op_2vc1ntlbvj7mkkpxj3r",
+        "tipo": "gasto",
+        "nombre": "Comida",
+        "descripcion": "",
+        "etiquetaId": "tag_enqfjyk80imkkmrd16",
+        "cantidad": 50,
+        "fecha": "2024-10-28T00:02",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-01-19T05:22:15.159Z"
+      },
+      {
+        "id": "op_gxwv2h2o1nmmkkpyyjp",
+        "tipo": "gasto",
+        "nombre": "Compra de acceso a CT Pro",
+        "descripcion": "",
+        "etiquetaId": "tag_w75qjdd7i6mkkmwwx9",
+        "cantidad": 114,
+        "fecha": "2024-10-28T11:17",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-01-19T05:23:21.829Z",
+        "actualizadaEn": "2026-01-19T05:23:29.260Z"
+      },
+      {
+        "id": "op_jrmp6p0sebdmkkq0gbv",
+        "tipo": "gasto",
+        "nombre": "Compra de tijeras e impresiones",
+        "descripcion": "",
+        "etiquetaId": "tag_t1p6ys9quhbmkknyryo",
+        "cantidad": 30,
+        "fecha": "2024-10-29T00:00",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-01-19T05:24:31.531Z"
+      },
+      {
+        "id": "op_oicy1gzhv6hmkkq2oxp",
+        "tipo": "gasto",
+        "nombre": "Compra de dos ladrillos",
+        "descripcion": "",
+        "etiquetaId": "tag_t1p6ys9quhbmkknyryo",
+        "cantidad": 12,
+        "fecha": "2024-10-30T13:56",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-01-19T05:26:15.996Z"
+      },
+      {
+        "id": "op_5msa0xfzip9mkkq3m8s",
+        "tipo": "ingreso",
+        "nombre": "Bonificación sobre saldo",
+        "descripcion": "",
+        "etiquetaId": "tag_h0pa9hcfyhmkkod8ob",
+        "cantidad": 30,
+        "fecha": "2024-10-30T22:50",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-01-19T05:26:59.164Z",
+        "actualizadaEn": "2026-01-19T05:27:14.953Z"
+      },
+      {
+        "id": "op_407ikxoyzqvml34bhzb",
+        "tipo": "gasto",
+        "nombre": "Compra de acuarelas y pincel",
+        "descripcion": "Para prototipo de física",
+        "etiquetaId": "tag_t1p6ys9quhbmkknyryo",
+        "cantidad": 23,
+        "fecha": "2024-11-01T11:35",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-02-01T02:24:52.679Z"
+      },
+      {
+        "id": "op_dfgri1lrgbbml34cgsc",
+        "tipo": "gasto",
+        "nombre": "Comida",
+        "descripcion": "",
+        "etiquetaId": "tag_enqfjyk80imkkmrd16",
+        "cantidad": 10,
+        "fecha": "2024-11-02T21:31",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-02-01T02:25:37.788Z"
+      },
+      {
+        "id": "op_en7esyfgtk7ml34fian",
+        "tipo": "ingreso",
+        "nombre": "Ingreso semanal",
+        "descripcion": "",
+        "etiquetaId": "tag_sis61i5wirmkkobff0",
+        "cantidad": 100,
+        "fecha": "2024-11-04T08:00",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-02-01T02:27:59.710Z",
+        "actualizadaEn": "2026-02-01T02:28:36.091Z"
+      },
+      {
+        "id": "op_6jkfinvphghml34hyt9",
+        "tipo": "gasto",
+        "nombre": "Copias",
+        "descripcion": "Importantes para un trabajo",
+        "etiquetaId": "tag_t1p6ys9quhbmkknyryo",
+        "cantidad": 7,
+        "fecha": "2024-11-04T20:30",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-02-01T02:29:54.428Z",
+        "actualizadaEn": "2026-02-01T02:30:17.712Z"
+      },
+      {
+        "id": "op_4jtuo3zdg33ml34k8lx",
+        "tipo": "gasto",
+        "nombre": "Comida",
+        "descripcion": "",
+        "etiquetaId": "tag_enqfjyk80imkkmrd16",
+        "cantidad": 30,
+        "fecha": "2024-11-04T20:31",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-02-01T02:31:40.435Z",
+        "actualizadaEn": "2026-02-01T02:32:02.322Z"
+      },
+      {
+        "id": "op_nd1kq1aknllml34l9gz",
+        "tipo": "gasto",
+        "nombre": "Transporte",
+        "descripcion": "",
+        "etiquetaId": "tag_6mx858ic12mmkkmtm2r",
+        "cantidad": 50,
+        "fecha": "2024-11-04T20:32",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-02-01T02:32:28.211Z",
+        "actualizadaEn": "2026-02-01T02:32:41.815Z"
+      },
+      {
+        "id": "op_k8khybrc1lkml34nczu",
+        "tipo": "gasto",
+        "nombre": "Renta de equipo del laboratorio",
+        "descripcion": "",
+        "etiquetaId": "tag_t1p6ys9quhbmkknyryo",
+        "cantidad": 7,
+        "fecha": "2024-11-05T21:20",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-02-01T02:34:06.089Z",
+        "actualizadaEn": "2026-02-01T02:34:19.745Z"
+      },
+      {
+        "id": "op_o9xaoso1rlpml34qv4m",
+        "tipo": "ingreso",
+        "nombre": "Ingreso semanal",
+        "descripcion": "",
+        "etiquetaId": "tag_sis61i5wirmkkobff0",
+        "cantidad": 100,
+        "fecha": "2024-11-06T00:00",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-02-01T02:36:49.556Z"
+      },
+      {
+        "id": "op_nq1i8zlxw2bml34tdub",
+        "tipo": "ingreso",
+        "nombre": "Recompensa",
+        "descripcion": "",
+        "etiquetaId": "tag_h0pa9hcfyhmkkod8ob",
+        "cantidad": 100,
+        "fecha": "2024-11-06T00:01",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-02-01T02:38:47.123Z"
+      },
+      {
+        "id": "op_zsvmdsdpl7ml35107i",
+        "tipo": "gasto",
+        "nombre": "Corte de pelo",
+        "descripcion": "",
+        "etiquetaId": "tag_02jjb93kes8ymkko8578",
+        "cantidad": 100,
+        "fecha": "2024-11-07T15:15",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-02-01T02:44:42.701Z"
+      },
+      {
+        "id": "op_8n5cuc94cvaml353hu4",
+        "tipo": "transferencia",
+        "nombre": "Transferencia",
+        "descripcion": "En calidad de compra de crédito para Google Play",
+        "cantidad": 40,
+        "fecha": "2024-11-07T20:45",
+        "origenId": "cta_a4srcluakypmkkosciw",
+        "destinoId": "cta_mdxdv69rujmml005avg",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-02-01T02:46:38.859Z"
+      },
+      {
+        "id": "op_pr2vbs5k2tjml356iwb",
+        "tipo": "transferencia",
+        "nombre": "Transferencia",
+        "descripcion": "",
+        "cantidad": 4,
+        "fecha": "2024-11-07T20:48",
+        "origenId": "cta_a4srcluakypmkkosciw",
+        "destinoId": "cta_gk93uqeqr4ml2zzfzu",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-02-01T02:49:00.202Z"
+      },
+      {
+        "id": "op_sks7x5qfm6rml359kqp",
+        "tipo": "gasto",
+        "nombre": "Transporte",
+        "descripcion": "",
+        "etiquetaId": "tag_6mx858ic12mmkkmtm2r",
+        "cantidad": 4,
+        "fecha": "2024-11-10T20:50",
+        "cuentaId": "cta_gk93uqeqr4ml2zzfzu",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-02-01T02:51:22.561Z"
+      },
+      {
+        "id": "op_4g5f9kelc7aml35bevq",
+        "tipo": "ingreso",
+        "nombre": "Pago de App",
+        "descripcion": "",
+        "etiquetaId": "tag_cbk8zdcttbhmkkoml4j",
+        "cantidad": 1.22,
+        "fecha": "2024-11-11T11:17",
+        "cuentaId": "cta_cvx2rncgximl30hlk9",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-02-01T02:52:48.276Z"
+      },
+      {
+        "id": "op_vn2zinq57iml35cllj",
+        "tipo": "ingreso",
+        "nombre": "Ingreso semanal",
+        "descripcion": "",
+        "etiquetaId": "tag_sis61i5wirmkkobff0",
+        "cantidad": 200,
+        "fecha": "2024-11-11T11:19",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-02-01T02:53:43.639Z"
+      },
+      {
+        "id": "op_bz3moq7cy4lml35etuc",
+        "tipo": "gasto",
+        "nombre": "Comida",
+        "descripcion": "Descuento de ~-$8",
+        "etiquetaId": "tag_enqfjyk80imkkmrd16",
+        "cantidad": 42,
+        "fecha": "2024-11-11T11:46",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-02-01T02:55:27.636Z"
+      },
+      {
+        "id": "op_ghxb5r94ce7ml35gdjr",
+        "tipo": "transferencia",
+        "nombre": "Transferencia",
+        "descripcion": "",
+        "cantidad": 50,
+        "fecha": "2024-11-11T14:01",
+        "origenId": "cta_a4srcluakypmkkosciw",
+        "destinoId": "cta_gk93uqeqr4ml2zzfzu",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-02-01T02:56:39.830Z"
+      },
+      {
+        "id": "op_fz1lhwrwc5ml35hf3f",
+        "tipo": "gasto",
+        "nombre": "Transporte",
+        "descripcion": "",
+        "etiquetaId": "tag_6mx858ic12mmkkmtm2r",
+        "cantidad": 50,
+        "fecha": "2024-11-11T14:04",
+        "cuentaId": "cta_gk93uqeqr4ml2zzfzu",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-02-01T02:57:28.491Z"
+      },
+      {
+        "id": "op_kfuyczpm9qjml35jc94",
+        "tipo": "ingreso",
+        "nombre": "Pago de App",
+        "descripcion": "",
+        "etiquetaId": "tag_cbk8zdcttbhmkkoml4j",
+        "cantidad": 0.75,
+        "fecha": "2024-11-12T23:34",
+        "cuentaId": "cta_cvx2rncgximl30hlk9",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-02-01T02:58:58.119Z"
+      },
+      {
+        "id": "op_ar3n84a5l4ml35lp0x",
+        "tipo": "gasto",
+        "nombre": "Compra de un paliacate",
+        "descripcion": "",
+        "etiquetaId": "tag_t1p6ys9quhbmkknyryo",
+        "cantidad": 25,
+        "fecha": "2024-11-13T20:14",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-02-01T03:00:47.984Z"
+      },
+      {
+        "id": "op_ww1lf5z0h1ml35nnai",
+        "tipo": "ingreso",
+        "nombre": "Pago CT Browser",
+        "descripcion": "",
+        "etiquetaId": "tag_t30d6xswuu9mkkoitiu",
+        "cantidad": 16.91,
+        "fecha": "2024-11-13T23:35",
+        "cuentaId": "cta_4mokviphqpyml30o8v4",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-02-01T03:02:19.049Z"
+      },
+      {
+        "id": "op_s0aq9i26obml35ps4d",
+        "tipo": "ingreso",
+        "nombre": "Pago de App",
+        "descripcion": "",
+        "etiquetaId": "tag_cbk8zdcttbhmkkoml4j",
+        "cantidad": 1.16,
+        "fecha": "2024-11-17T23:35",
+        "cuentaId": "cta_cvx2rncgximl30hlk9",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-02-01T03:03:58.621Z"
+      },
+      {
+        "id": "op_4p3dh7ib6tmld8760d",
+        "tipo": "ingreso",
+        "nombre": "Salario",
+        "descripcion": "",
+        "etiquetaId": "tag_sis61i5wirmkkobff0",
+        "cantidad": 200,
+        "fecha": "2024-11-18T11:48",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-02-08T04:11:10.765Z"
+      },
+      {
+        "id": "op_9gjn95rjh9mld88npk",
+        "tipo": "transferencia",
+        "nombre": "Transferencia",
+        "descripcion": "",
+        "cantidad": 100,
+        "fecha": "2024-11-18T12:18",
+        "origenId": "cta_a4srcluakypmkkosciw",
+        "destinoId": "cta_mdxdv69rujmml005avg",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-02-08T04:12:20.359Z",
+        "actualizadaEn": "2026-02-08T04:12:30.693Z"
+      },
+      {
+        "id": "op_2dy8y8d6bj3mld8aq2m",
+        "tipo": "ingreso",
+        "nombre": "Pago CT Browser",
+        "descripcion": "",
+        "etiquetaId": "tag_t30d6xswuu9mkkoitiu",
+        "cantidad": 13.09,
+        "fecha": "2024-11-18T23:36",
+        "cuentaId": "cta_4mokviphqpyml30o8v4",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-02-08T04:13:56.732Z"
+      },
+      {
+        "id": "op_pfuc16ze0zmld8cc90",
+        "tipo": "gasto",
+        "nombre": "Compra de contrato básico",
+        "descripcion": "",
+        "etiquetaId": "tag_fsli3f4uio4mkknqbew",
+        "cantidad": 109,
+        "fecha": "2024-11-18T23:37",
+        "cuentaId": "cta_mdxdv69rujmml005avg",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-02-08T04:15:12.131Z"
+      },
+      {
+        "id": "op_3nnrn39spmamld8e7vk",
+        "tipo": "gasto",
+        "nombre": "Semanal",
+        "descripcion": "",
+        "etiquetaId": "tag_enqfjyk80imkkmrd16",
+        "cantidad": 42,
+        "fecha": "2024-11-19T20:52",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-02-08T04:16:39.775Z"
+      },
+      {
+        "id": "op_iwwgtfgoc17mld8ftn9",
+        "tipo": "ingreso",
+        "nombre": "Recuperación de lo prestado",
+        "descripcion": "",
+        "etiquetaId": "tag_6rh3kyn6hwmkkoehj2",
+        "cantidad": 15,
+        "fecha": "2024-11-19T20:54",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-02-08T04:17:54.643Z"
+      },
+      {
+        "id": "op_e607amaqztlmld8h0xr",
+        "tipo": "transferencia",
+        "nombre": "Transferencia",
+        "descripcion": "",
+        "cantidad": 40,
+        "fecha": "2024-11-19T20:55",
+        "origenId": "cta_a4srcluakypmkkosciw",
+        "destinoId": "cta_gk93uqeqr4ml2zzfzu",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-02-08T04:18:50.750Z",
+        "actualizadaEn": "2026-02-08T04:19:00.022Z"
+      },
+      {
+        "id": "op_or4300yblwmld8ioy9",
+        "tipo": "gasto",
+        "nombre": "Transporte",
+        "descripcion": "",
+        "etiquetaId": "tag_6mx858ic12mmkkmtm2r",
+        "cantidad": 40,
+        "fecha": "2024-11-19T20:56",
+        "cuentaId": "cta_gk93uqeqr4ml2zzfzu",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-02-08T04:20:08.529Z",
+        "actualizadaEn": "2026-02-08T04:20:17.765Z"
+      },
+      {
+        "id": "op_iygo7cplxmld8lmna",
+        "tipo": "ingreso",
+        "nombre": "Pago CT Browser",
+        "descripcion": "",
+        "etiquetaId": "tag_t30d6xswuu9mkkoitiu",
+        "cantidad": 6.01,
+        "fecha": "2024-11-21T23:36",
+        "cuentaId": "cta_4mokviphqpyml30o8v4",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-02-08T04:22:25.508Z"
+      },
+      {
+        "id": "op_l33i1j1nq4pmld8mt3f",
+        "tipo": "ingreso",
+        "nombre": "Salario",
+        "descripcion": "",
+        "etiquetaId": "tag_sis61i5wirmkkobff0",
+        "cantidad": 200,
+        "fecha": "2024-11-25T23:31",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-02-08T04:23:20.523Z"
+      },
+      {
+        "id": "op_44d53011wirmld8p1v9",
+        "tipo": "ingreso",
+        "nombre": "Pago de Crypto Sense",
+        "descripcion": "",
+        "etiquetaId": "tag_cbk8zdcttbhmkkoml4j",
+        "cantidad": 0.86,
+        "fecha": "2024-11-25T23:36",
+        "cuentaId": "cta_cvx2rncgximl30hlk9",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-02-08T04:25:05.205Z",
+        "actualizadaEn": "2026-02-08T04:25:21.918Z"
+      },
+      {
+        "id": "op_kna2npo6e4mld8rsg1",
+        "tipo": "transferencia",
+        "nombre": "Transferencia",
+        "descripcion": "",
+        "cantidad": 120,
+        "fecha": "2024-11-26T00:01",
+        "origenId": "cta_a4srcluakypmkkosciw",
+        "destinoId": "cta_mdxdv69rujmml005avg",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-02-08T04:27:12.960Z"
+      },
+      {
+        "id": "op_4k3uid25f0wmld8sz1u",
+        "tipo": "transferencia",
+        "nombre": "Transferencia",
+        "descripcion": "",
+        "cantidad": 10,
+        "fecha": "2024-11-26T00:01",
+        "origenId": "cta_a4srcluakypmkkosciw",
+        "destinoId": "cta_gk93uqeqr4ml2zzfzu",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-02-08T04:28:08.177Z"
+      },
+      {
+        "id": "op_emb33iudywrmld8ui84",
+        "tipo": "gasto",
+        "nombre": "Transporte",
+        "descripcion": "",
+        "etiquetaId": "tag_6mx858ic12mmkkmtm2r",
+        "cantidad": 10,
+        "fecha": "2024-11-27T00:00",
+        "cuentaId": "cta_gk93uqeqr4ml2zzfzu",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-02-08T04:29:19.684Z",
+        "actualizadaEn": "2026-02-08T04:29:28.688Z"
+      },
+      {
+        "id": "op_bitcd3n3cx5mld8xe3v",
+        "tipo": "gasto",
+        "nombre": "Suscripción Todoist",
+        "descripcion": "",
+        "etiquetaId": "tag_syumowazbogmkko2vw9",
+        "cantidad": 65,
+        "fecha": "2024-11-27T00:01",
+        "cuentaId": "cta_mdxdv69rujmml005avg",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-02-08T04:31:34.315Z"
+      },
+      {
+        "id": "op_6ywn7lrhuy5mld8yt2f",
+        "tipo": "ingreso",
+        "nombre": "Encuentro",
+        "descripcion": "",
+        "etiquetaId": "tag_h0pa9hcfyhmkkod8ob",
+        "cantidad": 15,
+        "fecha": "2024-11-28T12:07",
+        "cuentaId": "cta_rli14fh0bbml30saqu",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-02-08T04:32:40.357Z"
+      },
+      {
+        "id": "op_7au7dq00vplmld92icw",
+        "tipo": "ingreso",
+        "nombre": "Pago CT Browser",
+        "descripcion": "",
+        "etiquetaId": "tag_t30d6xswuu9mkkoitiu",
+        "cantidad": 19.73,
+        "fecha": "2024-11-30T23:37",
+        "cuentaId": "cta_4mokviphqpyml30o8v4",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-02-08T04:35:33.103Z"
+      },
+      {
+        "id": "op_u2z2nt4mxicmmcm9otl",
+        "tipo": "transferencia",
+        "nombre": "Transferencia",
+        "descripcion": "",
+        "cantidad": 220,
+        "fecha": "2024-12-02T11:35",
+        "origenId": "cta_a4srcluakypmkkosciw",
+        "destinoId": "cta_mdxdv69rujmml005avg",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-03-04T22:36:59.240Z"
+      },
+      {
+        "id": "op_qri4bc15rwmmcmbr0x",
+        "tipo": "ingreso",
+        "nombre": "Pago de apps de minería",
+        "descripcion": "",
+        "etiquetaId": "tag_1gv1em5r6utmkkolfnw",
+        "cantidad": 0.5,
+        "fecha": "2024-12-02T23:43",
+        "cuentaId": "cta_md7ub5h8t0mml30vjgk",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-03-04T22:38:35.408Z"
+      },
+      {
+        "id": "op_1jxrp6jnebymmcmdijz",
+        "tipo": "ingreso",
+        "nombre": "Pago de apps de minería",
+        "descripcion": "",
+        "etiquetaId": "tag_1gv1em5r6utmkkolfnw",
+        "cantidad": 6.87,
+        "fecha": "2024-12-02T23:45",
+        "cuentaId": "cta_md7ub5h8t0mml30vjgk",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-03-04T22:39:57.742Z"
+      },
+      {
+        "id": "op_lsdrmk5rnjmmcmg2xo",
+        "tipo": "gasto",
+        "nombre": "Suscripción CT Pool",
+        "descripcion": "",
+        "etiquetaId": "tag_ha9mjajnp1kmkkmxgf2",
+        "cantidad": 288,
+        "fecha": "2024-12-02T23:57",
+        "cuentaId": "cta_mdxdv69rujmml005avg",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-03-04T22:41:57.467Z"
+      },
+      {
+        "id": "op_wb55qk7onnmmcmhmyn",
+        "tipo": "ingreso",
+        "nombre": "Salario",
+        "descripcion": "",
+        "etiquetaId": "tag_sis61i5wirmkkobff0",
+        "cantidad": 200,
+        "fecha": "2024-12-03T12:35",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-03-04T22:43:10.079Z"
+      },
+      {
+        "id": "op_ytuojwkysqkmmcmmam8",
+        "tipo": "transferencia",
+        "nombre": "Transferencia",
+        "descripcion": "",
+        "cantidad": 100,
+        "fecha": "2024-12-03T12:36",
+        "origenId": "cta_a4srcluakypmkkosciw",
+        "destinoId": "cta_mdxdv69rujmml005avg",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-03-04T22:46:47.360Z"
+      },
+      {
+        "id": "op_b7ym8ehwutammcmolu8",
+        "tipo": "ingreso",
+        "nombre": "Pago de App de minería",
+        "descripcion": "",
+        "etiquetaId": "tag_1gv1em5r6utmkkolfnw",
+        "cantidad": 0.36,
+        "fecha": "2024-12-03T23:46",
+        "cuentaId": "cta_md7ub5h8t0mml30vjgk",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-03-04T22:48:35.215Z"
+      },
+      {
+        "id": "op_gc06qbpfs4mmcmq0fz",
+        "tipo": "ingreso",
+        "nombre": "Pago de encuesta Google",
+        "descripcion": "",
+        "etiquetaId": "tag_h0pa9hcfyhmkkod8ob",
+        "cantidad": 1.83,
+        "fecha": "2024-12-04T00:00",
+        "cuentaId": "cta_mdxdv69rujmml005avg",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-03-04T22:49:40.796Z"
+      },
+      {
+        "id": "op_bpt482ufugrmmcmrxxs",
+        "tipo": "transferencia",
+        "nombre": "Transferencia",
+        "descripcion": "",
+        "cantidad": 0.9,
+        "fecha": "2024-12-05T13:25",
+        "origenId": "cta_cvx2rncgximl30hlk9",
+        "destinoId": "cta_4mokviphqpyml30o8v4",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-03-04T22:51:10.863Z"
+      },
+      {
+        "id": "op_w42kaabe0gsmmcmu517",
+        "tipo": "ingreso",
+        "nombre": "Pago de Apps ROX",
+        "descripcion": "",
+        "etiquetaId": "tag_ylvq7cbafwpmkkokm3h",
+        "cantidad": 4.23,
+        "fecha": "2024-12-05T23:00",
+        "cuentaId": "cta_4mokviphqpyml30o8v4",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-03-04T22:52:53.370Z",
+        "actualizadaEn": "2026-03-23T03:53:16.144Z"
+      },
+      {
+        "id": "op_z24xvt01ssemmcmwgrn",
+        "tipo": "transferencia",
+        "nombre": "Transferencia",
+        "descripcion": "",
+        "cantidad": 142.85,
+        "fecha": "2024-12-05T23:17",
+        "origenId": "cta_4mokviphqpyml30o8v4",
+        "destinoId": "cta_kvyxk1myp98ml30zbxq",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-03-04T22:54:41.890Z",
+        "actualizadaEn": "2026-03-23T03:53:45.102Z"
+      },
+      {
+        "id": "op_1ou1zejpbermn2nhbtu",
+        "tipo": "ingreso",
+        "nombre": "Pago CryptoTab",
+        "descripcion": "",
+        "etiquetaId": "tag_t30d6xswuu9mkkoitiu",
+        "cantidad": 17.1,
+        "fecha": "2024-12-05T23:46",
+        "cuentaId": "cta_4mokviphqpyml30o8v4",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-03-23T03:52:55.842Z"
+      },
+      {
+        "id": "op_gwb0na97shwmn2nlv6s",
+        "tipo": "gasto",
+        "nombre": "Compra suscripción CT Browser",
+        "descripcion": "",
+        "etiquetaId": "tag_w75qjdd7i6mkkmwwx9",
+        "cantidad": 104.48,
+        "fecha": "2024-12-05T23:43",
+        "cuentaId": "cta_kvyxk1myp98ml30zbxq",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-03-23T03:56:27.556Z"
+      },
+      {
+        "id": "op_37u4z54x1lpmn2no94s",
+        "tipo": "transferencia",
+        "nombre": "Transferencia",
+        "descripcion": "",
+        "cantidad": 40.03,
+        "fecha": "2024-12-05T22:17",
+        "origenId": "cta_kvyxk1myp98ml30zbxq",
+        "destinoId": "cta_cvx2rncgximl30hlk9",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-03-23T03:58:18.940Z"
+      },
+      {
+        "id": "op_6lz5rmaq47umn2nx2g4",
+        "tipo": "ingreso",
+        "nombre": "Pago CryptoTab",
+        "descripcion": "",
+        "etiquetaId": "tag_t30d6xswuu9mkkoitiu",
+        "cantidad": 5.05,
+        "fecha": "2024-12-06T23:01",
+        "cuentaId": "cta_4mokviphqpyml30o8v4",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-03-23T04:05:10.180Z"
+      },
+      {
+        "id": "op_m3hhty2km8fmn2ny47r",
+        "tipo": "transferencia",
+        "nombre": "Transferencia",
+        "descripcion": "",
+        "cantidad": 0.55,
+        "fecha": "2024-12-07T23:48",
+        "origenId": "cta_cvx2rncgximl30hlk9",
+        "destinoId": "cta_hojdu915r6tml3126rn",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-03-23T04:05:59.127Z"
+      },
+      {
+        "id": "op_3crwsggjg2lmn2o2poz",
+        "tipo": "gasto",
+        "nombre": "Suscripción Budge",
+        "descripcion": "Gestor de finanzas (otra app)",
+        "etiquetaId": "tag_syumowazbogmkko2vw9",
+        "cantidad": 19,
+        "fecha": "2024-12-08T00:00",
+        "cuentaId": "cta_mdxdv69rujmml005avg",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-03-23T04:09:33.587Z"
+      },
+      {
+        "id": "op_x11ypnddr3smn2o4qh2",
+        "tipo": "ingreso",
+        "nombre": "Por responder encuesta de Google",
+        "descripcion": "",
+        "etiquetaId": "tag_h0pa9hcfyhmkkod8ob",
+        "cantidad": 9.95,
+        "fecha": "2024-12-10T23:55",
+        "cuentaId": "cta_mdxdv69rujmml005avg",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-03-23T04:11:07.909Z"
+      },
+      {
+        "id": "op_n6sk4z6nq3omn2o6zfh",
+        "tipo": "ingreso",
+        "nombre": "Pago de app",
+        "descripcion": "",
+        "etiquetaId": "tag_cbk8zdcttbhmkkoml4j",
+        "cantidad": 0.77,
+        "fecha": "2024-12-11T23:01",
+        "cuentaId": "cta_cvx2rncgximl30hlk9",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-03-23T04:12:52.829Z"
+      },
+      {
+        "id": "op_n0h4abo9dzjmn2ob7is",
+        "tipo": "transferencia",
+        "nombre": "Transferencia",
+        "descripcion": "",
+        "cantidad": 0.55,
+        "fecha": "2024-12-11T00:09",
+        "origenId": "cta_hojdu915r6tml3126rn",
+        "destinoId": "cta_cvx2rncgximl30hlk9",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-03-23T04:16:09.940Z"
+      },
+      {
+        "id": "op_vzde5040pcmn2ocqh5",
+        "tipo": "transferencia",
+        "nombre": "Transferencia",
+        "descripcion": "",
+        "cantidad": 0.2,
+        "fecha": "2024-12-11T10:24",
+        "origenId": "cta_cvx2rncgximl30hlk9",
+        "destinoId": "cta_hojdu915r6tml3126rn",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-03-23T04:17:21.160Z"
+      },
+      {
+        "id": "op_v1vj1t7tq8fmn2oepgm",
+        "tipo": "ingreso",
+        "nombre": "Pago CT Browser",
+        "descripcion": "",
+        "etiquetaId": "tag_t30d6xswuu9mkkoitiu",
+        "cantidad": 20.21,
+        "fecha": "2024-12-12T23:02",
+        "cuentaId": "cta_4mokviphqpyml30o8v4",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-03-23T04:18:53.158Z"
+      },
+      {
+        "id": "op_824i8fhotfimn2og3ea",
+        "tipo": "ingreso",
+        "nombre": "Pago CT Pool",
+        "descripcion": "",
+        "etiquetaId": "tag_yv8iheg2q6mkkojawb",
+        "cantidad": 39.43,
+        "fecha": "2024-12-13T23:03",
+        "cuentaId": "cta_4mokviphqpyml30o8v4",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-03-23T04:19:57.874Z"
+      },
+      {
+        "id": "op_wu2ro26gypdmn2ohg00",
+        "tipo": "ingreso",
+        "nombre": "Pago BTC Mining",
+        "descripcion": "",
+        "etiquetaId": "tag_1gv1em5r6utmkkolfnw",
+        "cantidad": 3.04,
+        "fecha": "2024-12-13T23:06",
+        "cuentaId": "cta_md7ub5h8t0mml30vjgk",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-03-23T04:21:00.864Z"
+      },
+      {
+        "id": "op_5ygqdu9wl96mn2oipzn",
+        "tipo": "ingreso",
+        "nombre": "Pago BTC Mining",
+        "descripcion": "",
+        "etiquetaId": "tag_1gv1em5r6utmkkolfnw",
+        "cantidad": 5.28,
+        "fecha": "2024-12-16T23:06",
+        "cuentaId": "cta_rli14fh0bbml30saqu",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-03-23T04:22:00.467Z"
+      },
+      {
+        "id": "op_5yn4tvk9mqemn2oktj9",
+        "tipo": "gasto",
+        "nombre": "Suscripción Todoist",
+        "descripcion": "",
+        "etiquetaId": "tag_syumowazbogmkko2vw9",
+        "cantidad": 65,
+        "fecha": "2024-12-19T00:00",
+        "cuentaId": "cta_mdxdv69rujmml005avg",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-03-23T04:23:38.373Z"
+      },
+      {
+        "id": "op_ntd8kmxerulmn2on500",
+        "tipo": "ingreso",
+        "nombre": "Pago CT Browser",
+        "descripcion": "",
+        "etiquetaId": "tag_t30d6xswuu9mkkoitiu",
+        "cantidad": 19.92,
+        "fecha": "2024-12-19T23:07",
+        "cuentaId": "cta_4mokviphqpyml30o8v4",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-03-23T04:25:26.544Z"
+      },
+      {
+        "id": "op_zcusqyd7r0bmn2otl0y",
+        "tipo": "ingreso",
+        "nombre": "Pago ROBOX",
+        "descripcion": "",
+        "etiquetaId": "tag_ylvq7cbafwpmkkokm3h",
+        "cantidad": 4.02,
+        "fecha": "2024-12-20T23:08",
+        "cuentaId": "cta_4mokviphqpyml30o8v4",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-03-23T04:30:27.250Z"
+      },
+      {
+        "id": "op_fybcd1zed7kmn2oug0y",
+        "tipo": "ingreso",
+        "nombre": "Pago CT Pool",
+        "descripcion": "",
+        "etiquetaId": "tag_yv8iheg2q6mkkojawb",
+        "cantidad": 19.58,
+        "fecha": "2024-12-21T23:08",
+        "cuentaId": "cta_4mokviphqpyml30o8v4",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-03-23T04:31:07.426Z"
+      },
+      {
+        "id": "op_eomg44mnf6imn2ovv8t",
+        "tipo": "ingreso",
+        "nombre": "Por responder encuesta de Google",
+        "descripcion": "",
+        "etiquetaId": "tag_h0pa9hcfyhmkkod8ob",
+        "cantidad": 2,
+        "fecha": "2024-12-24T15:27",
+        "cuentaId": "cta_mdxdv69rujmml005avg",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-03-23T04:32:13.805Z"
+      },
+      {
+        "id": "op_lrxz0dpab2mn2ozcs1",
+        "tipo": "ingreso",
+        "nombre": "Regalo",
+        "descripcion": "",
+        "etiquetaId": "tag_v9fkpwvfddmkkodlyj",
+        "cantidad": 300,
+        "fecha": "2024-12-25T15:50",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-03-23T04:34:56.496Z"
+      },
+      {
+        "id": "op_txvphk42xnamn2p024x",
+        "tipo": "transferencia",
+        "nombre": "Transferencia",
+        "descripcion": "",
+        "cantidad": 150,
+        "fecha": "2024-12-25T16:50",
+        "origenId": "cta_a4srcluakypmkkosciw",
+        "destinoId": "cta_mdxdv69rujmml005avg",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-03-23T04:35:29.361Z"
+      },
+      {
+        "id": "op_mp0jz0wvgikmn2p14vy",
+        "tipo": "ingreso",
+        "nombre": "Regalo",
+        "descripcion": "",
+        "etiquetaId": "tag_v9fkpwvfddmkkodlyj",
+        "cantidad": 500,
+        "fecha": "2024-12-26T18:10",
+        "cuentaId": "cta_p9i7mbggkfsml316u7o",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-03-23T04:36:19.582Z",
+        "actualizadaEn": "2026-03-23T04:37:27.209Z"
+      },
+      {
+        "id": "op_czeowttq7j4mn2p3bze",
+        "tipo": "transferencia",
+        "nombre": "Transferencia",
+        "descripcion": "",
+        "cantidad": 300,
+        "fecha": "2024-12-26T19:18",
+        "origenId": "cta_p9i7mbggkfsml316u7o",
+        "destinoId": "cta_mdxdv69rujmml005avg",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-03-23T04:38:02.090Z"
+      },
+      {
+        "id": "op_qyalwrjs7hmn2p4i93",
+        "tipo": "transferencia",
+        "nombre": "Transferencia",
+        "descripcion": "",
+        "cantidad": 200,
+        "fecha": "2024-12-26T19:19",
+        "origenId": "cta_p9i7mbggkfsml316u7o",
+        "destinoId": "cta_rli14fh0bbml30saqu",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-03-23T04:38:56.871Z"
+      },
+      {
+        "id": "op_q1pzff9svdsmn2p7qki",
+        "tipo": "gasto",
+        "nombre": "Compra* de app de gestor de finanzas",
+        "descripcion": "Probablemente fue en realidad el pago de una suscripción al gestor",
+        "etiquetaId": "tag_syumowazbogmkko2vw9",
+        "cantidad": 50,
+        "fecha": "2024-12-26T23:56",
+        "cuentaId": "cta_mdxdv69rujmml005avg",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-03-23T04:41:27.618Z"
+      },
+      {
+        "id": "op_hy2ga3yyewumn2p97w8",
+        "tipo": "ingreso",
+        "nombre": "Pago CT Browser",
+        "descripcion": "",
+        "etiquetaId": "tag_t30d6xswuu9mkkoitiu",
+        "cantidad": 19.32,
+        "fecha": "2024-12-26T23:09",
+        "cuentaId": "cta_4mokviphqpyml30o8v4",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-03-23T04:42:36.728Z"
+      },
+      {
+        "id": "op_t2fbs4p87k9mn2pas8y",
+        "tipo": "ingreso",
+        "nombre": "Por responder encuestas de Google",
+        "descripcion": "",
+        "etiquetaId": "tag_h0pa9hcfyhmkkod8ob",
+        "cantidad": 2.93,
+        "fecha": "2024-12-27T00:32",
+        "cuentaId": "cta_mdxdv69rujmml005avg",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-03-23T04:43:49.762Z"
+      },
+      {
+        "id": "op_dsiun34o256mn2pcb4j",
+        "tipo": "ingreso",
+        "nombre": "Pago Bitcoin Mining",
+        "descripcion": "",
+        "etiquetaId": "tag_1gv1em5r6utmkkolfnw",
+        "cantidad": 3.84,
+        "fecha": "2024-12-27T23:09",
+        "cuentaId": "cta_md7ub5h8t0mml30vjgk",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-03-23T04:45:00.883Z"
+      },
+      {
+        "id": "op_5mv51whqmd9mn2pe2h4",
+        "tipo": "ingreso",
+        "nombre": "Pago CT Pool",
+        "descripcion": "",
+        "etiquetaId": "tag_yv8iheg2q6mkkojawb",
+        "cantidad": 18.99,
+        "fecha": "2024-12-27T23:09",
+        "cuentaId": "cta_4mokviphqpyml30o8v4",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-03-23T04:46:22.984Z"
+      },
+      {
+        "id": "op_qmvafqbp9vsmn2pfw34",
+        "tipo": "ingreso",
+        "nombre": "Pago de Bitcoin Mining (copia)",
+        "descripcion": "",
+        "etiquetaId": "tag_1gv1em5r6utmkkolfnw",
+        "cantidad": 0.24,
+        "fecha": "2024-12-29T23:11",
+        "cuentaId": "cta_md7ub5h8t0mml30vjgk",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-03-23T04:47:48.016Z"
+      },
+      {
+        "id": "op_jabv1zivtmkmn2pljql",
+        "tipo": "ingreso",
+        "nombre": "Pago ROBOX",
+        "descripcion": "",
+        "etiquetaId": "tag_ylvq7cbafwpmkkokm3h",
+        "cantidad": 4.17,
+        "fecha": "2024-12-31T23:11",
+        "cuentaId": "cta_4mokviphqpyml30o8v4",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-03-23T04:52:11.949Z"
+      },
+      {
+        "id": "op_k5nxz8njmeimn2pnn80",
+        "tipo": "ingreso",
+        "nombre": "Pago Crypto Sense",
+        "descripcion": "",
+        "etiquetaId": "tag_cbk8zdcttbhmkkoml4j",
+        "cantidad": 0.35,
+        "fecha": "2024-12-31T23:11",
+        "cuentaId": "cta_cvx2rncgximl30hlk9",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-03-23T04:53:49.776Z"
+      },
+      {
+        "id": "op_gdtugjdbq55mn2ppep3",
+        "tipo": "ingreso",
+        "nombre": "Pago CT Browser",
+        "descripcion": "",
+        "etiquetaId": "tag_t30d6xswuu9mkkoitiu",
+        "cantidad": 28.64,
+        "fecha": "2024-12-31T23:11",
+        "cuentaId": "cta_4mokviphqpyml30o8v4",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-03-23T04:55:12.039Z"
+      },
+      {
+        "id": "op_5o3np1n5mu6mn2pql6i",
+        "tipo": "transferencia",
+        "nombre": "Transferencia",
+        "descripcion": "",
+        "cantidad": 35.19,
+        "fecha": "2024-12-31T16:57",
+        "origenId": "cta_cvx2rncgximl30hlk9",
+        "destinoId": "cta_4mokviphqpyml30o8v4",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-03-23T04:56:07.098Z"
+      },
+      {
+        "id": "op_249ltfdlv6emp6cawop",
+        "tipo": "gasto",
+        "nombre": "Compra de poder computacional en BTC Mining",
+        "descripcion": "",
+        "etiquetaId": "tag_fsli3f4uio4mkknqbew",
+        "cantidad": 219,
+        "fecha": "2025-01-01T23:14",
+        "cuentaId": "cta_mdxdv69rujmml005avg",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T03:10:29.881Z"
+      },
+      {
+        "id": "op_7mn1b70ibs8mp6ccdxb",
+        "tipo": "ingreso",
+        "nombre": "Pago BTC Mining",
+        "descripcion": "",
+        "etiquetaId": "tag_1gv1em5r6utmkkolfnw",
+        "cantidad": 1.72,
+        "fecha": "2025-01-02T23:20",
+        "cuentaId": "cta_md7ub5h8t0mml30vjgk",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T03:11:38.879Z"
+      },
+      {
+        "id": "op_2r7zgnrqysomp6cgpyg",
+        "tipo": "transferencia",
+        "nombre": "Transferencia",
+        "descripcion": "",
+        "cantidad": 252.5,
+        "fecha": "2025-01-03T12:01",
+        "origenId": "cta_4mokviphqpyml30o8v4",
+        "destinoId": "cta_cvx2rncgximl30hlk9",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T03:15:01.096Z"
+      },
+      {
+        "id": "op_mwo56nx9hjmp6citjs",
+        "tipo": "gasto",
+        "nombre": "Compra CT Pool",
+        "descripcion": "",
+        "etiquetaId": "tag_ha9mjajnp1kmkkmxgf2",
+        "cantidad": 247.36,
+        "fecha": "2025-01-03T23:17",
+        "cuentaId": "cta_cvx2rncgximl30hlk9",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T03:16:39.064Z"
+      },
+      {
+        "id": "op_3va9y81cmmemp6clqse",
+        "tipo": "ingreso",
+        "nombre": "Pago CryptoTab",
+        "descripcion": "",
+        "etiquetaId": "tag_t30d6xswuu9mkkoitiu",
+        "cantidad": 16.24,
+        "fecha": "2025-01-03T23:22",
+        "cuentaId": "cta_4mokviphqpyml30o8v4",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T03:18:55.454Z"
+      },
+      {
+        "id": "op_kjyh960ws6mp6cn0ok",
+        "tipo": "ingreso",
+        "nombre": "Por responder encuesta de Google",
+        "descripcion": "",
+        "etiquetaId": "tag_h0pa9hcfyhmkkod8ob",
+        "cantidad": 4.46,
+        "fecha": "2025-01-09T00:00",
+        "cuentaId": "cta_mdxdv69rujmml005avg",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T03:19:54.932Z",
+        "actualizadaEn": "2026-05-15T03:21:19.022Z"
+      },
+      {
+        "id": "op_60fkhzgm27hmp6co1lu",
+        "tipo": "ingreso",
+        "nombre": "Pago CryptoTab Browser",
+        "descripcion": "",
+        "etiquetaId": "tag_t30d6xswuu9mkkoitiu",
+        "cantidad": 19.67,
+        "fecha": "2025-01-10T23:23",
+        "cuentaId": "cta_4mokviphqpyml30o8v4",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T03:20:42.786Z"
+      },
+      {
+        "id": "op_yr2i6u62zamp6cprfk",
+        "tipo": "ingreso",
+        "nombre": "Pago CT Pool",
+        "descripcion": "",
+        "etiquetaId": "tag_yv8iheg2q6mkkojawb",
+        "cantidad": 38.02,
+        "fecha": "2025-01-09T23:23",
+        "cuentaId": "cta_4mokviphqpyml30o8v4",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T03:22:02.912Z"
+      },
+      {
+        "id": "op_5fozwrdbrc7mp6cqrhi",
+        "tipo": "ingreso",
+        "nombre": "Por responder encuesta de Google",
+        "descripcion": "",
+        "etiquetaId": "tag_h0pa9hcfyhmkkod8ob",
+        "cantidad": 1,
+        "fecha": "2025-01-10T00:00",
+        "cuentaId": "cta_mdxdv69rujmml005avg",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T03:22:49.638Z"
+      },
+      {
+        "id": "op_cxesiydhvupmp6cs6ip",
+        "tipo": "gasto",
+        "nombre": "Compra de app escolar",
+        "descripcion": "",
+        "etiquetaId": "tag_cm697wb4bnumkko2nqp",
+        "cantidad": 29,
+        "fecha": "2025-01-12T00:00",
+        "cuentaId": "cta_mdxdv69rujmml005avg",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T03:23:55.777Z"
+      },
+      {
+        "id": "op_m9x12d763semp6ct6uy",
+        "tipo": "ingreso",
+        "nombre": "Canje de puntos por saldo",
+        "descripcion": "",
+        "etiquetaId": "tag_h0pa9hcfyhmkkod8ob",
+        "cantidad": 20,
+        "fecha": "2025-01-12T00:01",
+        "cuentaId": "cta_mdxdv69rujmml005avg",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T03:24:42.874Z"
+      },
+      {
+        "id": "op_m3hhnyiybvimp6cu1ju",
+        "tipo": "ingreso",
+        "nombre": "Pago ecosistema ROBOX",
+        "descripcion": "",
+        "etiquetaId": "tag_ylvq7cbafwpmkkokm3h",
+        "cantidad": 4.14,
+        "fecha": "2025-01-12T23:24",
+        "cuentaId": "cta_4mokviphqpyml30o8v4",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T03:25:22.650Z"
+      },
+      {
+        "id": "op_lsa5525gpn8mp6cuqoh",
+        "tipo": "ingreso",
+        "nombre": "Semanal",
+        "descripcion": "",
+        "etiquetaId": "tag_sis61i5wirmkkobff0",
+        "cantidad": 200,
+        "fecha": "2025-01-13T00:00",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T03:25:55.217Z"
+      },
+      {
+        "id": "op_h0l7c9r01x4mp6cw8g9",
+        "tipo": "transferencia",
+        "nombre": "Transferencia",
+        "descripcion": "",
+        "cantidad": 200,
+        "fecha": "2025-01-13T00:01",
+        "origenId": "cta_a4srcluakypmkkosciw",
+        "destinoId": "cta_mdxdv69rujmml005avg",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T03:27:04.905Z"
+      },
+      {
+        "id": "op_uav4uj7r5bmp6cyiwe",
+        "tipo": "gasto",
+        "nombre": "Compra de poder computacional en app de minado cripto",
+        "descripcion": "",
+        "etiquetaId": "tag_jgsy6xylwpmkkmw3ov",
+        "cantidad": 129,
+        "fecha": "2025-01-13T00:02",
+        "cuentaId": "cta_mdxdv69rujmml005avg",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T03:28:51.758Z"
+      },
+      {
+        "id": "op_wgz5z1exonsmp6czlwn",
+        "tipo": "gasto",
+        "nombre": "Compra de poder computacional en app de minado cripto",
+        "descripcion": "",
+        "etiquetaId": "tag_jgsy6xylwpmkkmw3ov",
+        "cantidad": 69,
+        "fecha": "2025-01-13T00:03",
+        "cuentaId": "cta_mdxdv69rujmml005avg",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T03:29:42.311Z"
+      },
+      {
+        "id": "op_u2opr3az8j9mp6d0sfp",
+        "tipo": "ingreso",
+        "nombre": "Pago BTC Mining",
+        "descripcion": "",
+        "etiquetaId": "tag_1gv1em5r6utmkkolfnw",
+        "cantidad": 13.59,
+        "fecha": "2025-01-13T23:24",
+        "cuentaId": "cta_md7ub5h8t0mml30vjgk",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T03:30:37.429Z"
+      },
+      {
+        "id": "op_acp5ng4vmu4mp6d2ojg",
+        "tipo": "gasto",
+        "nombre": "Renovación de suscripción CryptoTab",
+        "descripcion": "",
+        "etiquetaId": "tag_w75qjdd7i6mkkmwwx9",
+        "cantidad": 109.65,
+        "fecha": "2025-01-14T23:17",
+        "cuentaId": "cta_mdxdv69rujmml005avg",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T03:32:05.692Z"
+      },
+      {
+        "id": "op_15hbic7yn3zmp6d7d8n",
+        "tipo": "transferencia",
+        "nombre": "Transferencia",
+        "descripcion": "",
+        "cantidad": 35.69,
+        "fecha": "2025-01-15T00:00",
+        "origenId": "cta_md7ub5h8t0mml30vjgk",
+        "destinoId": "cta_cvx2rncgximl30hlk9",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T03:35:44.327Z"
+      },
+      {
+        "id": "op_ji950dr70cmp6d8t9x",
+        "tipo": "ingreso",
+        "nombre": "Pago CryptoTab Pool",
+        "descripcion": "",
+        "etiquetaId": "tag_yv8iheg2q6mkkojawb",
+        "cantidad": 41.63,
+        "fecha": "2025-01-16T23:24",
+        "cuentaId": "cta_4mokviphqpyml30o8v4",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T03:36:51.765Z"
+      },
+      {
+        "id": "op_n5sxq8zchxomp6d9ra8",
+        "tipo": "ingreso",
+        "nombre": "Pago CryptoTab Browser",
+        "descripcion": "",
+        "etiquetaId": "tag_t30d6xswuu9mkkoitiu",
+        "cantidad": 21.71,
+        "fecha": "2025-01-17T23:25",
+        "cuentaId": "cta_4mokviphqpyml30o8v4",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T03:37:35.840Z"
+      },
+      {
+        "id": "op_kn5yeumht2mp6db4om",
+        "tipo": "gasto",
+        "nombre": "Pago de suscripción a Todoist",
+        "descripcion": "",
+        "etiquetaId": "tag_syumowazbogmkko2vw9",
+        "cantidad": 65,
+        "fecha": "2025-01-19T00:00",
+        "cuentaId": "cta_mdxdv69rujmml005avg",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T03:38:39.862Z"
+      },
+      {
+        "id": "op_i6z3gkp0otmmp6dbrmw",
+        "tipo": "ingreso",
+        "nombre": "Semanal",
+        "descripcion": "",
+        "etiquetaId": "tag_sis61i5wirmkkobff0",
+        "cantidad": 200,
+        "fecha": "2025-01-20T00:00",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T03:39:09.608Z"
+      },
+      {
+        "id": "op_eg6f9kmiaymp6df3m0",
+        "tipo": "transferencia",
+        "nombre": "Transferencia",
+        "descripcion": "",
+        "cantidad": 200,
+        "fecha": "2025-01-01T00:00",
+        "origenId": "cta_a4srcluakypmkkosciw",
+        "destinoId": "cta_mdxdv69rujmml005avg",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T03:41:45.096Z"
+      },
+      {
+        "id": "op_ksismeop6k9mp6dkhxa",
+        "tipo": "transferencia",
+        "nombre": "Transferencia",
+        "descripcion": "",
+        "cantidad": 200,
+        "fecha": "2025-01-21T00:00",
+        "origenId": "cta_a4srcluakypmkkosciw",
+        "destinoId": "cta_mdxdv69rujmml005avg",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T03:45:56.926Z"
+      },
+      {
+        "id": "op_9b78a76hjjnmp6dngsz",
+        "tipo": "transferencia",
+        "nombre": "Transferencia",
+        "descripcion": "",
+        "cantidad": 182.62,
+        "fecha": "2025-01-21T00:01",
+        "origenId": "cta_4mokviphqpyml30o8v4",
+        "destinoId": "cta_cvx2rncgximl30hlk9",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T03:48:15.443Z"
+      },
+      {
+        "id": "op_r1mgh32xnnmp6doxb1",
+        "tipo": "ingreso",
+        "nombre": "Bono por crear cuenta",
+        "descripcion": "",
+        "etiquetaId": "tag_h0pa9hcfyhmkkod8ob",
+        "cantidad": 100,
+        "fecha": "2025-01-21T00:02",
+        "cuentaId": "cta_unbpvidzlemlzuk4gw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T03:49:23.485Z"
+      },
+      {
+        "id": "op_a90bcamtlemp6dqw18",
+        "tipo": "transferencia",
+        "nombre": "Transferencia",
+        "descripcion": "",
+        "cantidad": 200,
+        "fecha": "2025-01-21T00:03",
+        "origenId": "cta_cvx2rncgximl30hlk9",
+        "destinoId": "cta_unbpvidzlemlzuk4gw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T03:50:55.148Z"
+      },
+      {
+        "id": "op_gxb3jjoa9x7mp6dsg49",
+        "tipo": "gasto",
+        "nombre": "Compra de tarjeta cripto",
+        "descripcion": "",
+        "etiquetaId": "tag_jgsy6xylwpmkkmw3ov",
+        "cantidad": 200,
+        "fecha": "2025-01-21T00:04",
+        "cuentaId": "cta_unbpvidzlemlzuk4gw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T03:52:07.833Z"
+      },
+      {
+        "id": "op_pwv3p8i1w9mp6du6gz",
+        "tipo": "ingreso",
+        "nombre": "Pago CryptoTab Pool",
+        "descripcion": "",
+        "etiquetaId": "tag_yv8iheg2q6mkkojawb",
+        "cantidad": 34.83,
+        "fecha": "2025-01-21T23:25",
+        "cuentaId": "cta_4mokviphqpyml30o8v4",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T03:53:28.643Z"
+      },
+      {
+        "id": "op_z29ofp73eefmp6dvuth",
+        "tipo": "ingreso",
+        "nombre": "Pago CryptoTab Browser",
+        "descripcion": "",
+        "etiquetaId": "tag_t30d6xswuu9mkkoitiu",
+        "cantidad": 13.06,
+        "fecha": "2025-01-21T23:26",
+        "cuentaId": "cta_4mokviphqpyml30o8v4",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T03:54:46.853Z"
+      },
+      {
+        "id": "op_sbivkmeiyfmp6dywde",
+        "tipo": "gasto",
+        "nombre": "Compra de 450 creditos en Exaroton",
+        "descripcion": "",
+        "etiquetaId": "tag_cpoadvu0g39mkknx2ws",
+        "cantidad": 97.88,
+        "fecha": "2025-01-22T00:00",
+        "cuentaId": "cta_unbpvidzlemlzuk4gw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T03:57:08.834Z"
+      },
+      {
+        "id": "op_yoe04kogllqmp6e3tbb",
+        "tipo": "gasto",
+        "nombre": "Compra de boost X5 en ROBOX",
+        "descripcion": "",
+        "etiquetaId": "tag_ueev0izrpwmkknn73q",
+        "cantidad": 75,
+        "fecha": "2025-01-22T23:18",
+        "cuentaId": "cta_mdxdv69rujmml005avg",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T04:00:58.151Z"
+      },
+      {
+        "id": "op_sh2b0ie3o3cmp6e4j3u",
+        "tipo": "gasto",
+        "nombre": "Compra de boost X10 en ROBOX",
+        "descripcion": "",
+        "etiquetaId": "tag_ueev0izrpwmkknn73q",
+        "cantidad": 149,
+        "fecha": "2025-01-22T23:19",
+        "cuentaId": "cta_mdxdv69rujmml005avg",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T04:01:31.578Z"
+      },
+      {
+        "id": "op_ejznmby92yemp6e5x2c",
+        "tipo": "ingreso",
+        "nombre": "Pago ecosistema ROBOX",
+        "descripcion": "",
+        "etiquetaId": "tag_ylvq7cbafwpmkkokm3h",
+        "cantidad": 4.09,
+        "fecha": "2025-01-22T23:26",
+        "cuentaId": "cta_4mokviphqpyml30o8v4",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T04:02:36.324Z",
+        "actualizadaEn": "2026-05-15T04:03:10.676Z"
+      },
+      {
+        "id": "op_se5yg9ozodmp6e7pr8",
+        "tipo": "ingreso",
+        "nombre": "Para compra de cuadernos",
+        "descripcion": "",
+        "etiquetaId": "tag_sis61i5wirmkkobff0",
+        "cantidad": 200,
+        "fecha": "2025-01-23T00:00",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T04:04:00.164Z"
+      },
+      {
+        "id": "op_x1nqmsms5imp6e8yxm",
+        "tipo": "gasto",
+        "nombre": "Compra de 3 cuadernos",
+        "descripcion": "",
+        "etiquetaId": "tag_t1p6ys9quhbmkknyryo",
+        "cantidad": 111,
+        "fecha": "2025-01-23T00:01",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T04:04:58.714Z"
+      },
+      {
+        "id": "op_qfdlrh3uguqmp6eat48",
+        "tipo": "gasto",
+        "nombre": "Comida",
+        "descripcion": "",
+        "etiquetaId": "tag_ufduw2pgzcsmkknzwz2",
+        "cantidad": 10,
+        "fecha": "2025-01-23T00:04",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T04:06:24.488Z"
+      },
+      {
+        "id": "op_6fe4yd5zfpump6ec0i3",
+        "tipo": "ingreso",
+        "nombre": "Para la compra de libros",
+        "descripcion": "",
+        "etiquetaId": "tag_sis61i5wirmkkobff0",
+        "cantidad": 700,
+        "fecha": "2025-01-24T00:00",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T04:07:20.715Z",
+        "actualizadaEn": "2026-05-15T04:32:41.374Z"
+      },
+      {
+        "id": "op_xt9w0v4ha1pmp6ed7d1",
+        "tipo": "gasto",
+        "nombre": "Compra de algunos libros",
+        "descripcion": "",
+        "etiquetaId": "tag_t1p6ys9quhbmkknyryo",
+        "cantidad": 460,
+        "fecha": "2025-01-24T12:01",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T04:08:16.261Z"
+      },
+      {
+        "id": "op_9ah5m4629b9mp6ee2o6",
+        "tipo": "gasto",
+        "nombre": "Comida",
+        "descripcion": "",
+        "etiquetaId": "tag_ufduw2pgzcsmkknzwz2",
+        "cantidad": 15,
+        "fecha": "2025-01-24T12:02",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T04:08:56.838Z"
+      },
+      {
+        "id": "op_yvd766ivwd9mp6eg13l",
+        "tipo": "ingreso",
+        "nombre": "Pago BTC Mining",
+        "descripcion": "",
+        "etiquetaId": "tag_1gv1em5r6utmkkolfnw",
+        "cantidad": 10.51,
+        "fecha": "2025-01-25T23:26",
+        "cuentaId": "cta_md7ub5h8t0mml30vjgk",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T04:10:28.113Z"
+      },
+      {
+        "id": "op_6ujspe9c9ommp6egq0k",
+        "tipo": "ingreso",
+        "nombre": "Pago ecosistema ROBOX",
+        "descripcion": "",
+        "etiquetaId": "tag_ylvq7cbafwpmkkokm3h",
+        "cantidad": 16.42,
+        "fecha": "2025-01-26T23:26",
+        "cuentaId": "cta_4mokviphqpyml30o8v4",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T04:11:00.404Z"
+      },
+      {
+        "id": "op_x345o5tmepmp6ehn3m",
+        "tipo": "ingreso",
+        "nombre": "Semanal",
+        "descripcion": "",
+        "etiquetaId": "tag_sis61i5wirmkkobff0",
+        "cantidad": 200,
+        "fecha": "2025-01-27T00:00",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T04:11:43.282Z"
+      },
+      {
+        "id": "op_45edcqc450omp6ei5wu",
+        "tipo": "ingreso",
+        "nombre": "Para la compra de libros",
+        "descripcion": "",
+        "etiquetaId": "tag_sis61i5wirmkkobff0",
+        "cantidad": 200,
+        "fecha": "2025-01-27T12:01",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T04:12:07.662Z"
+      },
+      {
+        "id": "op_l65rljhoh4smp6eirqj",
+        "tipo": "transferencia",
+        "nombre": "Transferencia",
+        "descripcion": "",
+        "cantidad": 200,
+        "fecha": "2025-01-27T12:02",
+        "origenId": "cta_a4srcluakypmkkosciw",
+        "destinoId": "cta_mdxdv69rujmml005avg",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T04:12:35.947Z"
+      },
+      {
+        "id": "op_r48j9p8jbxmp6elu64",
+        "tipo": "gasto",
+        "nombre": "Compra de licencia para una app de gestor de finanzas",
+        "descripcion": "Una app gestora antigua.",
+        "etiquetaId": "tag_cm697wb4bnumkko2nqp",
+        "cantidad": 139,
+        "fecha": "2025-01-27T12:03",
+        "cuentaId": "cta_mdxdv69rujmml005avg",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T04:14:59.068Z"
+      },
+      {
+        "id": "op_8153sq6v4nmmp6emw3z",
+        "tipo": "gasto",
+        "nombre": "Renovación de suscripción trimestral CT Max",
+        "descripcion": "",
+        "etiquetaId": "tag_w75qjdd7i6mkkmwwx9",
+        "cantidad": 42,
+        "fecha": "2025-01-27T23:19",
+        "cuentaId": "cta_mdxdv69rujmml005avg",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T04:15:48.239Z"
+      },
+      {
+        "id": "op_dt4qhh2s7rpmp6eobsm",
+        "tipo": "gasto",
+        "nombre": "Compra de cinta plateada",
+        "descripcion": "",
+        "etiquetaId": "tag_t1p6ys9quhbmkknyryo",
+        "cantidad": 29,
+        "fecha": "2025-01-28T20:30",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T04:16:55.222Z"
+      },
+      {
+        "id": "op_fu5sofryfphmp6eqy1n",
+        "tipo": "gasto",
+        "nombre": "Compra de un libro",
+        "descripcion": "",
+        "etiquetaId": "tag_t1p6ys9quhbmkknyryo",
+        "cantidad": 130,
+        "fecha": "2025-01-29T20:58",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T04:18:57.371Z"
+      },
+      {
+        "id": "op_yskybcskw6mp6ermln",
+        "tipo": "gasto",
+        "nombre": "Compra de folder",
+        "descripcion": "",
+        "etiquetaId": "tag_t1p6ys9quhbmkknyryo",
+        "cantidad": 25,
+        "fecha": "2025-01-29T20:59",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T04:19:29.195Z"
+      },
+      {
+        "id": "op_mn3pfg7wbkmp6esg4c",
+        "tipo": "ingreso",
+        "nombre": "Pago CryptoTab Pool",
+        "descripcion": "",
+        "etiquetaId": "tag_yv8iheg2q6mkkojawb",
+        "cantidad": 41.96,
+        "fecha": "2025-01-29T23:27",
+        "cuentaId": "cta_4mokviphqpyml30o8v4",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T04:20:07.452Z"
+      },
+      {
+        "id": "op_6el6cr278iqmp6et88c",
+        "tipo": "ingreso",
+        "nombre": "Pago CryptoTab Browser",
+        "descripcion": "",
+        "etiquetaId": "tag_t30d6xswuu9mkkoitiu",
+        "cantidad": 20.98,
+        "fecha": "2025-01-29T23:27",
+        "cuentaId": "cta_4mokviphqpyml30o8v4",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T04:20:43.884Z"
+      },
+      {
+        "id": "op_o0670bcn88mp6eu2f9",
+        "tipo": "ingreso",
+        "nombre": "Pago ROBOX FIT",
+        "descripcion": "",
+        "etiquetaId": "tag_ylvq7cbafwpmkkokm3h",
+        "cantidad": 2.06,
+        "fecha": "2025-01-29T23:28",
+        "cuentaId": "cta_4mokviphqpyml30o8v4",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T04:21:23.013Z",
+        "actualizadaEn": "2026-05-15T04:22:15.537Z"
+      },
+      {
+        "id": "op_ye9o42p4yycmp6ey064",
+        "tipo": "transferencia",
+        "nombre": "Transferencia",
+        "descripcion": "",
+        "cantidad": 200,
+        "fecha": "2025-01-30T16:14",
+        "origenId": "cta_a4srcluakypmkkosciw",
+        "destinoId": "cta_jtdvy8slrkmlzuh7v7",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T04:24:26.716Z"
+      },
+      {
+        "id": "op_5linz6sle2mp6eyn16",
+        "tipo": "gasto",
+        "nombre": "Comida",
+        "descripcion": "",
+        "etiquetaId": "tag_ufduw2pgzcsmkknzwz2",
+        "cantidad": 19,
+        "fecha": "2025-01-31T00:00",
+        "cuentaId": "cta_jtdvy8slrkmlzuh7v7",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-15T04:24:56.346Z"
+      },
+      {
+        "id": "op_x2cpx7jprifmp96z47y",
+        "tipo": "ingreso",
+        "nombre": "Pago Robox",
+        "descripcion": "",
+        "etiquetaId": "tag_ylvq7cbafwpmkkokm3h",
+        "cantidad": 20,
+        "fecha": "2025-02-01T00:00",
+        "cuentaId": "cta_4mokviphqpyml30o8v4",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T03:04:40.222Z"
+      },
+      {
+        "id": "op_argzz58ue5vmp970hah",
+        "tipo": "ingreso",
+        "nombre": "Pago BTC Mining",
+        "descripcion": "",
+        "etiquetaId": "tag_1gv1em5r6utmkkolfnw",
+        "cantidad": 10.24,
+        "fecha": "2025-02-02T23:54",
+        "cuentaId": "cta_md7ub5h8t0mml30vjgk",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T03:05:43.817Z"
+      },
+      {
+        "id": "op_85tpgmlnjzwmp971iyt",
+        "tipo": "ingreso",
+        "nombre": "Pago Robox",
+        "descripcion": "",
+        "etiquetaId": "tag_ylvq7cbafwpmkkokm3h",
+        "cantidad": 18.11,
+        "fecha": "2025-02-03T23:54",
+        "cuentaId": "cta_4mokviphqpyml30o8v4",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T03:06:32.645Z"
+      },
+      {
+        "id": "op_1xv1aldtkemp973kob",
+        "tipo": "ingreso",
+        "nombre": "Semanal",
+        "descripcion": "",
+        "etiquetaId": "tag_sis61i5wirmkkobff0",
+        "cantidad": 300,
+        "fecha": "2025-02-04T13:06",
+        "cuentaId": "cta_jtdvy8slrkmlzuh7v7",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T03:08:08.171Z",
+        "actualizadaEn": "2026-05-17T03:09:13.870Z"
+      },
+      {
+        "id": "op_negxvlmdkcmp976eop",
+        "tipo": "gasto",
+        "nombre": "Refresco",
+        "descripcion": "",
+        "etiquetaId": "tag_ufduw2pgzcsmkknzwz2",
+        "cantidad": 19,
+        "fecha": "2025-02-04T19:49",
+        "cuentaId": "cta_jtdvy8slrkmlzuh7v7",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T03:10:20.377Z"
+      },
+      {
+        "id": "op_bdh6l639g5fmp977ls1",
+        "tipo": "ingreso",
+        "nombre": "Pago CT Pool",
+        "descripcion": "",
+        "etiquetaId": "tag_yv8iheg2q6mkkojawb",
+        "cantidad": 40.13,
+        "fecha": "2025-02-05T11:57",
+        "cuentaId": "cta_4mokviphqpyml30o8v4",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T03:11:16.225Z"
+      },
+      {
+        "id": "op_odooq5nfzjbmp978twe",
+        "tipo": "ingreso",
+        "nombre": "Pago CT Browser",
+        "descripcion": "",
+        "etiquetaId": "tag_t30d6xswuu9mkkoitiu",
+        "cantidad": 20.07,
+        "fecha": "2025-02-05T12:09",
+        "cuentaId": "cta_4mokviphqpyml30o8v4",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T03:12:13.406Z",
+        "actualizadaEn": "2026-05-17T03:12:24.819Z"
+      },
+      {
+        "id": "op_4oy43hq9ojymp97a6xo",
+        "tipo": "ingreso",
+        "nombre": "Pago Robox FIT",
+        "descripcion": "",
+        "etiquetaId": "tag_ylvq7cbafwpmkkokm3h",
+        "cantidad": 2.05,
+        "fecha": "2025-02-05T12:32",
+        "cuentaId": "cta_4mokviphqpyml30o8v4",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T03:13:16.956Z"
+      },
+      {
+        "id": "op_k3xy9v4kxdmmp97e6uu",
+        "tipo": "transferencia",
+        "nombre": "Transferencia",
+        "descripcion": "",
+        "cantidad": 300,
+        "fecha": "2025-02-05T22:59",
+        "origenId": "cta_jtdvy8slrkmlzuh7v7",
+        "destinoId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T03:16:23.477Z"
+      },
+      {
+        "id": "op_r5hnd1opdi8mp97hql8",
+        "tipo": "gasto",
+        "nombre": "Compra de libro",
+        "descripcion": "",
+        "etiquetaId": "tag_t1p6ys9quhbmkknyryo",
+        "cantidad": 230,
+        "fecha": "2025-02-06T16:28",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T03:19:09.020Z"
+      },
+      {
+        "id": "op_8m6ew0gxz7gmp97jc6b",
+        "tipo": "ingreso",
+        "nombre": "Pago Robox",
+        "descripcion": "",
+        "etiquetaId": "tag_ylvq7cbafwpmkkokm3h",
+        "cantidad": 17.37,
+        "fecha": "2025-02-07T01:58",
+        "cuentaId": "cta_4mokviphqpyml30o8v4",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T03:20:23.651Z"
+      },
+      {
+        "id": "op_q3phz11meehmp97lr2m",
+        "tipo": "transferencia",
+        "nombre": "Transferencia",
+        "descripcion": "",
+        "cantidad": 16.87,
+        "fecha": "2025-02-09T17:28",
+        "origenId": "cta_cvx2rncgximl30hlk9",
+        "destinoId": "cta_4mokviphqpyml30o8v4",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T03:22:16.270Z"
+      },
+      {
+        "id": "op_c9tvrapnfzlmp97punq",
+        "tipo": "gasto",
+        "nombre": "Compra de libro",
+        "descripcion": "",
+        "etiquetaId": "tag_t1p6ys9quhbmkknyryo",
+        "cantidad": 300,
+        "fecha": "2025-02-10T00:00",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T03:25:27.542Z"
+      },
+      {
+        "id": "op_8vawbaw2ekkmp97rgx6",
+        "tipo": "ingreso",
+        "nombre": "Semanal",
+        "descripcion": "",
+        "etiquetaId": "tag_sis61i5wirmkkobff0",
+        "cantidad": 71.19,
+        "fecha": "2025-02-10T00:01",
+        "cuentaId": "cta_jtdvy8slrkmlzuh7v7",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T03:26:43.050Z"
+      },
+      {
+        "id": "op_roa8itoxsbmp97tcg7",
+        "tipo": "ingreso",
+        "nombre": "Semanal",
+        "descripcion": "",
+        "etiquetaId": "tag_sis61i5wirmkkobff0",
+        "cantidad": 200,
+        "fecha": "2025-02-10T00:02",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T03:28:10.567Z",
+        "actualizadaEn": "2026-05-17T03:28:16.177Z"
+      },
+      {
+        "id": "op_gpra09mut2omp97uqf9",
+        "tipo": "gasto",
+        "nombre": "Café",
+        "descripcion": "",
+        "etiquetaId": "tag_ufduw2pgzcsmkknzwz2",
+        "cantidad": 29,
+        "fecha": "2025-02-10T00:03",
+        "cuentaId": "cta_jtdvy8slrkmlzuh7v7",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T03:29:15.333Z",
+        "actualizadaEn": "2026-05-17T03:29:27.394Z"
+      },
+      {
+        "id": "op_w6yluftz2uamp97vyo6",
+        "tipo": "ingreso",
+        "nombre": "Pago Robox",
+        "descripcion": "",
+        "etiquetaId": "tag_ylvq7cbafwpmkkokm3h",
+        "cantidad": 15.83,
+        "fecha": "2025-02-11T13:10",
+        "cuentaId": "cta_4mokviphqpyml30o8v4",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T03:30:12.678Z"
+      },
+      {
+        "id": "op_ab8qo5byotjmp97wxcf",
+        "tipo": "ingreso",
+        "nombre": "Pago CT Pool",
+        "descripcion": "",
+        "etiquetaId": "tag_yv8iheg2q6mkkojawb",
+        "cantidad": 29.46,
+        "fecha": "2025-02-11T13:17",
+        "cuentaId": "cta_4mokviphqpyml30o8v4",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T03:30:57.615Z"
+      },
+      {
+        "id": "op_cc66uk23n1jmp97zegg",
+        "tipo": "gasto",
+        "nombre": "Cortaúñas",
+        "descripcion": "",
+        "etiquetaId": "tag_02jjb93kes8ymkko8578",
+        "cantidad": 20,
+        "fecha": "2025-02-11T15:03",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T03:32:53.104Z"
+      },
+      {
+        "id": "op_ch6qgv61nwmp980dbw",
+        "tipo": "gasto",
+        "nombre": "Comida",
+        "descripcion": "",
+        "etiquetaId": "tag_ufduw2pgzcsmkknzwz2",
+        "cantidad": 36,
+        "fecha": "2025-02-11T23:41",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T03:33:38.300Z"
+      },
+      {
+        "id": "op_f3gnj6a3topmp9840iw",
+        "tipo": "transferencia",
+        "nombre": "Transferencia",
+        "descripcion": "",
+        "cantidad": 262.89,
+        "fecha": "2025-02-11T17:24",
+        "origenId": "cta_4mokviphqpyml30o8v4",
+        "destinoId": "cta_kvyxk1myp98ml30zbxq",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T03:36:28.328Z"
+      },
+      {
+        "id": "op_kkhyfxb505qmp9862ba",
+        "tipo": "transferencia",
+        "nombre": "Transferencia",
+        "descripcion": "",
+        "cantidad": 210,
+        "fecha": "2025-02-11T17:25",
+        "origenId": "cta_kvyxk1myp98ml30zbxq",
+        "destinoId": "cta_dex4x0sc4zmlzv1xn6",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T03:38:03.958Z"
+      },
+      {
+        "id": "op_h1gwpbwnknsmp988pt2",
+        "tipo": "ingreso",
+        "nombre": "Ganancias del día",
+        "descripcion": "",
+        "etiquetaId": "tag_26qrhld7pb2mkkofc49",
+        "cantidad": 37,
+        "fecha": "2025-02-12T13:16",
+        "cuentaId": "cta_dex4x0sc4zmlzv1xn6",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T03:40:07.718Z"
+      },
+      {
+        "id": "op_es7hp3zrclbmp98ak2n",
+        "tipo": "gasto",
+        "nombre": "Reposición objeto laboratorio",
+        "descripcion": "",
+        "etiquetaId": "tag_t1p6ys9quhbmkknyryo",
+        "cantidad": 23,
+        "fecha": "2025-02-12T20:06",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T03:41:33.599Z"
+      },
+      {
+        "id": "op_s2vaz3bs3mp98bh1e",
+        "tipo": "ingreso",
+        "nombre": "Pago CT Browser",
+        "descripcion": "",
+        "etiquetaId": "tag_t30d6xswuu9mkkoitiu",
+        "cantidad": 19.8,
+        "fecha": "2025-02-13T00:27",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T03:42:16.322Z"
+      },
+      {
+        "id": "op_abgd9vim2ucmp98dn7h",
+        "tipo": "gasto",
+        "nombre": "Google One",
+        "descripcion": "30 GB de almacenamiento en Drive",
+        "etiquetaId": "tag_syumowazbogmkko2vw9",
+        "cantidad": 5,
+        "fecha": "2025-02-13T11:11",
+        "cuentaId": "cta_mdxdv69rujmml005avg",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T03:43:57.629Z"
+      },
+      {
+        "id": "op_bm5d4ejyormp98h45s",
+        "tipo": "ingreso",
+        "nombre": "Pago BTC Mining",
+        "descripcion": "",
+        "etiquetaId": "tag_1gv1em5r6utmkkolfnw",
+        "cantidad": 9.7,
+        "fecha": "2025-02-13T16:15",
+        "cuentaId": "cta_md7ub5h8t0mml30vjgk",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T03:46:39.568Z"
+      },
+      {
+        "id": "op_08a2hhes1a1ymp98ih7h",
+        "tipo": "ingreso",
+        "nombre": "Pago Robox FIT",
+        "descripcion": "",
+        "etiquetaId": "tag_ylvq7cbafwpmkkokm3h",
+        "cantidad": 2.04,
+        "fecha": "2025-02-13T20:20",
+        "cuentaId": "cta_4mokviphqpyml30o8v4",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T03:47:43.133Z"
+      },
+      {
+        "id": "op_xn0v4ywb0ymp98jvuj",
+        "tipo": "gasto",
+        "nombre": "Agua",
+        "descripcion": "",
+        "etiquetaId": "tag_ufduw2pgzcsmkknzwz2",
+        "cantidad": 26,
+        "fecha": "2025-02-13T23:18",
+        "cuentaId": "cta_jtdvy8slrkmlzuh7v7",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T03:48:48.763Z"
+      },
+      {
+        "id": "op_su02yah49zomp98mzyb",
+        "tipo": "ingreso",
+        "nombre": "Pago BTC MINING",
+        "descripcion": "",
+        "etiquetaId": "tag_1gv1em5r6utmkkolfnw",
+        "cantidad": 0.2,
+        "fecha": "2025-02-14T18:11",
+        "cuentaId": "cta_md7ub5h8t0mml30vjgk",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T03:51:14.051Z"
+      },
+      {
+        "id": "op_ffy45nfbhomp98p856",
+        "tipo": "ingreso",
+        "nombre": "Ganancias del día",
+        "descripcion": "",
+        "etiquetaId": "tag_26qrhld7pb2mkkofc49",
+        "cantidad": 44,
+        "fecha": "2025-02-14T23:11",
+        "cuentaId": "cta_dex4x0sc4zmlzv1xn6",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T03:52:57.978Z"
+      },
+      {
+        "id": "op_mek1rjnztzrmp98qq1j",
+        "tipo": "ingreso",
+        "nombre": "Pago Robox",
+        "descripcion": "",
+        "etiquetaId": "tag_ylvq7cbafwpmkkokm3h",
+        "cantidad": 15.64,
+        "fecha": "2025-02-15T13:48",
+        "cuentaId": "cta_4mokviphqpyml30o8v4",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T03:54:07.831Z"
+      },
+      {
+        "id": "op_yi4wczb5jhmp98t9z5",
+        "tipo": "transferencia",
+        "nombre": "Transferencia",
+        "descripcion": "",
+        "cantidad": 258.62,
+        "fecha": "2025-02-15T23:24",
+        "origenId": "cta_dex4x0sc4zmlzv1xn6",
+        "destinoId": "cta_cvx2rncgximl30hlk9",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T03:56:06.977Z"
+      },
+      {
+        "id": "op_zrbjrw1zlpmp98vwti",
+        "tipo": "transferencia",
+        "nombre": "Transferencia",
+        "descripcion": "",
+        "cantidad": 41.1,
+        "fecha": "2025-02-16T12:34",
+        "origenId": "cta_kvyxk1myp98ml30zbxq",
+        "destinoId": "cta_cvx2rncgximl30hlk9",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T03:58:09.894Z"
+      },
+      {
+        "id": "op_v8g10ql05pmp98ycxn",
+        "tipo": "transferencia",
+        "nombre": "Transferencia",
+        "descripcion": "",
+        "cantidad": 100,
+        "fecha": "2025-02-16T16:07",
+        "origenId": "cta_a4srcluakypmkkosciw",
+        "destinoId": "cta_mdxdv69rujmml005avg",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T04:00:04.091Z",
+        "actualizadaEn": "2026-05-17T04:00:58.926Z"
+      },
+      {
+        "id": "op_g1nx551h44vmp991oj2",
+        "tipo": "transferencia",
+        "nombre": "Transferencia",
+        "descripcion": "",
+        "cantidad": 25.77,
+        "fecha": "2025-02-16T16:31",
+        "origenId": "cta_md7ub5h8t0mml30vjgk",
+        "destinoId": "cta_cvx2rncgximl30hlk9",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T04:02:39.086Z"
+      },
+      {
+        "id": "op_gpiphilot9gmp9asqrx",
+        "tipo": "ingreso",
+        "nombre": "Semanal",
+        "descripcion": "",
+        "etiquetaId": "tag_sis61i5wirmkkobff0",
+        "cantidad": 200,
+        "fecha": "2025-02-17T10:53",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T04:51:41.325Z"
+      },
+      {
+        "id": "op_9cp6ievgu6lmp9atpv9",
+        "tipo": "transferencia",
+        "nombre": "Transferencia",
+        "descripcion": "",
+        "cantidad": 200,
+        "fecha": "2025-02-17T10:54",
+        "origenId": "cta_a4srcluakypmkkosciw",
+        "destinoId": "cta_mdxdv69rujmml005avg",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T04:52:26.805Z",
+        "actualizadaEn": "2026-05-17T04:52:47.757Z"
+      },
+      {
+        "id": "op_jj3l4o5vnakmp9b37g8",
+        "tipo": "gasto",
+        "nombre": "Compra nivel 1 de minería",
+        "descripcion": "",
+        "etiquetaId": "tag_8bo811cwo7bmkknrtd3",
+        "cantidad": 115,
+        "fecha": "2025-02-17T11:29",
+        "cuentaId": "cta_mdxdv69rujmml005avg",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T04:59:49.496Z"
+      },
+      {
+        "id": "op_fyjhaha0639mp9b4am7",
+        "tipo": "gasto",
+        "nombre": "Compra nivel 2 de minería",
+        "descripcion": "",
+        "etiquetaId": "tag_8bo811cwo7bmkknrtd3",
+        "cantidad": 165,
+        "fecha": "2025-02-17T11:30",
+        "cuentaId": "cta_mdxdv69rujmml005avg",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T05:00:40.255Z"
+      },
+      {
+        "id": "op_1u797lrqqjcmp9b6e3q",
+        "tipo": "ingreso",
+        "nombre": "Pago CT Pool",
+        "descripcion": "",
+        "etiquetaId": "tag_yv8iheg2q6mkkojawb",
+        "cantidad": 38.37,
+        "fecha": "2025-02-18T10:43",
+        "cuentaId": "cta_4mokviphqpyml30o8v4",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T05:02:18.086Z"
+      },
+      {
+        "id": "op_lmmlldlxlbmp9b91qa",
+        "tipo": "transferencia",
+        "nombre": "Transferencia",
+        "descripcion": "",
+        "cantidad": 2,
+        "fecha": "2025-02-18T11:10",
+        "origenId": "cta_cvx2rncgximl30hlk9",
+        "destinoId": "cta_4mokviphqpyml30o8v4",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T05:04:22.018Z"
+      },
+      {
+        "id": "op_z36frogttjmp9ba4kf",
+        "tipo": "ingreso",
+        "nombre": "Pago Robox",
+        "descripcion": "",
+        "etiquetaId": "tag_ylvq7cbafwpmkkokm3h",
+        "cantidad": 17.39,
+        "fecha": "2025-02-19T10:55",
+        "cuentaId": "cta_4mokviphqpyml30o8v4",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T05:05:12.351Z"
+      },
+      {
+        "id": "op_einb5hr8n77mp9bb5vo",
+        "tipo": "ingreso",
+        "nombre": "Pago CT Browser",
+        "descripcion": "",
+        "etiquetaId": "tag_t30d6xswuu9mkkoitiu",
+        "cantidad": 19.67,
+        "fecha": "2025-02-19T10:56",
+        "cuentaId": "cta_4mokviphqpyml30o8v4",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T05:06:00.708Z",
+        "actualizadaEn": "2026-05-17T05:06:07.226Z"
+      },
+      {
+        "id": "op_102quqep3w8mp9bd5y5",
+        "tipo": "gasto",
+        "nombre": "Engargolado de manual Química",
+        "descripcion": "",
+        "etiquetaId": "tag_t1p6ys9quhbmkknyryo",
+        "cantidad": 33,
+        "fecha": "2025-02-19T15:21",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T05:07:34.109Z"
+      },
+      {
+        "id": "op_tv8ohttwgffmp9bdyen",
+        "tipo": "gasto",
+        "nombre": "Compra de lentes de seguridad",
+        "descripcion": "",
+        "etiquetaId": "tag_t1p6ys9quhbmkknyryo",
+        "cantidad": 29.5,
+        "fecha": "2025-02-19T15:22",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T05:08:10.991Z",
+        "actualizadaEn": "2026-05-17T05:08:20.121Z"
+      },
+      {
+        "id": "op_vem1bsg3somp9beyhm",
+        "tipo": "gasto",
+        "nombre": "Comida",
+        "descripcion": "",
+        "etiquetaId": "tag_ufduw2pgzcsmkknzwz2",
+        "cantidad": 15,
+        "fecha": "2025-02-20T13:05",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T05:08:57.753Z"
+      },
+      {
+        "id": "op_6awe37tyjitmp9bgbbj",
+        "tipo": "ingreso",
+        "nombre": "Pago Robox FIT",
+        "descripcion": "",
+        "etiquetaId": "tag_ylvq7cbafwpmkkokm3h",
+        "cantidad": 2.03,
+        "fecha": "2025-02-20T20:17",
+        "cuentaId": "cta_4mokviphqpyml30o8v4",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T05:10:01.039Z"
+      },
+      {
+        "id": "op_c0d4sktlvdmmp9bhjgb",
+        "tipo": "ingreso",
+        "nombre": "Ingresos del día",
+        "descripcion": "",
+        "etiquetaId": "tag_26qrhld7pb2mkkofc49",
+        "cantidad": 44,
+        "fecha": "2025-02-21T23:30",
+        "cuentaId": "cta_dex4x0sc4zmlzv1xn6",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T05:10:58.235Z"
+      },
+      {
+        "id": "op_5jn3cvixuptmp9biodr",
+        "tipo": "transferencia",
+        "nombre": "Transferencia",
+        "descripcion": "",
+        "cantidad": 200,
+        "fecha": "2025-02-21T11:25",
+        "origenId": "cta_cvx2rncgximl30hlk9",
+        "destinoId": "cta_dex4x0sc4zmlzv1xn6",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T05:11:51.279Z"
+      },
+      {
+        "id": "op_calw3v3xmremp9bkaa6",
+        "tipo": "ingreso",
+        "nombre": "Recarga",
+        "descripcion": "",
+        "etiquetaId": "tag_h0pa9hcfyhmkkod8ob",
+        "cantidad": 3,
+        "fecha": "2025-02-22T00:00",
+        "cuentaId": "cta_gk93uqeqr4ml2zzfzu",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T05:13:06.318Z",
+        "actualizadaEn": "2026-05-17T05:13:14.395Z"
+      },
+      {
+        "id": "op_dd3gi5x6g8mp9bmupr",
+        "tipo": "gasto",
+        "nombre": "Transporte",
+        "descripcion": "",
+        "etiquetaId": "tag_6mx858ic12mmkkmtm2r",
+        "cantidad": 10,
+        "fecha": "2025-02-22T00:01",
+        "cuentaId": "cta_gk93uqeqr4ml2zzfzu",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T05:15:06.111Z"
+      },
+      {
+        "id": "op_06m3lhd6kebkmp9bobsf",
+        "tipo": "ingreso",
+        "nombre": "Pago Robox",
+        "descripcion": "",
+        "etiquetaId": "tag_ylvq7cbafwpmkkokm3h",
+        "cantidad": 14.31,
+        "fecha": "2025-02-23T15:40",
+        "cuentaId": "cta_4mokviphqpyml30o8v4",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T05:16:14.895Z"
+      },
+      {
+        "id": "op_eha180vwuwlmp9bp33h",
+        "tipo": "ingreso",
+        "nombre": "Semanal",
+        "descripcion": "",
+        "etiquetaId": "tag_sis61i5wirmkkobff0",
+        "cantidad": 200,
+        "fecha": "2025-02-24T00:00",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T05:16:50.285Z"
+      },
+      {
+        "id": "op_u0ltey0eu8mp9bpxrf",
+        "tipo": "transferencia",
+        "nombre": "Transferencia",
+        "descripcion": "",
+        "cantidad": 100,
+        "fecha": "2025-02-24T20:55",
+        "origenId": "cta_a4srcluakypmkkosciw",
+        "destinoId": "cta_mdxdv69rujmml005avg",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T05:17:30.027Z"
+      },
+      {
+        "id": "op_hfbprurcuymp9br63a",
+        "tipo": "transferencia",
+        "nombre": "Transferencia",
+        "descripcion": "",
+        "cantidad": 112.18,
+        "fecha": "2025-02-24T11:19",
+        "origenId": "cta_cvx2rncgximl30hlk9",
+        "destinoId": "cta_4mokviphqpyml30o8v4",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T05:18:27.478Z"
+      },
+      {
+        "id": "op_2vgxvdzn9ghmp9bssun",
+        "tipo": "ingreso",
+        "nombre": "Pago CT Pool",
+        "descripcion": "",
+        "etiquetaId": "tag_yv8iheg2q6mkkojawb",
+        "cantidad": 36,
+        "fecha": "2025-02-25T14:09",
+        "cuentaId": "cta_4mokviphqpyml30o8v4",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T05:19:43.631Z"
+      },
+      {
+        "id": "op_oj0b4hfa3cmp9btkwd",
+        "tipo": "ingreso",
+        "nombre": "Pago CT Browser",
+        "descripcion": "",
+        "etiquetaId": "tag_t30d6xswuu9mkkoitiu",
+        "cantidad": 17.6,
+        "fecha": "2025-02-26T11:50",
+        "cuentaId": "cta_4mokviphqpyml30o8v4",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T05:20:19.981Z"
+      },
+      {
+        "id": "op_xq7rpxdqsmp9buefq",
+        "tipo": "ingreso",
+        "nombre": "Pago Robox FIT",
+        "descripcion": "",
+        "etiquetaId": "tag_ylvq7cbafwpmkkokm3h",
+        "cantidad": 2.05,
+        "fecha": "2025-02-27T00:00",
+        "cuentaId": "cta_4mokviphqpyml30o8v4",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T05:20:58.262Z"
+      },
+      {
+        "id": "op_uoks0somz7smp9bv9id",
+        "tipo": "ingreso",
+        "nombre": "Recompensa",
+        "descripcion": "",
+        "etiquetaId": "tag_h0pa9hcfyhmkkod8ob",
+        "cantidad": 20,
+        "fecha": "2025-02-27T17:41",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T05:21:38.532Z"
+      },
+      {
+        "id": "op_4iv4dq4c2himp9bw4mk",
+        "tipo": "gasto",
+        "nombre": "Comida",
+        "descripcion": "",
+        "etiquetaId": "tag_ufduw2pgzcsmkknzwz2",
+        "cantidad": 15,
+        "fecha": "2025-02-28T10:47",
+        "cuentaId": "cta_a4srcluakypmkkosciw",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T05:22:18.860Z"
+      },
+      {
+        "id": "op_m84izwz0af8mp9bx49z",
+        "tipo": "ingreso",
+        "nombre": "Pago CT Pool",
+        "descripcion": "",
+        "etiquetaId": "tag_yv8iheg2q6mkkojawb",
+        "cantidad": 17.31,
+        "fecha": "2025-02-28T11:20",
+        "cuentaId": "cta_4mokviphqpyml30o8v4",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T05:23:05.062Z"
+      },
+      {
+        "id": "op_yd8x7mgtvxlmp9bxwfz",
+        "tipo": "ingreso",
+        "nombre": "Pago CT Browser",
+        "descripcion": "",
+        "etiquetaId": "tag_t30d6xswuu9mkkoitiu",
+        "cantidad": 5.19,
+        "fecha": "2025-02-28T23:21",
+        "cuentaId": "cta_4mokviphqpyml30o8v4",
+        "estado": "pagado",
+        "recurrenciaId": null,
+        "cicloNumero": null,
+        "creadaEn": "2026-05-17T05:23:41.567Z"
+      }
+    ],
+    "gtr-metas": [
+      {
+        "id": "ganancias",
+        "tipo": "ganancias",
+        "nombre": "Meta de ganancias objetivo",
+        "activo": false,
+        "objetivo": 0,
+        "fechaInicio": null,
+        "fechaFin": null,
+        "historial": [
+          {
+            "fecha": "2026-01-29T18:15:04.071Z",
+            "tipo": "sistema",
+            "mensaje": "Meta creada y desactivada por defecto"
+          }
+        ],
+        "ahorrado": 0
+      },
+      {
+        "id": "gastos",
+        "tipo": "gastos",
+        "nombre": "Meta de gastos máximos objetivo",
+        "activo": false,
+        "objetivo": 0,
+        "fechaInicio": null,
+        "fechaFin": null,
+        "historial": [
+          {
+            "fecha": "2026-01-29T18:15:04.071Z",
+            "tipo": "sistema",
+            "mensaje": "Meta creada y desactivada por defecto"
+          }
+        ],
+        "ahorrado": 0
+      },
+      {
+        "id": "pnl",
+        "tipo": "pnl",
+        "nombre": "Meta de PNL objetivo",
+        "activo": false,
+        "objetivo": 0,
+        "fechaInicio": null,
+        "fechaFin": null,
+        "historial": [
+          {
+            "fecha": "2026-01-29T18:15:04.071Z",
+            "tipo": "sistema",
+            "mensaje": "Meta creada y desactivada por defecto"
+          }
+        ],
+        "ahorrado": 0
+      }
+    ],
+    "gtr-presupuestos": {
+      "general": {
+        "id": "general",
+        "monto": 800,
+        "fechaInicio": "2026-04-26",
+        "fechaFin": "2026-05-23",
+        "diasPeriodo": 28,
+        "creadoEn": "2026-01-30T19:18:08.673Z",
+        "actualizadoEn": "2026-01-30T19:18:08.673Z",
+        "historial": [
+          {
+            "fecha": "2026-01-30T19:18:08.673Z",
+            "tipo": "creacion",
+            "mensaje": "Presupuesto general creado"
+          },
+          {
+            "fecha": "2026-05-15T04:25:54.649Z",
+            "tipo": "cierre",
+            "mensaje": "Periodo 2026-02-01 a 2026-02-28. Gasto total $0.00 sobre presupuesto $800.00. Dentro del presupuesto."
+          },
+          {
+            "fecha": "2026-05-15T04:25:54.649Z",
+            "tipo": "cierre",
+            "mensaje": "Periodo 2026-03-01 a 2026-03-28. Gasto total $0.00 sobre presupuesto $800.00. Dentro del presupuesto."
+          },
+          {
+            "fecha": "2026-05-15T04:25:54.650Z",
+            "tipo": "cierre",
+            "mensaje": "Periodo 2026-03-29 a 2026-04-25. Gasto total $0.00 sobre presupuesto $800.00. Dentro del presupuesto."
+          }
+        ]
+      },
+      "categorias": [
+        {
+          "id": "pcat_7fcjy6cgh7mml19n9f9",
+          "etiquetaId": "tag_6mx858ic12mmkkmtm2r",
+          "monto": 200,
+          "creadoEn": "2026-01-30T19:18:27.189Z",
+          "actualizadoEn": "2026-01-30T19:18:27.189Z",
+          "historial": [
+            {
+              "fecha": "2026-01-30T19:18:27.189Z",
+              "tipo": "creacion",
+              "mensaje": "Presupuesto creado para etiqueta Transporte"
+            }
+          ]
+        },
+        {
+          "id": "pcat_31haxjp02dwml19nqw5",
+          "etiquetaId": "tag_enqfjyk80imkkmrd16",
+          "monto": 200,
+          "creadoEn": "2026-01-30T19:18:49.829Z",
+          "actualizadoEn": "2026-01-30T19:18:49.829Z",
+          "historial": [
+            {
+              "fecha": "2026-01-30T19:18:49.829Z",
+              "tipo": "creacion",
+              "mensaje": "Presupuesto creado para etiqueta Supermercado"
+            }
+          ]
+        },
+        {
+          "id": "pcat_vp4hzncwaqml19o728",
+          "etiquetaId": "tag_t1p6ys9quhbmkknyryo",
+          "monto": 200,
+          "creadoEn": "2026-01-30T19:19:10.784Z",
+          "actualizadoEn": "2026-01-30T19:19:10.784Z",
+          "historial": [
+            {
+              "fecha": "2026-01-30T19:19:10.784Z",
+              "tipo": "creacion",
+              "mensaje": "Presupuesto creado para etiqueta Educación"
+            }
+          ]
+        }
+      ]
+    },
+    "gtr-configuracion": {
+      "discordWebhook": "https://discord.com/api/webhooks/1427864454753812662/Jvb_ecz6gH286QhpOlM7nLEBsPU43O_GH7LnHcbikur8oU5rpjzbZpeWQLTbEJDXyv_c"
+    },
+    "gtr-separadores": [
+      {
+        "id": "52c4aaeb-08a0-4bed-b911-c1c99b43a1a7",
+        "nombre": "Banca y liquidez",
+        "cuentaIds": [
+          "cta_a4srcluakypmkkosciw",
+          "cta_crr836t4zv5mlzufwsr",
+          "cta_jtdvy8slrkmlzuh7v7"
+        ],
+        "color": "#22c55e",
+        "orden": 0,
+        "creadoEn": "2026-01-19T04:50:30.168Z"
+      },
+      {
+        "id": "a1fa897e-6e3d-4590-b179-056d9bc698d7",
+        "nombre": "Exchanges Cripto",
+        "cuentaIds": [
+          "cta_cvx2rncgximl30hlk9",
+          "cta_4mokviphqpyml30o8v4",
+          "cta_hojdu915r6tml3126rn",
+          "cta_8o8efr277zemlzun2l6",
+          "cta_mro9l7wjibmlzupkmb"
+        ],
+        "color": "#eab308",
+        "orden": 1,
+        "creadoEn": "2026-02-01T00:40:41.502Z"
+      },
+      {
+        "id": "44c46aaf-7a28-4e3b-80c3-dd017e9cb1de",
+        "nombre": "Wallets Cripto",
+        "cuentaIds": [
+          "cta_md7ub5h8t0mml30vjgk",
+          "cta_kvyxk1myp98ml30zbxq",
+          "cta_1ac8nsatbdfmlzurm8a",
+          "cta_uhhx4smd5oimlzut7hk"
+        ],
+        "color": "#6366f1",
+        "orden": 2,
+        "creadoEn": "2026-02-01T00:48:47.303Z"
+      },
+      {
+        "id": "0cf54344-9da6-4ccd-926b-b67358dbbb90",
+        "nombre": "servicios y créditos digitales",
+        "cuentaIds": [
+          "cta_mdxdv69rujmml005avg",
+          "cta_gk93uqeqr4ml2zzfzu",
+          "cta_xiizprxkrml3157sc",
+          "cta_unbpvidzlemlzuk4gw"
+        ],
+        "color": "#0ea5e9",
+        "orden": 4,
+        "creadoEn": "2026-01-29T22:05:33.988Z"
+      },
+      {
+        "id": "b0c31ce9-f2b6-49b7-8c25-713a7578638b",
+        "nombre": "Inversiones y Trading",
+        "cuentaIds": [
+          "cta_g9vo20ufsj4mlzuui25",
+          "cta_vhn50hwy3qrmlzuxsuw",
+          "cta_5iiv0rou1bxmlzuz2nn",
+          "cta_dex4x0sc4zmlzv1xn6",
+          "cta_u7zkyuykrbmlzv2zt8",
+          "cta_s63wft6oxmmlzv53wy",
+          "cta_qbkqcql838mlzv64n8",
+          "cta_41of7b9iwqumlzv8cst",
+          "cta_vrh4jtrriprmlzv9qar"
+        ],
+        "color": "#14b8a6",
+        "orden": 3,
+        "creadoEn": "2026-02-24T00:16:35.104Z"
+      },
+      {
+        "id": "2375765e-76b9-40ef-af07-f2fb72be1794",
+        "nombre": "Reservas y ahorro",
+        "cuentaIds": [
+          "cta_rli14fh0bbml30saqu",
+          "cta_p9i7mbggkfsml316u7o"
+        ],
+        "color": "#64748b",
+        "orden": 5,
+        "creadoEn": "2026-02-01T00:46:16.172Z"
+      }
+    ]
+  }
+}
