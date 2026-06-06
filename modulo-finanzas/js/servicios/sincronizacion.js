@@ -1,23 +1,24 @@
 import { STORAGE_KEYS } from '../sistema/constantes.js'
 import { obtenerPasswordNube, estaAutenticadoEnNube } from './auth.js'
+import { leer, escribir, eliminar } from './almacenamiento.js'
 
 // Límite de Vercel Serverless Functions Payload es 4.5MB.
 // Usamos chunks de 3MB para estar súper seguros y no tener problemas en un par de años.
 const CHUNK_SIZE_CHARS = 3 * 1024 * 1024; // ~3MB de caracteres
 
-function construirSnapshotDatos() {
+async function construirSnapshotDatos() {
     const snapshot = {}
     const keys = Object.values(STORAGE_KEYS)
-    keys.forEach((k) => {
+    for (const k of keys) {
         try {
-            const raw = localStorage.getItem(k)
+            const raw = await leer(k)
             if (raw !== null) {
-                snapshot[k] = JSON.parse(raw)
+                snapshot[k] = raw
             }
         } catch {
             // ignorar claves corruptas
         }
-    })
+    }
     return {
         version: 1,
         exportadoEn: new Date().toISOString(),
@@ -77,7 +78,7 @@ export async function respaldarDatos(opciones = {}) {
     }
 
     try {
-        const snapshot = construirSnapshotDatos();
+        const snapshot = await construirSnapshotDatos();
         const stats = calcularEstadisticas(snapshot);
         const password = obtenerPasswordNube();
 
@@ -191,13 +192,13 @@ export async function restaurarDatos() {
         const datos = snapshot.datos;
         const keys = Object.values(STORAGE_KEYS);
         
-        keys.forEach((k) => {
+        for (const k of keys) {
             if (Object.prototype.hasOwnProperty.call(datos, k)) {
-                localStorage.setItem(k, JSON.stringify(datos[k]));
+                await escribir(k, datos[k]);
             } else {
-                localStorage.removeItem(k);
+                await eliminar(k);
             }
-        });
+        }
 
         const stats = calcularEstadisticas(snapshot);
         return { success: true, error: null, stats };

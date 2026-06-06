@@ -280,13 +280,14 @@ function crearCardMeta(meta, progreso) {
   return card
 }
 
-function renderMetasAvanzadas() {
+async function renderMetasAvanzadas() {
   const cont = document.getElementById('metas-contenedor')
   if (!cont) return
   cont.innerHTML = ''
 
-  const metas = revisarPeriodosYActualizar().filter((m) => m.tipo !== 'simple')
-  const operaciones = listarOperaciones()
+  const allMetas = await revisarPeriodosYActualizar()
+  const metas = allMetas.filter((m) => m.tipo !== 'simple')
+  const operaciones = await listarOperaciones()
 
   metas.forEach((meta) => {
     const progreso = calcularProgresoMeta(meta, operaciones)
@@ -300,7 +301,7 @@ function renderMetasAvanzadas() {
 function bindFormHandlersAvanzadas() {
   const forms = document.querySelectorAll('form[data-meta-id]')
   forms.forEach((form) => {
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault()
       const metaId = form.dataset.metaId
       const inputs = form.querySelectorAll('input')
@@ -310,12 +311,12 @@ function bindFormHandlersAvanzadas() {
       const errorBox = document.querySelector('div[data-error-for="' + metaId + '"]')
 
       try {
-        guardarMetaParametros(metaId, { objetivo, fechaInicio, fechaFin })
+        await guardarMetaParametros(metaId, { objetivo, fechaInicio, fechaFin })
         if (errorBox) {
           errorBox.textContent = ''
           errorBox.classList.add('hidden')
         }
-        renderMetas()
+        await renderMetasAvanzadas()
       } catch (err) {
         if (errorBox) {
           errorBox.textContent = err.message || String(err)
@@ -328,14 +329,14 @@ function bindFormHandlersAvanzadas() {
   const toggleButtons = document.querySelectorAll('button[data-meta-id]')
   toggleButtons.forEach((btn) => {
     if (!btn.textContent || (btn.textContent !== 'Parar seguimiento' && btn.textContent !== 'Reactivar seguimiento')) return
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       const metaId = btn.dataset.metaId
-      const metas = listarMetas()
+      const metas = await listarMetas()
       const meta = metas.find((m) => m.id === metaId)
       if (!meta) return
       try {
-        cambiarEstadoMeta(metaId, !meta.activo)
-        renderMetas()
+        await cambiarEstadoMeta(metaId, !meta.activo)
+        await renderMetasAvanzadas()
       } catch (err) {
         alert(err.message || String(err))
       }
@@ -358,16 +359,16 @@ function buildCuentaOptions(select, cuentas, selectedId) {
   })
 }
 
-function renderMetasSimples() {
-  evaluarMetasSimples()
+async function renderMetasSimples() {
+  await evaluarMetasSimples()
   const contActivas = document.getElementById('metas-simples-activas')
   const contCompletas = document.getElementById('metas-simples-completadas')
   if (!contActivas || !contCompletas) return
   contActivas.innerHTML = ''
   contCompletas.innerHTML = ''
 
-  const cuentas = listarCuentas()
-  const metasSimples = listarMetasSimples()
+  const cuentas = await listarCuentas()
+  const metasSimples = await listarMetasSimples()
   const activas = metasSimples.filter((m) => !m.completada)
   const completadas = metasSimples.filter((m) => m.completada)
 
@@ -646,19 +647,19 @@ function bindMetasSimplesHandlers() {
   const form = document.getElementById('form-meta-simple')
   const errorBox = document.getElementById('error-meta-simple')
   if (form) {
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault()
       const nombre = form.querySelector('input[type=\"text\"]').value
       const cuentaId = form.querySelector('select').value
       const objetivo = form.querySelector('input[type=\"number\"]').value
       try {
-        crearMetaSimple({ nombre, cuentaId, objetivo })
+        await crearMetaSimple({ nombre, cuentaId, objetivo })
         if (errorBox) {
           errorBox.textContent = ''
           errorBox.classList.add('hidden')
         }
         form.reset()
-        renderMetasSimples()
+        await renderMetasSimples()
       } catch (err) {
         if (errorBox) {
           errorBox.textContent = err.message || String(err)
@@ -670,15 +671,15 @@ function bindMetasSimplesHandlers() {
 
   const editForms = document.querySelectorAll('form[data-simple-id]')
   editForms.forEach((f) => {
-    f.addEventListener('submit', (e) => {
+    f.addEventListener('submit', async (e) => {
       e.preventDefault()
       const id = f.dataset.simpleId
       const nombre = f.querySelector('input[type=\"text\"]').value
       const cuentaId = f.querySelector('select').value
       const objetivo = f.querySelector('input[type=\"number\"]').value
       try {
-        actualizarMetaSimple(id, { nombre, cuentaId, objetivo })
-        renderMetasSimples()
+        await actualizarMetaSimple(id, { nombre, cuentaId, objetivo })
+        await renderMetasSimples()
       } catch (err) {
         alert(err.message || String(err))
       }
@@ -687,13 +688,13 @@ function bindMetasSimplesHandlers() {
 
   const deleteButtons = document.querySelectorAll('button[data-simple-id]')
   deleteButtons.forEach((btn) => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       const id = btn.dataset.simpleId
       if (!id) return
       if (!confirm('¿Eliminar esta meta simple?')) return
       try {
-        eliminarMetaSimple(id)
-        renderMetasSimples()
+        await eliminarMetaSimple(id)
+        await renderMetasSimples()
       } catch (err) {
         alert(err.message || String(err))
       }
@@ -712,7 +713,7 @@ function setActiveNav() {
   })
 }
 
-function init() {
+async function init() {
   if (window.GTRTheme && typeof window.GTRTheme.applyThemeOnLoad === 'function') {
     window.GTRTheme.applyThemeOnLoad()
   }
@@ -721,8 +722,8 @@ function init() {
     toggleBtn.addEventListener('click', window.GTRTheme.toggleTheme)
   }
   setActiveNav()
-  renderMetasAvanzadas()
-  renderMetasSimples()
+  await renderMetasAvanzadas()
+  await renderMetasSimples()
 }
 
 document.addEventListener('DOMContentLoaded', init)

@@ -66,7 +66,7 @@ window.cerrarModalDecision = function () {
   }, 200)
 }
 
-function ejecutarDecision(decision) {
+async function ejecutarDecision(decision) {
   if (!operacionEnTransito) return
 
   const op = operacionEnTransito
@@ -89,23 +89,23 @@ function ejecutarDecision(decision) {
         break
 
       case 'borrar-solo-esta':
-        eliminarOperacion(op.id)
+        await eliminarOperacion(op.id)
         window.cerrarModalDecision()
-        renderHistorial()
+        await renderHistorial()
         break
 
       case 'borrar-toda-serie':
         if (confirm('⚠️ Esto borrará la plantilla Y todas las operaciones. ¿Continuar?')) {
-          eliminarRecurrenciaCompleta(op.recurrenciaId)
+          await eliminarRecurrenciaCompleta(op.recurrenciaId)
           window.cerrarModalDecision()
-          renderHistorial()
+          await renderHistorial()
         }
         break
 
       case 'dejar-repetir':
-        desactivarRecurrencia(op.recurrenciaId)
+        await desactivarRecurrencia(op.recurrenciaId)
         window.cerrarModalDecision()
-        renderHistorial()
+        await renderHistorial()
         alert('✅ Recurrencia desactivada. Se eliminaron las operaciones futuras.')
         break
     }
@@ -118,9 +118,9 @@ function ejecutarDecision(decision) {
 function bindDecisionEvents() {
   const botones = document.querySelectorAll('#modal-decision-serie button[data-decision]')
   botones.forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       const decision = btn.getAttribute('data-decision')
-      ejecutarDecision(decision)
+      await ejecutarDecision(decision)
     })
   })
 }
@@ -339,16 +339,16 @@ function actualizarFondoEstacional() {
   }
 }
 
-function cambiarMes(delta) {
+async function cambiarMes(delta) {
   filtroFecha.setMonth(filtroFecha.getMonth() + delta)
   actualizarLabelMes()
   actualizarFondoEstacional()
-  renderHistorial()
+  await renderHistorial()
 }
 
 // === Modal Logic ===
 
-window.abrirModal = function (modo = 'crear', op = null) {
+window.abrirModal = async function (modo = 'crear', op = null) {
   const modal = document.getElementById('modal-operacion')
   const backdrop = document.getElementById('modal-backdrop')
   const panel = document.getElementById('modal-panel')
@@ -371,7 +371,7 @@ window.abrirModal = function (modo = 'crear', op = null) {
   }
 
   // Load Selects Data
-  loadSelectsData()
+  await loadSelectsData()
 
   // Show Modal
   modal.classList.remove('hidden')
@@ -421,7 +421,7 @@ window.abrirModal = function (modo = 'crear', op = null) {
     const camposRecurrencia = document.getElementById('campos-recurrencia')
 
     if (op.recurrenciaId) {
-      const rec = obtenerRecurrencia(op.recurrenciaId)
+      const rec = await obtenerRecurrencia(op.recurrenciaId)
       if (rec && toggleRecurrencia && camposRecurrencia) {
         // Activar toggle y mostrar campos
         toggleRecurrencia.checked = true
@@ -467,7 +467,7 @@ window.abrirModal = function (modo = 'crear', op = null) {
     document.querySelector('input[name="tipo"][value="ingreso"]').checked = true
   }
 
-  updateFormVisibility()
+  await updateFormVisibility()
 }
 
 window.cerrarModal = function () {
@@ -489,7 +489,7 @@ window.cerrarModal = function () {
   }, 200) // Match transition duration
 }
 
-function updateFormVisibility() {
+async function updateFormVisibility() {
   const tipo = document.querySelector('input[name="tipo"]:checked').value
   const fieldCuenta = document.getElementById('field-cuenta')
   const fieldEtiqueta = document.getElementById('field-etiqueta')
@@ -521,7 +521,7 @@ function updateFormVisibility() {
     document.getElementById('op-etiqueta').required = true
 
     // Refresh Etiqueta Select based on Type
-    const etiquetas = listarEtiquetas()
+    const etiquetas = await listarEtiquetas()
     const etiquetasFiltradas = etiquetas.filter(e => e.tipo === tipo)
 
     // Sort logic to group parent/child if needed, but fillSelect simple handles it
@@ -530,7 +530,7 @@ function updateFormVisibility() {
     // If editing, re-set value because options changed
     if (editandoId) {
       // For now, simple re-fetch from ID (not optimal but safes)
-      const ops = listarOperaciones()
+      const ops = await listarOperaciones()
       const op = ops.find(o => o.id === editandoId)
       if (op && op.tipo === tipo) {
         setSelectValue(selEtiquetas, op.etiquetaId)
@@ -539,8 +539,8 @@ function updateFormVisibility() {
   }
 }
 
-function loadSelectsData() {
-  const cuentas = listarCuentas()
+async function loadSelectsData() {
+  const cuentas = await listarCuentas()
   const selCuenta = document.getElementById('op-cuenta')
   const selOrigen = document.getElementById('op-origen')
   const selDestino = document.getElementById('op-destino')
@@ -553,7 +553,7 @@ function loadSelectsData() {
 function bindModalEvents() {
   const radios = document.querySelectorAll('input[name="tipo"]')
   radios.forEach(r => {
-    r.addEventListener('change', updateFormVisibility)
+    r.addEventListener('change', async () => { await updateFormVisibility() })
   })
 
   // Close on backdrop click
@@ -599,7 +599,7 @@ function bindModalEvents() {
   form?.addEventListener('submit', handleFormSubmit)
 }
 
-function handleFormSubmit(e) {
+async function handleFormSubmit(e) {
   e.preventDefault()
   const errorEl = document.getElementById('op-error')
   const tipo = document.querySelector('input[name="tipo"]:checked').value
@@ -643,7 +643,8 @@ function handleFormSubmit(e) {
 
     if (editandoId) {
       // Edición de operación existente
-      const opActual = listarOperaciones().find(o => o.id === editandoId)
+      const ops = await listarOperaciones()
+      const opActual = ops.find(o => o.id === editandoId)
 
       if (opActual && opActual.recurrenciaId) {
         // Es una operación recurrente
@@ -683,17 +684,17 @@ function handleFormSubmit(e) {
           }
 
           // Actualizar plantilla de recurrencia (esto ahora limpia zombis y regenera)
-          actualizarRecurrencia(opActual.recurrenciaId, recPayload)
+          await actualizarRecurrencia(opActual.recurrenciaId, recPayload)
 
           // También actualizar la instancia actual
-          actualizarOperacion(editandoId, { ...payload, tipo })
+          await actualizarOperacion(editandoId, { ...payload, tipo })
         } else {
           // Solo actualizar esta operación (por defecto o si _soloEsta está activo)
-          actualizarOperacion(editandoId, { ...payload, tipo })
+          await actualizarOperacion(editandoId, { ...payload, tipo })
         }
       } else {
         // Operación simple (no recurrente)
-        actualizarOperacion(editandoId, { ...payload, tipo })
+        await actualizarOperacion(editandoId, { ...payload, tipo })
       }
     } else if (esRecurrente) {
       // === CREAR RECURRENCIA ===
@@ -725,20 +726,20 @@ function handleFormSubmit(e) {
         finFecha: finTipo === 'fecha' ? val('op-rec-fin-fecha') : null
       }
 
-      crearRecurrencia(recPayload)
+      await crearRecurrencia(recPayload)
 
       // Generar instancias pendientes (incluye la primera si fecha <= ahora)
-      generarInstanciasRecurrentes()
+      await generarInstanciasRecurrentes()
 
     } else {
       // Operación simple (no recurrente)
-      if (tipo === 'ingreso') crearIngreso(payload)
-      else if (tipo === 'gasto') crearGasto(payload)
-      else if (tipo === 'transferencia') crearTransferencia(payload)
+      if (tipo === 'ingreso') await crearIngreso(payload)
+      else if (tipo === 'gasto') await crearGasto(payload)
+      else if (tipo === 'transferencia') await crearTransferencia(payload)
     }
 
     window.cerrarModal()
-    renderHistorial()
+    await renderHistorial()
   } catch (ex) {
     errorEl.textContent = ex.message
     errorEl.classList.remove('hidden')
@@ -747,15 +748,16 @@ function handleFormSubmit(e) {
 
 // === Historial Logic ===
 
-function renderHistorial() {
+async function renderHistorial() {
   const cont = document.getElementById('ops-historial')
   if (!cont) return
 
-  const ops = listarOperaciones()
-  const etiquetas = listarEtiquetas()
+  const ops = await listarOperaciones()
+  const etiquetas = await listarEtiquetas()
   const etiquetaMap = new Map(etiquetas.map(e => [e.id, e]))
-  const cuentas = listarCuentas()
+  const cuentas = await listarCuentas()
   const cuentaMap = new Map(cuentas.map(c => [c.id, c]))
+  const recurrencias = await listarRecurrencias()
 
   // Filter by Month
   const targetMonth = filtroFecha.getMonth()
@@ -929,7 +931,7 @@ function renderHistorial() {
       // Badge de Recurrencia
       let recurrenciaBadge = ''
       if (op.recurrenciaId) {
-        const rec = listarRecurrencias().find(r => r.id === op.recurrenciaId)
+        const rec = recurrencias.find(r => r.id === op.recurrenciaId)
         const cicloInfo = op.cicloNumero ? ` #${op.cicloNumero}` : ''
         const finInfo = rec?.finCiclos ? `/${rec.finCiclos}` : '/∞'
         recurrenciaBadge = `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 ml-1.5">🔄${cicloInfo}${finInfo}</span>`
@@ -982,7 +984,7 @@ function renderHistorial() {
       const btnDel = document.createElement('button')
       btnDel.className = 'p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors'
       btnDel.innerHTML = '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-linecap="round" stroke-linejoin="round"></path></svg>'
-      btnDel.onclick = () => {
+      btnDel.onclick = async () => {
         if (op.recurrenciaId) {
           // Operación recurrente - mostrar modal de decisión
           abrirModalDecision('borrar', op)
@@ -990,8 +992,8 @@ function renderHistorial() {
           // Operación simple
           if (confirm('¿Borrar esta operación?')) {
             try {
-              eliminarOperacion(op.id)
-              renderHistorial()
+              await eliminarOperacion(op.id)
+              await renderHistorial()
             } catch (e) {
               alert(e.message)
             }
@@ -1013,7 +1015,7 @@ function renderHistorial() {
   })
 }
 
-function init() {
+async function init() {
   if (window.GTRTheme && typeof window.GTRTheme.applyThemeOnLoad === 'function') window.GTRTheme.applyThemeOnLoad()
   const toggleBtn = document.getElementById('theme-toggle')
   if (toggleBtn && window.GTRTheme && typeof window.GTRTheme.toggleTheme === 'function') {
@@ -1033,17 +1035,17 @@ function init() {
   const btnPrev = document.getElementById('btn-prev-mes')
   const btnNext = document.getElementById('btn-next-mes')
 
-  if (btnPrev) btnPrev.addEventListener('click', () => cambiarMes(-1))
-  if (btnNext) btnNext.addEventListener('click', () => cambiarMes(1))
+  if (btnPrev) btnPrev.addEventListener('click', async () => { await cambiarMes(-1) })
+  if (btnNext) btnNext.addEventListener('click', async () => { await cambiarMes(1) })
 
   bindModalEvents()
   bindCustomSelects()
   bindDecisionEvents() // Eventos del modal de decisión de series
-  ejecutarPendientes() // Procesar operaciones cuya fecha ya pasó
-  generarInstanciasRecurrentes() // Generar instancias de recurrencias pendientes
+  await ejecutarPendientes() // Procesar operaciones cuya fecha ya pasó
+  await generarInstanciasRecurrentes() // Generar instancias de recurrencias pendientes
   actualizarLabelMes() // Init Label
   actualizarFondoEstacional() // Fondo estacional
-  renderHistorial()
+  await renderHistorial()
 }
 
 document.addEventListener('DOMContentLoaded', init)

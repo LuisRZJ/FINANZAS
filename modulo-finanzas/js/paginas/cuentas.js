@@ -3,11 +3,11 @@ import { contarOperacionesPorCuentas, eliminarOperacionesPorCuentas, listarOpera
 import { listarSeparadores, crearSeparador, actualizarSeparador, eliminarSeparador, obtenerSeparadorDeCuenta, moverSeparador, COLORES_SEPARADOR } from '../servicios/separadores.js'
 import { formatoMoneda } from '../utilidades/formato.js'
 
-function renderLista() {
+async function renderLista() {
   const cont = document.getElementById('cuentas-lista')
   if (!cont) return
-  const cuentas = listarCuentas()
-  const separadores = listarSeparadores()
+  const cuentas = await listarCuentas()
+  const separadores = await listarSeparadores()
   cont.innerHTML = ''
 
   // Separate main accounts and sub-accounts
@@ -550,7 +550,7 @@ function crearTarjetaCuenta(c, esSubcuenta) {
   card.appendChild(actions)
   return card
 }
-function abrirModalHistorial(c) {
+async function abrirModalHistorial(c) {
   const modal = document.getElementById('modal-historial-cuenta')
   if (!modal) return
 
@@ -639,7 +639,7 @@ function abrirModalHistorial(c) {
     }
 
     // 2. Obtener operaciones reales que involucren a esta cuenta
-    const todasOps = listarOperaciones()
+    const todasOps = await listarOperaciones()
     const misOps = todasOps.filter(op => op.cuentaId === c.id || op.origenId === c.id || op.destinoId === c.id)
 
     // 3. Transformar operaciones al formato de historial visual
@@ -742,16 +742,17 @@ function cerrarModalHistorial() {
   document.body.style.overflow = ''
 }
 
-function abrirModalCuenta() {
+async function abrirModalCuenta() {
   const modal = document.getElementById('modal-cuenta')
   if (!modal) return
 
   // Populate parent account selector
   const parentSelect = document.getElementById('cuenta-padre')
   if (parentSelect) {
-    const cuentas = listarCuentas().filter(c => !c.esSubcuenta)
+    const cuentas = await listarCuentas()
+    const cuentasPrincipales = cuentas.filter(c => !c.esSubcuenta)
     parentSelect.innerHTML = '<option value="">Selecciona una cuenta principal...</option>'
-    cuentas.forEach(c => {
+    cuentasPrincipales.forEach(c => {
       const opt = document.createElement('option')
       opt.value = c.id
       opt.textContent = c.nombre
@@ -788,7 +789,7 @@ function cerrarModalCuenta() {
   document.body.style.overflow = ''
 }
 
-function abrirModalEdicion(c) {
+async function abrirModalEdicion(c) {
   const modal = document.getElementById('modal-editar-cuenta')
   if (!modal) return
 
@@ -838,7 +839,7 @@ function abrirModalEdicion(c) {
   const padreInfo = document.getElementById('editar-cuenta-padre-info')
   const padreNombre = document.getElementById('editar-cuenta-padre-nombre')
   if (c.esSubcuenta && c.parentId) {
-    const parent = obtenerCuentaPorId(c.parentId)
+    const parent = await obtenerCuentaPorId(c.parentId)
     if (padreInfo) padreInfo.classList.remove('hidden')
     if (padreNombre) padreNombre.textContent = parent?.nombre || 'Cuenta eliminada'
   } else {
@@ -850,7 +851,7 @@ function abrirModalEdicion(c) {
   const subcuentasLista = document.getElementById('editar-subcuentas-lista')
   const subcuentasCount = document.getElementById('editar-subcuentas-count')
   if (!c.esSubcuenta) {
-    const subs = obtenerSubcuentas(c.id)
+    const subs = await obtenerSubcuentas(c.id)
     if (subs.length > 0) {
       if (subcuentasPanel) subcuentasPanel.classList.remove('hidden')
       if (subcuentasCount) subcuentasCount.textContent = subs.length
@@ -910,7 +911,7 @@ function handleEditar() {
     })
   }
 
-  form.addEventListener('submit', (e) => {
+  form.addEventListener('submit', async (e) => {
     e.preventDefault()
     const id = document.getElementById('editar-cuenta-id').value
     const nombre = document.getElementById('editar-cuenta-nombre').value
@@ -939,8 +940,8 @@ function handleEditar() {
       }
     }
 
-    actualizarCuenta(id, { nombre, descripcion, color, dinero, creadaEn, fechaHistorial })
-    renderLista()
+    await actualizarCuenta(id, { nombre, descripcion, color, dinero, creadaEn, fechaHistorial })
+    await renderLista()
     cerrarModalEdicion()
   })
 }
@@ -972,7 +973,7 @@ function initModalEdicion() {
 function handleCrear() {
   const form = document.getElementById('form-cuenta')
   if (!form) return
-  form.addEventListener('submit', (e) => {
+  form.addEventListener('submit', async (e) => {
     e.preventDefault()
     const nombre = document.getElementById('cuenta-nombre').value
     const descripcion = document.getElementById('cuenta-desc').value
@@ -983,9 +984,9 @@ function handleCrear() {
     const esSubcuenta = document.getElementById('cuenta-es-subcuenta')?.checked || false
     const parentId = esSubcuenta ? document.getElementById('cuenta-padre')?.value || null : null
 
-    crearCuenta({ nombre, descripcion, color, dinero, esSubcuenta, parentId, creadaEn })
+    await crearCuenta({ nombre, descripcion, color, dinero, esSubcuenta, parentId, creadaEn })
     form.reset()
-    renderLista()
+    await renderLista()
     cerrarModalCuenta()
   })
 }
@@ -1059,7 +1060,7 @@ function initModalHistorial() {
   }
 }
 
-function abrirModalEliminar(c) {
+async function abrirModalEliminar(c) {
   const modal = document.getElementById('modal-eliminar-cuenta')
   if (!modal) return
 
@@ -1073,7 +1074,7 @@ function abrirModalEliminar(c) {
   const subcuentasWarning = document.getElementById('eliminar-subcuentas-warning')
   const subcuentasCountEl = document.getElementById('eliminar-subcuentas-count')
   if (!c.esSubcuenta) {
-    const subs = obtenerSubcuentas(c.id)
+    const subs = await obtenerSubcuentas(c.id)
     if (subs.length > 0) {
       if (subcuentasWarning) subcuentasWarning.classList.remove('hidden')
       if (subcuentasCountEl) subcuentasCountEl.textContent = subs.length
@@ -1085,8 +1086,8 @@ function abrirModalEliminar(c) {
   }
 
   // Check for associated operations
-  const idsAfectados = obtenerIdsParaEliminar(c.id)
-  const numOperaciones = contarOperacionesPorCuentas(idsAfectados)
+  const idsAfectados = await obtenerIdsParaEliminar(c.id)
+  const numOperaciones = await contarOperacionesPorCuentas(idsAfectados)
 
   const operacionesWarning = document.getElementById('eliminar-operaciones-warning')
   const operacionesCountEl = document.getElementById('eliminar-operaciones-count')
@@ -1139,7 +1140,7 @@ function initModalEliminar() {
 
   if (confirmBtn) {
     // Usar onclick para evitar acumulación de listeners o manejarlo con cuidado
-    confirmBtn.onclick = (e) => {
+    confirmBtn.onclick = async (e) => {
       e.preventDefault()
       const id = document.getElementById('id-cuenta-eliminar').value
       if (id) {
@@ -1147,23 +1148,23 @@ function initModalEliminar() {
         const radioEliminarOps = document.getElementById('eliminar-ops-eliminar')
         const eliminarOperaciones = radioEliminarOps && radioEliminarOps.checked
 
-        const idsAfectados = obtenerIdsParaEliminar(id)
+        const idsAfectados = await obtenerIdsParaEliminar(id)
 
         // Si eligió eliminar operaciones, hacerlo primero
         if (eliminarOperaciones) {
-          eliminarOperacionesPorCuentas(idsAfectados)
+          await eliminarOperacionesPorCuentas(idsAfectados)
         }
 
         // Eliminar la cuenta
-        eliminarCuenta(id)
-        renderLista()
+        await eliminarCuenta(id)
+        await renderLista()
         cerrarModalEliminar()
       }
     }
   }
 }
 
-function init() {
+async function init() {
   if (window.GTRTheme && typeof window.GTRTheme.applyThemeOnLoad === 'function') window.GTRTheme.applyThemeOnLoad()
   const toggleBtn = document.getElementById('theme-toggle')
   if (toggleBtn && window.GTRTheme && typeof window.GTRTheme.toggleTheme === 'function') {
@@ -1184,27 +1185,28 @@ function init() {
   initModalSeparadores()
   handleCrear()
   handleEditar()
-  renderLista()
+  await renderLista()
 }
 
 // ========== SEPARADORES ==========
 
-function abrirModalCrearSeparador() {
+async function abrirModalCrearSeparador() {
   const modal = document.getElementById('modal-crear-separador')
   if (!modal) return
 
   // Populate accounts checklist (only main accounts not already in a separator)
   const lista = document.getElementById('separador-cuentas-lista')
   if (lista) {
-    const cuentas = listarCuentas().filter(c => !c.esSubcuenta)
+    const todasCuentas = await listarCuentas()
+    const cuentas = todasCuentas.filter(c => !c.esSubcuenta)
     cuentas.sort((a, b) => (b.dinero || 0) - (a.dinero || 0))
 
     lista.innerHTML = ''
     if (cuentas.length === 0) {
       lista.innerHTML = '<p class="text-sm text-gray-400 italic">No hay cuentas disponibles.</p>'
     } else {
-      cuentas.forEach(c => {
-        const sep = obtenerSeparadorDeCuenta(c.id)
+      for (const c of cuentas) {
+        const sep = await obtenerSeparadorDeCuenta(c.id)
         const label = document.createElement('label')
         label.className = 'flex items-center gap-3 p-2 rounded hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer'
 
@@ -1235,7 +1237,7 @@ function abrirModalCrearSeparador() {
         label.appendChild(colorDot)
         label.appendChild(info)
         lista.appendChild(label)
-      })
+      }
     }
   }
 
@@ -1285,7 +1287,7 @@ function handleCrearSeparador() {
   const form = document.getElementById('form-crear-separador')
   if (!form) return
 
-  form.addEventListener('submit', (e) => {
+  form.addEventListener('submit', async (e) => {
     e.preventDefault()
     const nombre = document.getElementById('separador-nombre').value
     const checkboxes = document.querySelectorAll('#separador-cuentas-lista input[type="checkbox"]:checked')
@@ -1298,17 +1300,17 @@ function handleCrearSeparador() {
       return
     }
 
-    crearSeparador({ nombre, cuentaIds, color })
-    renderLista()
+    await crearSeparador({ nombre, cuentaIds, color })
+    await renderLista()
     cerrarModalCrearSeparador()
   })
 }
 
-function abrirModalGestionSeparadores() {
+async function abrirModalGestionSeparadores() {
   const modal = document.getElementById('modal-gestionar-separadores')
   if (!modal) return
 
-  renderGestionSeparadores()
+  await renderGestionSeparadores()
 
   modal.classList.remove('hidden')
   document.body.style.overflow = 'hidden'
@@ -1321,12 +1323,13 @@ function cerrarModalGestionSeparadores() {
   document.body.style.overflow = ''
 }
 
-function renderGestionSeparadores() {
+async function renderGestionSeparadores() {
   const cont = document.getElementById('gestionar-separadores-content')
   if (!cont) return
 
-  const separadores = listarSeparadores()
-  const cuentas = listarCuentas().filter(c => !c.esSubcuenta)
+  const separadores = await listarSeparadores()
+  const todasCuentas = await listarCuentas()
+  const cuentas = todasCuentas.filter(c => !c.esSubcuenta)
 
   cont.innerHTML = ''
 
@@ -1354,10 +1357,10 @@ function renderGestionSeparadores() {
     title.type = 'text'
     title.value = sep.nombre
     title.className = 'font-semibold text-gray-800 dark:text-gray-200 bg-transparent border-0 border-b border-transparent hover:border-gray-300 focus:border-sky-500 focus:ring-0 outline-none px-1 py-0.5'
-    title.onblur = () => {
+    title.onblur = async () => {
       if (title.value.trim() !== sep.nombre) {
-        actualizarSeparador(sep.id, { nombre: title.value.trim() })
-        renderLista()
+        await actualizarSeparador(sep.id, { nombre: title.value.trim() })
+        await renderLista()
       }
     }
     title.onkeydown = (e) => { if (e.key === 'Enter') title.blur() }
@@ -1373,10 +1376,10 @@ function renderGestionSeparadores() {
     btnUp.className = 'p-1.5 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors'
     btnUp.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg>'
     btnUp.title = 'Mover arriba'
-    btnUp.onclick = () => {
-      moverSeparador(sep.id, 'up')
-      renderGestionSeparadores()
-      renderLista()
+    btnUp.onclick = async () => {
+      await moverSeparador(sep.id, 'up')
+      await renderGestionSeparadores()
+      await renderLista()
     }
 
     // Move down button
@@ -1384,20 +1387,20 @@ function renderGestionSeparadores() {
     btnDown.className = 'p-1.5 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors'
     btnDown.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>'
     btnDown.title = 'Mover abajo'
-    btnDown.onclick = () => {
-      moverSeparador(sep.id, 'down')
-      renderGestionSeparadores()
-      renderLista()
+    btnDown.onclick = async () => {
+      await moverSeparador(sep.id, 'down')
+      await renderGestionSeparadores()
+      await renderLista()
     }
 
     const btnDel = document.createElement('button')
     btnDel.className = 'p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors'
     btnDel.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>'
-    btnDel.onclick = () => {
+    btnDel.onclick = async () => {
       if (confirm(`¿Eliminar categoría "${sep.nombre}"? Las cuentas quedarán sin agrupar.`)) {
-        eliminarSeparador(sep.id)
-        renderGestionSeparadores()
-        renderLista()
+        await eliminarSeparador(sep.id)
+        await renderGestionSeparadores()
+        await renderLista()
       }
     }
 
@@ -1421,10 +1424,10 @@ function renderGestionSeparadores() {
       dot.className = 'w-5 h-5 rounded-full border-2 transition-transform hover:scale-110'
       dot.style.backgroundColor = col
       dot.style.borderColor = (sep.color === col) ? '#1f2937' : 'transparent'
-      dot.onclick = () => {
-        actualizarSeparador(sep.id, { color: col })
-        renderGestionSeparadores()
-        renderLista()
+      dot.onclick = async () => {
+        await actualizarSeparador(sep.id, { color: col })
+        await renderGestionSeparadores()
+        await renderLista()
       }
       colorRow.appendChild(dot)
     })
@@ -1448,7 +1451,7 @@ function renderGestionSeparadores() {
       cb.checked = isInSep
       cb.disabled = isInOtherSep
       cb.className = 'w-3.5 h-3.5 rounded border-gray-300 text-sky-600 focus:ring-sky-500' + (isInOtherSep ? ' cursor-not-allowed' : '')
-      cb.onchange = () => {
+      cb.onchange = async () => {
         if (isInOtherSep) return
         let newIds = [...sep.cuentaIds]
         if (cb.checked) {
@@ -1456,9 +1459,9 @@ function renderGestionSeparadores() {
         } else {
           newIds = newIds.filter(id => id !== c.id)
         }
-        actualizarSeparador(sep.id, { cuentaIds: newIds })
-        renderGestionSeparadores()
-        renderLista()
+        await actualizarSeparador(sep.id, { cuentaIds: newIds })
+        await renderGestionSeparadores()
+        await renderLista()
       }
 
       const colorDot = document.createElement('div')

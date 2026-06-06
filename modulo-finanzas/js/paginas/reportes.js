@@ -28,7 +28,7 @@ let periodOffset = 0; // 0 = actual, -1 = anterior, etc.
 function inicializarEventos() {
     const botones = document.querySelectorAll('[data-period]');
     botones.forEach(btn => {
-        btn.addEventListener('click', (e) => {
+        btn.addEventListener('click', async (e) => {
             // Update UI active state
             botones.forEach(b => {
                 b.classList.remove('bg-gray-100', 'dark:bg-gray-700', 'text-gray-900', 'dark:text-white');
@@ -40,7 +40,7 @@ function inicializarEventos() {
             // Reset offset when changing period type
             periodOffset = 0;
             currentPeriodo = e.target.dataset.period;
-            cargarDatos(currentPeriodo);
+            await cargarDatos(currentPeriodo);
         });
     });
 
@@ -50,7 +50,7 @@ function inicializarEventos() {
     const toggleBollinger = document.getElementById('toggle-bollinger');
 
     modeButtons.forEach(btn => {
-        btn.addEventListener('click', (e) => {
+        btn.addEventListener('click', async (e) => {
             // Update UI active state
             modeButtons.forEach(b => {
                 b.classList.remove('bg-white', 'dark:bg-gray-600', 'text-gray-900', 'dark:text-white', 'shadow-sm');
@@ -67,8 +67,8 @@ function inicializarEventos() {
             if (toggleSMA) toggleSMA.disabled = !isLineal;
             if (toggleBollinger) toggleBollinger.disabled = !isLineal;
 
-            const operaciones = listarOperaciones();
-            actualizarGraficoBalanceHistorico(operaciones, currentPeriodo);
+            const operaciones = await listarOperaciones();
+            await actualizarGraficoBalanceHistorico(operaciones, currentPeriodo);
         });
     });
 
@@ -77,17 +77,17 @@ function inicializarEventos() {
     const btnNext = document.getElementById('btn-next-period');
 
     if (btnPrev) {
-        btnPrev.addEventListener('click', () => {
+        btnPrev.addEventListener('click', async () => {
             periodOffset--;
-            cargarDatos(currentPeriodo);
+            await cargarDatos(currentPeriodo);
         });
     }
 
     if (btnNext) {
-        btnNext.addEventListener('click', () => {
+        btnNext.addEventListener('click', async () => {
             if (periodOffset < 0) {
                 periodOffset++;
-                cargarDatos(currentPeriodo);
+                await cargarDatos(currentPeriodo);
             }
         });
     }
@@ -96,18 +96,20 @@ function inicializarEventos() {
     // Nota: toggleSMA y toggleBollinger ya están declarados arriba en la sección de modo gráfico
 
     if (toggleSMA) {
-        toggleSMA.addEventListener('change', (e) => {
+        toggleSMA.addEventListener('change', async (e) => {
             showSMA = e.target.checked;
             // Optimización: solo redibujar el gráfico de balance, no todos los reportes
-            actualizarGraficoBalanceHistorico(listarOperaciones(), currentPeriodo);
+            const ops = await listarOperaciones();
+            await actualizarGraficoBalanceHistorico(ops, currentPeriodo);
         });
     }
 
     if (toggleBollinger) {
-        toggleBollinger.addEventListener('change', (e) => {
+        toggleBollinger.addEventListener('change', async (e) => {
             showBollinger = e.target.checked;
             // Optimización: solo redibujar el gráfico de balance, no todos los reportes
-            actualizarGraficoBalanceHistorico(listarOperaciones(), currentPeriodo);
+            const ops = await listarOperaciones();
+            await actualizarGraficoBalanceHistorico(ops, currentPeriodo);
         });
     }
 
@@ -127,30 +129,30 @@ function inicializarEventos() {
     }
 }
 
-function cargarDatos(periodo) {
-    const operaciones = listarOperaciones();
-    const etiquetas = listarEtiquetas();
-    const cuentas = listarCuentas();
+async function cargarDatos(periodo) {
+    const operaciones = await listarOperaciones();
+    const etiquetas = await listarEtiquetas();
+    const cuentas = await listarCuentas();
 
     // Filter by period
-    const filteredOps = filtrarOperacionesPorPeriodo(operaciones, periodo);
+    const filteredOps = await filtrarOperacionesPorPeriodo(operaciones, periodo);
     operacionesPeriodo = filteredOps;
     etiquetasCache = etiquetas;
     cuentasCache = cuentas;
 
     // Calculate Summary
-    actualizarResumen(filteredOps, periodo);
+    await actualizarResumen(filteredOps, periodo);
 
     // Update Charts
     actualizarGraficoEvolucion(filteredOps);
     actualizarGraficoCategorias(filteredOps, etiquetas);
     actualizarGraficoIngresos(filteredOps, etiquetas);
-    actualizarGraficoBalanceHistorico(operaciones, periodo); // Usa TODAS las operaciones para calcular balance inicial
-    actualizarProyeccionFinanciera(operaciones, periodo);
+    await actualizarGraficoBalanceHistorico(operaciones, periodo); // Usa TODAS las operaciones para calcular balance inicial
+    await actualizarProyeccionFinanciera(operaciones, periodo);
     actualizarMaximosMinimos(filteredOps);
 }
 
-function calcularRangoPeriodo(periodo, offset = 0) {
+async function calcularRangoPeriodo(periodo, offset = 0) {
     const now = new Date();
     let start, end, label;
 
@@ -207,7 +209,7 @@ function calcularRangoPeriodo(periodo, offset = 0) {
 
     } else { // 'todo'
         // Usar la fecha de la primera operación o hace 1 año si no hay
-        const todasOps = listarOperaciones();
+        const todasOps = await listarOperaciones();
         if (todasOps.length > 0) {
             const fechas = todasOps.map(op => {
                 const fechaNormalizada = op.fecha.includes('T') ? op.fecha : op.fecha + 'T00:00:00';
@@ -225,8 +227,8 @@ function calcularRangoPeriodo(periodo, offset = 0) {
     return { start, end, label };
 }
 
-function filtrarOperacionesPorPeriodo(operaciones, periodo) {
-    const rango = calcularRangoPeriodo(periodo, periodOffset);
+async function filtrarOperacionesPorPeriodo(operaciones, periodo) {
+    const rango = await calcularRangoPeriodo(periodo, periodOffset);
 
     // Actualizar UI de navegación
     const labelEl = document.getElementById('period-label');
@@ -254,7 +256,7 @@ function filtrarOperacionesPorPeriodo(operaciones, periodo) {
     })
 }
 
-function actualizarResumen(operaciones, periodo) {
+async function actualizarResumen(operaciones, periodo) {
     let ingresos = 0;
     let gastos = 0;
 
@@ -265,7 +267,7 @@ function actualizarResumen(operaciones, periodo) {
 
     let balance;
     if (periodo === 'todo') {
-        const cuentas = listarCuentas();
+        const cuentas = await listarCuentas();
         balance = cuentas.reduce((acc, c) => acc + Number(c.dinero || 0), 0);
     } else {
         balance = ingresos - gastos;
@@ -287,14 +289,14 @@ function actualizarResumen(operaciones, periodo) {
 
     if (periodo !== 'todo') {
         // Usar calcularRangoPeriodo con offset - 1 para el periodo anterior
-        const rangoPrev = calcularRangoPeriodo(periodo, periodOffset - 1);
+        const rangoPrev = await calcularRangoPeriodo(periodo, periodOffset - 1);
         const startPrev = rangoPrev.start;
         const endPrev = rangoPrev.end;
 
         // Calcular totales previos
         let ingresosPrev = 0;
         let gastosPrev = 0;
-        const todasOps = listarOperaciones();
+        const todasOps = await listarOperaciones();
         todasOps.forEach(op => {
             const fechaNormalizada = op.fecha.includes('T') ? op.fecha : op.fecha + 'T00:00:00';
             const d = new Date(fechaNormalizada);
@@ -429,30 +431,30 @@ function obtenerDiasPeriodo(periodo, referenciaFecha) {
     return 30;
 }
 
-function calcularPnLPromedioTresPeriodos(operaciones, periodo) {
+async function calcularPnLPromedioTresPeriodos(operaciones, periodo) {
     const periodoBase = periodo === 'todo' ? 'mes' : periodo;
     const offsets = [periodOffset, periodOffset - 1, periodOffset - 2];
     let suma = 0;
-    offsets.forEach(offset => {
-        const rango = calcularRangoPeriodo(periodoBase, offset);
+    for (const offset of offsets) {
+        const rango = await calcularRangoPeriodo(periodoBase, offset);
         suma += calcularPnLPorRango(operaciones, rango.start, rango.end);
-    });
+    }
     return { pnlPromedio: suma / 3, periodoBase };
 }
 
-function actualizarProyeccionFinanciera(operaciones, periodo) {
+async function actualizarProyeccionFinanciera(operaciones, periodo) {
     const canvas = document.getElementById('chart-projection-year');
     const statEl = document.getElementById('stat-run-rate');
     const finalEl = document.getElementById('stat-projection-final');
     const growthEl = document.getElementById('stat-projection-growth');
     if (!canvas || !statEl || !finalEl || !growthEl) return;
 
-    const { pnlPromedio, periodoBase } = calcularPnLPromedioTresPeriodos(operaciones, periodo);
-    const rangoActual = calcularRangoPeriodo(periodoBase, periodOffset);
+    const { pnlPromedio, periodoBase } = await calcularPnLPromedioTresPeriodos(operaciones, periodo);
+    const rangoActual = await calcularRangoPeriodo(periodoBase, periodOffset);
     const diasPeriodo = obtenerDiasPeriodo(periodoBase, rangoActual.start);
     const pnlDiario = pnlPromedio / (diasPeriodo || 1);
 
-    const cuentas = listarCuentas();
+    const cuentas = await listarCuentas();
     const saldoActual = cuentas.reduce((acc, c) => acc + Number(c.dinero || 0), 0);
     const saldoFinal = saldoActual + (pnlDiario * 365);
     const porcentajeCrecimiento = saldoActual === 0 ? 0 : ((saldoFinal - saldoActual) / Math.abs(saldoActual)) * 100;
@@ -1061,7 +1063,7 @@ function calcularBollinger(data, period, stdDev) {
     return { upper, lower };
 }
 
-function actualizarGraficoBalanceHistorico(todasOperaciones, periodo) {
+async function actualizarGraficoBalanceHistorico(todasOperaciones, periodo) {
     const ctx = document.getElementById('chart-balance-history').getContext('2d');
 
     /**
@@ -1081,7 +1083,7 @@ function actualizarGraficoBalanceHistorico(todasOperaciones, periodo) {
     const opsSorted = [...todasOperaciones].sort((a, b) => normalizarFecha(a.fecha) - normalizarFecha(b.fecha));
 
     // Usar calcularRangoPeriodo para determinar fechas límite
-    const rango = calcularRangoPeriodo(periodo, periodOffset);
+    const rango = await calcularRangoPeriodo(periodo, periodOffset);
     const startDate = rango.start;
     const endDate = rango.end;
 

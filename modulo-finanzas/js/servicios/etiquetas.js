@@ -5,20 +5,20 @@ function uid() {
   return 'tag_' + Math.random().toString(36).slice(2) + Date.now().toString(36)
 }
 
-function obtenerTodas() {
-  const data = leer(STORAGE_KEYS.etiquetas, [])
+async function obtenerTodas() {
+  const data = await leer(STORAGE_KEYS.etiquetas, [])
   return Array.isArray(data) ? data : []
 }
 
-function guardarTodas(list) {
-  return escribir(STORAGE_KEYS.etiquetas, list)
+async function guardarTodas(list) {
+  return await escribir(STORAGE_KEYS.etiquetas, list)
 }
 
-export function listarEtiquetas() {
-  return obtenerTodas()
+export async function listarEtiquetas() {
+  return await obtenerTodas()
 }
 
-export function crearEtiqueta(payload) {
+export async function crearEtiqueta(payload) {
   const now = new Date().toISOString()
   const etiqueta = {
     id: uid(),
@@ -37,14 +37,14 @@ export function crearEtiqueta(payload) {
       }
     ]
   }
-  const list = obtenerTodas()
+  const list = await obtenerTodas()
   list.push(etiqueta)
-  guardarTodas(list)
+  await guardarTodas(list)
   return etiqueta
 }
 
-export function actualizarEtiqueta(id, payload) {
-  const list = obtenerTodas()
+export async function actualizarEtiqueta(id, payload) {
+  const list = await obtenerTodas()
   const idx = list.findIndex((c) => c.id === id)
   if (idx === -1) return null
   const prev = list[idx]
@@ -149,14 +149,14 @@ export function actualizarEtiqueta(id, payload) {
     })
   }
 
-  guardarTodas(list)
+  await guardarTodas(list)
   return next
 }
 
-export function eliminarEtiqueta(id) {
-  const list = obtenerTodas()
+export async function eliminarEtiqueta(id) {
+  const list = await obtenerTodas()
   const next = list.filter((c) => c.id !== id)
   const changed = next.length !== list.length
-  if (changed) guardarTodas(next)
+  if (changed) await guardarTodas(next)
   return changed
 }

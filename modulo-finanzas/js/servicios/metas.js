@@ -10,9 +10,8 @@ const META_DEFS = [
   { id: 'pnl', tipo: 'pnl', nombre: 'Meta de PNL objetivo' }
 ]
 
-
-function leerTodasRaw() {
-  const data = leer(STORAGE_KEYS.metas, null)
+async function leerTodasRaw() {
+  const data = await leer(STORAGE_KEYS.metas, null)
   if (!Array.isArray(data) || data.length === 0) return null
   return data
 }
@@ -37,35 +36,37 @@ function crearPorDefecto() {
   }))
 }
 
-function obtenerTodas() {
-  const existentes = leerTodasRaw()
+async function obtenerTodas() {
+  const existentes = await leerTodasRaw()
   if (existentes) return existentes
   const creadas = crearPorDefecto()
-  escribir(STORAGE_KEYS.metas, creadas)
+  await escribir(STORAGE_KEYS.metas, creadas)
   return creadas
 }
 
-function guardarTodas(list) {
-  escribir(STORAGE_KEYS.metas, list)
+async function guardarTodas(list) {
+  await escribir(STORAGE_KEYS.metas, list)
 }
 
-export function listarMetas() {
-  return obtenerTodas()
+export async function listarMetas() {
+  return await obtenerTodas()
 }
 
 function uidSimple() {
   return 'simple_' + Math.random().toString(36).slice(2) + Date.now().toString(36)
 }
 
-export function listarMetasSimples() {
-  return obtenerTodas().filter((m) => m.tipo === 'simple')
+export async function listarMetasSimples() {
+  const todas = await obtenerTodas()
+  return todas.filter((m) => m.tipo === 'simple')
 }
 
-export function listarMetasAvanzadas() {
-  return obtenerTodas().filter((m) => m.tipo !== 'simple')
+export async function listarMetasAvanzadas() {
+  const todas = await obtenerTodas()
+  return todas.filter((m) => m.tipo !== 'simple')
 }
 
-export function guardarMetaParametros(id, payload) {
+export async function guardarMetaParametros(id, payload) {
   const objetivo = Number(payload?.objetivo || 0)
   const fechaInicioStr = String(payload?.fechaInicio || '').trim()
   const fechaFinStr = String(payload?.fechaFin || '').trim()
@@ -81,7 +82,7 @@ export function guardarMetaParametros(id, payload) {
   if (inicio < hoyFecha) throw new Error('La fecha de inicio no puede estar en el pasado')
   if (fin < inicio) throw new Error('La fecha de fin no puede ser anterior al inicio')
 
-  const list = obtenerTodas()
+  const list = await obtenerTodas()
   const idx = list.findIndex((m) => m.id === id)
   if (idx === -1) throw new Error('Meta no encontrada')
   const prev = list[idx]
@@ -111,7 +112,7 @@ export function guardarMetaParametros(id, payload) {
   }
 
   list[idx] = next
-  guardarTodas(list)
+  await guardarTodas(list)
   return next
 }
 
@@ -125,7 +126,6 @@ function calcularBalanceMeta(meta, operaciones) {
   operaciones.forEach(op => {
     const d = parseFecha(op.fecha)
     if (!d) return
-    // Comparar timestamps para evitar problemas de horas
     if (d.getTime() < inicio.getTime() || d.getTime() > fin.getTime()) return
 
     let monto = 0
@@ -142,8 +142,8 @@ function calcularBalanceMeta(meta, operaciones) {
   return total
 }
 
-export function cambiarEstadoMeta(id, activo) {
-  const list = obtenerTodas()
+export async function cambiarEstadoMeta(id, activo) {
+  const list = await obtenerTodas()
   const idx = list.findIndex((m) => m.id === id)
   if (idx === -1) throw new Error('Meta no encontrada')
   const prev = list[idx]
@@ -164,13 +164,13 @@ export function cambiarEstadoMeta(id, activo) {
   }
 
   list[idx] = next
-  guardarTodas(list)
+  await guardarTodas(list)
   return next
 }
 
-export function revisarPeriodosYActualizar() {
-  const list = obtenerTodas()
-  const operaciones = listarOperaciones()
+export async function revisarPeriodosYActualizar() {
+  const list = await obtenerTodas()
+  const operaciones = await listarOperaciones()
   const hoyFecha = hoy()
   let cambiado = false
 
@@ -180,20 +180,17 @@ export function revisarPeriodosYActualizar() {
     if (!fin) return meta
 
     if (fin < hoyFecha) {
-      // Calcular resultados finales
       const actual = calcularBalanceMeta(meta, operaciones)
       const objetivo = Number(meta.objetivo || 0)
       const diff = actual - objetivo
 
-      // Determinar éxito
       let cumplido = false
       if (meta.tipo === 'gastos') {
         cumplido = actual <= objetivo
-      } else { // ganancias o pnl
+      } else {
         cumplido = actual >= objetivo
       }
 
-      // Formatear moneda
       const fmt = (n) => Number(n).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })
 
       let detalle = ''
@@ -228,11 +225,11 @@ export function revisarPeriodosYActualizar() {
     return meta
   })
 
-  if (cambiado) guardarTodas(nextList)
+  if (cambiado) await guardarTodas(nextList)
   return nextList
 }
 
-export function crearMetaSimple(payload) {
+export async function crearMetaSimple(payload) {
   const nombre = String(payload?.nombre || '').trim()
   const cuentaId = String(payload?.cuentaId || '').trim()
   const objetivo = Number(payload?.objetivo || 0)
@@ -241,11 +238,11 @@ export function crearMetaSimple(payload) {
   if (!cuentaId) throw new Error('Debes seleccionar una cuenta')
   if (!(objetivo > 0)) throw new Error('El objetivo debe ser mayor que cero')
 
-  const cuentas = listarCuentas()
+  const cuentas = await listarCuentas()
   const cuenta = cuentas.find((c) => c.id === cuentaId)
   if (!cuenta) throw new Error('Cuenta no encontrada')
 
-  const list = obtenerTodas()
+  const list = await obtenerTodas()
   const existeDuplicada = list.some(
     (m) => m.tipo === 'simple' && m.cuentaId === cuentaId && Number(m.objetivo || 0) === objetivo
   )
@@ -275,12 +272,12 @@ export function crearMetaSimple(payload) {
   }
 
   list.push(meta)
-  guardarTodas(list)
+  await guardarTodas(list)
   return meta
 }
 
-export function actualizarMetaSimple(id, payload) {
-  const list = obtenerTodas()
+export async function actualizarMetaSimple(id, payload) {
+  const list = await obtenerTodas()
   const idx = list.findIndex((m) => m.id === id && m.tipo === 'simple')
   if (idx === -1) throw new Error('Meta simple no encontrada')
   const prev = list[idx]
@@ -294,7 +291,7 @@ export function actualizarMetaSimple(id, payload) {
   if (!cuentaId) throw new Error('Debes seleccionar una cuenta')
   if (!(objetivo > 0)) throw new Error('El objetivo debe ser mayor que cero')
 
-  const cuentas = listarCuentas()
+  const cuentas = await listarCuentas()
   const cuenta = cuentas.find((c) => c.id === cuentaId)
   if (!cuenta) throw new Error('Cuenta no encontrada')
 
@@ -335,23 +332,23 @@ export function actualizarMetaSimple(id, payload) {
   }
 
   list[idx] = next
-  guardarTodas(list)
+  await guardarTodas(list)
   return next
 }
 
-export function eliminarMetaSimple(id) {
-  const list = obtenerTodas()
+export async function eliminarMetaSimple(id) {
+  const list = await obtenerTodas()
   const meta = list.find((m) => m.id === id && m.tipo === 'simple')
   if (!meta) return false
   if (meta.completada) throw new Error('No se puede eliminar una meta simple completada')
   const next = list.filter((m) => m.id !== id)
-  guardarTodas(next)
+  await guardarTodas(next)
   return true
 }
 
-export function evaluarMetasSimples() {
-  const list = obtenerTodas()
-  const cuentas = listarCuentas()
+export async function evaluarMetasSimples() {
+  const list = await obtenerTodas()
+  const cuentas = await listarCuentas()
   let cambiado = false
 
   const nextList = list.map((meta) => {
@@ -443,6 +440,6 @@ export function evaluarMetasSimples() {
     }
   })
 
-  if (cambiado) guardarTodas(nextList)
+  if (cambiado) await guardarTodas(nextList)
   return nextList
 }

@@ -3,17 +3,17 @@ import { leer, escribir } from './almacenamiento.js'
 function uid() {
   return 'cta_' + Math.random().toString(36).slice(2) + Date.now().toString(36)
 }
-function obtenerTodas() {
-  const data = leer(STORAGE_KEYS.cuentas, [])
+async function obtenerTodas() {
+  const data = await leer(STORAGE_KEYS.cuentas, [])
   return Array.isArray(data) ? data : []
 }
-function guardarTodas(list) {
-  return escribir(STORAGE_KEYS.cuentas, list)
+async function guardarTodas(list) {
+  return await escribir(STORAGE_KEYS.cuentas, list)
 }
-export function listarCuentas() {
-  return obtenerTodas()
+export async function listarCuentas() {
+  return await obtenerTodas()
 }
-export function crearCuenta(payload) {
+export async function crearCuenta(payload) {
   const now = new Date().toISOString()
   // Permitir fecha de creación personalizada para migración de datos históricos
   let fechaCreacion = now
@@ -46,14 +46,14 @@ export function crearCuenta(payload) {
       }
     ]
   }
-  const list = obtenerTodas()
+  const list = await obtenerTodas()
   list.push(cuenta)
-  guardarTodas(list)
+  await guardarTodas(list)
   return cuenta
 }
 
-export function actualizarCuenta(id, payload) {
-  const list = obtenerTodas()
+export async function actualizarCuenta(id, payload) {
+  const list = await obtenerTodas()
   const idx = list.findIndex((c) => c.id === id)
   if (idx === -1) return null
   const prev = list[idx]
@@ -137,17 +137,12 @@ export function actualizarCuenta(id, payload) {
     historial: historial
   }
   list[idx] = next
-  guardarTodas(list)
+  await guardarTodas(list)
   return next
 }
 
-/**
- * Actualiza los saldos de múltiples cuentas en una sola operación de escritura.
- * Optimizado para rendimiento cuando se procesan lotes de operaciones.
- * @param {Array<{id: string, delta: number}>} actualizaciones - Lista de cambios de saldo
- */
-export function actualizarMultiplesSaldos(actualizaciones) {
-  const list = obtenerTodas()
+export async function actualizarMultiplesSaldos(actualizaciones) {
+  const list = await obtenerTodas()
   const now = new Date().toISOString()
   let changed = false
   const mapCuentas = new Map(list.map((c, i) => [c.id, i]))
@@ -168,24 +163,12 @@ export function actualizarMultiplesSaldos(actualizaciones) {
   })
 
   if (changed) {
-    guardarTodas(list)
+    await guardarTodas(list)
   }
 }
 
-/**
- * Ajusta el saldo de una cuenta debido a una operación (ingreso/gasto/transferencia).
- * Registra en el historial con tipo 'operacion' y detalles de la transacción.
- * @param {string} id - ID de la cuenta
- * @param {number} delta - Cambio en el saldo (positivo o negativo)
- * @param {Object} operacionInfo - Información de la operación
- * @param {string} operacionInfo.nombre - Nombre de la operación
- * @param {string} operacionInfo.tipo - Tipo: 'ingreso', 'gasto', 'transferencia'
- * @param {number} operacionInfo.cantidad - Cantidad de la operación
- * @param {string} [operacionInfo.fecha] - Fecha de la operación (YYYY-MM-DD o ISO string)
- * @param {string} [operacionInfo.accion] - 'aplicar' o 'revertir'
- */
-export function ajustarSaldoPorOperacion(id, delta, operacionInfo = {}) {
-  const list = obtenerTodas()
+export async function ajustarSaldoPorOperacion(id, delta, operacionInfo = {}) {
+  const list = await obtenerTodas()
   const idx = list.findIndex((c) => c.id === id)
   if (idx === -1) return null
 
@@ -205,31 +188,28 @@ export function ajustarSaldoPorOperacion(id, delta, operacionInfo = {}) {
   }
 
   list[idx] = next
-  guardarTodas(list)
+  await guardarTodas(list)
   return next
 }
 
-export function obtenerSubcuentas(parentId) {
-  const list = obtenerTodas()
+export async function obtenerSubcuentas(parentId) {
+  const list = await obtenerTodas()
   return list.filter((c) => c.parentId === parentId)
 }
 
-export function obtenerCuentaPadre(cuenta) {
+export async function obtenerCuentaPadre(cuenta) {
   if (!cuenta?.parentId) return null
-  const list = obtenerTodas()
+  const list = await obtenerTodas()
   return list.find((c) => c.id === cuenta.parentId) || null
 }
 
-export function obtenerCuentaPorId(id) {
-  const list = obtenerTodas()
+export async function obtenerCuentaPorId(id) {
+  const list = await obtenerTodas()
   return list.find((c) => c.id === id) || null
 }
 
-/**
- * Obtiene los IDs de todas las cuentas que se eliminarían (cuenta + subcuentas)
- */
-export function obtenerIdsParaEliminar(id) {
-  const list = obtenerTodas()
+export async function obtenerIdsParaEliminar(id) {
+  const list = await obtenerTodas()
   const idsToDelete = new Set([id])
   list.forEach((c) => {
     if (c.parentId === id) idsToDelete.add(c.id)
@@ -237,15 +217,11 @@ export function obtenerIdsParaEliminar(id) {
   return Array.from(idsToDelete)
 }
 
-/**
- * Elimina una cuenta y sus subcuentas
- * @returns {{deleted: boolean, deletedIds: string[]}}
- */
-export function eliminarCuenta(id) {
-  const list = obtenerTodas()
-  const deletedIds = obtenerIdsParaEliminar(id)
+export async function eliminarCuenta(id) {
+  const list = await obtenerTodas()
+  const deletedIds = await obtenerIdsParaEliminar(id)
   const next = list.filter((c) => !deletedIds.includes(c.id))
   const changed = next.length !== list.length
-  if (changed) guardarTodas(next)
+  if (changed) await guardarTodas(next)
   return { deleted: changed, deletedIds }
 }

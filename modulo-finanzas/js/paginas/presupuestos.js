@@ -49,9 +49,9 @@ function buildEtiquetaOptions(select, etiquetas, selectedId) {
   })
 }
 
-function renderGeneral() {
-  revisarPeriodosPresupuesto()
-  const resumen = calcularResumenPresupuestoActual()
+async function renderGeneral() {
+  await revisarPeriodosPresupuesto()
+  const resumen = await calcularResumenPresupuestoActual()
   const wrap = document.getElementById('presupuesto-general')
   if (!wrap) return
   wrap.innerHTML = ''
@@ -208,21 +208,21 @@ function renderGeneral() {
   card.appendChild(histWrap)
   wrap.appendChild(card)
 
-  form.addEventListener('submit', (e) => {
+  form.addEventListener('submit', async (e) => {
     e.preventDefault()
     const montoVal = iMonto.value
     const iniVal = iInicio.value
     const finVal = iFin.value
     try {
-      configurarPresupuestoGeneral({
+      await configurarPresupuestoGeneral({
         monto: montoVal,
         fechaInicio: iniVal,
         fechaFin: finVal
       })
       error.textContent = ''
       error.classList.add('hidden')
-      renderGeneral()
-      renderCategorias()
+      await renderGeneral()
+      await renderCategorias()
     } catch (err) {
       error.textContent = err.message || String(err)
       error.classList.remove('hidden')
@@ -230,14 +230,15 @@ function renderGeneral() {
   })
 }
 
-function renderCategorias() {
+async function renderCategorias() {
   const wrap = document.getElementById('presupuestos-categorias')
   if (!wrap) return
   wrap.innerHTML = ''
 
-  const resumen = calcularResumenPresupuestoActual()
+  const resumen = await calcularResumenPresupuestoActual()
   const general = resumen.general
-  const etiquetas = listarEtiquetas().filter((e) => e.tipo === 'gasto')
+  const todasEtiquetas = await listarEtiquetas()
+  const etiquetas = todasEtiquetas.filter((e) => e.tipo === 'gasto')
 
   const header = document.createElement('div')
   header.className = 'flex items-center justify-between mb-3'
@@ -318,18 +319,18 @@ function renderCategorias() {
   wrap.appendChild(form)
   wrap.appendChild(error)
 
-  form.addEventListener('submit', (e) => {
+  form.addEventListener('submit', async (e) => {
     e.preventDefault()
     const etiquetaId = sEtiqueta.value
     const montoVal = iMonto.value
     try {
-      crearPresupuestoCategoria({ etiquetaId, monto: montoVal })
+      await crearPresupuestoCategoria({ etiquetaId, monto: montoVal })
       error.textContent = ''
       error.classList.add('hidden')
       form.reset()
       buildEtiquetaOptions(sEtiqueta, etiquetas, '')
-      renderGeneral()
-      renderCategorias()
+      await renderGeneral()
+      await renderCategorias()
     } catch (err) {
       error.textContent = err.message || String(err)
       error.classList.remove('hidden')
@@ -451,25 +452,25 @@ function renderCategorias() {
     formEdit.appendChild(eRest)
     formEdit.appendChild(eActions)
 
-    formEdit.addEventListener('submit', (e) => {
+    formEdit.addEventListener('submit', async (e) => {
       e.preventDefault()
       const etiquetaId = sE.value
       const montoVal = iM.value
       try {
-        actualizarPresupuestoCategoria(c.id, { etiquetaId, monto: montoVal })
-        renderGeneral()
-        renderCategorias()
+        await actualizarPresupuestoCategoria(c.id, { etiquetaId, monto: montoVal })
+        await renderGeneral()
+        await renderCategorias()
       } catch (err) {
         alert(err.message || String(err))
       }
     })
 
-    btnDel.addEventListener('click', () => {
+    btnDel.addEventListener('click', async () => {
       if (!confirm('¿Eliminar este presupuesto de etiqueta?')) return
       try {
-        eliminarPresupuestoCategoria(c.id)
-        renderGeneral()
-        renderCategorias()
+        await eliminarPresupuestoCategoria(c.id)
+        await renderGeneral()
+        await renderCategorias()
       } catch (err) {
         alert(err.message || String(err))
       }
@@ -484,7 +485,7 @@ function renderCategorias() {
   wrap.appendChild(list)
 }
 
-function init() {
+async function init() {
   if (window.GTRTheme && typeof window.GTRTheme.applyThemeOnLoad === 'function') {
     window.GTRTheme.applyThemeOnLoad()
   }
@@ -493,8 +494,8 @@ function init() {
     toggleBtn.addEventListener('click', window.GTRTheme.toggleTheme)
   }
   setActiveNav()
-  renderGeneral()
-  renderCategorias()
+  await renderGeneral()
+  await renderCategorias()
 }
 
 document.addEventListener('DOMContentLoaded', init)

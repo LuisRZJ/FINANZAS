@@ -4,9 +4,8 @@ import { listarEtiquetas } from './etiquetas.js'
 import { listarOperaciones } from './operaciones.js'
 import { parseFecha, hoy, formatFechaISO } from '../sistema/fechas.js'
 
-
-function leerEstado() {
-  const raw = leer(STORAGE_KEYS.presupuestos, null)
+async function leerEstado() {
+  const raw = await leer(STORAGE_KEYS.presupuestos, null)
   if (!raw || typeof raw !== 'object') {
     return {
       general: null,
@@ -17,8 +16,8 @@ function leerEstado() {
   return raw
 }
 
-function guardarEstado(estado) {
-  escribir(STORAGE_KEYS.presupuestos, estado)
+async function guardarEstado(estado) {
+  await escribir(STORAGE_KEYS.presupuestos, estado)
 }
 
 function nuevoHistorialEntry(tipo, mensaje) {
@@ -29,13 +28,13 @@ function nuevoHistorialEntry(tipo, mensaje) {
   }
 }
 
-export function obtenerPresupuestoGeneral() {
-  const estado = leerEstado()
+export async function obtenerPresupuestoGeneral() {
+  const estado = await leerEstado()
   return estado.general
 }
 
-export function listarPresupuestosCategorias() {
-  const estado = leerEstado()
+export async function listarPresupuestosCategorias() {
+  const estado = await leerEstado()
   return estado.categorias
 }
 
@@ -50,7 +49,7 @@ function validarPeriodo(fechaInicioStr, fechaFinStr) {
   return { inicio, fin, dias }
 }
 
-export function configurarPresupuestoGeneral(payload) {
+export async function configurarPresupuestoGeneral(payload) {
   const monto = Number(payload?.monto || 0)
   const fechaInicioStr = String(payload?.fechaInicio || '').trim()
   const fechaFinStr = String(payload?.fechaFin || '').trim()
@@ -60,7 +59,7 @@ export function configurarPresupuestoGeneral(payload) {
 
   const periodo = validarPeriodo(fechaInicioStr, fechaFinStr)
 
-  const estado = leerEstado()
+  const estado = await leerEstado()
   const anterior = estado.general
 
   const totalCategorias = estado.categorias.reduce((acc, c) => acc + Number(c.monto || 0), 0)
@@ -98,12 +97,12 @@ export function configurarPresupuestoGeneral(payload) {
   }
 
   estado.general = general
-  guardarEstado(estado)
+  await guardarEstado(estado)
   return general
 }
 
-export function calcularResumenPresupuestoActual() {
-  const estado = leerEstado()
+export async function calcularResumenPresupuestoActual() {
+  const estado = await leerEstado()
   const general = estado.general
   if (!general) {
     return {
@@ -111,14 +110,15 @@ export function calcularResumenPresupuestoActual() {
       categorias: [],
       totalCategorias: 0,
       restanteAsignar: 0,
-      gastoTotalPeriodo: 0
+      gastoTotalPeriodo: 0,
+      gastoComprometidoTotal: 0
     }
   }
 
   const inicio = parseFecha(general.fechaInicio)
   const fin = parseFecha(general.fechaFin)
-  const ops = listarOperaciones()
-  const etiquetas = listarEtiquetas()
+  const ops = await listarOperaciones()
+  const etiquetas = await listarEtiquetas()
   const mapEt = new Map(etiquetas.map((e) => [e.id, e]))
 
   function dentroPeriodo(fechaStr) {
@@ -128,17 +128,13 @@ export function calcularResumenPresupuestoActual() {
     return t >= inicio.getTime() && t <= fin.getTime()
   }
 
-  // Función para obtener todos los ancestros de una etiqueta (incluyendo ella misma)
-  // PROTECCIÓN: Detecta referencias circulares para evitar loop infinito
   function obtenerAncestros(etiquetaId) {
     const ancestros = [etiquetaId]
-    const visitados = new Set([etiquetaId]) // Para detectar ciclos
+    const visitados = new Set([etiquetaId])
     let actual = mapEt.get(etiquetaId)
 
     while (actual && actual.padreId) {
-      // Protección contra referencias circulares
       if (visitados.has(actual.padreId)) {
-        console.warn(`[Presupuestos] Referencia circular detectada en etiqueta ${actual.padreId}. Se detuvo la búsqueda de ancestros.`)
         break
       }
       ancestros.push(actual.padreId)
@@ -148,12 +144,11 @@ export function calcularResumenPresupuestoActual() {
     return ancestros
   }
 
-  // Separamos gastos PAGADOS (reales) de PENDIENTES (comprometidos/proyectados)
-  const gastoPorEtiqueta = new Map() // Solo pagados
-  const gastoComprometidoPorEtiqueta = new Map() // Solo pendientes
+  const gastoPorEtiqueta = new Map() 
+  const gastoComprometidoPorEtiqueta = new Map() 
 
-  let gastoTotalPeriodo = 0 // Solo pagados
-  let gastoComprometidoTotal = 0 // Solo pendientes
+  let gastoTotalPeriodo = 0 
+  let gastoComprometidoTotal = 0 
 
   ops.forEach((op) => {
     if (op.tipo !== 'gasto') return
@@ -169,7 +164,6 @@ export function calcularResumenPresupuestoActual() {
     }
 
     if (op.etiquetaId) {
-      // Sumar el gasto a la etiqueta directa Y a todos sus ancestros (padres)
       const etiquetasAfectadas = obtenerAncestros(op.etiquetaId)
       etiquetasAfectadas.forEach((etId) => {
         if (esPagado) {
@@ -187,16 +181,16 @@ export function calcularResumenPresupuestoActual() {
     const et = mapEt.get(c.etiquetaId)
     const gastado = gastoPorEtiqueta.get(c.etiquetaId) || 0
     const comprometido = gastoComprometidoPorEtiqueta.get(c.etiquetaId) || 0
-    const restante = Number(c.monto || 0) - gastado // Solo resta lo realmente gastado
-    const restanteProyectado = Number(c.monto || 0) - gastado - comprometido // Incluyendo pendientes
+    const restante = Number(c.monto || 0) - gastado 
+    const restanteProyectado = Number(c.monto || 0) - gastado - comprometido 
     return {
       ...c,
       etiquetaNombre: et ? et.nombre : 'Etiqueta eliminada',
       etiquetaColor: et ? et.color : '#64748b',
-      gastado, // Solo operaciones pagadas
-      comprometido, // Operaciones pendientes (futuras)
-      restante, // Restante real
-      restanteProyectado // Restante incluyendo comprometido
+      gastado, 
+      comprometido, 
+      restante, 
+      restanteProyectado 
     }
   })
 
@@ -208,13 +202,13 @@ export function calcularResumenPresupuestoActual() {
     categorias,
     totalCategorias,
     restanteAsignar,
-    gastoTotalPeriodo, // Solo pagados
-    gastoComprometidoTotal // Solo pendientes (proyección)
+    gastoTotalPeriodo, 
+    gastoComprometidoTotal 
   }
 }
 
-export function crearPresupuestoCategoria(payload) {
-  const estado = leerEstado()
+export async function crearPresupuestoCategoria(payload) {
+  const estado = await leerEstado()
   if (!estado.general) throw new Error('Primero debes definir un presupuesto general')
 
   const etiquetaId = String(payload?.etiquetaId || '').trim()
@@ -222,14 +216,15 @@ export function crearPresupuestoCategoria(payload) {
   if (!etiquetaId) throw new Error('Debes seleccionar una etiqueta de gasto')
   if (!(monto > 0)) throw new Error('El monto del presupuesto debe ser mayor que cero')
 
-  const etiquetas = listarEtiquetas().filter((e) => e.tipo === 'gasto')
-  const etiqueta = etiquetas.find((e) => e.id === etiquetaId)
+  const etiquetas = await listarEtiquetas()
+  const etiquetasGasto = etiquetas.filter((e) => e.tipo === 'gasto')
+  const etiqueta = etiquetasGasto.find((e) => e.id === etiquetaId)
   if (!etiqueta) throw new Error('Etiqueta de gasto no encontrada')
 
   const existente = estado.categorias.find((c) => c.etiquetaId === etiquetaId)
   if (existente) throw new Error('Ya existe un presupuesto para esta etiqueta')
 
-  const resumen = calcularResumenPresupuestoActual()
+  const resumen = await calcularResumenPresupuestoActual()
   if (monto > resumen.restanteAsignar) throw new Error('El monto excede el presupuesto general disponible por asignar')
 
   const ahora = new Date().toISOString()
@@ -245,12 +240,12 @@ export function crearPresupuestoCategoria(payload) {
   }
 
   estado.categorias.push(categoria)
-  guardarEstado(estado)
+  await guardarEstado(estado)
   return categoria
 }
 
-export function actualizarPresupuestoCategoria(id, payload) {
-  const estado = leerEstado()
+export async function actualizarPresupuestoCategoria(id, payload) {
+  const estado = await leerEstado()
   if (!estado.general) throw new Error('Primero debes definir un presupuesto general')
   const idx = estado.categorias.findIndex((c) => c.id === id)
   if (idx === -1) throw new Error('Presupuesto de etiqueta no encontrado')
@@ -262,8 +257,9 @@ export function actualizarPresupuestoCategoria(id, payload) {
   if (!etiquetaId) throw new Error('Debes seleccionar una etiqueta de gasto')
   if (!(monto > 0)) throw new Error('El monto del presupuesto debe ser mayor que cero')
 
-  const etiquetas = listarEtiquetas().filter((e) => e.tipo === 'gasto')
-  const etiqueta = etiquetas.find((e) => e.id === etiquetaId)
+  const etiquetas = await listarEtiquetas()
+  const etiquetasGasto = etiquetas.filter((e) => e.tipo === 'gasto')
+  const etiqueta = etiquetasGasto.find((e) => e.id === etiquetaId)
   if (!etiqueta) throw new Error('Etiqueta de gasto no encontrada')
 
   const duplicado = estado.categorias.some(
@@ -299,16 +295,16 @@ export function actualizarPresupuestoCategoria(id, payload) {
   }
 
   estado.categorias[idx] = next
-  guardarEstado(estado)
+  await guardarEstado(estado)
   return next
 }
 
-export function eliminarPresupuestoCategoria(id) {
-  const estado = leerEstado()
+export async function eliminarPresupuestoCategoria(id) {
+  const estado = await leerEstado()
   const idx = estado.categorias.findIndex((c) => c.id === id)
   if (idx === -1) return false
   const prev = estado.categorias[idx]
-  const etiquetas = listarEtiquetas()
+  const etiquetas = await listarEtiquetas()
   const etiqueta = etiquetas.find((e) => e.id === prev.etiquetaId)
   const nombre = etiqueta ? etiqueta.nombre : 'etiqueta'
 
@@ -327,12 +323,12 @@ export function eliminarPresupuestoCategoria(id) {
   }
 
   estado.categorias.splice(idx, 1)
-  guardarEstado(estado)
+  await guardarEstado(estado)
   return true
 }
 
-export function revisarPeriodosPresupuesto() {
-  const estado = leerEstado()
+export async function revisarPeriodosPresupuesto() {
+  const estado = await leerEstado()
   if (!estado.general) return estado
   const general = estado.general
   if (!general.fechaInicio || !general.fechaFin) return estado
@@ -343,9 +339,9 @@ export function revisarPeriodosPresupuesto() {
   const hoyFecha = hoy()
   if (fin >= hoyFecha) return estado
 
-  const etiquetas = listarEtiquetas()
+  const etiquetas = await listarEtiquetas()
   const mapEt = new Map(etiquetas.map((e) => [e.id, e]))
-  const ops = listarOperaciones()
+  const ops = await listarOperaciones()
 
   const diasPeriodo = general.diasPeriodo || Math.max(1, Math.round((fin.getTime() - inicio.getTime()) / 86400000) + 1)
 
@@ -401,7 +397,6 @@ export function revisarPeriodosPresupuesto() {
   }
 
   estado.general = nuevoGeneral
-  guardarEstado(estado)
+  await guardarEstado(estado)
   return estado
 }
-

@@ -3,12 +3,14 @@ import { contarOperacionesPorEtiqueta, limpiarReferenciaEtiqueta, eliminarOperac
 import { STORAGE_KEYS } from '../sistema/constantes.js'
 import { estaAutenticadoEnNube, guardarPasswordNube, cerrarSesionNube } from '../servicios/auth.js'
 import { respaldarDatos, restaurarDatos } from '../servicios/sincronizacion.js'
+import { leer, escribir, eliminar } from '../servicios/almacenamiento.js'
 
-function renderSeccion(tipo, containerId) {
+async function renderSeccion(tipo, containerId) {
   const cont = document.getElementById(containerId)
   if (!cont) return
 
-  const allTags = listarEtiquetas().filter(t => t.tipo === tipo)
+  const etiquetas = await listarEtiquetas()
+  const allTags = etiquetas.filter(t => t.tipo === tipo)
 
   // Separar padres y huérfanos
   const padres = allTags.filter(t => !t.padreId)
@@ -72,7 +74,7 @@ function renderSeccion(tipo, containerId) {
     const btnEdit = document.createElement('button')
     btnEdit.className = 'text-xs px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors'
     btnEdit.textContent = 'Editar'
-    btnEdit.onclick = () => abrirEdicion(tag)
+    btnEdit.onclick = async () => await abrirEdicion(tag)
 
     const btnHist = document.createElement('button')
     btnHist.className = 'text-xs px-2 py-1 rounded bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors'
@@ -87,7 +89,7 @@ function renderSeccion(tipo, containerId) {
     const btnDel = document.createElement('button')
     btnDel.className = 'text-xs px-2 py-1 rounded bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors ml-auto'
     btnDel.textContent = 'Eliminar'
-    btnDel.onclick = () => confirmarEliminacionEtiqueta(tag)
+    btnDel.onclick = async () => await confirmarEliminacionEtiqueta(tag)
 
     actions.appendChild(btnEdit)
     actions.appendChild(btnHist)
@@ -132,12 +134,12 @@ function renderSeccion(tipo, containerId) {
         const btnSubEdit = document.createElement('button')
         btnSubEdit.className = 'p-1 text-gray-400 hover:text-blue-500 transition-colors'
         btnSubEdit.innerHTML = '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>'
-        btnSubEdit.onclick = () => abrirEdicion(sub)
+        btnSubEdit.onclick = async () => await abrirEdicion(sub)
 
         const btnSubDel = document.createElement('button')
         btnSubDel.className = 'p-1 text-gray-400 hover:text-red-500 transition-colors'
         btnSubDel.innerHTML = '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>'
-        btnSubDel.onclick = () => confirmarEliminacionEtiqueta(sub)
+        btnSubDel.onclick = async () => await confirmarEliminacionEtiqueta(sub)
 
         subActions.appendChild(btnSubEdit)
         subActions.appendChild(btnSubDel)
@@ -175,13 +177,13 @@ function renderSeccion(tipo, containerId) {
   cont.appendChild(grid)
 }
 
-function renderTodas() {
-  renderSeccion('ingreso', 'lista-ingresos')
-  renderSeccion('gasto', 'lista-gastos')
+async function renderTodas() {
+  await renderSeccion('ingreso', 'lista-ingresos')
+  await renderSeccion('gasto', 'lista-gastos')
 }
 
-function abrirEdicion(tag) {
-  const etiquetas = listarEtiquetas()
+async function abrirEdicion(tag) {
+  const etiquetas = await listarEtiquetas()
   const padresMismaCategoria = etiquetas.filter(t => !t.padreId && t.tipo === tag.tipo && t.id !== tag.id)
   const padreActual = tag.padreId ? etiquetas.find(t => t.id === tag.padreId) : null
   const opcionesPadre = padresMismaCategoria.map(p => {
@@ -267,7 +269,7 @@ function abrirEdicion(tag) {
   })
 
   const form = document.getElementById('form-edit-tag')
-  form.onsubmit = (e) => {
+  form.onsubmit = async (e) => {
     e.preventDefault()
     const nuevoNombre = document.getElementById('edit-tag-nombre').value
     const nuevoIcono = document.getElementById('edit-tag-icono').value
@@ -276,14 +278,14 @@ function abrirEdicion(tag) {
     const nuevoPadre = document.getElementById('edit-tag-padre')?.value
 
     try {
-      actualizarEtiqueta(tag.id, {
+      await actualizarEtiqueta(tag.id, {
         nombre: nuevoNombre,
         icono: nuevoIcono,
         color: nuevoColor,
         tipo: nuevoTipo,
         padreId: tag.padreId ? (nuevoPadre || null) : undefined
       })
-      renderTodas()
+      await renderTodas()
       cerrarModal()
     } catch (err) {
       alert(err.message)
@@ -355,8 +357,8 @@ function abrirHistorial(tag) {
   })
 }
 
-function confirmarEliminacionEtiqueta(tag) {
-  const numOperaciones = contarOperacionesPorEtiqueta(tag.id)
+async function confirmarEliminacionEtiqueta(tag) {
+  const numOperaciones = await contarOperacionesPorEtiqueta(tag.id)
 
   const overlay = document.createElement('div')
   overlay.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[60] animate-fade-in'
@@ -441,7 +443,7 @@ function confirmarEliminacionEtiqueta(tag) {
     if (e.target === overlay) cerrarModal()
   })
 
-  document.getElementById('btn-confirm-delete').addEventListener('click', () => {
+  document.getElementById('btn-confirm-delete').addEventListener('click', async () => {
     // Verificar qué opción eligió el usuario
     const radioEliminar = modal.querySelector('input[name="eliminar-etiqueta-ops"][value="eliminar"]')
     const eliminarTransacciones = radioEliminar && radioEliminar.checked
@@ -449,15 +451,15 @@ function confirmarEliminacionEtiqueta(tag) {
     if (numOperaciones > 0) {
       if (eliminarTransacciones) {
         // Eliminar todas las transacciones con esta etiqueta
-        eliminarOperacionesPorEtiqueta(tag.id)
+        await eliminarOperacionesPorEtiqueta(tag.id)
       } else {
         // Limpiar la referencia (las transacciones quedan sin etiqueta)
-        limpiarReferenciaEtiqueta(tag.id)
+        await limpiarReferenciaEtiqueta(tag.id)
       }
     }
 
-    eliminarEtiqueta(tag.id)
-    renderTodas()
+    await eliminarEtiqueta(tag.id)
+    await renderTodas()
     cerrarModal()
   })
 }
@@ -539,26 +541,26 @@ function abrirModalCreacion(tipoDefault = 'gasto', padreId = null, nombrePadre =
   }
 
   const form = document.getElementById('form-create-tag')
-  form.onsubmit = (e) => {
+  form.onsubmit = async (e) => {
     e.preventDefault()
     const nombre = document.getElementById('create-tag-nombre').value
     const icono = document.getElementById('create-tag-icono').value
     const color = inputColor.value
     const tipo = selectTipo.value
 
-    crearEtiqueta({ nombre, color, tipo, icono, padreId })
+    await crearEtiqueta({ nombre, color, tipo, icono, padreId })
 
-    renderTodas()
+    await renderTodas()
     cerrarModal()
   }
 }
 
-function calcularUsoAlmacenamiento() {
+async function calcularUsoAlmacenamiento() {
   if (typeof localStorage === 'undefined') return 'N/D'
 
   try {
     // Simular exactamente el objeto que se descargará
-    const snapshot = construirSnapshotDatos()
+    const snapshot = await construirSnapshotDatos()
     // Usar los mismos parámetros de formateo que en la descarga (null, 2)
     const jsonString = JSON.stringify(snapshot, null, 2)
     const total = jsonString.length
@@ -574,19 +576,19 @@ function calcularUsoAlmacenamiento() {
   }
 }
 
-function construirSnapshotDatos() {
+async function construirSnapshotDatos() {
   const snapshot = {}
   const keys = Object.values(STORAGE_KEYS)
-  keys.forEach((k) => {
+  for (const k of keys) {
     try {
-      const raw = localStorage.getItem(k)
+      const raw = await leer(k)
       if (raw !== null) {
-        snapshot[k] = JSON.parse(raw)
+        snapshot[k] = raw
       }
     } catch {
       // ignorar claves corruptas
     }
-  })
+  }
   return {
     version: 1,
     exportadoEn: new Date().toISOString(),
@@ -594,22 +596,22 @@ function construirSnapshotDatos() {
   }
 }
 
-function restaurarDesdeSnapshot(snapshot) {
+async function restaurarDesdeSnapshot(snapshot) {
   if (!snapshot || typeof snapshot !== 'object' || !snapshot.datos) {
     throw new Error('Archivo de respaldo inválido')
   }
   const datos = snapshot.datos
   const keys = Object.values(STORAGE_KEYS)
-  keys.forEach((k) => {
+  for (const k of keys) {
     if (Object.prototype.hasOwnProperty.call(datos, k)) {
-      localStorage.setItem(k, JSON.stringify(datos[k]))
+      await escribir(k, datos[k])
     } else {
-      localStorage.removeItem(k)
+      await eliminar(k)
     }
-  })
+  }
 }
 
-function inicializarPanelDatos() {
+async function inicializarPanelDatos() {
   const usageEl = document.getElementById('data-usage')
   const msgEl = document.getElementById('data-management-message')
   const btnExport = document.getElementById('btn-export-data')
@@ -618,13 +620,13 @@ function inicializarPanelDatos() {
   const dropOverlay = document.getElementById('drop-overlay')
 
   if (usageEl) {
-    usageEl.textContent = calcularUsoAlmacenamiento()
+    usageEl.textContent = await calcularUsoAlmacenamiento()
   }
 
   if (btnExport) {
-    btnExport.addEventListener('click', () => {
+    btnExport.addEventListener('click', async () => {
       try {
-        const snapshot = construirSnapshotDatos()
+        const snapshot = await construirSnapshotDatos()
         const blob = new Blob([JSON.stringify(snapshot, null, 2)], {
           type: 'application/json'
         })
@@ -651,16 +653,16 @@ function inicializarPanelDatos() {
   const handleImportFile = (file) => {
     if (!file) return
     const reader = new FileReader()
-    reader.onload = (ev) => {
+    reader.onload = async (ev) => {
       try {
         const text = ev.target?.result
         const data = JSON.parse(text)
-        restaurarDesdeSnapshot(data)
+        await restaurarDesdeSnapshot(data)
         if (msgEl) {
           msgEl.textContent = 'Datos restaurados correctamente. Recarga la página para ver los cambios.'
         }
         if (usageEl) {
-          usageEl.textContent = calcularUsoAlmacenamiento()
+          usageEl.textContent = await calcularUsoAlmacenamiento()
         }
       } catch (err) {
         if (msgEl) {
@@ -775,7 +777,9 @@ function inicializarPanelDatos() {
         try {
           // Siempre borramos local
           const keys = Object.values(STORAGE_KEYS)
-          keys.forEach((k) => localStorage.removeItem(k))
+          for (const k of keys) {
+            await eliminar(k)
+          }
 
           // Si se marcó, también borrar en la nube
           if (borrarNube) {
@@ -792,9 +796,9 @@ function inicializarPanelDatos() {
               : 'Datos locales borrados.'
           }
           if (usageEl) {
-            usageEl.textContent = calcularUsoAlmacenamiento()
+            usageEl.textContent = await calcularUsoAlmacenamiento()
           }
-          renderTodas()
+          await renderTodas()
           cerrarModal()
         } catch (err) {
           if (msgEl) {
@@ -1004,9 +1008,9 @@ async function inicializarAuth() {
           const downloadResult = await restaurarDatos()
           if (downloadResult.success) {
             showMessage(syncMsgEl, '✓ Datos descargados. Ahora puedes subir tu respaldo.', false)
-            renderTodas()
+            await renderTodas()
             const usageEl = document.getElementById('data-usage')
-            if (usageEl) usageEl.textContent = calcularUsoAlmacenamiento()
+            if (usageEl) usageEl.textContent = await calcularUsoAlmacenamiento()
           } else {
             showMessage(syncMsgEl, downloadResult.error, true)
           }
@@ -1038,9 +1042,9 @@ async function inicializarAuth() {
 
       if (result.success) {
         showMessage(syncMsgEl, `✓ Restaurado: ${result.stats.cuentas} cuentas, ${result.stats.etiquetas} etiquetas, ${result.stats.operaciones} operaciones, ${result.stats.separadores} categorías. Recarga la página.`, false)
-        renderTodas()
+        await renderTodas()
         const usageEl = document.getElementById('data-usage')
-        if (usageEl) usageEl.textContent = calcularUsoAlmacenamiento()
+        if (usageEl) usageEl.textContent = await calcularUsoAlmacenamiento()
       } else {
         showMessage(syncMsgEl, result.error, true)
       }
@@ -1048,7 +1052,7 @@ async function inicializarAuth() {
   }
 }
 
-function init() {
+async function init() {
   if (window.GTRTheme && typeof window.GTRTheme.applyThemeOnLoad === 'function') window.GTRTheme.applyThemeOnLoad()
 
   const toggleBtn = document.getElementById('theme-toggle')
@@ -1071,9 +1075,9 @@ function init() {
   const btnCrearGasto = document.getElementById('btn-abrir-crear-gasto')
   if (btnCrearGasto) btnCrearGasto.addEventListener('click', () => abrirModalCreacion('gasto'))
 
-  renderTodas()
-  inicializarPanelDatos()
-  inicializarAuth()
+  await renderTodas()
+  await inicializarPanelDatos()
+  await inicializarAuth()
 
   // Toggle de fondos dinámicos (cookie)
   const toggleFondos = document.getElementById('toggle-fondos-dinamicos')

@@ -6,17 +6,17 @@ function uid() {
   return 'op_' + Math.random().toString(36).slice(2) + Date.now().toString(36)
 }
 
-function obtenerTodas() {
-  const data = leer(STORAGE_KEYS.operaciones, [])
+async function obtenerTodas() {
+  const data = await leer(STORAGE_KEYS.operaciones, [])
   return Array.isArray(data) ? data : []
 }
 
-function guardarTodas(list) {
-  return escribir(STORAGE_KEYS.operaciones, list)
+async function guardarTodas(list) {
+  return await escribir(STORAGE_KEYS.operaciones, list)
 }
 
-export function listarOperaciones() {
-  return obtenerTodas()
+export async function listarOperaciones() {
+  return await obtenerTodas()
 }
 
 // Determina el estado basándose en la fecha
@@ -28,8 +28,8 @@ function determinarEstado(fechaStr) {
 }
 
 // Valida que la fecha no sea anterior a la creación de las cuentas involucradas
-function validarFechaCuentas(fechaStr, cuentaIds) {
-  const cuentas = listarCuentas()
+async function validarFechaCuentas(fechaStr, cuentaIds) {
+  const cuentas = await listarCuentas()
   const involucradas = cuentas.filter(c => cuentaIds.includes(c.id))
   if (involucradas.length !== cuentaIds.length) return { ok: false, error: 'Cuenta(s) no encontrada(s)' }
 
@@ -43,37 +43,36 @@ function validarFechaCuentas(fechaStr, cuentaIds) {
   return { ok: true }
 }
 
-function revertirEfecto(op) {
+async function revertirEfecto(op) {
   const opInfo = { nombre: op.nombre, tipo: op.tipo, cantidad: op.cantidad, fecha: op.fecha, accion: 'revertir' }
 
   if (op.tipo === 'ingreso') {
-    ajustarSaldoPorOperacion(op.cuentaId, -Number(op.cantidad), opInfo)
+    await ajustarSaldoPorOperacion(op.cuentaId, -Number(op.cantidad), opInfo)
   } else if (op.tipo === 'gasto') {
-    ajustarSaldoPorOperacion(op.cuentaId, Number(op.cantidad), opInfo)
+    await ajustarSaldoPorOperacion(op.cuentaId, Number(op.cantidad), opInfo)
   } else if (op.tipo === 'transferencia') {
-    ajustarSaldoPorOperacion(op.origenId, Number(op.cantidad), opInfo)
-    ajustarSaldoPorOperacion(op.destinoId, -Number(op.cantidad), opInfo)
+    await ajustarSaldoPorOperacion(op.origenId, Number(op.cantidad), opInfo)
+    await ajustarSaldoPorOperacion(op.destinoId, -Number(op.cantidad), opInfo)
   }
 }
 
-function aplicarEfecto(op) {
+async function aplicarEfecto(op) {
   const opInfo = { nombre: op.nombre, tipo: op.tipo, cantidad: op.cantidad, fecha: op.fecha, accion: 'aplicar' }
 
   if (op.tipo === 'ingreso') {
-    ajustarSaldoPorOperacion(op.cuentaId, Number(op.cantidad), opInfo)
+    await ajustarSaldoPorOperacion(op.cuentaId, Number(op.cantidad), opInfo)
   } else if (op.tipo === 'gasto') {
-    ajustarSaldoPorOperacion(op.cuentaId, -Number(op.cantidad), opInfo)
+    await ajustarSaldoPorOperacion(op.cuentaId, -Number(op.cantidad), opInfo)
   } else if (op.tipo === 'transferencia') {
-    ajustarSaldoPorOperacion(op.origenId, -Number(op.cantidad), opInfo)
-    ajustarSaldoPorOperacion(op.destinoId, Number(op.cantidad), opInfo)
+    await ajustarSaldoPorOperacion(op.origenId, -Number(op.cantidad), opInfo)
+    await ajustarSaldoPorOperacion(op.destinoId, Number(op.cantidad), opInfo)
   }
 }
 
 // === NUEVA FUNCIÓN: Ejecutar operaciones pendientes cuya fecha ya pasó ===
-// OPTIMIZADO: Procesa los cambios en batch para evitar múltiples escrituras en disco
-export function ejecutarPendientes() {
+export async function ejecutarPendientes() {
   const ahora = new Date()
-  const list = obtenerTodas()
+  const list = await obtenerTodas()
   let huboCambios = false
   const actualizacionesSaldos = []
 
@@ -81,7 +80,6 @@ export function ejecutarPendientes() {
     if (op.estado === 'pendiente') {
       const fechaOp = new Date(op.fecha.includes('T') ? op.fecha : op.fecha + 'T23:59:59')
       if (fechaOp <= ahora) {
-        // En lugar de aplicarEfecto individualmente, acumulamos los cambios
         const cantidad = Number(op.cantidad || 0)
 
         if (op.tipo === 'ingreso') {
@@ -100,12 +98,9 @@ export function ejecutarPendientes() {
   })
 
   if (huboCambios) {
-    // 1. Guardar todas las operaciones actualizadas (cambio de estado)
-    guardarTodas(list)
-
-    // 2. Aplicar todos los cambios de saldo en una sola escritura
+    await guardarTodas(list)
     if (actualizacionesSaldos.length > 0) {
-      actualizarMultiplesSaldos(actualizacionesSaldos)
+      await actualizarMultiplesSaldos(actualizacionesSaldos)
     }
   }
 
@@ -114,7 +109,7 @@ export function ejecutarPendientes() {
 
 // === CREACIÓN DE OPERACIONES ===
 
-export function crearIngreso(payload) {
+export async function crearIngreso(payload) {
   const nombre = String(payload?.nombre || '').trim()
   const descripcion = String(payload?.descripcion || '').trim()
   const etiquetaId = String(payload?.etiquetaId || '').trim()
@@ -124,18 +119,17 @@ export function crearIngreso(payload) {
 
   if (!nombre || !fecha || !cuentaId || !(cantidad > 0)) throw new Error('Datos de ingreso inválidos')
 
-  const v = validarFechaCuentas(fecha, [cuentaId])
+  const v = await validarFechaCuentas(fecha, [cuentaId])
   if (!v.ok) throw new Error(v.error)
 
-  const cuentas = listarCuentas()
+  const cuentas = await listarCuentas()
   const cuenta = cuentas.find(c => c.id === cuentaId)
   if (!cuenta) throw new Error('Cuenta no encontrada')
 
   const estado = determinarEstado(fecha)
 
-  // Solo aplicar efecto si está pagado
   if (estado === 'pagado') {
-    ajustarSaldoPorOperacion(cuentaId, cantidad, { nombre, tipo: 'ingreso', cantidad, fecha })
+    await ajustarSaldoPorOperacion(cuentaId, cantidad, { nombre, tipo: 'ingreso', cantidad, fecha })
   }
 
   const now = new Date().toISOString()
@@ -154,13 +148,13 @@ export function crearIngreso(payload) {
     creadaEn: now
   }
 
-  const list = obtenerTodas()
+  const list = await obtenerTodas()
   list.push(op)
-  guardarTodas(list)
+  await guardarTodas(list)
   return op
 }
 
-export function crearGasto(payload) {
+export async function crearGasto(payload) {
   const nombre = String(payload?.nombre || '').trim()
   const descripcion = String(payload?.descripcion || '').trim()
   const etiquetaId = String(payload?.etiquetaId || '').trim()
@@ -170,18 +164,17 @@ export function crearGasto(payload) {
 
   if (!nombre || !fecha || !cuentaId || !(cantidad > 0)) throw new Error('Datos de gasto inválidos')
 
-  const v = validarFechaCuentas(fecha, [cuentaId])
+  const v = await validarFechaCuentas(fecha, [cuentaId])
   if (!v.ok) throw new Error(v.error)
 
-  const cuentas = listarCuentas()
+  const cuentas = await listarCuentas()
   const cuenta = cuentas.find(c => c.id === cuentaId)
   if (!cuenta) throw new Error('Cuenta no encontrada')
 
   const estado = determinarEstado(fecha)
 
-  // Solo aplicar efecto si está pagado
   if (estado === 'pagado') {
-    ajustarSaldoPorOperacion(cuentaId, -cantidad, { nombre, tipo: 'gasto', cantidad, fecha })
+    await ajustarSaldoPorOperacion(cuentaId, -cantidad, { nombre, tipo: 'gasto', cantidad, fecha })
   }
 
   const now = new Date().toISOString()
@@ -200,13 +193,13 @@ export function crearGasto(payload) {
     creadaEn: now
   }
 
-  const list = obtenerTodas()
+  const list = await obtenerTodas()
   list.push(op)
-  guardarTodas(list)
+  await guardarTodas(list)
   return op
 }
 
-export function crearTransferencia(payload) {
+export async function crearTransferencia(payload) {
   const nombre = String(payload?.nombre || '').trim()
   const descripcion = String(payload?.descripcion || '').trim()
   const cantidad = Number(payload?.cantidad || 0)
@@ -217,20 +210,19 @@ export function crearTransferencia(payload) {
   if (!nombre || !fecha || !origenId || !destinoId || !(cantidad > 0)) throw new Error('Datos de transferencia inválidos')
   if (origenId === destinoId) throw new Error('Las cuentas de origen y destino deben ser distintas')
 
-  const v = validarFechaCuentas(fecha, [origenId, destinoId])
+  const v = await validarFechaCuentas(fecha, [origenId, destinoId])
   if (!v.ok) throw new Error(v.error)
 
-  const cuentas = listarCuentas()
+  const cuentas = await listarCuentas()
   const origen = cuentas.find(c => c.id === origenId)
   const destino = cuentas.find(c => c.id === destinoId)
   if (!origen || !destino) throw new Error('Cuenta(s) no encontrada(s)')
 
   const estado = determinarEstado(fecha)
 
-  // Solo aplicar efecto si está pagado
   if (estado === 'pagado') {
-    ajustarSaldoPorOperacion(origenId, -cantidad, { nombre, tipo: 'transferencia', cantidad, fecha })
-    ajustarSaldoPorOperacion(destinoId, cantidad, { nombre, tipo: 'transferencia', cantidad, fecha })
+    await ajustarSaldoPorOperacion(origenId, -cantidad, { nombre, tipo: 'transferencia', cantidad, fecha })
+    await ajustarSaldoPorOperacion(destinoId, cantidad, { nombre, tipo: 'transferencia', cantidad, fecha })
   }
 
   const now = new Date().toISOString()
@@ -249,38 +241,36 @@ export function crearTransferencia(payload) {
     creadaEn: now
   }
 
-  const list = obtenerTodas()
+  const list = await obtenerTodas()
   list.push(op)
-  guardarTodas(list)
+  await guardarTodas(list)
   return op
 }
 
 // === ELIMINACIÓN ===
 
-export function eliminarOperacion(id) {
-  const list = obtenerTodas()
+export async function eliminarOperacion(id) {
+  const list = await obtenerTodas()
   const op = list.find(o => o.id === id)
   if (!op) return false
 
-  // Solo revertir efecto si estaba pagado
   if (op.estado === 'pagado') {
-    revertirEfecto(op)
+    await revertirEfecto(op)
   }
 
   const next = list.filter(o => o.id !== id)
-  guardarTodas(next)
+  await guardarTodas(next)
   return true
 }
 
 // === ACTUALIZACIÓN ===
 
-export function actualizarOperacion(id, payload) {
-  const list = obtenerTodas()
+export async function actualizarOperacion(id, payload) {
+  const list = await obtenerTodas()
   const idx = list.findIndex(o => o.id === id)
   if (idx === -1) throw new Error('Operación no encontrada')
   const prev = list[idx]
 
-  // 1. Validar nuevos datos
   const nuevoTipo = payload.tipo || prev.tipo
   const cantidad = Number(payload.cantidad !== undefined ? payload.cantidad : prev.cantidad)
   const fecha = String(payload.fecha !== undefined ? payload.fecha : prev.fecha).trim()
@@ -289,10 +279,8 @@ export function actualizarOperacion(id, payload) {
   if (!(cantidad > 0)) throw new Error('La cantidad debe ser positiva')
   if (!nombre) throw new Error('El nombre es requerido')
 
-  // Calcular nuevo estado basado en la nueva fecha
   const nuevoEstado = determinarEstado(fecha)
 
-  // Preparar objeto actualizado
   const now = new Date().toISOString()
   let next = {
     ...prev,
@@ -300,69 +288,59 @@ export function actualizarOperacion(id, payload) {
     id: prev.id,
     creadaEn: prev.creadaEn,
     estado: nuevoEstado,
-    actualizadaEn: now // Campo clave para sincronización
+    actualizadaEn: now
   }
 
   if (nuevoTipo === 'ingreso' || nuevoTipo === 'gasto') {
     const cuentaId = String(payload.cuentaId || prev.cuentaId).trim()
-    const v = validarFechaCuentas(fecha, [cuentaId])
+    const v = await validarFechaCuentas(fecha, [cuentaId])
     if (!v.ok) throw new Error(v.error)
     next.cuentaId = cuentaId
   } else if (nuevoTipo === 'transferencia') {
     const origenId = String(payload.origenId || prev.origenId).trim()
     const destinoId = String(payload.destinoId || prev.destinoId).trim()
     if (origenId === destinoId) throw new Error('Cuentas origen y destino iguales')
-    const v = validarFechaCuentas(fecha, [origenId, destinoId])
+    const v = await validarFechaCuentas(fecha, [origenId, destinoId])
     if (!v.ok) throw new Error(v.error)
     next.origenId = origenId
     next.destinoId = destinoId
   }
 
-  // 2. Revertir efecto anterior (solo si estaba pagado)
   if (prev.estado === 'pagado') {
-    revertirEfecto(prev)
+    await revertirEfecto(prev)
   }
 
-  // 3. Aplicar nuevo efecto (solo si el nuevo estado es pagado)
   if (nuevoEstado === 'pagado') {
     try {
       const opInfo = { nombre, tipo: nuevoTipo, cantidad, fecha }
       if (nuevoTipo === 'ingreso') {
-        ajustarSaldoPorOperacion(next.cuentaId, Number(cantidad), opInfo)
+        await ajustarSaldoPorOperacion(next.cuentaId, Number(cantidad), opInfo)
       } else if (nuevoTipo === 'gasto') {
-        ajustarSaldoPorOperacion(next.cuentaId, -Number(cantidad), opInfo)
+        await ajustarSaldoPorOperacion(next.cuentaId, -Number(cantidad), opInfo)
       } else if (nuevoTipo === 'transferencia') {
-        ajustarSaldoPorOperacion(next.origenId, -Number(cantidad), opInfo)
-        ajustarSaldoPorOperacion(next.destinoId, Number(cantidad), opInfo)
+        await ajustarSaldoPorOperacion(next.origenId, -Number(cantidad), opInfo)
+        await ajustarSaldoPorOperacion(next.destinoId, Number(cantidad), opInfo)
       }
     } catch (e) {
-      // Rollback si la anterior estaba pagada
       if (prev.estado === 'pagado') {
-        aplicarEfecto(prev)
+        await aplicarEfecto(prev)
       }
       throw e
     }
   }
 
-  // 4. Guardar
-  // Marcar como modificada manualmente si pertenece a una recurrencia
   if (next.recurrenciaId) {
     next.modificadaManualmente = true
   }
   list[idx] = next
-  guardarTodas(list)
+  await guardarTodas(list)
   return next
 }
 
 // === INTEGRIDAD REFERENCIAL ===
 
-/**
- * Cuenta operaciones asociadas a una o más cuentas
- * @param {string[]} cuentaIds - IDs de cuentas a buscar
- * @returns {number}
- */
-export function contarOperacionesPorCuentas(cuentaIds) {
-  const ops = obtenerTodas()
+export async function contarOperacionesPorCuentas(cuentaIds) {
+  const ops = await obtenerTodas()
   return ops.filter(op =>
     cuentaIds.includes(op.cuentaId) ||
     cuentaIds.includes(op.origenId) ||
@@ -370,13 +348,8 @@ export function contarOperacionesPorCuentas(cuentaIds) {
   ).length
 }
 
-/**
- * Elimina todas las operaciones asociadas a cuentas específicas
- * @param {string[]} cuentaIds - IDs de cuentas
- * @returns {number} Cantidad de operaciones eliminadas
- */
-export function eliminarOperacionesPorCuentas(cuentaIds) {
-  const ops = obtenerTodas()
+export async function eliminarOperacionesPorCuentas(cuentaIds) {
+  const ops = await obtenerTodas()
   const filtradas = ops.filter(op =>
     !cuentaIds.includes(op.cuentaId) &&
     !cuentaIds.includes(op.origenId) &&
@@ -384,37 +357,26 @@ export function eliminarOperacionesPorCuentas(cuentaIds) {
   )
   const eliminadas = ops.length - filtradas.length
   if (eliminadas > 0) {
-    // Revertir efectos de operaciones pagadas antes de eliminar
-    ops.forEach(op => {
+    for (const op of ops) {
       const afecta = cuentaIds.includes(op.cuentaId) ||
         cuentaIds.includes(op.origenId) ||
         cuentaIds.includes(op.destinoId)
       if (afecta && op.estado === 'pagado') {
-        revertirEfecto(op)
+        await revertirEfecto(op)
       }
-    })
-    guardarTodas(filtradas)
+    }
+    await guardarTodas(filtradas)
   }
   return eliminadas
 }
 
-/**
- * Cuenta operaciones asociadas a una etiqueta
- * @param {string} etiquetaId
- * @returns {number}
- */
-export function contarOperacionesPorEtiqueta(etiquetaId) {
-  const ops = obtenerTodas()
+export async function contarOperacionesPorEtiqueta(etiquetaId) {
+  const ops = await obtenerTodas()
   return ops.filter(op => op.etiquetaId === etiquetaId).length
 }
 
-/**
- * Elimina la referencia a una etiqueta de todas las operaciones (no borra las operaciones)
- * @param {string} etiquetaId
- * @returns {number} Cantidad de operaciones afectadas
- */
-export function limpiarReferenciaEtiqueta(etiquetaId) {
-  const ops = obtenerTodas()
+export async function limpiarReferenciaEtiqueta(etiquetaId) {
+  const ops = await obtenerTodas()
   let afectadas = 0
   ops.forEach(op => {
     if (op.etiquetaId === etiquetaId) {
@@ -423,28 +385,22 @@ export function limpiarReferenciaEtiqueta(etiquetaId) {
     }
   })
   if (afectadas > 0) {
-    guardarTodas(ops)
+    await guardarTodas(ops)
   }
   return afectadas
 }
 
-/**
- * Elimina todas las operaciones asociadas a una etiqueta
- * @param {string} etiquetaId
- * @returns {number} Cantidad de operaciones eliminadas
- */
-export function eliminarOperacionesPorEtiqueta(etiquetaId) {
-  const ops = obtenerTodas()
+export async function eliminarOperacionesPorEtiqueta(etiquetaId) {
+  const ops = await obtenerTodas()
   const filtradas = ops.filter(op => op.etiquetaId !== etiquetaId)
   const eliminadas = ops.length - filtradas.length
   if (eliminadas > 0) {
-    // Revertir efectos de operaciones pagadas antes de eliminar
-    ops.forEach(op => {
+    for (const op of ops) {
       if (op.etiquetaId === etiquetaId && op.estado === 'pagado') {
-        revertirEfecto(op)
+        await revertirEfecto(op)
       }
-    })
-    guardarTodas(filtradas)
+    }
+    await guardarTodas(filtradas)
   }
   return eliminadas
 }
