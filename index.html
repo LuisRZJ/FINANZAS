@@ -466,21 +466,26 @@
             React.useEffect(() => {
                 const calculateFinancials = async () => {
                     try {
-                        // 1. Cuentas y Balance Actual
-                        // Leemos de 'gtr-cuentas' que es la clave usada por el módulo de finanzas
-                        const accountsRaw = localStorage.getItem('gtr-cuentas') || '[]';
-                        let accounts = [];
-                        try { accounts = JSON.parse(accountsRaw); } catch (e) { console.error("Error parseando cuentas", e); }
+                        // 1. Importar almacenamiento de IndexedDB
+                        let leerStorage;
+                        try {
+                            const modStorage = await import('./modulo-finanzas/js/servicios/almacenamiento.js');
+                            leerStorage = modStorage.leer;
+                        } catch (e) {
+                            console.warn("No se pudo importar almacenamiento.js", e);
+                            return;
+                        }
+
+                        // 2. Cuentas y Balance Actual
+                        const accounts = (await leerStorage('gtr-cuentas')) || [];
 
                         // Suma de balance de todas las cuentas (usando propiedad 'dinero')
                         const currentBalance = Array.isArray(accounts)
                             ? accounts.reduce((acc, account) => acc + (Number(account.dinero) || 0), 0)
                             : 0;
 
-                        // 2. Operaciones y Comparativa Histórica (Mes anterior)
-                        const opsRaw = localStorage.getItem('gtr-operaciones') || '[]';
-                        let operations = [];
-                        try { operations = JSON.parse(opsRaw); } catch (e) { console.error("Error parseando operaciones", e); }
+                        // 3. Operaciones y Comparativa Histórica (Mes anterior)
+                        const operations = (await leerStorage('gtr-operaciones')) || [];
 
                         const now = new Date();
                         const oneMonthAgo = new Date();
@@ -524,9 +529,7 @@
                             console.warn("No se pudo importar el servicio de presupuestos para la revisión automática", e);
                         }
 
-                        const budgetRaw = localStorage.getItem('gtr-presupuestos');
-                        let budgetPlan = null;
-                        try { budgetPlan = JSON.parse(budgetRaw); } catch (e) { }
+                        const budgetPlan = await leerStorage('gtr-presupuestos');
 
                         // Extraer datos del presupuesto general
                         const general = budgetPlan?.general;
