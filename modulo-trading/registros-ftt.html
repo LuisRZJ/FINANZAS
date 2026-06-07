@@ -1346,7 +1346,7 @@
 
             try {
                 const password = obtenerPasswordNube();
-                const response = await fetch('/api/sync?module=trading&index=true', {
+                const response = await fetch('/api/sync?module=trading_ftt&index=true', {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${password}`
@@ -1399,7 +1399,7 @@
                 // Subir chunks uno a uno
                 for (let i = 0; i < chunks.length; i++) {
                     showSyncMessage(`Subiendo parte ${i + 1}/${chunks.length}...`, false);
-                    const res = await fetch(`/api/sync?module=trading&part=${i}`, {
+                    const res = await fetch(`/api/sync?module=trading_ftt&part=${i}`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'text/plain',
@@ -1419,7 +1419,7 @@
                     exportadoEn: exportTimestamp,
                     version: 1
                 };
-                const indexRes = await fetch(`/api/sync?module=trading&index=true`, {
+                const indexRes = await fetch(`/api/sync?module=trading_ftt&index=true`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1463,7 +1463,7 @@
 
             try {
                 // 1. Descargar Index
-                const indexRes = await fetch(`/api/sync?module=trading&index=true`, {
+                const indexRes = await fetch(`/api/sync?module=trading_ftt&index=true`, {
                     method: 'GET',
                     headers: { 'Authorization': `Bearer ${password}` }
                 });
@@ -1480,7 +1480,7 @@
                 // 2. Descargar Chunks
                 for (let i = 0; i < partsCount; i++) {
                     showSyncMessage(`Descargando parte ${i + 1}/${partsCount}...`, false);
-                    const partRes = await fetch(`/api/sync?module=trading&part=${i}`, {
+                    const partRes = await fetch(`/api/sync?module=trading_ftt&part=${i}`, {
                         method: 'GET',
                         headers: { 'Authorization': `Bearer ${password}` }
                     });
@@ -1604,7 +1604,7 @@
 
                             try {
                                 const password = obtenerPasswordNube();
-                                const indexRes = await fetch(`/api/sync?module=trading&index=true`, {
+                                const indexRes = await fetch(`/api/sync?module=trading_ftt&index=true`, {
                                     method: 'GET',
                                     headers: { 'Authorization': `Bearer ${password}` }
                                 });
@@ -1614,7 +1614,7 @@
                                 const partsCount = indexResult.data.parts || 1;
                                 const chunks = [];
                                 for (let i = 0; i < partsCount; i++) {
-                                    const partRes = await fetch(`/api/sync?module=trading&part=${i}`, {
+                                    const partRes = await fetch(`/api/sync?module=trading_ftt&part=${i}`, {
                                         method: 'GET',
                                         headers: { 'Authorization': `Bearer ${password}` }
                                     });
