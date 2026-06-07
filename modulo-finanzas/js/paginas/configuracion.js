@@ -985,7 +985,7 @@ async function inicializarPanelDatos() {
       if (discordMsgEl) discordMsgEl.textContent = '📤 Enviando respaldo...'
 
       try {
-        const snapshot = construirSnapshotDatos()
+        const snapshot = await construirSnapshotDatos()
         const jsonString = JSON.stringify(snapshot, null, 2)
         const fecha = new Date().toISOString().slice(0, 10)
         const fileName = `gtr-finanzas-backup-${fecha}.json`

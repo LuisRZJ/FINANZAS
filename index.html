@@ -466,18 +466,30 @@
             React.useEffect(() => {
                 const calculateFinancials = async () => {
                     try {
-                        // 1. Importar almacenamiento de IndexedDB
-                        let leerStorage;
-                        try {
-                            const modStorage = await import('./modulo-finanzas/js/servicios/almacenamiento.js');
-                            leerStorage = modStorage.leer;
-                        } catch (e) {
-                            console.warn("No se pudo importar almacenamiento.js", e);
-                            return;
-                        }
+                        // 1. Función para leer de IndexedDB (GTRFinanzasDB)
+                        const leerIndexedDB = (key) => new Promise((resolve) => {
+                            try {
+                                const request = indexedDB.open('GTRFinanzasDB', 1);
+                                request.onsuccess = (e) => {
+                                    const db = e.target.result;
+                                    if (!db.objectStoreNames.contains('keyval')) {
+                                        resolve(null);
+                                        return;
+                                    }
+                                    const tx = db.transaction('keyval', 'readonly');
+                                    const store = tx.objectStore('keyval');
+                                    const req = store.get(key);
+                                    req.onsuccess = () => resolve(req.result !== undefined ? req.result : null);
+                                    req.onerror = () => resolve(null);
+                                };
+                                request.onerror = () => resolve(null);
+                            } catch (error) {
+                                resolve(null);
+                            }
+                        });
 
                         // 2. Cuentas y Balance Actual
-                        const accounts = (await leerStorage('gtr-cuentas')) || [];
+                        const accounts = (await leerIndexedDB('gtr-cuentas')) || [];
 
                         // Suma de balance de todas las cuentas (usando propiedad 'dinero')
                         const currentBalance = Array.isArray(accounts)
@@ -485,7 +497,7 @@
                             : 0;
 
                         // 3. Operaciones y Comparativa Histórica (Mes anterior)
-                        const operations = (await leerStorage('gtr-operaciones')) || [];
+                        const operations = (await leerIndexedDB('gtr-operaciones')) || [];
 
                         const now = new Date();
                         const oneMonthAgo = new Date();
@@ -523,13 +535,7 @@
                         // 3. Presupuesto Mensual
                         // Intentar ejecutar la revisión de periodos para asegurar que el presupuesto esté al día
                         try {
-                            const { revisarPeriodosPresupuesto } = await import('./modulo-finanzas/js/servicios/presupuestos.js');
-                            revisarPeriodosPresupuesto();
-                        } catch (e) {
-                            console.warn("No se pudo importar el servicio de presupuestos para la revisión automática", e);
-                        }
-
-                        const budgetPlan = await leerStorage('gtr-presupuestos');
+                        const budgetPlan = await leerIndexedDB('gtr-presupuestos');
 
                         // Extraer datos del presupuesto general
                         const general = budgetPlan?.general;
