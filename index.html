@@ -469,7 +469,7 @@
                         // 1. Función para leer de IndexedDB (GTRFinanzasDB)
                         const leerIndexedDB = (key) => new Promise((resolve) => {
                             try {
-                                const request = indexedDB.open('GTRFinanzasDB', 1);
+                                const request = indexedDB.open('GTRFinanzasDB');
                                 request.onsuccess = (e) => {
                                     const db = e.target.result;
                                     if (!db.objectStoreNames.contains('keyval')) {

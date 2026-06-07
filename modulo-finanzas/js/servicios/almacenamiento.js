@@ -2,7 +2,7 @@ import { STORAGE_KEYS } from '../sistema/constantes.js';
 
 const DB_NAME = 'GTRFinanzasDB';
 const STORE_NAME = 'keyval';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 let dbPromise = null;
 
