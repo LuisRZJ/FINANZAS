@@ -24,9 +24,16 @@ const normalizar = (str) => {
 
 export function procesarCSVBudge(contenidoCSV, cuentasExistentes = [], etiquetasExistentes = [], operacionesExistentes = [], metasExistentes = []) {
   const secciones = contenidoCSV.split('###');
-  const transaccionesCSV = secciones[0] || '';
-  const cuentasCSV = secciones[1] || '';
-  const metasCSV = secciones[2] || '';
+  
+  let transaccionesCSV = '';
+  let cuentasCSV = '';
+  let metasCSV = '';
+  
+  for (const sec of secciones) {
+    if (sec.includes('Date,Payment,Is paid,Amount')) transaccionesCSV = sec;
+    else if (sec.includes('Account,Account Balance,Available Balance')) cuentasCSV = sec;
+    else if (sec.includes('Goal,Required sum,Required sum currency')) metasCSV = sec;
+  }
   
   const registrosCSV = [];
   const cuentasParseadas = [];
