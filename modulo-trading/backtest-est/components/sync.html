@@ -1,0 +1,43 @@
+<section class="card" style="max-width: 600px; margin: 0 auto 3rem auto; padding: 1.5rem; background: var(--card-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid var(--border-color); border-radius: var(--radius-lg); box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);">
+    <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-primary);">☁️ Sincronización en la Nube</h3>
+    <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem;">
+        Respalda o restaura tu base de datos de trading (incluyendo cuentas, trades y estrategias personalizadas) desde tu repositorio de GitHub.
+    </p>
+
+    <!-- Estado de autenticación: Invitado -->
+    <div id="auth-guest-cloud" class="space-y-4">
+        <form id="form-login-cloud" style="display: flex; flex-direction: column; gap: 1rem;">
+            <div>
+                <label style="display: block; color: var(--text-muted); font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem;">Contraseña de Sincronización</label>
+                <input type="password" id="input-cloud-password" required placeholder="Ingresa tu contraseña maestra" class="input-glass">
+            </div>
+            <button type="submit" class="btn-primary" style="width: 100%; padding: 0.8rem; font-size: 0.95rem;">
+                🔑 Iniciar Sesión de Nube
+            </button>
+        </form>
+    </div>
+
+    <!-- Estado de autenticación: Logueado -->
+    <div id="auth-user-cloud" class="hidden" style="display: flex; flex-direction: column; gap: 1.25rem;">
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.85rem 1.25rem; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: var(--radius); backdrop-filter: blur(4px);">
+            <div style="display: flex; align-items: center; gap: 0.6rem;">
+                <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--positive); box-shadow: 0 0 8px var(--positive-glow);"></span>
+                <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary);">Sesión Nube Activa</span>
+            </div>
+            <button type="button" id="btn-logout-cloud" style="background: none; border: none; color: var(--negative); font-size: 0.8rem; font-weight: 600; cursor: pointer; text-decoration: underline;">
+                Cerrar Sesión
+            </button>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <button id="btn-backup-cloud" type="button" class="btn-primary" style="padding: 0.9rem; font-size: 0.95rem;">
+                📤 Respaldar Datos
+            </button>
+            <button id="btn-restore-cloud" type="button" class="btn-primary" style="padding: 0.9rem; font-size: 0.95rem; background: transparent; border: 1px solid var(--border-color); color: var(--text-primary);">
+                📥 Restaurar Datos
+            </button>
+        </div>
+
+        <div id="sync-message-cloud" style="text-align: center; font-size: 0.8rem; color: var(--text-muted);"></div>
+    </div>
+</section>

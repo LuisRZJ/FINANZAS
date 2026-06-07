@@ -780,6 +780,106 @@
             }
         };
 
+        // --- SERVICIOS DE INDEXEDDB ---
+        const DB_NAME = 'GTRTradingFTTDB';
+        const STORE_NAME = 'keyval';
+        const DB_VERSION = 1;
+        let dbPromise = null;
+
+        const getDB = () => {
+            if (!dbPromise) {
+                dbPromise = new Promise((resolve, reject) => {
+                    const request = window.indexedDB.open(DB_NAME, DB_VERSION);
+                    request.onerror = (e) => reject('Error abriendo IndexedDB: ' + e.target.error);
+                    request.onsuccess = (e) => resolve(e.target.result);
+                    request.onupgradeneeded = (e) => {
+                        const db = e.target.result;
+                        if (!db.objectStoreNames.contains(STORE_NAME)) {
+                            db.createObjectStore(STORE_NAME);
+                        }
+                    };
+                });
+            }
+            return dbPromise;
+        };
+
+        const dbGetItem = async (key, fallback = null) => {
+            try {
+                const db = await getDB();
+                return new Promise((resolve) => {
+                    const tx = db.transaction(STORE_NAME, 'readonly');
+                    const store = tx.objectStore(STORE_NAME);
+                    const req = store.get(key);
+                    req.onsuccess = () => {
+                        resolve(req.result !== undefined ? req.result : fallback);
+                    };
+                    req.onerror = () => resolve(fallback);
+                });
+            } catch (e) {
+                console.error(e);
+                return fallback;
+            }
+        };
+
+        const dbSetItem = async (key, value) => {
+            try {
+                const db = await getDB();
+                return new Promise((resolve) => {
+                    const tx = db.transaction(STORE_NAME, 'readwrite');
+                    const store = tx.objectStore(STORE_NAME);
+                    const req = store.put(value, key);
+                    req.onsuccess = () => resolve(true);
+                    req.onerror = () => resolve(false);
+                });
+            } catch (e) {
+                console.error(e);
+                return false;
+            }
+        };
+
+        const dbRemoveItem = async (key) => {
+            try {
+                const db = await getDB();
+                return new Promise((resolve) => {
+                    const tx = db.transaction(STORE_NAME, 'readwrite');
+                    const store = tx.objectStore(STORE_NAME);
+                    const req = store.delete(key);
+                    req.onsuccess = () => resolve(true);
+                    req.onerror = () => resolve(false);
+                });
+            } catch (e) {
+                console.error(e);
+                return false;
+            }
+        };
+
+        const migrarLocalStorageAIndexedDB = async () => {
+            const yaMigrado = await dbGetItem(ACCOUNT_STORAGE_KEY);
+            if (yaMigrado) return; // Ya migrado anteriormente
+
+            const localState = storageGetItem(ACCOUNT_STORAGE_KEY);
+            if (localState) {
+                console.log("Iniciando migración automática de FTT a IndexedDB...");
+                await dbSetItem(ACCOUNT_STORAGE_KEY, localState);
+                
+                const localTheme = storageGetItem(THEME_PREF_KEY);
+                if (localTheme) await dbSetItem(THEME_PREF_KEY, localTheme);
+                
+                const localWebhook = storageGetItem(DISCORD_WEBHOOK_STORAGE_KEY);
+                if (localWebhook) await dbSetItem(DISCORD_WEBHOOK_STORAGE_KEY, localWebhook);
+                
+                const localSyncTime = storageGetItem('bt_last_sync_timestamp');
+                if (localSyncTime) await dbSetItem('bt_last_sync_timestamp', localSyncTime);
+                
+                // Eliminar claves de LocalStorage (manteniendo las de sesión compartida)
+                storageRemoveItem(ACCOUNT_STORAGE_KEY);
+                storageRemoveItem(THEME_PREF_KEY);
+                storageRemoveItem(DISCORD_WEBHOOK_STORAGE_KEY);
+                storageRemoveItem('bt_last_sync_timestamp');
+                console.log("Migración completada con éxito. Datos movidos a IndexedDB.");
+            }
+        };
+
         const safeJsonParse = (raw, fallback) => {
             if (typeof raw !== 'string' || !raw) return fallback;
             try {
@@ -804,13 +904,6 @@
         };
 
         let discordWebhookUrl = '';
-        const storedDiscordWebhook = storageGetItem(DISCORD_WEBHOOK_STORAGE_KEY);
-        const normalizedStoredWebhook = normalizeDiscordWebhookUrl(storedDiscordWebhook);
-        if (normalizedStoredWebhook) {
-            discordWebhookUrl = normalizedStoredWebhook;
-        } else if (storedDiscordWebhook) {
-            storageRemoveItem(DISCORD_WEBHOOK_STORAGE_KEY);
-        }
 
         if (window.marked) {
             window.marked.setOptions({ gfm: true, breaks: true });
@@ -839,8 +932,8 @@
             };
         };
 
-        const loadAccountState = () => {
-            const stored = storageGetItem(ACCOUNT_STORAGE_KEY);
+        const loadAccountState = async () => {
+            const stored = await dbGetItem(ACCOUNT_STORAGE_KEY);
             if (stored) {
                 try {
                     const parsed = JSON.parse(stored);
@@ -876,29 +969,17 @@
             if (hasLegacy) {
                 ['trades', 'assets', 'strategies'].forEach(key => storageRemoveItem(key));
             }
-            storageSetItem(ACCOUNT_STORAGE_KEY, JSON.stringify(defaultState));
+            await dbSetItem(ACCOUNT_STORAGE_KEY, JSON.stringify(defaultState));
             return defaultState;
         };
 
-        let accountState = loadAccountState();
-        const defaultAccountMeta = getDefaultAccountMeta(accountState);
-        let currentAccountId = defaultAccountMeta ? defaultAccountMeta.id : null;
+        let accountState = null;
+        let currentAccountId = null;
+        let trades = [];
+        let strategies = [];
+        let assets = [];
 
-        if (currentAccountId && !accountState.data[currentAccountId]) {
-            accountState.data[currentAccountId] = createEmptyCollections();
-        }
-
-        accountState.activeAccountId = currentAccountId;
-
-        let trades = currentAccountId ? accountState.data[currentAccountId].trades || [] : [];
-        let strategies = currentAccountId ? accountState.data[currentAccountId].strategies || [] : [];
-        let assets = currentAccountId ? accountState.data[currentAccountId].assets || [] : [];
-
-        const saveAccountState = () => storageSetItem(ACCOUNT_STORAGE_KEY, JSON.stringify(accountState));
-
-        if (currentAccountId) {
-            saveAccountState();
-        }
+        const saveAccountState = async () => await dbSetItem(ACCOUNT_STORAGE_KEY, JSON.stringify(accountState));
 
         const cloneTrade = (trade) => ({
             ...trade,
@@ -911,7 +992,7 @@
         let monthlyInitialized = false;
         const cloneSimpleItem = (item) => ({ ...item });
 
-        const persistCurrentAccount = () => {
+        const persistCurrentAccount = async () => {
             if (!currentAccountId) return;
             const prev = accountState.data[currentAccountId] || createEmptyCollections();
             accountState.data[currentAccountId] = {
@@ -922,19 +1003,19 @@
                 monthlyTargetProfit: typeof prev.monthlyTargetProfit === 'number' ? prev.monthlyTargetProfit : 0,
                 objectivesNote: typeof prev.objectivesNote === 'string' ? prev.objectivesNote : ''
             };
-            saveAccountState();
+            await saveAccountState();
             ensureAccountDataStructure(currentAccountId);
         };
 
         const getAccountById = (accountId) => accountState.accounts.find(account => account.id === accountId);
 
-        const setCurrentAccountToDefault = () => {
+        const setCurrentAccountToDefault = async () => {
             const defaultMeta = getDefaultAccountMeta(accountState);
             if (!defaultMeta) return;
             currentAccountId = defaultMeta.id;
             accountState.activeAccountId = currentAccountId;
             ensureAccountDataStructure(currentAccountId);
-            saveAccountState();
+            await saveAccountState();
         };
 
         const ensureAccountDataStructure = (accountId) => {
@@ -973,18 +1054,18 @@
             }
         };
 
-        const handleAccountChange = () => {
+        const handleAccountChange = async () => {
             const selectedId = accountSelect.value;
             if (!selectedId || selectedId === currentAccountId) {
                 renderAccountSection();
                 return;
             }
 
-            persistCurrentAccount();
+            await persistCurrentAccount();
             currentAccountId = selectedId;
             accountState.activeAccountId = currentAccountId;
             ensureAccountDataStructure(currentAccountId);
-            migrateData();
+            await migrateData();
             cancelEditMode();
             fullRefreshUI();
             const meta = getAccountById(currentAccountId);
@@ -992,7 +1073,7 @@
             showToast(`Cuenta "${accountName}" cargada.`);
         };
 
-        const handleAddAccount = (e) => {
+        const handleAddAccount = async (e) => {
             e.preventDefault();
             const name = newAccountInput.value.trim();
             if (!name) {
@@ -1004,12 +1085,12 @@
                 return;
             }
 
-            persistCurrentAccount();
+            await persistCurrentAccount();
 
             const newAccountId = createId();
             accountState.accounts.push({ id: newAccountId, name, locked: false, createdAt: Date.now() });
             accountState.data[newAccountId] = createEmptyCollections();
-            saveAccountState();
+            await saveAccountState();
 
             if (addAccountForm) addAccountForm.reset();
             cancelEditMode();
@@ -1017,7 +1098,7 @@
             showToast(`Cuenta "${name}" creada. Selecciónala desde Ajustes para usarla.`);
         };
 
-        const handleDeleteAccount = () => {
+        const handleDeleteAccount = async () => {
             const account = getAccountById(currentAccountId);
             if (!account) return;
             if (account.locked || accountState.accounts.length <= 1) {
@@ -1029,12 +1110,12 @@
                 return;
             }
 
-            persistCurrentAccount();
+            await persistCurrentAccount();
 
             accountState.accounts = accountState.accounts.filter(item => item.id !== currentAccountId);
             delete accountState.data[currentAccountId];
 
-            setCurrentAccountToDefault();
+            await setCurrentAccountToDefault();
 
             cancelEditMode();
             fullRefreshUI();
@@ -1052,7 +1133,7 @@
             editAccountInput.focus();
         };
 
-        const handleUpdateAccountName = (e) => {
+        const handleUpdateAccountName = async (e) => {
             e.preventDefault();
             const account = getAccountById(currentAccountId);
             if (!account || account.locked) {
@@ -1070,7 +1151,7 @@
                 return;
             }
             account.name = newName;
-            saveAccountState();
+            await saveAccountState();
             renderAccountSection();
             renderStorageSummary();
             showToast('Cuenta actualizada.');
@@ -1430,7 +1511,7 @@
                 const indexResult = await indexRes.json();
                 if (!indexRes.ok) throw new Error(indexResult.error || 'Error al guardar el índice en la nube.');
 
-                storageSetItem('bt_last_sync_timestamp', exportTimestamp);
+                await dbSetItem('bt_last_sync_timestamp', exportTimestamp);
                 showSyncMessage(`✓ Sincronizado correctamente: ${accountState.accounts.length} cuenta(s) respaldada(s).`, false);
                 showToast('Respaldo en la nube exitoso.');
             } catch (err) {
@@ -1506,12 +1587,12 @@
                 const importedWebhook = normalizeDiscordWebhookUrl(accountState.discordWebhookUrl);
                 if (importedWebhook) {
                     discordWebhookUrl = importedWebhook;
-                    storageSetItem(DISCORD_WEBHOOK_STORAGE_KEY, importedWebhook);
+                    await dbSetItem(DISCORD_WEBHOOK_STORAGE_KEY, importedWebhook);
                 }
 
-                storageSetItem('bt_last_sync_timestamp', indexResult.data.exportadoEn);
+                await dbSetItem('bt_last_sync_timestamp', indexResult.data.exportadoEn);
 
-                setCurrentAccountToDefault();
+                await setCurrentAccountToDefault();
                 cancelEditMode();
                 fullRefreshUI();
 
@@ -1554,7 +1635,7 @@
                 const check = await verificarSeguridadSincronizacionCloud();
                 if (!check.safe || !check.hasCloudData) return;
 
-                const lastSyncStr = storageGetItem('bt_last_sync_timestamp');
+                const lastSyncStr = await dbGetItem('bt_last_sync_timestamp');
                 const cloudDate = new Date(check.cloudTimestamp);
                 
                 let hasNewerData = false;
@@ -1632,12 +1713,12 @@
                                 const importedWebhook = normalizeDiscordWebhookUrl(accountState.discordWebhookUrl);
                                 if (importedWebhook) {
                                     discordWebhookUrl = importedWebhook;
-                                    storageSetItem(DISCORD_WEBHOOK_STORAGE_KEY, importedWebhook);
+                                    await dbSetItem(DISCORD_WEBHOOK_STORAGE_KEY, importedWebhook);
                                 }
                                 
-                                storageSetItem('bt_last_sync_timestamp', indexResult.data.exportadoEn);
+                                await dbSetItem('bt_last_sync_timestamp', indexResult.data.exportadoEn);
 
-                                setCurrentAccountToDefault();
+                                await setCurrentAccountToDefault();
                                 cancelEditMode();
                                 fullRefreshUI();
                                 showToast('Restauración inicial exitosa.');
@@ -1705,17 +1786,55 @@
 
 
         // --- INICIALIZACIÓN ---
-        const init = () => {
+        const init = async () => {
             setupEventListeners();
-            initTheme();
-            migrateData();
+
+            // 1. Asegurar base de datos y migrar datos desde LocalStorage si existen
+            await migrarLocalStorageAIndexedDB();
+
+            // 2. Inicializar preferencia de tema
+            await initTheme();
+
+            // 3. Inicializar discord webhook
+            const storedDiscordWebhook = await dbGetItem(DISCORD_WEBHOOK_STORAGE_KEY);
+            const normalizedStoredWebhook = normalizeDiscordWebhookUrl(storedDiscordWebhook);
+            if (normalizedStoredWebhook) {
+                discordWebhookUrl = normalizedStoredWebhook;
+            } else if (storedDiscordWebhook) {
+                await dbRemoveItem(DISCORD_WEBHOOK_STORAGE_KEY);
+            }
+
+            // 4. Inicializar estado de cuentas
+            accountState = await loadAccountState();
+            const defaultAccountMeta = getDefaultAccountMeta(accountState);
+            currentAccountId = defaultAccountMeta ? defaultAccountMeta.id : null;
+
+            if (currentAccountId && !accountState.data[currentAccountId]) {
+                accountState.data[currentAccountId] = createEmptyCollections();
+            }
+
+            if (accountState) {
+                accountState.activeAccountId = currentAccountId;
+            }
+
+            trades = currentAccountId ? accountState.data[currentAccountId].trades || [] : [];
+            strategies = currentAccountId ? accountState.data[currentAccountId].strategies || [] : [];
+            assets = currentAccountId ? accountState.data[currentAccountId].assets || [] : [];
+
+            if (currentAccountId) {
+                await saveAccountState();
+            }
+
+            // 5. Migración de estructura de datos (si la hay)
+            await migrateData();
+
             if (fechaInput) fechaInput.value = getCurrentDateTimeLocalString();
             fullRefreshUI();
             updateAuthUICloud();
             verificarNubeInicioCloud().catch(err => console.error("Error en verificarNubeInicioCloud:", err));
         };
         
-        const migrateData = () => {
+        const migrateData = async () => {
             let dataWasMigrated = false;
             if (strategies.length > 0 && typeof strategies[0] === 'string') {
                 strategies = strategies.map(name => ({ id: createId(), name }));
@@ -1746,7 +1865,7 @@
             });
 
             if (dataWasMigrated) {
-                persistCurrentAccount();
+                await persistCurrentAccount();
             }
         };
 
@@ -1864,7 +1983,7 @@
         };
 
         // --- LÓGICA DE OPERACIONES (TRADES) ---
-        const handleFormSubmit = (e) => {
+        const handleFormSubmit = async (e) => {
             e.preventDefault();
             const formData = new FormData(tradeForm);
             const monto = parseFloat(formData.get('monto'));
@@ -1899,7 +2018,7 @@
                 tradeForm.reset();
                 fechaInput.value = getCurrentDateTimeLocalString();
             }
-            persistCurrentAccount();
+            await persistCurrentAccount();
             fullRefreshUI();
         };
         
@@ -1947,10 +2066,10 @@
             cancelEditBtn.classList.add('hidden');
         };
 
-        const confirmDeleteTrade = () => {
+        const confirmDeleteTrade = async () => {
             if (tradeIdToDelete) {
                 trades = trades.filter(trade => trade.id !== tradeIdToDelete);
-                persistCurrentAccount();
+                await persistCurrentAccount();
                 fullRefreshUI();
                 showToast('Operación eliminada.', true);
                 toggleModal('delete-modal', false);
@@ -1960,12 +2079,12 @@
 
         // --- LÓGICA DE GESTIÓN (ACTIVOS Y ESTRATEGIAS) ---
         
-        const handleAddAsset = (e) => {
+        const handleAddAsset = async (e) => {
             e.preventDefault();
             const name = newAssetInput.value.trim();
             if (name && !assets.some(item => item.name.toLowerCase() === name.toLowerCase())) {
                 assets.push({ id: createId(), name });
-                persistCurrentAccount();
+                await persistCurrentAccount();
                 fullRefreshUI();
                 newAssetInput.value = '';
                 showToast('Activo añadido.');
@@ -1974,12 +2093,12 @@
             }
         };
         
-        const handleAddStrategy = (e) => {
+        const handleAddStrategy = async (e) => {
             e.preventDefault();
             const name = newStrategyInput.value.trim();
             if (name && !strategies.some(item => item.name.toLowerCase() === name.toLowerCase())) {
                 strategies.push({ id: createId(), name });
-                persistCurrentAccount();
+                await persistCurrentAccount();
                 fullRefreshUI();
                 newStrategyInput.value = '';
                 showToast('Estrategia añadida.');
@@ -2026,14 +2145,14 @@
             }
         };
 
-        const handleUpdateAsset = (e) => {
+        const handleUpdateAsset = async (e) => {
             e.preventDefault();
             const newName = editAssetInput.value.trim();
             const isDuplicate = assets.some(item => item.name.toLowerCase() === newName.toLowerCase() && item.id !== editingAssetId);
             if (newName && !isDuplicate) {
                 const itemIndex = assets.findIndex(item => item.id === editingAssetId);
                 if (itemIndex > -1) assets[itemIndex].name = newName;
-                persistCurrentAccount();
+                await persistCurrentAccount();
                 fullRefreshUI();
                 showToast('Activo actualizado.');
                 toggleModal('edit-asset-modal', false);
@@ -2042,14 +2161,14 @@
             }
         };
         
-        const handleUpdateStrategy = (e) => {
+        const handleUpdateStrategy = async (e) => {
             e.preventDefault();
             const newName = editStrategyInput.value.trim();
             const isDuplicate = strategies.some(item => item.name.toLowerCase() === newName.toLowerCase() && item.id !== editingStrategyId);
             if (newName && !isDuplicate) {
                 const itemIndex = strategies.findIndex(item => item.id === editingStrategyId);
                 if(itemIndex > -1) strategies[itemIndex].name = newName;
-                persistCurrentAccount();
+                await persistCurrentAccount();
                 fullRefreshUI();
                 showToast('Estrategia actualizada.');
                 toggleModal('edit-strategy-modal', false);
@@ -2058,10 +2177,10 @@
             }
         };
 
-        const confirmDeleteAsset = () => {
+        const confirmDeleteAsset = async () => {
             if (assetIdToDelete) {
                 assets = assets.filter(item => item.id !== assetIdToDelete);
-                persistCurrentAccount();
+                await persistCurrentAccount();
                 fullRefreshUI();
                 showToast('Activo eliminado.', true);
                 toggleModal('delete-asset-modal', false);
@@ -2069,10 +2188,10 @@
             }
         };
 
-        const confirmDeleteStrategy = () => {
+        const confirmDeleteStrategy = async () => {
             if (strategyIdToDelete) {
                 strategies = strategies.filter(item => item.id !== strategyIdToDelete);
-                persistCurrentAccount();
+                await persistCurrentAccount();
                 fullRefreshUI();
                 showToast('Estrategia eliminada.', true);
                 toggleModal('delete-strategy-modal', false);
@@ -2260,7 +2379,7 @@
             }
         };
         
-        const confirmImportData = () => {
+        const confirmImportData = async () => {
             if (!dataToImport) return;
 
             if (dataToImport.type === 'multi') {
@@ -2268,9 +2387,9 @@
                 const importedWebhook = normalizeDiscordWebhookUrl(accountState.discordWebhookUrl);
                 if (importedWebhook) {
                     discordWebhookUrl = importedWebhook;
-                    storageSetItem(DISCORD_WEBHOOK_STORAGE_KEY, importedWebhook);
+                    await dbSetItem(DISCORD_WEBHOOK_STORAGE_KEY, importedWebhook);
                 }
-                setCurrentAccountToDefault();
+                await setCurrentAccountToDefault();
                 cancelEditMode();
                 fullRefreshUI();
                 showToast("Se importaron todas las cuentas correctamente.");
@@ -2285,10 +2404,10 @@
                 const importedWebhook = normalizeDiscordWebhookUrl(payload.discordWebhookUrl);
                 if (importedWebhook) {
                     discordWebhookUrl = importedWebhook;
-                    storageSetItem(DISCORD_WEBHOOK_STORAGE_KEY, importedWebhook);
+                    await dbSetItem(DISCORD_WEBHOOK_STORAGE_KEY, importedWebhook);
                 }
-                persistCurrentAccount();
-                setCurrentAccountToDefault();
+                await persistCurrentAccount();
+                await setCurrentAccountToDefault();
                 cancelEditMode();
                 fullRefreshUI();
                 showToast("Datos de la cuenta actual importados correctamente.");
@@ -2298,10 +2417,11 @@
             toggleModal('import-data-modal', false);
         };
         
-        const confirmDeleteAllData = () => {
-            storageRemoveItem(ACCOUNT_STORAGE_KEY);
-            storageRemoveItem(THEME_PREF_KEY);
-            storageRemoveItem(DISCORD_WEBHOOK_STORAGE_KEY);
+        const confirmDeleteAllData = async () => {
+            await dbRemoveItem(ACCOUNT_STORAGE_KEY);
+            await dbRemoveItem(THEME_PREF_KEY);
+            await dbRemoveItem(DISCORD_WEBHOOK_STORAGE_KEY);
+            await dbRemoveItem('bt_last_sync_timestamp');
             ['trades', 'assets', 'strategies'].forEach(key => storageRemoveItem(key));
 
             accountState = createDefaultAccountState();
@@ -2311,7 +2431,7 @@
             assets = accountState.data[currentAccountId].assets;
             strategies = accountState.data[currentAccountId].strategies;
             discordWebhookUrl = '';
-            saveAccountState();
+            await saveAccountState();
 
             cancelEditMode();
             fullRefreshUI();
@@ -2345,7 +2465,7 @@
             if (exportDiscordBtn) exportDiscordBtn.disabled = !isConfigured;
         };
 
-        const handleSaveDiscordWebhook = () => {
+        const handleSaveDiscordWebhook = async () => {
             if (!discordWebhookInput) return;
             const normalized = normalizeDiscordWebhookUrl(discordWebhookInput.value);
             if (normalized === null) {
@@ -2353,11 +2473,11 @@
                 return;
             }
             if (!normalized) {
-                handleClearDiscordWebhook();
+                await handleClearDiscordWebhook();
                 return;
             }
             discordWebhookUrl = normalized;
-            const stored = storageSetItem(DISCORD_WEBHOOK_STORAGE_KEY, normalized);
+            const stored = await dbSetItem(DISCORD_WEBHOOK_STORAGE_KEY, normalized);
             if (!stored) {
                 showToast('No se pudo guardar el webhook en este navegador.', true);
                 return;
@@ -2366,9 +2486,9 @@
             showToast('Webhook guardado.');
         };
 
-        const handleClearDiscordWebhook = () => {
+        const handleClearDiscordWebhook = async () => {
             discordWebhookUrl = '';
-            storageRemoveItem(DISCORD_WEBHOOK_STORAGE_KEY);
+            await dbRemoveItem(DISCORD_WEBHOOK_STORAGE_KEY);
             renderDiscordWebhookSettings();
             showToast('Webhook eliminado.');
         };
@@ -3203,26 +3323,26 @@
                 }
             }
         };
-        const handleMonthlyTargetChange = () => {
+        const handleMonthlyTargetChange = async () => {
             if (!monthlyTargetInput) return;
             const raw = monthlyTargetInput.value.trim();
             const num = Number(raw);
             const val = isFinite(num) && num >= 0 ? num : 0;
             ensureAccountDataStructure(currentAccountId);
             accountState.data[currentAccountId].monthlyTargetProfit = val;
-            saveAccountState();
+            await saveAccountState();
             renderObjectives();
         };
-        const handleSaveMonthlyTarget = () => {
-            handleMonthlyTargetChange();
-            persistCurrentAccount();
+        const handleSaveMonthlyTarget = async () => {
+            await handleMonthlyTargetChange();
+            await persistCurrentAccount();
             showToast('Meta mensual guardada.');
         };
-        const handleSaveAccountNote = () => {
+        const handleSaveAccountNote = async () => {
             if (!accountObjectivesNote) return;
             ensureAccountDataStructure(currentAccountId);
             accountState.data[currentAccountId].objectivesNote = accountObjectivesNote.value;
-            persistCurrentAccount();
+            await persistCurrentAccount();
             renderObjectives();
             showToast('Nota de objetivos guardada.');
         };
@@ -3319,13 +3439,13 @@
             copy.splice(targetIndex, 0, item);
             return copy;
         };
-        const handleMoveAction = (type, id, direction) => {
+        const handleMoveAction = async (type, id, direction) => {
             const delta = direction === 'up' ? -1 : 1;
             if (type === 'asset') {
                 const reordered = moveCollectionItem(assets, id, delta);
                 if (reordered) {
                     assets = reordered;
-                    persistCurrentAccount();
+                    await persistCurrentAccount();
                     renderAssetList();
                     showToast('Orden de activos actualizado.');
                 }
@@ -3333,7 +3453,7 @@
                 const reordered = moveCollectionItem(strategies, id, delta);
                 if (reordered) {
                     strategies = reordered;
-                    persistCurrentAccount();
+                    await persistCurrentAccount();
                     renderStrategyList();
                     showToast('Orden de estrategias actualizado.');
                 }
@@ -3386,25 +3506,25 @@
             if (meta) meta.setAttribute('content', isDark ? '#0f172a' : '#2563eb');
         };
         let themePreference = 'auto';
-        const applyTheme = (pref, notify=false) => {
+        const applyTheme = async (pref, notify=false) => {
             themePreference = pref;
-            storageSetItem(THEME_PREF_KEY, pref);
+            await dbSetItem(THEME_PREF_KEY, pref);
             const isDark = pref === 'dark' ? true : pref === 'light' ? false : prefersDarkMql.matches;
             document.documentElement.classList.toggle('dark', isDark);
             setMetaThemeColor(isDark);
             if (notify) showToast('Preferencia de tema actualizada.');
         };
-        const initTheme = () => {
-            const stored = storageGetItem(THEME_PREF_KEY);
+        const initTheme = async () => {
+            const stored = await dbGetItem(THEME_PREF_KEY);
             themePreference = stored || 'auto';
-            applyTheme(themePreference);
+            await applyTheme(themePreference);
             const radios = document.querySelectorAll('input[name="theme-preference"]');
             radios.forEach(r => r.checked = r.value === themePreference);
-            prefersDarkMql.addEventListener('change', () => { if (themePreference === 'auto') applyTheme('auto'); });
+            prefersDarkMql.addEventListener('change', async () => { if (themePreference === 'auto') await applyTheme('auto'); });
         };
-        const handleThemeChange = (e) => {
+        const handleThemeChange = async (e) => {
             const value = e.target.value;
-            applyTheme(value, true);
+            await applyTheme(value, true);
         };
         init();
     });

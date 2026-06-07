@@ -6294,3 +6294,332 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.addEventListener('click', runMonteCarlo);
   }
 });
+
+// ==========================================
+// SERVICIOS DE SINCRONIZACIÓN EN LA NUBE
+// ==========================================
+const CLOUD_PASSWORD_KEY = 'fti_cloud_password';
+const CLOUD_PASSWORD_DATE_KEY = 'fti_cloud_password_date';
+const SYNC_TIMESTAMP_KEY = 'trading_last_sync_timestamp';
+const EXPIRATION_DAYS = 15;
+const MS_PER_DAY = 1000 * 60 * 60 * 24;
+
+function estaAutenticadoEnNube() {
+  const pwd = originalLocalStorageGetItem(CLOUD_PASSWORD_KEY);
+  const dateStr = originalLocalStorageGetItem(CLOUD_PASSWORD_DATE_KEY);
+  if (!pwd || !dateStr) return false;
+  const date = parseInt(dateStr, 10);
+  if (isNaN(date)) return false;
+  return (Date.now() - date) / MS_PER_DAY <= EXPIRATION_DAYS;
+}
+
+function obtenerPasswordNube() {
+  return estaAutenticadoEnNube() ? originalLocalStorageGetItem(CLOUD_PASSWORD_KEY) : null;
+}
+
+function guardarPasswordNube(password) {
+  if (!password) return;
+  originalLocalStorageSetItem(CLOUD_PASSWORD_KEY, password);
+  originalLocalStorageSetItem(CLOUD_PASSWORD_DATE_KEY, Date.now().toString());
+}
+
+function cerrarSesionNube() {
+  originalLocalStorageRemoveItem(CLOUD_PASSWORD_KEY);
+  originalLocalStorageRemoveItem(CLOUD_PASSWORD_DATE_KEY);
+}
+
+function buildCloudExportState() {
+  const accountsMeta = readAccountsMeta();
+  const activeAccountId = getActiveAccountId();
+  const accounts = {};
+  accountsMeta.forEach(account => {
+    accounts[account.id] = readAccountData(account.id);
+  });
+  return {
+    format: 'tradingAccountsExport',
+    scope: 'all',
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    activeAccountId,
+    accountsMeta,
+    accounts
+  };
+}
+
+function restoreCloudImportState(parsed) {
+  if (!parsed || parsed.format !== 'tradingAccountsExport') return false;
+  const currentMeta = readAccountsMeta();
+  currentMeta.forEach(account => {
+    originalLocalStorageRemoveItem(ACCOUNT_DATA_PREFIX + account.id);
+  });
+  writeAccountsMeta(parsed.accountsMeta);
+  parsed.accountsMeta.forEach(account => {
+    const data = parsed.accounts[account.id] || {};
+    writeAccountData(account.id, data);
+  });
+  const nextActive = parsed.activeAccountId && parsed.accountsMeta.some(a => a.id === parsed.activeAccountId)
+    ? parsed.activeAccountId
+    : (parsed.accountsMeta[0] ? parsed.accountsMeta[0].id : null);
+  if (nextActive) {
+    setActiveAccountId(nextActive);
+  }
+  return true;
+}
+
+async function verificarSeguridadSincronizacionCloud() {
+  if (!estaAutenticadoEnNube()) {
+    return { safe: false, reason: 'No hay sesión activa' };
+  }
+  try {
+    const password = obtenerPasswordNube();
+    const response = await fetch('/api/sync?module=trading&index=true', {
+      method: 'GET',
+      headers: { 'Authorization': `Bearer ${password}` }
+    });
+    if (!response.ok) {
+      return { safe: false, reason: 'Error al contactar con la nube' };
+    }
+    const data = await response.json();
+    if (!data.exists) {
+      return { safe: true, hasCloudData: false };
+    }
+    const cloudTimestamp = data.data.exportadoEn || new Date().toISOString();
+    return { safe: true, cloudTimestamp, hasCloudData: true };
+  } catch (error) {
+    return { safe: false, reason: error.message };
+  }
+}
+
+async function respaldarDatosNube(onProgress, onSuccess, onError) {
+  if (!estaAutenticadoEnNube()) {
+    if (onError) onError('Debes autorizar la sesión primero.');
+    return;
+  }
+  const password = obtenerPasswordNube();
+  try {
+    if (onProgress) onProgress('Generando respaldo...', 0);
+    const exportState = buildCloudExportState();
+    const jsonString = JSON.stringify(exportState);
+    const CHUNK_SIZE_CHARS = 3 * 1024 * 1024; // 3MB
+    const chunks = [];
+    for (let i = 0; i < jsonString.length; i += CHUNK_SIZE_CHARS) {
+      chunks.push(jsonString.slice(i, i + CHUNK_SIZE_CHARS));
+    }
+    for (let i = 0; i < chunks.length; i++) {
+      if (onProgress) onProgress(`Subiendo parte ${i + 1}/${chunks.length}...`, Math.round(((i + 1) / (chunks.length + 1)) * 100));
+      const res = await fetch(`/api/sync?module=trading&part=${i}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/plain',
+          'Authorization': `Bearer ${password}`
+        },
+        body: chunks[i]
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || `Error al subir la parte ${i+1}/${chunks.length}`);
+    }
+    if (onProgress) onProgress('Subiendo índice de sincronización...', 95);
+    const exportTimestamp = new Date().toISOString();
+    const indexObj = {
+      parts: chunks.length,
+      exportadoEn: exportTimestamp,
+      version: 1
+    };
+    const indexRes = await fetch(`/api/sync?module=trading&index=true`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${password}`
+      },
+      body: JSON.stringify(indexObj)
+    });
+    const indexResult = await indexRes.json();
+    if (!indexRes.ok) throw new Error(indexResult.error || 'Error al guardar el índice en la nube.');
+    originalLocalStorageSetItem(SYNC_TIMESTAMP_KEY, exportTimestamp);
+    if (onSuccess) onSuccess(exportTimestamp);
+  } catch (err) {
+    if (onError) onError(err.message);
+  }
+}
+
+async function restaurarDatosNube(onProgress, onSuccess, onError) {
+  if (!estaAutenticadoEnNube()) {
+    if (onError) onError('Debes autorizar la sesión primero.');
+    return;
+  }
+  const password = obtenerPasswordNube();
+  try {
+    if (onProgress) onProgress('Descargando índice de respaldo...', 5);
+    const indexRes = await fetch(`/api/sync?module=trading&index=true`, {
+      method: 'GET',
+      headers: { 'Authorization': `Bearer ${password}` }
+    });
+    const indexResult = await indexRes.json();
+    if (!indexRes.ok) throw new Error(indexResult.error || 'Error al obtener el índice de la nube');
+    if (!indexResult.exists || !indexResult.data) {
+      throw new Error('No se encontraron datos de respaldo de trading en la nube.');
+    }
+    const partsCount = indexResult.data.parts || 1;
+    const chunks = [];
+    for (let i = 0; i < partsCount; i++) {
+      if (onProgress) onProgress(`Descargando parte ${i + 1}/${partsCount}...`, Math.round(((i + 1) / (partsCount + 1)) * 100));
+      const partRes = await fetch(`/api/sync?module=trading&part=${i}`, {
+        method: 'GET',
+        headers: { 'Authorization': `Bearer ${password}` }
+      });
+      const partResult = await partRes.json();
+      if (!partRes.ok) throw new Error(partResult.error || `Error al descargar parte ${i + 1}/${partsCount}`);
+      if (!partResult.exists) throw new Error(`Parte ${i + 1}/${partsCount} no encontrada.`);
+      chunks.push(partResult.raw || JSON.stringify(partResult.data));
+    }
+    if (onProgress) onProgress('Procesando datos descargados...', 95);
+    const fullJsonStr = chunks.join('');
+    const parsedData = JSON.parse(fullJsonStr);
+    const success = restoreCloudImportState(parsedData);
+    if (!success) {
+      throw new Error('El archivo recuperado no tiene un formato multicuenta válido.');
+    }
+    originalLocalStorageSetItem(SYNC_TIMESTAMP_KEY, indexResult.data.exportadoEn);
+    if (onSuccess) onSuccess(indexResult.data.exportadoEn);
+  } catch (err) {
+    if (onError) onError(err.message);
+  }
+}
+
+async function verificarNubeInicioCloud() {
+  if (sessionStorage.getItem('trading_local_session_only') === 'true') {
+    return;
+  }
+  const crearModalBloqueante = (htmlContent) => {
+    const overlay = document.createElement('div');
+    overlay.className = 'fixed inset-0 bg-gray-900/80 backdrop-blur-sm flex items-center justify-center z-[100] animate-fade-in';
+    overlay.id = 'modal-inicio-nube-cloud';
+    const modal = document.createElement('div');
+    modal.className = 'bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-md w-full mx-4 p-6 relative overflow-hidden text-gray-800 dark:text-gray-200';
+    modal.innerHTML = htmlContent;
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+    document.body.style.overflow = 'hidden';
+    return overlay;
+  };
+  const cerrarModal = (overlay) => {
+    overlay.remove();
+    document.body.style.overflow = '';
+  };
+  const chequearDatosNuevosCloud = async () => {
+    const check = await verificarSeguridadSincronizacionCloud();
+    if (!check.safe || !check.hasCloudData) return;
+    const lastSyncStr = originalLocalStorageGetItem(SYNC_TIMESTAMP_KEY);
+    const cloudDate = new Date(check.cloudTimestamp);
+    let hasNewerData = false;
+    if (!lastSyncStr) {
+      hasNewerData = true;
+    } else {
+      const localDate = new Date(lastSyncStr);
+      if (cloudDate.getTime() > localDate.getTime() + 5000) {
+        hasNewerData = true;
+      }
+    }
+    if (hasNewerData) {
+      return new Promise((resolve) => {
+        const overlay = crearModalBloqueante(`
+          <div class="text-center">
+            <div class="w-12 h-12 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center mx-auto mb-4 text-orange-600 dark:text-orange-400">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Datos de Trading más recientes en la nube</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-6">
+              Se detectó un respaldo de trading más actualizado en la nube (${cloudDate.toLocaleString()}). ¿Deseas restaurarlo ahora?
+            </p>
+            <div id="restore-loading-cloud" class="hidden mb-4 text-sm font-medium text-orange-600">Descargando datos...</div>
+            <div class="flex flex-col gap-3 mt-2" id="restore-actions-cloud">
+              <button type="button" id="btn-do-restore-cloud" class="w-full px-4 py-2 rounded-md text-sm font-medium bg-orange-600 hover:bg-orange-700 text-white shadow-sm transition-colors">
+                Sí, restaurar datos de trading
+              </button>
+              <button type="button" id="btn-skip-restore-cloud" class="w-full px-4 py-2 rounded-md text-sm font-medium border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                Continuar en local
+              </button>
+            </div>
+          </div>
+        `);
+        document.getElementById('btn-skip-restore-cloud').addEventListener('click', () => {
+          sessionStorage.setItem('trading_local_session_only', 'true');
+          cerrarModal(overlay);
+          resolve();
+        });
+        document.getElementById('btn-do-restore-cloud').addEventListener('click', async () => {
+          const actions = document.getElementById('restore-actions-cloud');
+          const loading = document.getElementById('restore-loading-cloud');
+          if (actions) actions.classList.add('hidden');
+          if (loading) loading.classList.remove('hidden');
+          await restaurarDatosNube(
+            (msg) => { if (loading) loading.textContent = msg; },
+            () => {
+              alert('Restauración inicial exitosa.');
+              cerrarModal(overlay);
+              resolve();
+              location.reload();
+            },
+            (err) => {
+              alert('Error al restaurar al inicio: ' + err);
+              cerrarModal(overlay);
+              resolve();
+            }
+          );
+        });
+      });
+    }
+  };
+  if (!estaAutenticadoEnNube()) {
+    return new Promise((resolve) => {
+      const overlay = crearModalBloqueante(`
+        <div class="text-center">
+          <div class="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mx-auto mb-4 text-blue-600 dark:text-blue-400">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+          </div>
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Seguridad de Sincronización</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-400 mb-6">Por favor, ingresa tu contraseña para habilitar la sincronización en la nube. Esta sesión durará 15 días.</p>
+          <form id="form-auth-inicio-cloud" class="space-y-4">
+            <div>
+              <input type="password" id="input-password-inicio-cloud" required placeholder="Contraseña de la nube" 
+                class="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none">
+            </div>
+            <div class="flex flex-col gap-3 mt-6">
+              <button type="submit" class="w-full px-4 py-2 rounded-md text-sm font-medium bg-orange-600 hover:bg-orange-700 text-white shadow-sm transition-colors">
+                Ingresar y Sincronizar
+              </button>
+              <button type="button" id="btn-local-only-cloud" class="w-full px-4 py-2 rounded-md text-sm font-medium border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                Trabajar en local por esta sesión
+              </button>
+            </div>
+          </form>
+        </div>
+      `);
+      const form = document.getElementById('form-auth-inicio-cloud');
+      const btnLocal = document.getElementById('btn-local-only-cloud');
+      btnLocal.addEventListener('click', () => {
+        sessionStorage.setItem('trading_local_session_only', 'true');
+        cerrarModal(overlay);
+        resolve();
+      });
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const pwd = document.getElementById('input-password-inicio-cloud').value;
+        guardarPasswordNube(pwd);
+        cerrarModal(overlay);
+        if (typeof updateCloudSyncUI === 'function') {
+          updateCloudSyncUI();
+        }
+        await chequearDatosNuevosCloud();
+        resolve();
+      });
+    });
+  } else {
+    await chequearDatosNuevosCloud();
+  }
+}
+
+// Iniciar verificación al arrancar
+document.addEventListener('DOMContentLoaded', () => {
+  verificarNubeInicioCloud().catch(err => console.error("Error en verificarNubeInicioCloud:", err));
+});

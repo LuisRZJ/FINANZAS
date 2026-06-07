@@ -230,10 +230,55 @@
             </div>
         </header>
 
-        <!-- Contenedor de Almacenamiento -->
         <div class="grid grid-cols-1 gap-6">
             <div id="storageContainer" class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md">
                 <!-- El contenido se cargará dinámicamente -->
+            </div>
+
+            <!-- Sincronización en la Nube -->
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md space-y-4 border-l-4 border-orange-500">
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Sincronización en la Nube</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-400">Respalda tus cuentas, trades y estrategias en un repositorio de GitHub utilizando tu contraseña maestra de Finanzas.</p>
+
+                <!-- Estado de autenticación -->
+                <div id="auth-guest-cloud" class="space-y-4">
+                    <form id="form-login-cloud" class="flex flex-wrap gap-3 items-end">
+                        <div class="w-full sm:w-80">
+                            <label for="input-cloud-password" class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Contraseña de la Nube</label>
+                            <input type="password" id="input-cloud-password" required placeholder="Ingresa tu contraseña" 
+                                class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none transition">
+                        </div>
+                        <button type="submit" class="px-6 py-2.5 bg-orange-600 text-white rounded-lg font-semibold hover:bg-orange-700 transition shadow-sm text-sm">
+                            Iniciar Sesión
+                        </button>
+                    </form>
+                    <p id="auth-message-cloud" class="text-sm text-gray-500"></p>
+                </div>
+
+                <div id="auth-user-cloud" class="hidden space-y-4">
+                    <div class="flex items-center justify-between flex-wrap gap-3 p-4 bg-orange-50 dark:bg-orange-950/20 rounded-xl">
+                        <div class="flex items-center gap-3">
+                            <span class="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></span>
+                            <span class="text-sm font-semibold text-orange-900 dark:text-orange-300">Sesión Activa en la Nube</span>
+                        </div>
+                        <button type="button" id="btn-logout-cloud" class="text-sm text-red-600 dark:text-red-400 font-semibold hover:underline">
+                            Cerrar Sesión
+                        </button>
+                    </div>
+
+                    <div class="flex flex-wrap gap-4">
+                        <button id="btn-backup-cloud" type="button"
+                            class="px-6 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-semibold transition shadow-sm">
+                            Respaldar en la Nube
+                        </button>
+                        <button id="btn-restore-cloud" type="button"
+                            class="px-6 py-3 bg-gray-900 dark:bg-gray-750 hover:bg-black text-white border border-gray-800 rounded-lg font-semibold transition shadow-sm">
+                            Restaurar de la Nube
+                        </button>
+                    </div>
+
+                    <div id="sync-message-cloud" class="text-sm"></div>
+                </div>
             </div>
 
             <div class="actions-container bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md space-y-4">
@@ -730,6 +775,7 @@
             }
         }
 
+
         // Función para renderizar la información de almacenamiento
         function renderStorageInfo() {
             const storageContainer = document.getElementById('storageContainer');
@@ -869,6 +915,108 @@
             });
         }
 
+        function updateCloudSyncUI() {
+            const guestEl = document.getElementById('auth-guest-cloud');
+            const userEl = document.getElementById('auth-user-cloud');
+            const msgEl = document.getElementById('sync-message-cloud');
+            
+            if (!guestEl || !userEl) return;
+
+            if (estaAutenticadoEnNube()) {
+                guestEl.classList.add('hidden');
+                userEl.classList.remove('hidden');
+                
+                const lastSyncStr = localStorage.getItem('trading_last_sync_timestamp');
+                if (msgEl) {
+                    if (lastSyncStr) {
+                        const d = new Date(lastSyncStr);
+                        msgEl.textContent = `Último respaldo: ${d.toLocaleString()}`;
+                        msgEl.className = 'text-sm text-gray-500 dark:text-gray-400';
+                    } else {
+                        msgEl.textContent = 'Sin respaldos recientes en esta sesión.';
+                        msgEl.className = 'text-sm text-yellow-650 dark:text-yellow-400';
+                    }
+                }
+            } else {
+                guestEl.classList.remove('hidden');
+                userEl.classList.add('hidden');
+            }
+        }
+
+        // Bindeos de eventos para Sincronización en la Nube
+        document.getElementById('form-login-cloud')?.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const password = document.getElementById('input-cloud-password')?.value;
+            if (password) {
+                guardarPasswordNube(password);
+                document.getElementById('form-login-cloud').reset();
+                updateCloudSyncUI();
+                alert('Sesión de nube iniciada exitosamente.');
+                if (typeof verificarNubeInicioCloud === 'function') {
+                    verificarNubeInicioCloud().catch(err => console.error(err));
+                }
+            }
+        });
+
+        document.getElementById('btn-logout-cloud')?.addEventListener('click', () => {
+            cerrarSesionNube();
+            updateCloudSyncUI();
+            alert('Sesión cerrada.');
+        });
+
+        document.getElementById('btn-backup-cloud')?.addEventListener('click', async () => {
+            const btn = document.getElementById('btn-backup-cloud');
+            const msgEl = document.getElementById('sync-message-cloud');
+            if (btn) btn.disabled = true;
+            
+            await respaldarDatosNube(
+                (msg) => {
+                    if (msgEl) {
+                        msgEl.textContent = msg;
+                        msgEl.className = 'text-sm text-blue-600 dark:text-blue-400';
+                    }
+                },
+                (timestamp) => {
+                    if (btn) btn.disabled = false;
+                    alert('Respaldo en la nube completado exitosamente.');
+                    updateCloudSyncUI();
+                },
+                (err) => {
+                    if (btn) btn.disabled = false;
+                    alert('Error al realizar el respaldo: ' + err);
+                    updateCloudSyncUI();
+                }
+            );
+        });
+
+        document.getElementById('btn-restore-cloud')?.addEventListener('click', async () => {
+            if (!confirm('¿Estás seguro de restaurar los datos de la nube? Esto reemplazará toda tu información de trading actual.')) {
+                return;
+            }
+            const btn = document.getElementById('btn-restore-cloud');
+            const msgEl = document.getElementById('sync-message-cloud');
+            if (btn) btn.disabled = true;
+
+            await restaurarDatosNube(
+                (msg) => {
+                    if (msgEl) {
+                        msgEl.textContent = msg;
+                        msgEl.className = 'text-sm text-blue-600 dark:text-blue-400';
+                    }
+                },
+                (timestamp) => {
+                    if (btn) btn.disabled = false;
+                    alert('Datos de trading restaurados desde la nube con éxito.');
+                    location.reload();
+                },
+                (err) => {
+                    if (btn) btn.disabled = false;
+                    alert('Error al restaurar: ' + err);
+                    updateCloudSyncUI();
+                }
+            );
+        });
+
         // Inicialización
         document.addEventListener('DOMContentLoaded', () => {
             loadTheme();
@@ -876,6 +1024,7 @@
             setActiveLink();
             setInterval(updateDateTime, 1000);
             updateDateTime();
+            updateCloudSyncUI();
         });
     </script>
 </body>

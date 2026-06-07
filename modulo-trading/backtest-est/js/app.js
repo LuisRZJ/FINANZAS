@@ -5,9 +5,125 @@ import { loadComponents } from './utilidades/loader.js';
 import { simulateDCA } from './utilidades/dca.js';
 import { rankResults, runBacktestInline, computeMACache } from './utilidades/optimizador.js';
 import { fetchBinanceKlines, detectFirstCandle, getIntervalMilliseconds } from './utilidades/binance.js';
+import { 
+    estaAutenticadoEnNube, 
+    guardarPasswordNube, 
+    cerrarSesionNube, 
+    respaldarDatosNube, 
+    restaurarDatosNube, 
+    verificarNubeInicioCloud 
+} from './utilidades/sync.js';
+
 document.addEventListener('DOMContentLoaded', async () => {
     // 1. Cargar e inyectar componentes HTML
     await loadComponents();
+
+    // ─── Sincronización en la Nube ──────────────────────
+    function updateCloudSyncUI() {
+        const guestEl = document.getElementById('auth-guest-cloud');
+        const userEl = document.getElementById('auth-user-cloud');
+        const msgEl = document.getElementById('sync-message-cloud');
+
+        if (!guestEl || !userEl) return;
+
+        if (estaAutenticadoEnNube()) {
+            guestEl.style.display = 'none';
+            userEl.style.display = 'block';
+
+            const lastSyncStr = localStorage.getItem('trading_last_sync_timestamp');
+            if (msgEl) {
+                if (lastSyncStr) {
+                    const d = new Date(lastSyncStr);
+                    msgEl.textContent = `Último respaldo: ${d.toLocaleString()}`;
+                    msgEl.className = 'text-sm text-gray-500 dark:text-gray-400';
+                } else {
+                    msgEl.textContent = 'Sin respaldos recientes en esta sesión.';
+                    msgEl.className = 'text-sm text-yellow-650 dark:text-yellow-450';
+                }
+            }
+        } else {
+            guestEl.style.display = 'block';
+            userEl.style.display = 'none';
+        }
+    }
+
+    // Bindeos de eventos para Sincronización en la Nube
+    document.getElementById('form-login-cloud')?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const password = document.getElementById('input-cloud-password')?.value;
+        if (password) {
+            guardarPasswordNube(password);
+            document.getElementById('form-login-cloud').reset();
+            updateCloudSyncUI();
+            alert('Sesión de nube iniciada exitosamente.');
+            verificarNubeInicioCloud(updateCloudSyncUI).catch(err => console.error(err));
+        }
+    });
+
+    document.getElementById('btn-logout-cloud')?.addEventListener('click', () => {
+        cerrarSesionNube();
+        updateCloudSyncUI();
+        alert('Sesión cerrada.');
+    });
+
+    document.getElementById('btn-backup-cloud')?.addEventListener('click', async () => {
+        const btn = document.getElementById('btn-backup-cloud');
+        const msgEl = document.getElementById('sync-message-cloud');
+        if (btn) btn.disabled = true;
+
+        await respaldarDatosNube(
+            (msg) => {
+                if (msgEl) {
+                    msgEl.textContent = msg;
+                    msgEl.className = 'text-sm text-blue-600 dark:text-blue-400';
+                }
+            },
+            (timestamp) => {
+                if (btn) btn.disabled = false;
+                alert('Respaldo en la nube completado exitosamente.');
+                updateCloudSyncUI();
+            },
+            (err) => {
+                if (btn) btn.disabled = false;
+                alert('Error al realizar el respaldo: ' + err);
+                updateCloudSyncUI();
+            }
+        );
+    });
+
+    document.getElementById('btn-restore-cloud')?.addEventListener('click', async () => {
+        if (!confirm('¿Estás seguro de restaurar los datos de la nube? Esto reemplazará toda tu información de trading actual.')) {
+            return;
+        }
+        const btn = document.getElementById('btn-restore-cloud');
+        const msgEl = document.getElementById('sync-message-cloud');
+        if (btn) btn.disabled = true;
+
+        await restaurarDatosNube(
+            (msg) => {
+                if (msgEl) {
+                    msgEl.textContent = msg;
+                    msgEl.className = 'text-sm text-blue-600 dark:text-blue-400';
+                }
+            },
+            (timestamp) => {
+                if (btn) btn.disabled = false;
+                alert('Datos de trading restaurados desde la nube con éxito.');
+                location.reload();
+            },
+            (err) => {
+                if (btn) btn.disabled = false;
+                alert('Error al restaurar: ' + err);
+                updateCloudSyncUI();
+            }
+        );
+    });
+
+    // Cargar UI inicial
+    updateCloudSyncUI();
+
+    // Lanzar chequeo automático
+    verificarNubeInicioCloud(updateCloudSyncUI).catch(err => console.error("Error en verificarNubeInicioCloud:", err));
 
     // ─── Estado Global ─────────────────────────────────
     let globalDataArray = null;
