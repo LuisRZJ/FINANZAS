@@ -22,7 +22,7 @@ const normalizar = (str) => {
   return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
 };
 
-export function procesarCSVBudge(contenidoCSV, cuentasExistentes = [], etiquetasExistentes = [], operacionesExistentes = [], metasExistentes = []) {
+export function procesarCSVBudge(contenidoCSV, cuentasExistentes = [], etiquetasExistentes = [], operacionesExistentes = [], metasExistentes = [], mapeoCuentas = null, mapeoEtiquetas = null) {
   const secciones = contenidoCSV.split('###');
   
   let transaccionesCSV = '';
@@ -38,6 +38,10 @@ export function procesarCSVBudge(contenidoCSV, cuentasExistentes = [], etiquetas
   const registrosCSV = [];
   const cuentasParseadas = [];
   const metasParseadas = [];
+  
+  // Mapeos para análisis visual
+  const analisisCuentasMap = new Map();
+  const analisisEtiquetasMap = new Map();
   
   // Parsear transacciones
   const lineasTrans = transaccionesCSV.split('\n');
@@ -63,6 +67,19 @@ export function procesarCSVBudge(contenidoCSV, cuentasExistentes = [], etiquetas
     
     const cantidad = parseFloat(AmountStr.replace(/,/g, ''));
     if (isNaN(cantidad)) continue;
+
+    const esIngreso = cantidad > 0;
+    
+    if (Account) {
+      analisisCuentasMap.set(normalizar(Account), { nombre: Account, saldo: null, esSubcuenta: false, descripcion: '' });
+    }
+    
+    if (Category !== 'Transferencia') {
+      const nombreEtiqueta = Subcategory ? Subcategory : Category;
+      if (nombreEtiqueta) {
+        analisisEtiquetasMap.set(normalizar(nombreEtiqueta), { nombre: nombreEtiqueta, padre: Category, hijo: Subcategory, tipo: esIngreso ? 'ingreso' : 'gasto' });
+      }
+    }
 
     registrosCSV.push({
       fechaISO,
@@ -93,12 +110,14 @@ export function procesarCSVBudge(contenidoCSV, cuentasExistentes = [], etiquetas
     const saldo = parseFloat(AccountBalance.replace(/,/g, ''));
     if (isNaN(saldo)) continue;
 
-    cuentasParseadas.push({
+    const objCuenta = {
        nombre: Account,
        saldo,
        esSubcuenta: IsSavings.trim().toLowerCase() === 'true',
        descripcion: Description || ''
-    });
+    };
+    cuentasParseadas.push(objCuenta);
+    analisisCuentasMap.set(normalizar(Account), objCuenta);
   }
 
   // Parsear metas
@@ -135,7 +154,38 @@ export function procesarCSVBudge(contenidoCSV, cuentasExistentes = [], etiquetas
     });
   }
 
-  // 1. Agrupar transferencias
+  // --- Fase 1: Análisis (Retornamos para que el UI muestre el modal de mapeo) ---
+  if (!mapeoCuentas || !mapeoEtiquetas) {
+    const analisisCuentas = [];
+    const analisisEtiquetas = [];
+    
+    for (const [key, val] of analisisCuentasMap.entries()) {
+      const localMatch = cuentasExistentes.find(c => normalizar(c.nombre) === key);
+      analisisCuentas.push({
+        ...val,
+        keyNormalizada: key,
+        idSugerido: localMatch ? localMatch.id : 'NUEVA'
+      });
+    }
+    
+    for (const [key, val] of analisisEtiquetasMap.entries()) {
+      const localMatch = etiquetasExistentes.find(e => normalizar(e.nombre) === key);
+      analisisEtiquetas.push({
+        ...val,
+        keyNormalizada: key,
+        idSugerido: localMatch ? localMatch.id : 'NUEVA'
+      });
+    }
+    
+    return {
+      requiereMapeo: true,
+      totalProcesadasCSV: registrosCSV.length,
+      analisisCuentas,
+      analisisEtiquetas
+    };
+  }
+
+  // --- Fase 2: Ejecución con mapeos provistos ---
   const transferenciasIn = [];
   const transferenciasOut = [];
   const operacionesSueltas = [];
@@ -171,93 +221,74 @@ export function procesarCSVBudge(contenidoCSV, cuentasExistentes = [], etiquetas
     if (!inReg.emparejado) operacionesSueltas.push(inReg);
   }
 
-  const mapCuentas = new Map(); // key normalizada => obj cuenta (existente o nueva)
-  const mapEtiquetas = new Map();
-
+  const mapCuentasFinales = new Map();
   for (const c of cuentasExistentes) {
-    mapCuentas.set(normalizar(c.nombre), { ...c }); 
+    mapCuentasFinales.set(c.id, { ...c }); 
   }
+  
+  const mapEtiquetasFinales = new Map();
   for (const e of etiquetasExistentes) {
-    mapEtiquetas.set(normalizar(e.nombre), { ...e });
+    mapEtiquetasFinales.set(e.id, { ...e });
   }
 
   const nuevasCuentasAgregadas = [];
-  const cuentasAActualizar = []; 
+  const nuevasEtiquetasAgregadas = [];
 
-  // Combinar saldos parseados
-  for (const cp of cuentasParseadas) {
-    const key = normalizar(cp.nombre);
-    if (mapCuentas.has(key)) {
-      const cuentaExistente = mapCuentas.get(key);
-      cuentaExistente.dinero = cp.saldo; // Actualizamos saldo
-      cuentaExistente.esSubcuenta = cp.esSubcuenta;
-      cuentasAActualizar.push(cuentaExistente);
-    } else {
+  // Resolver Mapeos de Cuentas
+  const idCuentasResolver = new Map(); // key normalizada => ID local definitivo
+  for (const [key, val] of analisisCuentasMap.entries()) {
+    let idAsignado = mapeoCuentas[key];
+    if (!idAsignado || idAsignado === 'NUEVA') {
+      idAsignado = generarIdCuenta();
       const nuevaCuenta = {
-        id: generarIdCuenta(),
-        nombre: cp.nombre,
-        descripcion: cp.descripcion || 'Importada de Budge',
+        id: idAsignado,
+        nombre: val.nombre,
+        descripcion: val.descripcion || 'Importada automáticamente de Budge',
         color: '#0ea5e9',
-        dinero: cp.saldo,
+        dinero: val.saldo || 0,
         parentId: null,
-        esSubcuenta: cp.esSubcuenta,
+        esSubcuenta: val.esSubcuenta || false,
         creadaEn: new Date().toISOString(),
         actualizadaEn: new Date().toISOString(),
-        historial: [{ fecha: new Date().toISOString(), tipo: 'creacion', mensaje: 'Importada de Budge con saldo inicial de $' + cp.saldo }]
+        historial: [{ fecha: new Date().toISOString(), tipo: 'creacion', mensaje: 'Cuenta importada de Budge' }]
       };
-      mapCuentas.set(key, nuevaCuenta);
+      mapCuentasFinales.set(idAsignado, nuevaCuenta);
       nuevasCuentasAgregadas.push(nuevaCuenta);
-    }
-  }
-
-  const obtenerIdCuenta = (nombre) => {
-    if (!nombre) return null;
-    const key = normalizar(nombre);
-    if (mapCuentas.has(key)) return mapCuentas.get(key).id;
-    
-    // Si la operación menciona una cuenta que no estaba en el bloque Accounts ni existía
-    const nuevaCuenta = {
-      id: generarIdCuenta(), nombre, descripcion: 'Importada automáticamente de operaciones Budge', color: '#0ea5e9', dinero: 0,
-      parentId: null, esSubcuenta: false, creadaEn: new Date().toISOString(), actualizadaEn: new Date().toISOString(), historial: []
-    };
-    mapCuentas.set(key, nuevaCuenta);
-    nuevasCuentasAgregadas.push(nuevaCuenta);
-    return nuevaCuenta.id;
-  };
-
-  const nuevasEtiquetas = [];
-  const obtenerIdEtiqueta = (padre, hijo, esIngreso) => {
-    const nombreReal = hijo ? hijo : padre;
-    if (!nombreReal) return null;
-    const key = normalizar(nombreReal);
-    
-    if (mapEtiquetas.has(key)) return mapEtiquetas.get(key).id;
-    
-    let padreId = null;
-    if (padre && hijo) {
-      const keyPadre = normalizar(padre);
-      if (mapEtiquetas.has(keyPadre)) {
-        padreId = mapEtiquetas.get(keyPadre).id;
-      } else {
-        padreId = generarIdEtiqueta();
-        const nuevaEtiPadre = {
-          id: padreId, nombre: padre, color: '#0ea5e9', tipo: esIngreso ? 'ingreso' : 'gasto',
-          icono: '🏷️', padreId: null, creadaEn: new Date().toISOString(), actualizadaEn: new Date().toISOString(), historial: []
-        };
-        mapEtiquetas.set(keyPadre, nuevaEtiPadre);
-        nuevasEtiquetas.push(nuevaEtiPadre);
+    } else {
+      // Es una cuenta existente. Si el CSV traía un saldo explícito, actualizarlo.
+      if (val.saldo !== null && mapCuentasFinales.has(idAsignado)) {
+        const cExist = mapCuentasFinales.get(idAsignado);
+        cExist.dinero = val.saldo; // Actualiza el saldo en la cuenta combinada
+        cExist.esSubcuenta = val.esSubcuenta;
       }
     }
-    
-    const id = generarIdEtiqueta();
-    const nuevaEti = {
-      id, nombre: nombreReal, color: '#0ea5e9', tipo: esIngreso ? 'ingreso' : 'gasto',
-      icono: '🏷️', padreId, creadaEn: new Date().toISOString(), actualizadaEn: new Date().toISOString(), historial: []
-    };
-    mapEtiquetas.set(key, nuevaEti);
-    nuevasEtiquetas.push(nuevaEti);
-    return id;
-  };
+    idCuentasResolver.set(key, idAsignado);
+  }
+
+  // Resolver Mapeos de Etiquetas
+  const idEtiquetasResolver = new Map(); // key normalizada => ID local definitivo
+  for (const [key, val] of analisisEtiquetasMap.entries()) {
+    let idAsignado = mapeoEtiquetas[key];
+    if (!idAsignado || idAsignado === 'NUEVA') {
+      idAsignado = generarIdEtiqueta();
+      const nuevaEti = {
+        id: idAsignado, 
+        nombre: val.nombre, 
+        color: '#0ea5e9', 
+        tipo: val.tipo,
+        icono: '🏷️', 
+        padreId: null, 
+        creadaEn: new Date().toISOString(), 
+        actualizadaEn: new Date().toISOString(), 
+        historial: []
+      };
+      // Aquí se simplificó padre/hijo del CSV para forzarlas todas planas si son NUEVAS
+      // debido a que Budge y la local difieren en arquitectura (una lista vs árbol)
+      mapEtiquetasFinales.set(idAsignado, nuevaEti);
+      nuevasEtiquetasAgregadas.push(nuevaEti);
+    }
+    idEtiquetasResolver.set(key, idAsignado);
+  }
 
   const esOperacionDuplicada = (fechaYYYYMMDD, cantidad, tipo) => {
     return operacionesExistentes.some(op => {
@@ -269,11 +300,21 @@ export function procesarCSVBudge(contenidoCSV, cuentasExistentes = [], etiquetas
   const nuevasOperaciones = [];
   for (const pair of transferenciasEmparejadas) {
     if (esOperacionDuplicada(pair.origenReg.fechaYYYYMMDD, Math.abs(pair.origenReg.cantidad), 'transferencia')) continue;
-    const origenId = obtenerIdCuenta(pair.origenReg.cuenta);
-    const destinoId = obtenerIdCuenta(pair.destinoReg.cuenta);
+    
+    const origenKey = normalizar(pair.origenReg.cuenta);
+    const destinoKey = normalizar(pair.destinoReg.cuenta);
+    
     nuevasOperaciones.push({
-      id: generarIdOperacion(), tipo: 'transferencia', nombre: pair.origenReg.nombre || 'Transferencia', descripcion: pair.origenReg.descripcion,
-      cantidad: Math.abs(pair.origenReg.cantidad), fecha: pair.origenReg.fechaISO, origenId, destinoId, estado: 'pagado', creadaEn: new Date().toISOString()
+      id: generarIdOperacion(), 
+      tipo: 'transferencia', 
+      nombre: pair.origenReg.nombre || 'Transferencia', 
+      descripcion: pair.origenReg.descripcion,
+      cantidad: Math.abs(pair.origenReg.cantidad), 
+      fecha: pair.origenReg.fechaISO, 
+      origenId: idCuentasResolver.get(origenKey) || null, 
+      destinoId: idCuentasResolver.get(destinoKey) || null, 
+      estado: 'pagado', 
+      creadaEn: new Date().toISOString()
     });
   }
 
@@ -281,27 +322,35 @@ export function procesarCSVBudge(contenidoCSV, cuentasExistentes = [], etiquetas
     const esIngreso = reg.cantidad > 0;
     const tipo = esIngreso ? 'ingreso' : 'gasto';
     if (esOperacionDuplicada(reg.fechaYYYYMMDD, Math.abs(reg.cantidad), tipo)) continue;
-    const cuentaId = obtenerIdCuenta(reg.cuenta);
-    const etiquetaId = obtenerIdEtiqueta(reg.categoriaPadre, reg.categoriaHijo, esIngreso);
+    
+    const cuentaKey = normalizar(reg.cuenta);
+    const nombreEti = reg.categoriaHijo ? reg.categoriaHijo : reg.categoriaPadre;
+    const etiquetaKey = normalizar(nombreEti);
+
     nuevasOperaciones.push({
-      id: generarIdOperacion(), tipo, nombre: reg.nombre, descripcion: reg.descripcion, etiquetaId,
-      cantidad: Math.abs(reg.cantidad), fecha: reg.fechaISO, cuentaId, estado: 'pagado', creadaEn: new Date().toISOString()
+      id: generarIdOperacion(), 
+      tipo, 
+      nombre: reg.nombre, 
+      descripcion: reg.descripcion, 
+      etiquetaId: idEtiquetasResolver.get(etiquetaKey) || null,
+      cantidad: Math.abs(reg.cantidad), 
+      fecha: reg.fechaISO, 
+      cuentaId: idCuentasResolver.get(cuentaKey) || null, 
+      estado: 'pagado', 
+      creadaEn: new Date().toISOString()
     });
   }
 
   // Procesar Metas Simples
   const nuevasMetas = [];
   for (const mp of metasParseadas) {
-    // Verificar si ya existe en metasExistentes por nombre normalizado
     const duplicada = metasExistentes.some(m => m.tipo === 'simple' && normalizar(m.nombre) === normalizar(mp.nombre));
     if (duplicada) continue;
 
-    // Crear subcuenta espejo para el saldo acumulado
-    const nombreEspejo = `Meta: ${mp.nombre}`;
     const idCuentaEspejo = generarIdCuenta();
     const nuevaCuentaEspejo = {
       id: idCuentaEspejo,
-      nombre: nombreEspejo,
+      nombre: `Meta: ${mp.nombre}`,
       descripcion: mp.descripcion || 'Cuenta espejo para meta de Budge',
       color: '#f59e0b',
       dinero: mp.acumulado,
@@ -311,9 +360,9 @@ export function procesarCSVBudge(contenidoCSV, cuentasExistentes = [], etiquetas
       actualizadaEn: new Date().toISOString(),
       historial: [{ fecha: new Date().toISOString(), tipo: 'creacion', mensaje: `Cuenta creada automáticamente por importación de meta.` }]
     };
+    mapCuentasFinales.set(idCuentaEspejo, nuevaCuentaEspejo);
     nuevasCuentasAgregadas.push(nuevaCuentaEspejo);
 
-    // Crear la Meta Simple
     nuevasMetas.push({
       id: generarIdMetaSimple(),
       tipo: 'simple',
@@ -329,15 +378,12 @@ export function procesarCSVBudge(contenidoCSV, cuentasExistentes = [], etiquetas
     });
   }
 
-  // Juntamos todo
-  // mapCuentas tiene todas las cuentas combinadas/actualizadas. 
-  // Para devolver la DB final de cuentas combinada, iteramos el mapCuentas.
-  const cuentasFinales = Array.from(mapCuentas.values());
-
   return { 
-    cuentasFinales, 
-    nuevasCuentasAgregadas, // Si quisiéramos diferenciarlas
-    nuevasEtiquetas, 
+    requiereMapeo: false,
+    cuentasFinales: Array.from(mapCuentasFinales.values()), 
+    nuevasCuentasAgregadas, 
+    etiquetasFinales: Array.from(mapEtiquetasFinales.values()),
+    nuevasEtiquetasAgregadas, 
     nuevasOperaciones, 
     nuevasMetas,
     totalProcesadasCSV: registrosCSV.length 

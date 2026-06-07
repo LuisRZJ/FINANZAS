@@ -673,7 +673,7 @@ async function inicializarPanelDatos() {
           const btnCancelar = document.getElementById('btn-import-cancelar')
           
           document.getElementById('modal-importacion-mensaje').textContent = 
-            `Se han procesado ${resultado.totalProcesadasCSV} filas. Se encontraron ${resultado.nuevasOperaciones.length} nuevas operaciones (no duplicadas). ¿Cómo deseas importarlas?`
+            `Se han procesado ${resultado.totalProcesadasCSV} filas de transacciones. Se detectaron ${resultado.analisisCuentas.length} cuentas y ${resultado.analisisEtiquetas.length} etiquetas en el archivo. ¿Cómo deseas importarlas?`
           
           modalImport.classList.remove('hidden')
           
@@ -685,16 +685,79 @@ async function inicializarPanelDatos() {
           
           btnCancelar.onclick = cerrarModalImport
           
-          btnCombinar.onclick = async () => {
+          btnCombinar.onclick = () => {
             modalImport.classList.add('hidden')
-            // Guardar con la DB mezclada
-            await escribir(STORAGE_KEYS.cuentas, resultado.cuentasFinales)
-            await escribir(STORAGE_KEYS.etiquetas, [...etiquetasExistentes, ...resultado.nuevasEtiquetas])
-            await escribir(STORAGE_KEYS.operaciones, [...operacionesExistentes, ...resultado.nuevasOperaciones])
-            await escribir(STORAGE_KEYS.metas, [...metasExistentes, ...resultado.nuevasMetas])
             
-            if (msgEl) msgEl.textContent = 'Datos combinados correctamente. Recarga la página para ver los cambios.'
-            if (usageEl) usageEl.textContent = await calcularUsoAlmacenamiento()
+            if (resultado.requiereMapeo) {
+              const modalMapeo = document.getElementById('modal-mapeo-datos')
+              const tbodyCuentas = document.getElementById('tbody-mapeo-cuentas')
+              const tbodyEtiquetas = document.getElementById('tbody-mapeo-etiquetas')
+              
+              // Helper para crear options
+              const generarOptions = (lista, seleccionado) => {
+                let html = `<option value="NUEVA" ${seleccionado === 'NUEVA' ? 'selected' : ''}>-- CREAR NUEVA --</option>`
+                lista.forEach(item => {
+                  html += `<option value="${item.id}" ${seleccionado === item.id ? 'selected' : ''}>${item.nombre}</option>`
+                })
+                return html
+              }
+
+              // Llenar cuentas
+              tbodyCuentas.innerHTML = resultado.analisisCuentas.map(c => `
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                  <td class="px-4 py-2 font-medium">${c.nombre}</td>
+                  <td class="px-4 py-2">${c.saldo !== null ? '$' + c.saldo : '-'}</td>
+                  <td class="px-4 py-2">
+                    <select data-key="${c.keyNormalizada}" class="select-mapeo-cuenta w-full text-sm rounded-md border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 p-1">
+                      ${generarOptions(cuentasExistentes, c.idSugerido)}
+                    </select>
+                  </td>
+                </tr>
+              `).join('')
+
+              // Llenar etiquetas
+              tbodyEtiquetas.innerHTML = resultado.analisisEtiquetas.map(e => `
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                  <td class="px-4 py-2 font-medium">${e.nombre}</td>
+                  <td class="px-4 py-2 text-xs opacity-70">${e.tipo}</td>
+                  <td class="px-4 py-2">
+                    <select data-key="${e.keyNormalizada}" class="select-mapeo-etiqueta w-full text-sm rounded-md border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 p-1">
+                      ${generarOptions(etiquetasExistentes.filter(et => et.tipo === e.tipo), e.idSugerido)}
+                    </select>
+                  </td>
+                </tr>
+              `).join('')
+
+              modalMapeo.classList.remove('hidden')
+
+              document.getElementById('btn-mapeo-cancelar').onclick = () => {
+                modalMapeo.classList.add('hidden')
+                if (inputImport) inputImport.value = ''
+              }
+
+              document.getElementById('btn-mapeo-confirmar').onclick = async () => {
+                // Recopilar mapeos
+                const mapeoCuentas = {}
+                document.querySelectorAll('.select-mapeo-cuenta').forEach(sel => mapeoCuentas[sel.dataset.key] = sel.value)
+                
+                const mapeoEtiquetas = {}
+                document.querySelectorAll('.select-mapeo-etiqueta').forEach(sel => mapeoEtiquetas[sel.dataset.key] = sel.value)
+
+                modalMapeo.classList.add('hidden')
+                
+                // Ejecutar fase 2
+                const resFinal = await procesarCSVBudge(text, cuentasExistentes, etiquetasExistentes, operacionesExistentes, metasExistentes, mapeoCuentas, mapeoEtiquetas)
+                
+                // Guardar
+                await escribir(STORAGE_KEYS.cuentas, resFinal.cuentasFinales)
+                await escribir(STORAGE_KEYS.etiquetas, resFinal.etiquetasFinales)
+                await escribir(STORAGE_KEYS.operaciones, [...operacionesExistentes, ...resFinal.nuevasOperaciones])
+                await escribir(STORAGE_KEYS.metas, [...metasExistentes, ...resFinal.nuevasMetas])
+                
+                if (msgEl) msgEl.textContent = 'Datos combinados correctamente. Recarga la página para ver los cambios.'
+                if (usageEl) usageEl.textContent = await calcularUsoAlmacenamiento()
+              }
+            }
           }
           
           btnReemplazar.onclick = async () => {
@@ -703,8 +766,8 @@ async function inicializarPanelDatos() {
             const keys = Object.values(STORAGE_KEYS)
             for (const k of keys) await eliminar(k)
             
-            // Re-procesar en limpio para no mezclar con la caché local
-            const resultadoLimpio = await procesarCSVBudge(text, [], [], [], [])
+            // Re-procesar en limpio forzando Fase 2 (pasando {} en lugar de null)
+            const resultadoLimpio = await procesarCSVBudge(text, [], [], [], [], {}, {})
             
             await escribir(STORAGE_KEYS.cuentas, resultadoLimpio.cuentasFinales)
             await escribir(STORAGE_KEYS.etiquetas, resultadoLimpio.nuevasEtiquetas)

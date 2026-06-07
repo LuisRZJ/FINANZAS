@@ -322,6 +322,69 @@
       </div>
     </div>
   </div>
+
+  <!-- Modal Mapeo Manual -->
+  <div id="modal-mapeo-datos" class="hidden fixed inset-0 z-[90] bg-gray-900/60 backdrop-blur-sm flex items-center justify-center px-4">
+    <div class="w-full max-w-2xl max-h-[90vh] flex flex-col rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-xl overflow-hidden">
+      <div class="p-4 border-b border-gray-200 dark:border-gray-800">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Mapeo Manual de Datos</h3>
+        <p class="text-sm text-gray-600 dark:text-gray-400">Verifica cómo se enlazarán tus cuentas y etiquetas del CSV con tus datos locales.</p>
+      </div>
+      
+      <div class="flex-1 overflow-y-auto p-4 space-y-6">
+        <!-- Cuentas -->
+        <div class="space-y-2">
+          <h4 class="font-medium text-gray-900 dark:text-gray-100 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-blue-500"></span> Cuentas
+          </h4>
+          <div class="bg-gray-50 dark:bg-gray-950 rounded-lg border border-gray-200 dark:border-gray-800 overflow-x-auto">
+            <table class="w-full text-sm text-left">
+              <thead class="text-xs uppercase bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400">
+                <tr>
+                  <th class="px-4 py-2">Cuenta (Budge)</th>
+                  <th class="px-4 py-2">Saldo a importar</th>
+                  <th class="px-4 py-2">Enlazar con (Local)</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-mapeo-cuentas" class="divide-y divide-gray-200 dark:divide-gray-800 text-gray-700 dark:text-gray-300">
+                <!-- Generado dinámicamente -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Etiquetas -->
+        <div class="space-y-2">
+          <h4 class="font-medium text-gray-900 dark:text-gray-100 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-indigo-500"></span> Etiquetas (Categorías)
+          </h4>
+          <div class="bg-gray-50 dark:bg-gray-950 rounded-lg border border-gray-200 dark:border-gray-800 overflow-x-auto">
+            <table class="w-full text-sm text-left">
+              <thead class="text-xs uppercase bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400">
+                <tr>
+                  <th class="px-4 py-2">Etiqueta (Budge)</th>
+                  <th class="px-4 py-2">Tipo</th>
+                  <th class="px-4 py-2">Enlazar con (Local)</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-mapeo-etiquetas" class="divide-y divide-gray-200 dark:divide-gray-800 text-gray-700 dark:text-gray-300">
+                <!-- Generado dinámicamente -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      
+      <div class="p-4 border-t border-gray-200 dark:border-gray-800 flex gap-3 justify-end bg-gray-50 dark:bg-gray-950/50">
+        <button id="btn-mapeo-cancelar" type="button" class="px-4 py-2 rounded-md text-sm font-medium border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+          Cancelar
+        </button>
+        <button id="btn-mapeo-confirmar" type="button" class="px-4 py-2 rounded-md text-sm font-medium bg-primary-600 text-white hover:bg-primary-700 transition-colors">
+          Confirmar e Importar
+        </button>
+      </div>
+    </div>
+  </div>
   <nav id="mobile-menu" class="hidden md:hidden fixed inset-0 top-16 z-40 bg-white dark:bg-gray-900 overflow-y-auto">
     <div class="px-4 py-6 space-y-1">
       <a href="../index.html"
