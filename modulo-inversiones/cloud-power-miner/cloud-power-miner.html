@@ -414,6 +414,66 @@
                         </button>
                     </div>
                 </div>
+
+                <!-- Nueva tarjeta de Sincronización en la Nube -->
+                <div class="card max-w-lg mx-auto mt-6">
+                    <div class="flex items-center justify-between mb-4 border-b border-gray-100 dark:border-gray-700 pb-3">
+                        <div>
+                            <h2 class="text-2xl font-semibold text-gray-800 dark:text-white">Sincronización en la Nube</h2>
+                            <p class="text-sm text-gray-500 mt-1 dark:text-gray-400">Respalda tus inversiones en la nube a través de GitHub utilizando las credenciales globales del proyecto.</p>
+                        </div>
+                        <span class="inline-flex items-center gap-2 bg-purple-50 text-purple-700 text-xs font-semibold px-3 py-1 rounded-full border border-purple-100 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800 flex-shrink-0">
+                            ☁️ Nube
+                        </span>
+                    </div>
+
+                    <!-- Estado no autenticado (sin contraseña o caducada) -->
+                    <div id="auth-guest-cloud" class="space-y-4">
+                        <p class="text-sm text-gray-600 dark:text-gray-400">
+                            Para sincronizar tus datos con la nube a través de GitHub, necesitas ingresar la Contraseña Maestra de Sincronización. Esta se guardará por 15 días en este navegador.
+                        </p>
+                        <form id="form-login-cloud" class="space-y-3">
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-600 dark:text-gray-300">Contraseña de la Nube</label>
+                                    <input type="password" id="input-cloud-password" required placeholder="Contraseña Maestra" class="form-input mt-1">
+                                </div>
+                                <button type="submit" class="w-full bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors font-semibold">
+                                    Autorizar Sesión
+                                </button>
+                            </div>
+                        </form>
+                        <div id="auth-message-cloud" class="text-sm text-center"></div>
+                    </div>
+
+                    <!-- Estado autenticado -->
+                    <div id="auth-user-cloud" class="hidden space-y-4">
+                        <div class="flex items-center justify-between flex-wrap gap-2">
+                            <div>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">Conexión a la nube:</p>
+                                <p class="font-semibold text-green-600 dark:text-green-400 flex items-center gap-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    Autorizada
+                                </p>
+                            </div>
+                            <button id="btn-logout-cloud" type="button" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-800 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700 font-semibold rounded-lg border border-gray-200 dark:border-gray-700 transition-colors text-sm">
+                                Revocar Acceso
+                            </button>
+                        </div>
+
+                        <hr class="border-gray-200 dark:border-gray-700">
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <button id="btn-backup-cloud" type="button" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2">
+                                <i class="fas fa-cloud-upload-alt"></i> Subir Respaldo
+                            </button>
+                            <button id="btn-restore-cloud" type="button" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2">
+                                <i class="fas fa-cloud-download-alt"></i> Restaurar Datos
+                            </button>
+                        </div>
+                        <div id="sync-message-cloud" class="text-sm text-center"></div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -1192,6 +1252,481 @@
                     if (e.target === roiTableModal) roiTableModal.classList.remove('active');
                 });
             }
+
+            // Elementos de la nube
+            const formLoginCloud = document.getElementById('form-login-cloud');
+            const inputCloudPassword = document.getElementById('input-cloud-password');
+            const authMessageCloud = document.getElementById('auth-message-cloud');
+            const syncMessageCloud = document.getElementById('sync-message-cloud');
+            const authGuestCloud = document.getElementById('auth-guest-cloud');
+            const authUserCloud = document.getElementById('auth-user-cloud');
+            const btnLogoutCloud = document.getElementById('btn-logout-cloud');
+            const btnBackupCloud = document.getElementById('btn-backup-cloud');
+            const btnRestoreCloud = document.getElementById('btn-restore-cloud');
+
+            // --- Estado de la nube ---
+            const CLOUD_PASSWORD_KEY = 'fti_cloud_password';
+            const CLOUD_PASSWORD_DATE_KEY = 'fti_cloud_password_date';
+            const LAST_SYNC_TIMESTAMP_KEY = 'cloud_power_miner_last_sync_timestamp';
+            const EXPIRATION_DAYS = 15;
+            const MS_PER_DAY = 1000 * 60 * 60 * 24;
+
+            const estaAutenticadoEnNube = () => {
+                const pwd = localStorage.getItem(CLOUD_PASSWORD_KEY);
+                const dateStr = localStorage.getItem(CLOUD_PASSWORD_DATE_KEY);
+                if (!pwd || !dateStr) return false;
+                const date = parseInt(dateStr, 10);
+                if (isNaN(date)) return false;
+                return (Date.now() - date) / MS_PER_DAY <= EXPIRATION_DAYS;
+            };
+
+            const obtenerPasswordNube = () => estaAutenticadoEnNube() ? localStorage.getItem(CLOUD_PASSWORD_KEY) : null;
+            const guardarPasswordNube = (password) => {
+                if (!password) return;
+                localStorage.setItem(CLOUD_PASSWORD_KEY, password);
+                localStorage.setItem(CLOUD_PASSWORD_DATE_KEY, Date.now().toString());
+            };
+            const cerrarSesionNube = () => {
+                localStorage.removeItem(CLOUD_PASSWORD_KEY);
+                localStorage.removeItem(CLOUD_PASSWORD_DATE_KEY);
+            };
+
+            const updateAuthUICloud = () => {
+                if (authMessageCloud) authMessageCloud.textContent = '';
+                if (syncMessageCloud) {
+                    syncMessageCloud.textContent = '';
+                    syncMessageCloud.className = 'text-sm text-center';
+                }
+
+                if (estaAutenticadoEnNube()) {
+                    if (authGuestCloud) authGuestCloud.classList.add('hidden');
+                    if (authUserCloud) authUserCloud.classList.remove('hidden');
+                } else {
+                    if (authGuestCloud) authGuestCloud.classList.remove('hidden');
+                    if (authUserCloud) authUserCloud.classList.add('hidden');
+                }
+            };
+
+            const verificarSeguridadSincronizacionCloud = async () => {
+                if (!estaAutenticadoEnNube()) {
+                    return { safe: false, reason: 'No hay sesión activa' };
+                }
+
+                try {
+                    const password = obtenerPasswordNube();
+                    const response = await fetch('/api/sync?module=cloud_power_miner&index=true', {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${password}`
+                        }
+                    });
+
+                    if (!response.ok) {
+                        return { safe: false, reason: 'Error al contactar con la nube' };
+                    }
+
+                    const data = await response.json();
+                    
+                    if (!data.exists) {
+                        return { safe: true, hasCloudData: false };
+                    }
+
+                    const cloudTimestamp = data.data.exportadoEn || new Date().toISOString();
+                    
+                    return { safe: true, cloudTimestamp, hasCloudData: true };
+                } catch (error) {
+                    return { safe: false, reason: error.message };
+                }
+            };
+
+            const buildExportableState = () => {
+                return {
+                    version: 'cloud-power-miner-v1',
+                    exportadoEn: new Date().toISOString(),
+                    discordWebhookUrl: discordWebhookUrl || '',
+                    data: investments || []
+                };
+            };
+
+            const parseImportPayload = (payload) => {
+                if (!payload) return null;
+                let data = null;
+                if (payload.version === 'cloud-power-miner-v1' || payload.type === 'cloud-power-miner' || payload.type === 'cloud-power-miner-investments') {
+                    data = payload.data;
+                } else if (Array.isArray(payload)) {
+                    data = payload;
+                }
+                if (!Array.isArray(data)) return null;
+                return {
+                    state: data,
+                    discordWebhookUrl: payload.discordWebhookUrl || '',
+                    exportadoEn: payload.exportadoEn || payload.exportDate || payload.date || new Date().toISOString()
+                };
+            };
+
+            const respaldarDatosNube = async () => {
+                const showSyncMessage = (msg, isError = false) => {
+                    if (!syncMessageCloud) return;
+                    syncMessageCloud.textContent = msg;
+                    syncMessageCloud.className = `text-sm text-center ${isError ? 'text-red-600 dark:text-red-400 font-semibold' : 'text-green-600 dark:text-green-400'}`;
+                };
+
+                if (!estaAutenticadoEnNube()) {
+                    showSyncMessage('Debes autorizar la sesión primero.', true);
+                    return;
+                }
+
+                if (btnBackupCloud) btnBackupCloud.disabled = true;
+                showSyncMessage('Generando respaldo y conectando con la nube...', false);
+                const password = obtenerPasswordNube();
+
+                try {
+                    const exportState = buildExportableState();
+                    const jsonString = JSON.stringify(exportState);
+
+                    const CHUNK_SIZE_CHARS = 3 * 1024 * 1024; // 3MB
+                    const chunks = [];
+                    for (let i = 0; i < jsonString.length; i += CHUNK_SIZE_CHARS) {
+                        chunks.push(jsonString.slice(i, i + CHUNK_SIZE_CHARS));
+                    }
+
+                    for (let i = 0; i < chunks.length; i++) {
+                        showSyncMessage(`Subiendo parte ${i + 1}/${chunks.length}...`, false);
+                        const res = await fetch(`/api/sync?module=cloud_power_miner&part=${i}`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'text/plain',
+                                'Authorization': `Bearer ${password}`
+                            },
+                            body: chunks[i]
+                        });
+                        const result = await res.json();
+                        if (!res.ok) throw new Error(result.error || `Error al subir la parte ${i+1}/${chunks.length}`);
+                    }
+
+                    showSyncMessage('Subiendo índice de sincronización...', false);
+                    const exportTimestamp = new Date().toISOString();
+                    const indexObj = {
+                        parts: chunks.length,
+                        exportadoEn: exportTimestamp,
+                        version: 1
+                    };
+                    const indexRes = await fetch(`/api/sync?module=cloud_power_miner&index=true`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${password}`
+                        },
+                        body: JSON.stringify(indexObj)
+                    });
+                    const indexResult = await indexRes.json();
+                    if (!indexRes.ok) throw new Error(indexResult.error || 'Error al guardar el índice en la nube.');
+
+                    localStorage.setItem(LAST_SYNC_TIMESTAMP_KEY, exportTimestamp);
+                    showSyncMessage(`✓ Sincronizado correctamente.`, false);
+                    showToast({ type: 'success', title: 'Sincronizado', message: 'Respaldo guardado en la nube.' });
+                } catch (err) {
+                    showSyncMessage(`❌ Error: ${err.message}`, true);
+                    showToast({ type: 'error', title: 'Error de Sincronización', message: err.message });
+                } finally {
+                    if (btnBackupCloud) btnBackupCloud.disabled = false;
+                }
+            };
+
+            const restaurarDatosNube = async () => {
+                const showSyncMessage = (msg, isError = false) => {
+                    if (!syncMessageCloud) return;
+                    syncMessageCloud.textContent = msg;
+                    syncMessageCloud.className = `text-sm text-center ${isError ? 'text-red-600 dark:text-red-400 font-semibold' : 'text-green-600 dark:text-green-400'}`;
+                };
+
+                if (!estaAutenticadoEnNube()) {
+                    showSyncMessage('Debes autorizar la sesión primero.', true);
+                    return;
+                }
+
+                if (!confirm('Esta acción reemplazará todos tus datos locales de minería Cloud Power con el respaldo guardado en la nube. ¿Continuar?')) {
+                    return;
+                }
+
+                if (btnRestoreCloud) btnRestoreCloud.disabled = true;
+                showSyncMessage('Descargando índice de respaldo...', false);
+                const password = obtenerPasswordNube();
+
+                try {
+                    const indexRes = await fetch(`/api/sync?module=cloud_power_miner&index=true`, {
+                        method: 'GET',
+                        headers: { 'Authorization': `Bearer ${password}` }
+                    });
+                    const indexResult = await indexRes.json();
+                    if (!indexRes.ok) throw new Error(indexResult.error || 'Error al obtener el índice de la nube');
+
+                    if (!indexResult.exists || !indexResult.data) {
+                        throw new Error('No se encontraron datos de respaldo en la nube.');
+                    }
+
+                    const partsCount = indexResult.data.parts || 1;
+                    const chunks = [];
+
+                    for (let i = 0; i < partsCount; i++) {
+                        showSyncMessage(`Descargando parte ${i + 1}/${partsCount}...`, false);
+                        const partRes = await fetch(`/api/sync?module=cloud_power_miner&part=${i}`, {
+                            method: 'GET',
+                            headers: { 'Authorization': `Bearer ${password}` }
+                        });
+                        const partResult = await partRes.json();
+                        
+                        if (!partRes.ok) throw new Error(partResult.error || `Error al descargar parte ${i + 1}`);
+                        if (!partResult.exists) throw new Error(`Parte ${i + 1} no encontrada.`);
+
+                        chunks.push(partResult.raw || JSON.stringify(partResult.data));
+                    }
+
+                    showSyncMessage('Procesando datos...', false);
+                    const fullJsonStr = chunks.join('');
+                    const parsedData = JSON.parse(fullJsonStr);
+                    const payload = parseImportPayload(parsedData);
+                    if (!payload) {
+                        throw new Error('El archivo recuperado no tiene un formato compatible válido.');
+                    }
+
+                    investments = payload.state;
+                    localStorage.setItem('cloudPowerMinerInvestments', JSON.stringify(investments));
+
+                    const importedWebhook = payload.discordWebhookUrl;
+                    if (importedWebhook) {
+                        discordWebhookUrl = importedWebhook;
+                        localStorage.setItem('cloudPowerMinerWebhook', importedWebhook);
+                        if (discordWebhookInput) discordWebhookInput.value = discordWebhookUrl;
+                    }
+
+                    localStorage.setItem(LAST_SYNC_TIMESTAMP_KEY, indexResult.data.exportadoEn);
+
+                    renderApp();
+
+                    showSyncMessage('✓ Restauración completada.', false);
+                    showToast({ type: 'success', title: 'Restaurado', message: 'Datos cargados desde la nube.' });
+                } catch (err) {
+                    showSyncMessage(`❌ Error: ${err.message}`, true);
+                    showToast({ type: 'error', title: 'Error de Restauración', message: err.message });
+                } finally {
+                    if (btnRestoreCloud) btnRestoreCloud.disabled = false;
+                }
+            };
+
+            const verificarNubeInicioCloud = async () => {
+                if (sessionStorage.getItem('bt_local_session_only') === 'true') {
+                    return;
+                }
+
+                const crearModalBloqueante = (htmlContent) => {
+                    const overlay = document.createElement('div');
+                    overlay.className = 'fixed inset-0 bg-gray-900/80 backdrop-blur-sm flex items-center justify-center z-[100] animate-fade-in';
+                    overlay.id = 'modal-inicio-nube-cloud';
+
+                    const modal = document.createElement('div');
+                    modal.className = 'bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-md w-full mx-4 p-6 relative overflow-hidden text-gray-900 dark:text-white';
+                    modal.innerHTML = htmlContent;
+
+                    overlay.appendChild(modal);
+                    document.body.appendChild(overlay);
+                    document.body.style.overflow = 'hidden';
+                    return overlay;
+                };
+
+                const cerrarModal = (overlay) => {
+                    overlay.remove();
+                    document.body.style.overflow = '';
+                };
+
+                const chequearDatosNuevosCloud = async () => {
+                    const check = await verificarSeguridadSincronizacionCloud();
+                    if (!check.safe || !check.hasCloudData) return;
+
+                    const lastSyncStr = localStorage.getItem(LAST_SYNC_TIMESTAMP_KEY);
+                    const cloudDate = new Date(check.cloudTimestamp);
+                    
+                    let hasNewerData = false;
+                    if (!lastSyncStr) {
+                        hasNewerData = true;
+                    } else {
+                        const localDate = new Date(lastSyncStr);
+                        if (cloudDate.getTime() > localDate.getTime() + 5000) {
+                            hasNewerData = true;
+                        }
+                    }
+
+                    if (hasNewerData) {
+                        return new Promise((resolve) => {
+                            const overlay = crearModalBloqueante(`
+                                <div class="text-center">
+                                    <div class="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mx-auto mb-4 text-amber-600 dark:text-amber-400">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                    </div>
+                                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Datos de Minería más recientes en la nube</h3>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-6">
+                                        Se detectó un respaldo de inversiones Cloud Power Miner más actualizado en la nube (${cloudDate.toLocaleString()}). ¿Deseas restaurarlo ahora?
+                                    </p>
+                                    <div id="restore-loading-cloud" class="hidden mb-4 text-sm font-medium text-blue-600">Descargando datos...</div>
+                                    <div class="flex flex-col gap-3 mt-2" id="restore-actions-cloud">
+                                        <button type="button" id="btn-do-restore-cloud" class="w-full px-4 py-2 rounded-md text-sm font-medium bg-amber-600 hover:bg-amber-700 text-white shadow-sm transition-colors">
+                                            Sí, restaurar datos de minería
+                                        </button>
+                                        <button type="button" id="btn-skip-restore-cloud" class="w-full px-4 py-2 rounded-md text-sm font-medium border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                            Continuar en local
+                                        </button>
+                                    </div>
+                                </div>
+                            `);
+
+                            document.getElementById('btn-skip-restore-cloud').addEventListener('click', () => {
+                                sessionStorage.setItem('bt_local_session_only', 'true');
+                                cerrarModal(overlay);
+                                resolve();
+                            });
+
+                            document.getElementById('btn-do-restore-cloud').addEventListener('click', async () => {
+                                const actions = document.getElementById('restore-actions-cloud');
+                                const loading = document.getElementById('restore-loading-cloud');
+                                if (actions) actions.classList.add('hidden');
+                                if (loading) loading.classList.remove('hidden');
+
+                                try {
+                                    const password = obtenerPasswordNube();
+                                    const indexRes = await fetch(`/api/sync?module=cloud_power_miner&index=true`, {
+                                        method: 'GET',
+                                        headers: { 'Authorization': `Bearer ${password}` }
+                                    });
+                                    const indexResult = await indexRes.json();
+                                    if (!indexRes.ok) throw new Error(indexResult.error);
+
+                                    const partsCount = indexResult.data.parts || 1;
+                                    const chunks = [];
+                                    for (let i = 0; i < partsCount; i++) {
+                                        const partRes = await fetch(`/api/sync?module=cloud_power_miner&part=${i}`, {
+                                            method: 'GET',
+                                            headers: { 'Authorization': `Bearer ${password}` }
+                                        });
+                                        const partResult = await partRes.json();
+                                        if (!partRes.ok) throw new Error(partResult.error);
+                                        chunks.push(partResult.raw || JSON.stringify(partResult.data));
+                                    }
+
+                                    const fullJsonStr = chunks.join('');
+                                    const parsedData = JSON.parse(fullJsonStr);
+                                    const payload = parseImportPayload(parsedData);
+                                    if (!payload) throw new Error('Formato inválido');
+
+                                    investments = payload.state;
+                                    localStorage.setItem('cloudPowerMinerInvestments', JSON.stringify(investments));
+                                    
+                                    const importedWebhook = payload.discordWebhookUrl;
+                                    if (importedWebhook) {
+                                        discordWebhookUrl = importedWebhook;
+                                        localStorage.setItem('cloudPowerMinerWebhook', importedWebhook);
+                                        if (discordWebhookInput) discordWebhookInput.value = discordWebhookUrl;
+                                    }
+                                    
+                                    localStorage.setItem(LAST_SYNC_TIMESTAMP_KEY, indexResult.data.exportadoEn);
+
+                                    renderApp();
+                                    showToast({ type: 'success', title: 'Sincronizado', message: 'Restauración inicial exitosa.' });
+                                } catch (e) {
+                                    showToast({ type: 'error', title: 'Error al restaurar', message: e.message });
+                                } finally {
+                                    cerrarModal(overlay);
+                                    resolve();
+                                }
+                            });
+                        });
+                    }
+                };
+
+                if (!estaAutenticadoEnNube()) {
+                    return new Promise((resolve) => {
+                        const overlay = crearModalBloqueante(`
+                            <div class="text-center">
+                                <div class="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mx-auto mb-4 text-blue-600 dark:text-blue-400">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                                </div>
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Seguridad de Sincronización</h3>
+                                <p class="text-sm text-gray-600 dark:text-gray-400 mb-6">Por favor, ingresa tu contraseña para habilitar la sincronización en la nube. Esta sesión durará 15 días.</p>
+                                
+                                <form id="form-auth-inicio-cloud" class="space-y-4">
+                                    <div>
+                                        <input type="password" id="input-password-inicio-cloud" required placeholder="Contraseña de la nube" 
+                                            class="w-full rounded-md border border-gray-300 dark:border-gray-900 px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none dark:bg-gray-950 dark:text-white">
+                                    </div>
+                                    <div class="flex flex-col gap-3 mt-6">
+                                        <button type="submit" class="w-full px-4 py-2 rounded-md text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-colors">
+                                            Ingresar y Sincronizar
+                                        </button>
+                                        <button type="button" id="btn-local-only-cloud" class="w-full px-4 py-2 rounded-md text-sm font-medium border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                            Trabajar en local por esta sesión
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        `);
+
+                        const form = document.getElementById('form-auth-inicio-cloud');
+                        const btnLocal = document.getElementById('btn-local-only-cloud');
+
+                        btnLocal.addEventListener('click', () => {
+                            sessionStorage.setItem('bt_local_session_only', 'true');
+                            cerrarModal(overlay);
+                            resolve();
+                        });
+
+                        form.addEventListener('submit', async (e) => {
+                            e.preventDefault();
+                            const pwd = document.getElementById('input-password-inicio-cloud').value;
+                            guardarPasswordNube(pwd);
+                            cerrarModal(overlay);
+                            updateAuthUICloud();
+                            await chequearDatosNuevosCloud();
+                            resolve();
+                        });
+                    });
+                } else {
+                    await chequearDatosNuevosCloud();
+                }
+            };
+
+            // --- Conexiones de Eventos de la Nube ---
+            if (formLoginCloud) {
+                formLoginCloud.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const pwd = inputCloudPassword.value;
+                    if (pwd) {
+                        guardarPasswordNube(pwd);
+                        inputCloudPassword.value = '';
+                        updateAuthUICloud();
+                        showToast({ type: 'success', title: 'Sesión autorizada', message: 'La contraseña maestra se guardó localmente.' });
+                        verificarNubeInicioCloud().catch(err => console.error(err));
+                    }
+                });
+            }
+
+            if (btnLogoutCloud) {
+                btnLogoutCloud.addEventListener('click', () => {
+                    cerrarSesionNube();
+                    updateAuthUICloud();
+                    showToast({ type: 'info', title: 'Sesión cerrada', message: 'Se eliminaron las credenciales de la nube.' });
+                });
+            }
+
+            if (btnBackupCloud) {
+                btnBackupCloud.addEventListener('click', respaldarDatosNube);
+            }
+
+            if (btnRestoreCloud) {
+                btnRestoreCloud.addEventListener('click', restaurarDatosNube);
+            }
+
+            // Init de la Nube
+            updateAuthUICloud();
+            verificarNubeInicioCloud().catch(err => console.error("Error en verificarNubeInicioCloud:", err));
 
             // Init
             renderApp();
