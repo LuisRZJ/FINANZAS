@@ -690,6 +690,50 @@ html:not(.dark) .tabs{ background: rgba(2,6,23,0.02) !important; }
         </div>
   <div class="help" style="margin-top:10px">Eliminar los datos borrará totalmente la base de datos <b id="dbNameInline">—</b>. Asegúrate de exportar si necesitas respaldo.</div>
       </div>
+
+      <!-- Nueva tarjeta de Sincronización en la Nube -->
+      <div class="card" style="margin-top: 14px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 12px">
+          <div>
+            <h2 style="margin:0; font-size:18px">☁️ Sincronización en la Nube</h2>
+            <p class="help" style="margin: 4px 0 0 0">Respalda tus registros en la nube a través de GitHub utilizando las credenciales globales del proyecto.</p>
+          </div>
+          <span style="background: rgba(59,130,246,0.1); color: #3b82f6; font-size: 10px; font-weight: bold; padding: 4px 8px; border-radius: 9999px; border: 1px solid rgba(59,130,246,0.2)">
+            Sincronizado
+          </span>
+        </div>
+
+        <!-- Estado no autenticado -->
+        <div id="auth-guest-cloud">
+          <p class="help" style="font-size:13px; color: var(--muted); margin-bottom: 12px">
+            Para sincronizar tus datos con la nube a través de GitHub, ingresa la Contraseña Maestra de Sincronización. Se guardará localmente por 15 días.
+          </p>
+          <form id="form-login-cloud" style="display: flex; gap: 8px">
+            <input type="password" id="input-cloud-password" required placeholder="Contraseña Maestra" style="flex: 1; padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--panel); color: var(--text);">
+            <button type="submit" class="btn primary">Autorizar Sesión</button>
+          </form>
+          <div id="auth-message-cloud" style="color: red; font-size:12px; margin-top:8px; text-align:center"></div>
+        </div>
+
+        <!-- Estado autenticado -->
+        <div id="auth-user-cloud" style="display:none; flex-direction:column; gap:12px">
+          <div style="display:flex; justify-content:space-between; align-items:center">
+            <div>
+              <span class="help" style="font-size:11px">Conexión a la nube:</span>
+              <div style="font-weight:bold; color:#4caf50; display:flex; align-items:center; gap:4px">
+                🟢 Autorizada
+              </div>
+            </div>
+            <button id="btn-logout-cloud" type="button" class="btn ghost" style="font-size:12px">Revocar Acceso</button>
+          </div>
+          <hr style="border: 0; border-top: 1px solid var(--border); margin: 4px 0">
+          <div class="row" style="display:flex; gap:8px">
+            <button id="btn-backup-cloud" type="button" class="btn primary" style="flex:1">☁️ Subir a la Nube</button>
+            <button id="btn-restore-cloud" type="button" class="btn" style="flex:1; background-color:#ffa500; color:white">📥 Descargar de la Nube</button>
+          </div>
+          <div id="sync-message-cloud" style="font-size:13px; text-align:center; margin-top:6px"></div>
+        </div>
+      </div>
     </section>
 
     <section id="tab-ajustes" class="panel" aria-labelledby="Ajustes" style="margin-top:14px;">
@@ -964,6 +1008,24 @@ html:not(.dark) .tabs{ background: rgba(2,6,23,0.02) !important; }
   function calcMXNFromSats(sats, btcPriceMXN){ return (Number(sats) / SATS_PER_BTC) * Number(btcPriceMXN); }
 
   function byId(id){return document.getElementById(id)}
+
+  // --- Constantes y Selectores de la Nube ---
+  const CLOUD_PASSWORD_KEY = 'fti_cloud_password';
+  const CLOUD_PASSWORD_DATE_KEY = 'fti_cloud_password_date';
+  const LAST_SYNC_TIMESTAMP_KEY = 'ct_farm_last_sync_timestamp';
+  const API_MODULE = 'ct_farm';
+  const EXPIRATION_DAYS = 15;
+  const MS_PER_DAY = 1000 * 60 * 60 * 24;
+
+  const formLoginCloud = byId('form-login-cloud');
+  const inputCloudPassword = byId('input-cloud-password');
+  const authMessageCloud = byId('auth-message-cloud');
+  const syncMessageCloud = byId('sync-message-cloud');
+  const authGuestCloud = byId('auth-guest-cloud');
+  const authUserCloud = byId('auth-user-cloud');
+  const btnLogoutCloud = byId('btn-logout-cloud');
+  const btnBackupCloud = byId('btn-backup-cloud');
+  const btnRestoreCloud = byId('btn-restore-cloud');
 
   // UI state and listeners (unchanged behavior)
   const tabs = document.querySelectorAll('.tab-btn');
@@ -1535,12 +1597,451 @@ html:not(.dark) .tabs{ background: rgba(2,6,23,0.02) !important; }
     if (displaySpan && buttonTextSpan) { displaySpan.textContent = date.toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' }); buttonTextSpan.style.display = 'none'; }
   }
 
+  // --- Funciones de Sincronización en la Nube ---
+  const estaAutenticadoEnNube = () => {
+    const pwd = localStorage.getItem(CLOUD_PASSWORD_KEY);
+    const dateStr = localStorage.getItem(CLOUD_PASSWORD_DATE_KEY);
+    if (!pwd || !dateStr) return false;
+    const date = parseInt(dateStr, 10);
+    if (isNaN(date)) return false;
+    return (Date.now() - date) / MS_PER_DAY <= EXPIRATION_DAYS;
+  };
+
+  const obtenerPasswordNube = () => estaAutenticadoEnNube() ? localStorage.getItem(CLOUD_PASSWORD_KEY) : null;
+  const guardarPasswordNube = (password) => {
+    if (!password) return;
+    localStorage.setItem(CLOUD_PASSWORD_KEY, password);
+    localStorage.setItem(CLOUD_PASSWORD_DATE_KEY, Date.now().toString());
+  };
+  const cerrarSesionNube = () => {
+    localStorage.removeItem(CLOUD_PASSWORD_KEY);
+    localStorage.removeItem(CLOUD_PASSWORD_DATE_KEY);
+  };
+
+  const updateAuthUICloud = () => {
+    if (authMessageCloud) authMessageCloud.textContent = '';
+    if (syncMessageCloud) {
+      syncMessageCloud.textContent = '';
+      syncMessageCloud.className = 'text-sm text-center';
+    }
+
+    if (estaAutenticadoEnNube()) {
+      if (authGuestCloud) authGuestCloud.style.display = 'none';
+      if (authUserCloud) authUserCloud.style.display = 'flex';
+    } else {
+      if (authGuestCloud) authGuestCloud.style.display = 'block';
+      if (authUserCloud) authUserCloud.style.display = 'none';
+    }
+  };
+
+  const verificarSeguridadSincronizacionCloud = async () => {
+    if (!estaAutenticadoEnNube()) {
+      return { safe: false, reason: 'No hay sesión activa' };
+    }
+
+    try {
+      const password = obtenerPasswordNube();
+      const response = await fetch(`/api/sync?module=${API_MODULE}&index=true`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${password}`
+        }
+      });
+
+      if (!response.ok) {
+        return { safe: false, reason: 'Error al contactar con la nube' };
+      }
+
+      const data = await response.json();
+      
+      if (!data.exists) {
+        return { safe: true, hasCloudData: false };
+      }
+
+      const cloudTimestamp = data.data.exportadoEn || new Date().toISOString();
+      
+      return { safe: true, cloudTimestamp, hasCloudData: true };
+    } catch (error) {
+      return { safe: false, reason: error.message };
+    }
+  };
+
+  const respaldarDatosNube = async () => {
+    const showSyncMessage = (msg, isError = false) => {
+      if (!syncMessageCloud) return;
+      syncMessageCloud.textContent = msg;
+      syncMessageCloud.className = `text-sm text-center ${isError ? 'text-danger' : ''}`;
+      syncMessageCloud.style.color = isError ? 'red' : 'green';
+    };
+
+    if (!estaAutenticadoEnNube()) {
+      showSyncMessage('Debes autorizar la sesión primero.', true);
+      return;
+    }
+
+    if (btnBackupCloud) btnBackupCloud.disabled = true;
+    showSyncMessage('Generando respaldo y conectando con la nube...', false);
+    const password = obtenerPasswordNube();
+
+    try {
+      const records = await getAllRecordsFromDB();
+      const settings = await getAllSettings();
+      const exportState = {
+        __page: 'ct-farm',
+        exportadoEn: new Date().toISOString(),
+        records,
+        settings
+      };
+      const jsonString = JSON.stringify(exportState);
+
+      const CHUNK_SIZE_CHARS = 3 * 1024 * 1024; // 3MB
+      const chunks = [];
+      for (let i = 0; i < jsonString.length; i += CHUNK_SIZE_CHARS) {
+        chunks.push(jsonString.slice(i, i + CHUNK_SIZE_CHARS));
+      }
+
+      for (let i = 0; i < chunks.length; i++) {
+        showSyncMessage(`Subiendo parte ${i + 1}/${chunks.length}...`, false);
+        const res = await fetch(`/api/sync?module=${API_MODULE}&part=${i}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'text/plain',
+            'Authorization': `Bearer ${password}`
+          },
+          body: chunks[i]
+        });
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.error || `Error al subir la parte ${i+1}/${chunks.length}`);
+      }
+
+      showSyncMessage('Subiendo índice de sincronización...', false);
+      const exportTimestamp = new Date().toISOString();
+      const indexObj = {
+        parts: chunks.length,
+        exportadoEn: exportTimestamp,
+        version: 1
+      };
+      const indexRes = await fetch(`/api/sync?module=${API_MODULE}&index=true`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${password}`
+        },
+        body: JSON.stringify(indexObj)
+      });
+      const indexResult = await indexRes.json();
+      if (!indexRes.ok) throw new Error(indexResult.error || 'Error al guardar el índice en la nube.');
+
+      localStorage.setItem(LAST_SYNC_TIMESTAMP_KEY, exportTimestamp);
+      showSyncMessage(`✓ Sincronizado correctamente.`, false);
+      alert('Sincronizado correctamente con la nube.');
+    } catch (err) {
+      showSyncMessage(`❌ Error: ${err.message}`, true);
+      alert('Error al respaldar en la nube: ' + err.message);
+    } finally {
+      if (btnBackupCloud) btnBackupCloud.disabled = false;
+    }
+  };
+
+  const restaurarDatosNube = async () => {
+    const showSyncMessage = (msg, isError = false) => {
+      if (!syncMessageCloud) return;
+      syncMessageCloud.textContent = msg;
+      syncMessageCloud.className = `text-sm text-center ${isError ? 'text-danger' : ''}`;
+      syncMessageCloud.style.color = isError ? 'red' : 'green';
+    };
+
+    if (!estaAutenticadoEnNube()) {
+      showSyncMessage('Debes autorizar la sesión primero.', true);
+      return;
+    }
+
+    if (!confirm('Esta acción reemplazará todos tus datos locales de CT Farm con el respaldo guardado en la nube. ¿Continuar?')) {
+      return;
+    }
+
+    if (btnRestoreCloud) btnRestoreCloud.disabled = true;
+    showSyncMessage('Descargando índice de respaldo...', false);
+    const password = obtenerPasswordNube();
+
+    try {
+      const indexRes = await fetch(`/api/sync?module=${API_MODULE}&index=true`, {
+        method: 'GET',
+        headers: { 'Authorization': `Bearer ${password}` }
+      });
+      const indexResult = await indexRes.json();
+      if (!indexRes.ok) throw new Error(indexResult.error || 'Error al obtener el índice de la nube');
+
+      if (!indexResult.exists || !indexResult.data) {
+        throw new Error('No se encontraron datos de respaldo en la nube.');
+      }
+
+      const partsCount = indexResult.data.parts || 1;
+      const chunks = [];
+
+      for (let i = 0; i < partsCount; i++) {
+        showSyncMessage(`Descargando parte ${i + 1}/${partsCount}...`, false);
+        const partRes = await fetch(`/api/sync?module=${API_MODULE}&part=${i}`, {
+          method: 'GET',
+          headers: { 'Authorization': `Bearer ${password}` }
+        });
+        const partResult = await partRes.json();
+        if (!partRes.ok) throw new Error(partResult.error || `Error al descargar parte ${i + 1}`);
+        if (!partResult.exists) throw new Error(`Parte ${i + 1} no encontrada.`);
+
+        chunks.push(partResult.raw || JSON.stringify(partResult.data));
+      }
+
+      showSyncMessage('Procesando datos...', false);
+      const fullJsonStr = chunks.join('');
+      const parsedData = JSON.parse(fullJsonStr);
+      
+      if (!parsedData || !Array.isArray(parsedData.records)) {
+        throw new Error('Estructura de respaldo descargada no es válida.');
+      }
+      
+      await saveRecords(parsedData.records);
+
+      if (parsedData.settings && typeof parsedData.settings === 'object') {
+        for (const key in parsedData.settings) {
+          await setSetting(key, parsedData.settings[key]);
+        }
+      }
+
+      localStorage.setItem(LAST_SYNC_TIMESTAMP_KEY, indexResult.data.exportadoEn);
+
+      await refreshAll();
+      await refreshStorageStats();
+      await refreshSettingsUI();
+
+      showSyncMessage('✓ Restauración completada.', false);
+      alert('Datos descargados e importados de la nube correctamente.');
+    } catch (err) {
+      showSyncMessage(`❌ Error: ${err.message}`, true);
+      alert('Error al descargar de la nube: ' + err.message);
+    } finally {
+      if (btnRestoreCloud) btnRestoreCloud.disabled = false;
+    }
+  };
+
+  const verificarNubeInicioCloud = async () => {
+    if (sessionStorage.getItem('bt_local_session_only') === 'true') {
+      return;
+    }
+
+    const crearModalBloqueante = (htmlContent) => {
+      const overlay = document.createElement('div');
+      overlay.id = 'modal-inicio-nube-cloud';
+      overlay.style.cssText = 'position:fixed; inset:0; background:rgba(15,23,42,0.85); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; z-index:10000; transition:all 0.3s ease;';
+
+      const modal = document.createElement('div');
+      modal.style.cssText = 'background:var(--card, #ffffff); color:var(--text, #1e293b); border:1px solid var(--border, #e2e8f0); border-radius:16px; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); max-width:400px; width:90%; padding:24px; text-align:center; position:relative;';
+      modal.innerHTML = htmlContent;
+
+      overlay.appendChild(modal);
+      document.body.appendChild(overlay);
+      document.body.style.overflow = 'hidden';
+      return overlay;
+    };
+
+    const cerrarModal = (overlay) => {
+      overlay.remove();
+      document.body.style.overflow = '';
+    };
+
+    const chequearDatosNuevosCloud = async () => {
+      const check = await verificarSeguridadSincronizacionCloud();
+      if (!check.safe || !check.hasCloudData) return;
+
+      const lastSyncStr = localStorage.getItem(LAST_SYNC_TIMESTAMP_KEY);
+      const cloudDate = new Date(check.cloudTimestamp);
+      
+      let hasNewerData = false;
+      if (!lastSyncStr) {
+        hasNewerData = true;
+      } else {
+        const localDate = new Date(lastSyncStr);
+        if (cloudDate.getTime() > localDate.getTime() + 5000) {
+          hasNewerData = true;
+        }
+      }
+
+      if (hasNewerData) {
+        return new Promise((resolve) => {
+          const overlay = crearModalBloqueante(`
+            <div style="text-align:center">
+              <div style="width: 48px; height: 48px; border-radius: 9999px; background: rgba(245,158,11,0.1); color: #f59e0b; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto;">
+                <svg style="width: 24px; height: 24px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+              </div>
+              <h3 style="font-size: 18px; font-weight: bold; margin-bottom: 8px">Datos en la nube más recientes</h3>
+              <p class="help" style="font-size: 14px; margin-bottom: 24px">
+                Se detectó un respaldo de CT Farm más actualizado en la nube (${cloudDate.toLocaleString()}). ¿Deseas restaurarlo ahora?
+              </p>
+              <div id="restore-loading-cloud" style="display:none; margin-bottom: 16px; font-size: 14px; font-weight: bold; color: #3b82f6">Descargando datos...</div>
+              <div id="restore-actions-cloud" style="display: flex; flex-direction: column; gap: 12px">
+                <button type="button" id="btn-do-restore-cloud" class="btn primary" style="width:100%; padding: 12px; font-weight:bold; border-radius:8px">
+                  Sí, restaurar datos de CT Farm
+                </button>
+                <button type="button" id="btn-skip-restore-cloud" class="btn ghost" style="width:100%; padding: 12px; font-weight:bold; border-radius:8px">
+                  Continuar en local
+                </button>
+              </div>
+            </div>
+          `);
+
+          document.getElementById('btn-skip-restore-cloud').addEventListener('click', () => {
+            sessionStorage.setItem('bt_local_session_only', 'true');
+            cerrarModal(overlay);
+            resolve();
+          });
+
+          document.getElementById('btn-do-restore-cloud').addEventListener('click', async () => {
+            const actions = document.getElementById('restore-actions-cloud');
+            const loading = document.getElementById('restore-loading-cloud');
+            if (actions) actions.style.display = 'none';
+            if (loading) loading.style.display = 'block';
+
+            try {
+              const password = obtenerPasswordNube();
+              const indexRes = await fetch(`/api/sync?module=${API_MODULE}&index=true`, {
+                method: 'GET',
+                headers: { 'Authorization': `Bearer ${password}` }
+              });
+              const indexResult = await indexRes.json();
+              if (!indexRes.ok) throw new Error(indexResult.error);
+
+              const partsCount = indexResult.data.parts || 1;
+              const chunks = [];
+              for (let i = 0; i < partsCount; i++) {
+                const partRes = await fetch(`/api/sync?module=${API_MODULE}&part=${i}`, {
+                  method: 'GET',
+                  headers: { 'Authorization': `Bearer ${password}` }
+                });
+                const partResult = await partRes.json();
+                if (!partRes.ok) throw new Error(partResult.error);
+                chunks.push(partResult.raw || JSON.stringify(partResult.data));
+              }
+
+              const fullJsonStr = chunks.join('');
+              const parsedData = JSON.parse(fullJsonStr);
+              
+              if (!parsedData || !Array.isArray(parsedData.records)) {
+                throw new Error('Estructura de respaldo descargada no es válida.');
+              }
+              
+              await saveRecords(parsedData.records);
+
+              if (parsedData.settings && typeof parsedData.settings === 'object') {
+                for (const key in parsedData.settings) {
+                  await setSetting(key, parsedData.settings[key]);
+                }
+              }
+
+              localStorage.setItem(LAST_SYNC_TIMESTAMP_KEY, indexResult.data.exportadoEn);
+
+              await refreshAll();
+              await refreshStorageStats();
+              await refreshSettingsUI();
+
+              alert('Datos sincronizados e importados de la nube.');
+            } catch (e) {
+              alert('Error al sincronizar al inicio: ' + e.message);
+            } finally {
+              cerrarModal(overlay);
+              resolve();
+            }
+          });
+        });
+      }
+    };
+
+    if (!estaAutenticadoEnNube()) {
+      return new Promise((resolve) => {
+        const overlay = crearModalBloqueante(`
+          <div style="text-align:center">
+            <div style="width: 48px; height: 48px; border-radius: 9999px; background: rgba(59,130,246,0.1); color: #3b82f6; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto;">
+              <svg style="width: 24px; height: 24px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+            </div>
+            <h3 style="font-size: 18px; font-weight: bold; margin-bottom: 8px">Seguridad de Sincronización</h3>
+            <p class="help" style="font-size: 14px; margin-bottom: 24px">Por favor, ingresa tu contraseña para habilitar la sincronización en la nube. Esta sesión durará 15 días.</p>
+            
+            <form id="form-auth-inicio-cloud" style="display: flex; flex-direction: column; gap: 12px">
+              <input type="password" id="input-password-inicio-cloud" required placeholder="Contraseña de la nube" 
+                style="width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--panel); color: var(--text); box-sizing: border-box;">
+              <button type="submit" class="btn primary" style="width:100%; padding: 12px; font-weight:bold; border-radius:8px">
+                Ingresar y Sincronizar
+              </button>
+              <button type="button" id="btn-local-only-cloud" class="btn ghost" style="width:100%; padding: 12px; font-weight:bold; border-radius:8px">
+                Trabajar en local por esta sesión
+              </button>
+            </form>
+          </div>
+        `);
+
+        const form = document.getElementById('form-auth-inicio-cloud');
+        const btnLocal = document.getElementById('btn-local-only-cloud');
+
+        btnLocal.addEventListener('click', () => {
+          sessionStorage.setItem('bt_local_session_only', 'true');
+          cerrarModal(overlay);
+          resolve();
+        });
+
+        form.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const pwd = document.getElementById('input-password-inicio-cloud').value;
+          guardarPasswordNube(pwd);
+          cerrarModal(overlay);
+          updateAuthUICloud();
+          await chequearDatosNuevosCloud();
+          resolve();
+        });
+      });
+    } else {
+      await chequearDatosNuevosCloud();
+    }
+  };
+
   // Inicio: obtener precio, luego inicializar UI leyendo IndexedDB
   await fetchBtcPrice();
   await refreshAll();
   // Refresh storage stats initially
   await refreshStorageStats();
   await refreshSettingsUI();
+
+  // Registrar Eventos de la Nube
+  if (formLoginCloud) {
+    formLoginCloud.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const pwd = inputCloudPassword.value;
+      if (pwd) {
+        guardarPasswordNube(pwd);
+        inputCloudPassword.value = '';
+        updateAuthUICloud();
+        alert('Sesión autorizada correctamente.');
+        verificarNubeInicioCloud().catch(err => console.error(err));
+      }
+    });
+  }
+
+  if (btnLogoutCloud) {
+    btnLogoutCloud.addEventListener('click', () => {
+      cerrarSesionNube();
+      updateAuthUICloud();
+      alert('Sesión de nube cerrada y credenciales locales eliminadas.');
+    });
+  }
+
+  if (btnBackupCloud) {
+    btnBackupCloud.addEventListener('click', respaldarDatosNube);
+  }
+
+  if (btnRestoreCloud) {
+    btnRestoreCloud.addEventListener('click', restaurarDatosNube);
+  }
+
+  updateAuthUICloud();
+  verificarNubeInicioCloud().catch(err => console.error("Error en verificarNubeInicioCloud:", err));
 
   // --- Calculadora (sin cambios funcionales) ---
   let calcDisplay = document.getElementById('calculatorDisplay');
