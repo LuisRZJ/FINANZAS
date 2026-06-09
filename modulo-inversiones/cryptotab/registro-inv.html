@@ -9,76 +9,99 @@
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        tailwind.config = { darkMode: 'class', theme: { extend: { colors: { slate: { 850: '#1e293b', 900: '#0f172a' } } } } };
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        slate: {
+                            850: '#1e293b',
+                            900: '#0f172a'
+                        }
+                    }
+                }
+            }
+        };
     </script>
     <script>
         (function(){try{var t=localStorage.getItem('fti_theme_preference');var d=window.matchMedia('(prefers-color-scheme: dark)').matches;if(t==='dark'||((!t||t==='system')&&d)){document.documentElement.classList.add('dark');}else{document.documentElement.classList.remove('dark');}}catch(e){}})();
     </script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-    <!-- Inter font -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        html, body, .app-inter { font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial !important; }
-        :root { --app-font: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; }
-    </style>
-    <style>
-        :root{--bg-body:#f9fafb;--text-body:#374151;--card:#ffffff;--card-border:#e5e7eb;--muted:#64748b;--accent:#3b82f6;--accent-hover:#2563eb;--divider:#e2e8f0}
-        html.dark{--bg-body:#0f172a;--text-body:#e2e8f0;--card:#1e293b;--card-border:#334155;--muted:#94a3b8;--accent:#60a5fa;--accent-hover:#3b82f6;--divider:#334155}
-        body{background-color:var(--bg-body);color:var(--text-body);transition:background-color .3s ease,color .3s ease}
-        html.dark .text-slate-900{color:#f8fafc!important}
-        html.dark .text-slate-700{color:var(--text-body)!important}
-        html.dark .text-slate-600{color:var(--muted)!important}
-        html.dark .text-slate-500{color:var(--muted)!important}
-        html.dark .bg-white{background-color:var(--card)!important}
-        html.dark .bg-white\/80{background-color:rgba(30,41,59,.8)!important}
-        html.dark .bg-white\/60{background-color:rgba(30,41,59,.6)!important}
-        html.dark .shadow{box-shadow:0 1px 3px rgba(0,0,0,.4),0 1px 2px rgba(0,0,0,.3)!important}
-        html.dark .ring-slate-300{--tw-ring-color:#334155!important}
-        html.dark .divide-slate-200{border-color:var(--divider)!important}
-        html.dark .divide-slate-100{border-color:var(--card-border)!important}
-        html.dark .bg-slate-50{background-color:#0b1220!important}
-        html.dark .from-slate-50{--tw-gradient-from:#0f172a!important;--tw-gradient-stops:var(--tw-gradient-from),var(--tw-gradient-to)!important}
-        html.dark .to-indigo-50{--tw-gradient-to:#1e293b!important}
-        html.dark .border{border-color:var(--card-border)!important}
-        html.dark .ring-inset{--tw-ring-offset-shadow:0 0 #0000!important}
-        html.dark .bg-indigo-600:hover{background-color:#4f46e5!important}
-        html.dark .bg-blue-600:hover{background-color:#3b82f6!important}
-        html.dark .bg-green-600:hover{background-color:#16a34a!important}
-        html.dark .bg-red-600:hover{background-color:#dc2626!important}
-        .btn-accent{background-color:var(--accent);color:#fff}
-        .btn-accent:hover{background-color:var(--accent-hover)}
+        :root {
+            --bg-body: #e2e8f0; /* bg-gray-200 equivalent */
+            --text-body: #1e293b; /* text-slate-800 */
+            --card: #ffffff;
+            --card-border: #f1f5f9;
+            --muted: #64748b;
+            --accent: #2563eb;
+            --accent-hover: #1d4ed8;
+            --divider: #e2e8f0;
+        }
+        html.dark {
+            --bg-body: #0f172a; /* bg-gray-900 equivalent */
+            --text-body: #f1f5f9; /* text-gray-100 */
+            --card: #1e293b; /* bg-slate-900 equivalent */
+            --card-border: #334155;
+            --muted: #94a3b8;
+            --accent: #3b82f6;
+            --accent-hover: #60a5fa;
+            --divider: #334155;
+        }
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-body);
+            font-family: 'Inter', sans-serif;
+            transition: background-color .3s ease, color .3s ease;
+        }
+        .btn-accent {
+            background-color: var(--accent);
+            color: #fff;
+        }
+        .btn-accent:hover {
+            background-color: var(--accent-hover);
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.25s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
     </style>
 </head>
-<body class="bg-gradient-to-br from-slate-50 to-indigo-50 font-sans app-inter min-h-screen">
+<body class="bg-gray-200 dark:bg-gray-900 text-slate-800 dark:text-gray-100 font-sans antialiased min-h-screen transition-colors duration-300">
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div class="max-w-7xl mx-auto p-4 sm:p-8 w-full">
 
-        <!-- Simple header for the page -->
-        <header class="mb-8 bg-white/80 backdrop-blur rounded-2xl shadow p-6 flex items-center justify-between">
+        <!-- Cabecera de la página -->
+        <header class="mb-8 bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 transition-all duration-300">
             <div>
-                <h1 class="text-3xl font-bold text-slate-900 tracking-tight">Registro de Inversiones — CryptoTab</h1>
-                <p class="text-sm text-slate-600 mt-1">Añade y gestiona tus registros de inversión. Usa los filtros para encontrar registros rápidamente.</p>
+                <h1 class="text-3xl font-extrabold bg-gradient-to-r from-orange-500 to-red-600 bg-clip-text text-transparent tracking-tight leading-none">CryptoTab</h1>
+                <p class="text-xs text-gray-500 font-medium uppercase tracking-wider dark:text-slate-400 mt-1">Registro de Inversiones</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">Añade y gestiona tus registros de inversión. Usa los filtros para encontrar registros rápidamente.</p>
             </div>
-            <div class="flex items-center gap-2">
-                <a href="../index.html" class="inline-flex items-center bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium py-2.5 px-3.5 rounded-full shadow-sm">
-                    <i class="fas fa-arrow-left mr-2"></i>Volver al Panel
+            <div class="flex items-center gap-2 self-start sm:self-center">
+                <a href="../index.html" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold border border-gray-200 dark:border-slate-700/60 bg-white/40 hover:bg-white/60 dark:bg-slate-900/40 dark:hover:bg-slate-900/60 text-gray-700 dark:text-slate-200 transition-all shadow-sm">
+                    <i class="fas fa-arrow-left"></i> <span>Volver al Panel</span>
                 </a>
             </div>
         </header>
 
         <!-- Pestañas de Navegación -->
-        <div class="mb-6">
-            <ul class="flex flex-wrap gap-2 text-sm font-medium" id="myTab" role="tablist">
-                <li class="mr-2" role="presentation">
-                    <button class="px-4 py-2 rounded-full border border-transparent text-slate-600 hover:text-slate-800 transition shadow-sm" id="dashboard-tab" type="button" role="tab" aria-controls="dashboard" aria-selected="true"><i class="fas fa-tachometer-alt mr-2"></i>Dashboard</button>
-                </li>
-                <li class="mr-2" role="presentation">
-                    <button class="px-4 py-2 rounded-full border border-transparent text-slate-600 hover:text-slate-800 transition shadow-sm" id="settings-tab" type="button" role="tab" aria-controls="settings" aria-selected="false"><i class="fas fa-cog mr-2"></i>Ajustes</button>
-                </li>
-                <li class="mr-2" role="presentation">
-                    <button class="px-4 py-2 rounded-full border border-transparent text-slate-600 hover:text-slate-800 transition shadow-sm" id="storage-tab" type="button" role="tab" aria-controls="storage" aria-selected="false"><i class="fas fa-database mr-2"></i>Almacenamiento</button>
-                </li>
-            </ul>
+        <div class="mb-8 flex justify-center sm:justify-start">
+            <div class="flex p-1 space-x-1 bg-white dark:bg-slate-900 rounded-xl max-w-md w-full border border-gray-100 dark:border-slate-800 shadow-sm transition-all duration-300">
+                <button id="dashboard-tab" class="w-full py-2 text-sm font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-2 bg-blue-600 dark:bg-blue-500 text-white shadow-sm" type="button" role="tab"><i class="fas fa-tachometer-alt"></i> Dashboard</button>
+                <button id="settings-tab" class="w-full py-2 text-sm font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-2 text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-200" type="button" role="tab"><i class="fas fa-cog"></i> Ajustes</button>
+                <button id="storage-tab" class="w-full py-2 text-sm font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-2 text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-200" type="button" role="tab"><i class="fas fa-database"></i> Almacenamiento</button>
+            </div>
         </div>
 
         <!-- Contenido de las Pestañas -->
@@ -86,209 +109,324 @@
 
             <!-- Pestaña Principal: Dashboard -->
             <div id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
-                <div class="flex justify-between items-center mb-4">
-                    <h1 class="text-2xl font-bold text-slate-900">Registros</h1>
-                    <button id="addRecordBtn" class="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-semibold py-2 px-4 rounded-full shadow">
-                        <i class="fas fa-plus mr-2"></i>Añadir Registro
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Registros Activos</h2>
+                    <button id="addRecordBtn" class="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-xl shadow-sm transition-all flex items-center gap-2 text-sm">
+                        <i class="fas fa-plus"></i> Añadir Registro
                     </button>
                 </div>
 
                 <!-- Filtros -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 p-4 bg-white/80 backdrop-blur rounded-2xl shadow">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6 p-6 bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm transition-all duration-300">
                     <div>
-                        <label for="filterApp" class="block text-sm font-medium text-slate-700">Filtrar por APP</label>
-                        <select id="filterApp" class="mt-1 block w-full rounded-xl border-0 ring-1 ring-inset ring-slate-300 bg-white/80 backdrop-blur px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-600"></select>
+                        <label for="filterApp" class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400">Filtrar por APP</label>
+                        <select id="filterApp" class="mt-2 block w-full rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-gray-700 dark:text-slate-200 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm"></select>
                     </div>
                     <div>
-                        <label for="filterPlazo" class="block text-sm font-medium text-slate-700">Filtrar por Plazo</label>
-                        <select id="filterPlazo" class="mt-1 block w-full rounded-xl border-0 ring-1 ring-inset ring-slate-300 bg-white/80 backdrop-blur px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-600"></select>
+                        <label for="filterPlazo" class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400">Filtrar por Plazo</label>
+                        <select id="filterPlazo" class="mt-2 block w-full rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-gray-700 dark:text-slate-200 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm"></select>
                     </div>
                     <div>
-                        <label for="filterMetodoPago" class="block text-sm font-medium text-slate-700">Filtrar por Método de Pago</label>
-                        <select id="filterMetodoPago" class="mt-1 block w-full rounded-xl border-0 ring-1 ring-inset ring-slate-300 bg-white/80 backdrop-blur px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-600"></select>
+                        <label for="filterMetodoPago" class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400">Filtrar por Método de Pago</label>
+                        <select id="filterMetodoPago" class="mt-2 block w-full rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-gray-700 dark:text-slate-200 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm"></select>
                     </div>
                     <div>
-                        <label for="filterOrder" class="block text-sm font-medium text-slate-700">Ordenar</label>
-                        <select id="filterOrder" class="mt-1 block w-full rounded-xl border-0 ring-1 ring-inset ring-slate-300 bg-white/80 backdrop-blur px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-600"></select>
+                        <label for="filterOrder" class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400">Ordenar</label>
+                        <select id="filterOrder" class="mt-2 block w-full rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-gray-700 dark:text-slate-200 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm"></select>
                     </div>
                 </div>
 
                 <!-- Tabla Principal -->
-                <div class="bg-white/80 backdrop-blur shadow rounded-2xl overflow-x-auto">
-                    <table class="min-w-full divide-y divide-slate-200">
-                        <thead class="bg-slate-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">APP</th>
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">Hash Rate</th>
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">Plazo Inversión</th>
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">Método Pago</th>
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">Costo</th>
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">Próx. Renovación</th>
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">Notas</th>
-                                <th class="px-6 py-3 text-right text-xs font-semibold text-slate-600 uppercase tracking-wide">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody id="dataTableBody" class="bg-white/0 divide-y divide-slate-100">
-                            <!-- Filas de datos se insertarán aquí -->
-                        </tbody>
-                        <tfoot class="bg-slate-50 font-bold">
-                            <tr id="tableTotals">
-                                <td class="px-6 py-4">Total</td>
-                                <td id="totalHashRate" class="px-6 py-4"></td>
-                                <td class="px-6 py-4"></td>
-                                <td class="px-6 py-4"></td>
-                                <td id="totalCosto" class="px-6 py-4"></td>
-                                <td class="px-6 py-4"></td>
-                                <td id="totalRegistros" class="px-6 py-4 text-center text-slate-700" colspan="2"></td>
-                            </tr>
-                        </tfoot>
-                    </table>
+                <div class="bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 shadow-sm rounded-2xl overflow-hidden transition-all duration-300">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-100 dark:divide-slate-800">
+                            <thead class="bg-gray-50 dark:bg-slate-800/40 text-gray-500 dark:text-slate-400">
+                                <tr>
+                                    <th class="px-6 py-4.5 text-left text-xs font-bold uppercase tracking-wider">APP</th>
+                                    <th class="px-6 py-4.5 text-left text-xs font-bold uppercase tracking-wider">Hash Rate</th>
+                                    <th class="px-6 py-4.5 text-left text-xs font-bold uppercase tracking-wider">Plazo Inversión</th>
+                                    <th class="px-6 py-4.5 text-left text-xs font-bold uppercase tracking-wider">Método Pago</th>
+                                    <th class="px-6 py-4.5 text-left text-xs font-bold uppercase tracking-wider">Costo</th>
+                                    <th class="px-6 py-4.5 text-left text-xs font-bold uppercase tracking-wider">Próx. Renovación</th>
+                                    <th class="px-6 py-4.5 text-left text-xs font-bold uppercase tracking-wider">Notas</th>
+                                    <th class="px-6 py-4.5 text-right text-xs font-bold uppercase tracking-wider">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dataTableBody" class="divide-y divide-gray-50 dark:divide-slate-800/60 text-sm">
+                                <!-- Filas de datos se insertarán aquí -->
+                            </tbody>
+                            <tfoot class="bg-gray-50 dark:bg-slate-800/40 font-bold border-t border-gray-100 dark:border-slate-800 text-gray-800 dark:text-slate-200">
+                                <tr id="tableTotals">
+                                    <td class="px-6 py-4">Total</td>
+                                    <td id="totalHashRate" class="px-6 py-4"></td>
+                                    <td class="px-6 py-4"></td>
+                                    <td class="px-6 py-4"></td>
+                                    <td id="totalCosto" class="px-6 py-4"></td>
+                                    <td class="px-6 py-4"></td>
+                                    <td id="totalRegistros" class="px-6 py-4 text-center" colspan="2"></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
                 </div>
             </div>
 
             <!-- Pestaña de Ajustes -->
             <div id="settings" class="hidden" role="tabpanel" aria-labelledby="settings-tab">
-                <h2 class="text-xl font-bold text-slate-900 mb-4">Gestionar Opciones</h2>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                     <!-- Gestión de APPs -->
-                    <div>
-                        <h3 class="font-semibold mb-2 text-slate-900">APPs</h3>
-                        <div id="appsOptions" class="space-y-2"></div>
-                        <div class="mt-2">
-                            <input type="text" id="newAppName" placeholder="Nombre de la APP" class="w-full rounded-xl border-0 ring-1 ring-inset ring-slate-300 bg-white/80 px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-600">
-                            <input type="color" id="newAppColor" class="w-full h-9 rounded-xl ring-1 ring-inset ring-slate-300 bg-white/80 mt-1">
-                            <button onclick="addOption('apps')" class="mt-2 bg-indigo-600 hover:bg-indigo-700 text-white w-full py-2 rounded-full">Añadir APP</button>
-                        </div>
-                    </div>
-                    <!-- Gestión de Plazos de Inversión -->
-                    <div>
-                        <h3 class="font-semibold mb-2 text-slate-900">Plazos de Inversión</h3>
-                        <div id="plazosOptions" class="space-y-2"></div>
-                        <div class="mt-2">
-                            <input type="text" id="newPlazoName" placeholder="Ej: 30 días / 3 meses" class="w-full rounded-xl border-0 ring-1 ring-inset ring-slate-300 bg-white/80 px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-600">
-                            <div class="mt-1 flex gap-2">
-                                <input type="number" id="newPlazoLength" placeholder="Número" class="w-1/2 rounded-xl border-0 ring-1 ring-inset ring-slate-300 bg-white/80 px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-600">
-                                <select id="newPlazoUnit" class="w-1/2 rounded-xl border-0 ring-1 ring-inset ring-slate-300 bg-white/80 px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-600">
-                                    <option value="days">Días</option>
-                                    <option value="months">Meses</option>
-                                </select>
+                    <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm transition-all duration-300">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400 mb-4 flex items-center gap-2"><i class="fas fa-mobile-alt text-blue-500"></i> APPs</h3>
+                        <div id="appsOptions" class="space-y-2 mb-4"></div>
+                        <div class="space-y-3 pt-3 border-t border-gray-100 dark:border-slate-800">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-500 dark:text-slate-400">Nombre de la APP</label>
+                                <input type="text" id="newAppName" placeholder="Ej: CryptoTab Pro" class="mt-1 w-full rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-gray-700 dark:text-slate-200 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
                             </div>
-                            <input type="color" id="newPlazoColor" class="w-full h-9 rounded-xl ring-1 ring-inset ring-slate-300 bg-white/80 mt-1">
-                            <button onclick="addOption('plazos')" class="mt-2 bg-indigo-600 hover:bg-indigo-700 text-white w-full py-2 rounded-full">Añadir Plazo</button>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-500 dark:text-slate-400">Color Identificador</label>
+                                <input type="color" id="newAppColor" class="mt-1 w-full h-10 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-1">
+                            </div>
+                            <button onclick="addOption('apps')" class="mt-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white w-full py-2 rounded-xl text-sm font-bold shadow-sm transition-all">Agregar APP</button>
                         </div>
                     </div>
+
+                    <!-- Gestión de Plazos de Inversión -->
+                    <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm transition-all duration-300">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400 mb-4 flex items-center gap-2"><i class="fas fa-calendar-alt text-green-500"></i> Plazos de Inversión</h3>
+                        <div id="plazosOptions" class="space-y-2 mb-4"></div>
+                        <div class="space-y-3 pt-3 border-t border-gray-100 dark:border-slate-800">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-500 dark:text-slate-400">Etiqueta del Plazo</label>
+                                <input type="text" id="newPlazoName" placeholder="Ej: 30 días / 1 año" class="mt-1 w-full rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-gray-700 dark:text-slate-200 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-500 dark:text-slate-400">Duración Temporal</label>
+                                <div class="mt-1 flex gap-2">
+                                    <input type="number" id="newPlazoLength" placeholder="Número" class="w-1/2 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-gray-700 dark:text-slate-200 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                                    <select id="newPlazoUnit" class="w-1/2 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-gray-700 dark:text-slate-200 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                                        <option value="days">Días</option>
+                                        <option value="months">Meses</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-500 dark:text-slate-400">Color Identificador</label>
+                                <input type="color" id="newPlazoColor" class="mt-1 w-full h-10 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-1">
+                            </div>
+                            <button onclick="addOption('plazos')" class="mt-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white w-full py-2 rounded-xl text-sm font-bold shadow-sm transition-all">Agregar Plazo</button>
+                        </div>
+                    </div>
+
                     <!-- Gestión de Métodos de Pago -->
-                    <div>
-                        <h3 class="font-semibold mb-2 text-slate-900">Métodos de Pago</h3>
-                        <div id="metodosPagoOptions" class="space-y-2"></div>
-                        <div class="mt-2">
-                            <input type="text" id="newMetodoPagoName" placeholder="Nombre del método" class="w-full rounded-xl border-0 ring-1 ring-inset ring-slate-300 bg-white/80 px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-600">
-                            <input type="color" id="newMetodoPagoColor" class="w-full h-9 rounded-xl ring-1 ring-inset ring-slate-300 bg-white/80 mt-1">
-                            <button onclick="addOption('metodosPago')" class="mt-2 bg-indigo-600 hover:bg-indigo-700 text-white w-full py-2 rounded-full">Añadir Método</button>
+                    <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm transition-all duration-300">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400 mb-4 flex items-center gap-2"><i class="fas fa-credit-card text-orange-500"></i> Métodos de Pago</h3>
+                        <div id="metodosPagoOptions" class="space-y-2 mb-4"></div>
+                        <div class="space-y-3 pt-3 border-t border-gray-100 dark:border-slate-800">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-500 dark:text-slate-400">Nombre del método</label>
+                                <input type="text" id="newMetodoPagoName" placeholder="Ej: Tarjeta de Crédito" class="mt-1 w-full rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-gray-700 dark:text-slate-200 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-500 dark:text-slate-400">Color Identificador</label>
+                                <input type="color" id="newMetodoPagoColor" class="mt-1 w-full h-10 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-1">
+                            </div>
+                            <button onclick="addOption('metodosPago')" class="mt-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white w-full py-2 rounded-xl text-sm font-bold shadow-sm transition-all">Agregar Método</button>
                         </div>
                     </div>
                 </div>
             </div>
+
             <!-- Pestaña de Almacenamiento -->
-            <div id="storage" class="hidden p-6 bg-white/80 backdrop-blur rounded-2xl shadow" role="tabpanel" aria-labelledby="storage-tab">
-                <h2 class="text-xl font-bold text-slate-900 mb-4">Almacenamiento</h2>
-                <p class="text-sm text-slate-600 mb-4">Resumen del almacenamiento usado por esta página y herramientas de respaldo/restauración.</p>
+            <div id="storage" class="hidden p-6 bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm transition-all duration-300" role="tabpanel" aria-labelledby="storage-tab">
+                <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-2">Almacenamiento</h2>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mb-6">Resumen del almacenamiento usado por esta página y herramientas de respaldo/restauración local.</p>
 
-                <div id="storageSummary" class="mb-4 space-y-2">
-                    <div>Total registros: <span id="storageTotalRecords">0</span></div>
-                    <div>Tamaño registros: <span id="storageSizeRecords">0</span> bytes</div>
-                    <div>Total opciones: <span id="storageTotalOptions">0</span></div>
-                    <div>Tamaño opciones: <span id="storageSizeOptions">0</span> bytes</div>
-                    <div>Tamaño total (estimado): <span id="storageSizeTotal">0</span> bytes</div>
+                <!-- Grid de estadísticas de storage -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-gray-50 dark:bg-slate-800/40 p-4 rounded-xl border border-gray-100 dark:border-slate-800 text-center">
+                        <p class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400">Total Registros</p>
+                        <p class="text-2xl font-black text-blue-600 dark:text-blue-400 mt-2" id="storageTotalRecords">0</p>
+                    </div>
+                    <div class="bg-gray-50 dark:bg-slate-800/40 p-4 rounded-xl border border-gray-100 dark:border-slate-800 text-center">
+                        <p class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400">Total Opciones</p>
+                        <p class="text-2xl font-black text-gray-800 dark:text-slate-200 mt-2" id="storageTotalOptions">0</p>
+                    </div>
+                    <div class="bg-gray-50 dark:bg-slate-800/40 p-4 rounded-xl border border-gray-100 dark:border-slate-800 text-center">
+                        <p class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400">Tamaño Total Estimado</p>
+                        <p class="text-2xl font-black text-green-600 dark:text-green-400 mt-2"><span id="storageSizeTotal">0</span> bytes</p>
+                        <p class="text-[9px] text-gray-400 mt-1">(Regs: <span id="storageSizeRecords">0</span>B | Opts: <span id="storageSizeOptions">0</span>B)</p>
+                    </div>
                 </div>
 
-                <div class="flex flex-wrap gap-2">
-                    <button id="exportBtn" class="inline-flex items-center rounded-full bg-green-600 hover:bg-green-700 text-white px-3 py-2 text-sm font-medium shadow-sm"><i class="fas fa-file-export mr-2"></i>Exportar datos</button>
-                    <button id="sendDiscordBtn" class="inline-flex items-center rounded-full bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 text-sm font-medium shadow-sm"><i class="fab fa-discord mr-2"></i>Enviar a Discord</button>
-                    <label for="importFile" class="inline-flex items-center rounded-full bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 text-sm font-medium shadow-sm cursor-pointer"><i class="fas fa-file-import mr-2"></i>Importar/Restaurar</label>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                    <button id="exportBtn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2.5 px-4 rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 text-sm">
+                        <i class="fas fa-file-export"></i> Exportar Datos
+                    </button>
+                    <button id="sendDiscordBtn" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2.5 px-4 rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 text-sm">
+                        <i class="fab fa-discord"></i> Enviar a Discord
+                    </button>
+                    <label for="importFile" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2.5 px-4 rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 text-sm cursor-pointer text-center">
+                        <i class="fas fa-file-import"></i> Importar Datos
+                    </label>
                     <input id="importFile" type="file" accept="application/json" class="hidden">
-                    <button id="clearBtn" class="inline-flex items-center rounded-full bg-red-600 hover:bg-red-700 text-white px-3 py-2 text-sm font-medium shadow-sm"><i class="fas fa-trash-alt mr-2"></i>Borrar datos</button>
+                    <button id="clearBtn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2.5 px-4 rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 text-sm">
+                        <i class="fas fa-trash-alt"></i> Borrar Datos
+                    </button>
                 </div>
-                <p id="storageMessage" class="text-sm text-slate-600 mt-3"></p>
-                <div id="logPanel" class="mt-4 p-3 rounded-xl ring-1 ring-inset ring-slate-200 bg-white/60 text-sm max-h-56 overflow-auto"></div>
+                <p id="storageMessage" class="text-sm font-semibold text-center mt-4"></p>
+
+                <!-- Configuración de Discord Webhook -->
+                <div id="webhookConfigDiv" class="mt-6 border-t border-gray-100 dark:border-slate-800 pt-6">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400 mb-3 flex items-center gap-2">
+                        <i class="fab fa-discord text-indigo-500"></i> Configuración de Discord Webhook
+                    </h3>
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <div class="flex-1">
+                            <input type="url" id="discordWebhookInput" placeholder="https://discord.com/api/webhooks/..." class="w-full rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2 text-sm text-gray-700 dark:text-slate-200 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm" autocomplete="off" inputmode="url">
+                        </div>
+                        <button id="saveWebhookBtn" class="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-xl shadow-sm transition-all text-sm">
+                            Guardar Webhook
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Sección de Sincronización en la Nube -->
+                <div class="mt-6 border-t border-gray-100 dark:border-slate-800 pt-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400 flex items-center gap-2">
+                                <i class="fas fa-cloud text-blue-500"></i> Sincronización en la Nube
+                            </h3>
+                            <p class="text-xs text-gray-400 dark:text-slate-500 mt-1">Respalda tus inversiones en la nube a través de GitHub utilizando las credenciales globales del proyecto.</p>
+                        </div>
+                        <span class="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 text-[10px] font-bold px-2.5 py-1 rounded-full border border-blue-100 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800 flex-shrink-0">
+                            ☁️ Sincronizado
+                        </span>
+                    </div>
+
+                    <!-- Estado no autenticado -->
+                    <div id="auth-guest-cloud" class="space-y-4">
+                        <p class="text-sm text-gray-600 dark:text-gray-400">
+                            Para sincronizar tus datos con la nube a través de GitHub, ingresa la Contraseña Maestra de Sincronización. Se guardará localmente por 15 días.
+                        </p>
+                        <form id="form-login-cloud" class="flex flex-col sm:flex-row gap-3">
+                            <div class="flex-1">
+                                <input type="password" id="input-cloud-password" required placeholder="Contraseña Maestra" class="w-full rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2 text-sm text-gray-700 dark:text-slate-200 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm">
+                            </div>
+                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-xl shadow-sm transition-all text-sm">
+                                Autorizar Sesión
+                            </button>
+                        </form>
+                        <div id="auth-message-cloud" class="text-xs text-red-500 font-medium text-center"></div>
+                    </div>
+
+                    <!-- Estado autenticado -->
+                    <div id="auth-user-cloud" class="hidden space-y-4">
+                        <div class="flex items-center justify-between flex-wrap gap-2">
+                            <div>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Conexión a la nube:</p>
+                                <p class="text-sm font-semibold text-green-600 dark:text-green-400 flex items-center gap-1.5">
+                                    <i class="fas fa-check-circle"></i> Sesión Autorizada
+                                </p>
+                            </div>
+                            <button id="btn-logout-cloud" type="button" class="px-3 py-1.5 bg-gray-50 hover:bg-gray-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-gray-700 dark:text-slate-200 font-semibold rounded-xl border border-gray-200 dark:border-slate-700/60 transition-all text-xs">
+                                Cerrar Sesión de Nube
+                            </button>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <button id="btn-backup-cloud" type="button" class="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-bold py-2.5 px-4 rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 text-sm">
+                                <i class="fas fa-cloud-upload-alt"></i> Subir a la Nube
+                            </button>
+                            <button id="btn-restore-cloud" type="button" class="w-full bg-amber-600 hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-600 text-white font-bold py-2.5 px-4 rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 text-sm">
+                                <i class="fas fa-cloud-download-alt"></i> Descargar de la Nube
+                            </button>
+                        </div>
+                        <div id="sync-message-cloud" class="text-sm text-center"></div>
+                    </div>
+                </div>
+
+                <div id="logPanel" class="border border-gray-100 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 p-4 rounded-xl text-xs font-mono text-gray-600 dark:text-slate-400 max-h-56 overflow-y-auto mt-4"></div>
             </div>
         </div>
     </div>
 
     <!-- Modal para Añadir/Editar Registro -->
-    <div id="recordModal" class="fixed inset-0 hidden flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 sm:p-6">
-        <div class="relative mx-auto w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
-            <div class="mt-1">
-                <h3 class="text-xl font-semibold text-slate-900" id="modalTitle">Añadir Nuevo Registro</h3>
-                <form id="recordForm" class="mt-4 space-y-6">
+    <div id="recordModal" class="fixed inset-0 hidden flex items-center justify-center bg-slate-900/75 backdrop-blur-sm p-4 sm:p-6 z-[100] transition-all duration-300">
+        <div class="relative mx-auto w-full max-w-lg rounded-2xl bg-white dark:bg-slate-900 p-6 border border-gray-100 dark:border-slate-800 shadow-2xl transition-all duration-300 text-gray-900 dark:text-white animate-fade-in">
+            <div>
+                <h3 class="text-xl font-bold text-gray-800 dark:text-white border-b border-gray-100 dark:border-slate-800 pb-3" id="modalTitle">Añadir Nuevo Registro</h3>
+                <form id="recordForm" class="mt-4 space-y-4">
                     <input type="hidden" id="recordId">
                     <div>
-                        <label for="app" class="block text-sm font-medium text-slate-700 text-left">APP</label>
-                        <select id="app" name="app" class="mt-1 block w-full rounded-xl border-0 ring-1 ring-inset ring-slate-300 bg-white/80 px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-600" required></select>
+                        <label for="app" class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400 mb-1 text-left">APP</label>
+                        <select id="app" name="app" class="w-full rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2 text-sm text-gray-700 dark:text-slate-200 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm" required></select>
                     </div>
                     <div>
-                        <label for="hashRate" class="block text-sm font-medium text-slate-700 text-left">Hash Rate</label>
-                        <input type="number" name="hashRate" id="hashRate" class="mt-1 block w-full rounded-xl border-0 ring-1 ring-inset ring-slate-300 bg-white/80 px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-600" required>
+                        <label for="hashRate" class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400 mb-1 text-left">Hash Rate (KH/s)</label>
+                        <input type="number" name="hashRate" id="hashRate" placeholder="Ej: 1500" class="w-full rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2 text-sm text-gray-700 dark:text-slate-200 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm" required>
                     </div>
                     <div>
-                        <label for="plazo" class="block text-sm font-medium text-slate-700 text-left">Plazo Inversión</label>
-                        <select id="plazo" name="plazo" class="mt-1 block w-full rounded-xl border-0 ring-1 ring-inset ring-slate-300 bg-white/80 px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-600" required></select>
+                        <label for="plazo" class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400 mb-1 text-left">Plazo Inversión</label>
+                        <select id="plazo" name="plazo" class="w-full rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2 text-sm text-gray-700 dark:text-slate-200 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm" required></select>
                     </div>
                     <div>
-                        <label for="metodoPago" class="block text-sm font-medium text-slate-700 text-left">Método de Pago</label>
-                        <select id="metodoPago" name="metodoPago" class="mt-1 block w-full rounded-xl border-0 ring-1 ring-inset ring-slate-300 bg-white/80 px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-600" required></select>
+                        <label for="metodoPago" class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400 mb-1 text-left">Método de Pago</label>
+                        <select id="metodoPago" name="metodoPago" class="w-full rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2 text-sm text-gray-700 dark:text-slate-200 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm" required></select>
                     </div>
                     <div>
-                        <label for="costo" class="block text-sm font-medium text-slate-700 text-left">Costo</label>
-                        <input type="number" step="0.01" name="costo" id="costo" class="mt-1 block w-full rounded-xl border-0 ring-1 ring-inset ring-slate-300 bg-white/80 px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-600" required>
+                        <label for="costo" class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400 mb-1 text-left">Costo (USD)</label>
+                        <input type="number" step="0.01" name="costo" id="costo" placeholder="Ej: 49.99" class="w-full rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2 text-sm text-gray-700 dark:text-slate-200 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm" required>
                     </div>
                     <div>
-                        <label for="fechaCompra" class="block text-sm font-medium text-slate-700 text-left">Fecha de Compra Inicial</label>
-                        <input type="date" name="fechaCompra" id="fechaCompra" class="mt-1 block w-full rounded-xl border-0 ring-1 ring-inset ring-slate-300 bg-white/80 px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-600" required>
+                        <label for="fechaCompra" class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400 mb-1 text-left">Fecha de Compra Inicial</label>
+                        <input type="date" name="fechaCompra" id="fechaCompra" class="w-full rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2 text-sm text-gray-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm" required>
                     </div>
                     <div>
-                        <label for="notas" class="block text-sm font-medium text-slate-700 text-left">Notas</label>
-                        <textarea id="notas" name="notas" rows="3" class="mt-1 block w-full rounded-xl border-0 ring-1 ring-inset ring-slate-300 bg-white/80 px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-600"></textarea>
+                        <label for="notas" class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400 mb-1 text-left">Notas</label>
+                        <textarea id="notas" name="notas" rows="3" placeholder="Anotaciones importantes..." class="w-full rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2 text-sm text-gray-700 dark:text-slate-200 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm"></textarea>
                     </div>
-                    <div class="items-center px-1 py-1 space-y-2">
-                        <button id="saveRecordBtn" class="w-full rounded-full bg-green-600 px-4 py-2 text-white text-base font-medium shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-400">Guardar</button>
-                        <button id="cancelBtn" type="button" class="w-full rounded-full bg-slate-600 px-4 py-2 text-white text-base font-medium shadow-sm hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400">Cancelar</button>
+                    <div class="flex flex-col gap-2 pt-3 border-t border-gray-100 dark:border-slate-800">
+                        <button id="saveRecordBtn" class="w-full rounded-xl bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white py-2.5 text-sm font-bold shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-400">Guardar</button>
+                        <button id="cancelBtn" type="button" class="w-full rounded-xl bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:text-gray-200 dark:hover:bg-slate-700 text-gray-800 py-2.5 text-sm font-bold shadow-sm border border-gray-200 dark:border-slate-700 transition-all focus:outline-none">Cancelar</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 
-    <div id="optionEditModal" class="fixed inset-0 hidden flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 sm:p-6">
-        <div class="relative mx-auto w-full max-w-xl rounded-2xl bg-white p-6 shadow-xl">
-            <h3 class="text-xl font-semibold text-slate-900" id="optionModalTitle">Editar Plazo de Inversión</h3>
+    <!-- Modal para Editar Plazos -->
+    <div id="optionEditModal" class="fixed inset-0 hidden flex items-center justify-center bg-slate-900/75 backdrop-blur-sm p-4 sm:p-6 z-[100] transition-all duration-300">
+        <div class="relative mx-auto w-full max-w-lg rounded-2xl bg-white dark:bg-slate-900 p-6 border border-gray-100 dark:border-slate-800 shadow-2xl transition-all duration-300 text-gray-900 dark:text-white animate-fade-in">
+            <h3 class="text-xl font-bold text-gray-800 dark:text-white border-b border-gray-100 dark:border-slate-800 pb-3" id="optionModalTitle">Editar Plazo de Inversión</h3>
             <form id="optionEditForm" class="mt-4 space-y-4">
                 <input type="hidden" id="optionEditType" value="plazos">
                 <input type="hidden" id="optionEditId">
                 <div>
-                    <label for="optionEditName" class="block text-sm font-medium text-slate-700 text-left">Nombre</label>
-                    <input type="text" id="optionEditName" class="mt-1 block w-full rounded-xl border-0 ring-1 ring-inset ring-slate-300 bg-white/80 px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-600">
+                    <label for="optionEditName" class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400 mb-1 text-left">Nombre del Plazo</label>
+                    <input type="text" id="optionEditName" class="w-full rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2 text-sm text-gray-700 dark:text-slate-200 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm">
                 </div>
                 <div>
-                    <label for="optionEditColor" class="block text-sm font-medium text-slate-700 text-left">Color</label>
-                    <input type="color" id="optionEditColor" class="mt-1 block w-full h-10 rounded-xl ring-1 ring-inset ring-slate-300 bg-white/80">
+                    <label for="optionEditColor" class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400 mb-1 text-left">Color Identificador</label>
+                    <input type="color" id="optionEditColor" class="w-full h-10 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-1">
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                        <label for="optionEditLength" class="block text-sm font-medium text-slate-700 text-left">Duración</label>
-                        <input type="number" id="optionEditLength" min="1" class="mt-1 block w-full rounded-xl border-0 ring-1 ring-inset ring-slate-300 bg-white/80 px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-600">
+                        <label for="optionEditLength" class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400 mb-1 text-left">Duración</label>
+                        <input type="number" id="optionEditLength" min="1" class="w-full rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2 text-sm text-gray-700 dark:text-slate-200 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm">
                     </div>
                     <div>
-                        <label for="optionEditUnit" class="block text-sm font-medium text-slate-700 text-left">Unidad</label>
-                        <select id="optionEditUnit" class="mt-1 block w-full rounded-xl border-0 ring-1 ring-inset ring-slate-300 bg-white/80 px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-600">
+                        <label for="optionEditUnit" class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400 mb-1 text-left">Unidad</label>
+                        <select id="optionEditUnit" class="w-full rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2 text-sm text-gray-700 dark:text-slate-200 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm">
                             <option value="days">Días</option>
                             <option value="months">Meses</option>
                         </select>
                     </div>
                 </div>
-                <div class="flex items-center gap-2 pt-2">
-                    <button type="button" id="optionSaveBtn" class="flex-1 rounded-full bg-green-600 px-4 py-2 text-white text-base font-medium shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-400">Guardar</button>
-                    <button type="button" id="optionCancelBtn" class="flex-1 rounded-full bg-slate-600 px-4 py-2 text-white text-base font-medium shadow-sm hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400">Cancelar</button>
+                <div class="flex flex-col gap-2 pt-3 border-t border-gray-100 dark:border-slate-800">
+                    <button type="button" id="optionSaveBtn" class="w-full rounded-xl bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white py-2.5 text-sm font-bold shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-400">Guardar</button>
+                    <button type="button" id="optionCancelBtn" class="w-full rounded-xl bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:text-gray-200 dark:hover:bg-slate-700 text-gray-800 py-2.5 text-sm font-bold shadow-sm border border-gray-200 dark:border-slate-700 transition-all focus:outline-none">Cancelar</button>
                 </div>
             </form>
         </div>
@@ -379,6 +517,31 @@
     const optionCancelBtn = document.getElementById('optionCancelBtn');
     const optionSaveBtn = document.getElementById('optionSaveBtn');
 
+    // Selectores del Webhook de Discord y Nube
+    const discordWebhookInput = document.getElementById('discordWebhookInput');
+    const saveWebhookBtn = document.getElementById('saveWebhookBtn');
+
+    const formLoginCloud = document.getElementById('form-login-cloud');
+    const inputCloudPassword = document.getElementById('input-cloud-password');
+    const authMessageCloud = document.getElementById('auth-message-cloud');
+    const syncMessageCloud = document.getElementById('sync-message-cloud');
+    const authGuestCloud = document.getElementById('auth-guest-cloud');
+    const authUserCloud = document.getElementById('auth-user-cloud');
+    const btnLogoutCloud = document.getElementById('btn-logout-cloud');
+    const btnBackupCloud = document.getElementById('btn-backup-cloud');
+    const btnRestoreCloud = document.getElementById('btn-restore-cloud');
+
+    // --- Claves y Constantes de Sincronización ---
+    const CLOUD_PASSWORD_KEY = 'fti_cloud_password';
+    const CLOUD_PASSWORD_DATE_KEY = 'fti_cloud_password_date';
+    const LAST_SYNC_TIMESTAMP_KEY = 'cryptotab_last_sync_timestamp';
+    const DISCORD_WEBHOOK_KEY = 'cryptotab_discord_webhook';
+    const EXPIRATION_DAYS = 15;
+    const MS_PER_DAY = 1000 * 60 * 60 * 24;
+
+    // Inicializar variable del webhook de Discord
+    let discordWebhookUrl = localStorage.getItem(DISCORD_WEBHOOK_KEY) || '';
+
     // --- Pestañas ---
     dashboardTab.addEventListener('click', () => switchTab('dashboard'));
     settingsTab.addEventListener('click', () => switchTab('settings'));
@@ -389,26 +552,25 @@
         settingsContent.classList.add('hidden');
         if (storageContent) storageContent.classList.add('hidden');
 
-        dashboardTab.classList.remove('bg-indigo-600', 'text-white', 'shadow');
-        settingsTab.classList.remove('bg-indigo-600', 'text-white', 'shadow');
-        if (storageTabBtn) storageTabBtn.classList.remove('bg-indigo-600', 'text-white', 'shadow');
-        dashboardTab.classList.add('text-slate-600');
-        settingsTab.classList.add('text-slate-600');
-        if (storageTabBtn) storageTabBtn.classList.add('text-slate-600');
+        const tabs = [dashboardTab, settingsTab, storageTabBtn].filter(Boolean);
+        tabs.forEach(btn => {
+            btn.classList.remove('bg-blue-600', 'dark:bg-blue-500', 'text-white', 'shadow-sm');
+            btn.classList.add('text-gray-500', 'hover:text-gray-700', 'dark:text-slate-400', 'dark:hover:text-slate-200');
+        });
 
         if (tab === 'dashboard') {
             dashboardContent.classList.remove('hidden');
-            dashboardTab.classList.add('bg-indigo-600', 'text-white', 'shadow');
-            dashboardTab.classList.remove('text-slate-600');
+            dashboardTab.classList.add('bg-blue-600', 'dark:bg-blue-500', 'text-white', 'shadow-sm');
+            dashboardTab.classList.remove('text-gray-500', 'hover:text-gray-700', 'dark:text-slate-400', 'dark:hover:text-slate-200');
         } else if (tab === 'settings') {
             settingsContent.classList.remove('hidden');
-            settingsTab.classList.add('bg-indigo-600', 'text-white', 'shadow');
-            settingsTab.classList.remove('text-slate-600');
+            settingsTab.classList.add('bg-blue-600', 'dark:bg-blue-500', 'text-white', 'shadow-sm');
+            settingsTab.classList.remove('text-gray-500', 'hover:text-gray-700', 'dark:text-slate-400', 'dark:hover:text-slate-200');
         } else if (tab === 'storage') {
             if (storageContent) storageContent.classList.remove('hidden');
             if (storageTabBtn) {
-                storageTabBtn.classList.add('bg-indigo-600', 'text-white', 'shadow');
-                storageTabBtn.classList.remove('text-slate-600');
+                storageTabBtn.classList.add('bg-blue-600', 'dark:bg-blue-500', 'text-white', 'shadow-sm');
+                storageTabBtn.classList.remove('text-gray-500', 'hover:text-gray-700', 'dark:text-slate-400', 'dark:hover:text-slate-200');
             }
             updateStorageSummary();
         }
@@ -559,11 +721,11 @@
         }
 
         if (working.length === 0) {
-            dataTableBody.innerHTML = `<tr><td colspan="8" class="text-center p-4">No hay registros que mostrar.</td></tr>`;
+            dataTableBody.innerHTML = `<tr><td colspan="8" class="text-center p-8 text-gray-500 dark:text-slate-400">No hay registros que mostrar.</td></tr>`;
         } else {
             working.forEach(record => {
                 const tr = document.createElement('tr');
-                tr.className = 'hover:bg-slate-50/50 transition-colors';
+                tr.className = 'hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors text-gray-700 dark:text-slate-300';
                 const nextDate = computeNextRenewal(record);
                 const fechaRenovacion = nextDate ? nextDate.toLocaleDateString() : 'N/A';
                 const tiempoRestante = nextDate ? formatTimeRemaining(nextDate) : '';
@@ -573,19 +735,19 @@
                 const metodoOpt = state.options.metodosPago.find(m => m.name === record.metodoPago);
 
                 tr.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap"><span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ring-1 ring-inset ring-slate-200" style="background-color:${appOption?.color || '#ffffff'}; color: ${getContrastYIQ(appOption?.color)}">${record.app}</span></td>
-                    <td class="px-6 py-4 whitespace-nowrap">${record.hashRate}</td>
-                    <td class="px-6 py-4 whitespace-nowrap"><span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ring-1 ring-inset ring-slate-200" style="background-color:${plazoOpt?.color || '#ffffff'}; color: ${getContrastYIQ(plazoOpt?.color)}">${record.plazo}</span></td>
-                    <td class="px-6 py-4 whitespace-nowrap"><span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ring-1 ring-inset ring-slate-200" style="background-color:${metodoOpt?.color || '#ffffff'}; color: ${getContrastYIQ(metodoOpt?.color)}">${record.metodoPago}</span></td>
-                    <td class="px-6 py-4 whitespace-nowrap">${formatCurrency(parseFloat(record.costo) || 0)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap"><span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold shadow-sm ring-1 ring-inset ring-slate-200/20 dark:ring-slate-700/30" style="background-color:${appOption?.color || '#ffffff'}; color: ${getContrastYIQ(appOption?.color)}">${record.app}</span></td>
+                    <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-950 dark:text-white">${record.hashRate}</td>
+                    <td class="px-6 py-4 whitespace-nowrap"><span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold shadow-sm ring-1 ring-inset ring-slate-200/20 dark:ring-slate-700/30" style="background-color:${plazoOpt?.color || '#ffffff'}; color: ${getContrastYIQ(plazoOpt?.color)}">${record.plazo}</span></td>
+                    <td class="px-6 py-4 whitespace-nowrap"><span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold shadow-sm ring-1 ring-inset ring-slate-200/20 dark:ring-slate-700/30" style="background-color:${metodoOpt?.color || '#ffffff'}; color: ${getContrastYIQ(metodoOpt?.color)}">${record.metodoPago}</span></td>
+                    <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-950 dark:text-white">${formatCurrency(parseFloat(record.costo) || 0)}</td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm font-medium text-slate-900">${fechaRenovacion}</div>
-                        <div class="text-[10px] text-slate-500 font-medium">${tiempoRestante}</div>
+                        <div class="text-sm font-semibold text-slate-900 dark:text-slate-100">${fechaRenovacion}</div>
+                        <div class="text-[10px] text-slate-500 dark:text-slate-400 font-medium">${tiempoRestante}</div>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">${record.notas}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400 max-w-xs truncate">${record.notas}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button onclick="editRecord(${record.id})" class="text-indigo-600 hover:text-indigo-700 transition-transform duration-200 hover:scale-105"><i class="fas fa-edit"></i></button>
-                        <button onclick="deleteRecord(${record.id})" class="text-red-600 hover:text-red-700 ml-4 transition-transform duration-200 hover:scale-105"><i class="fas fa-trash"></i></button>
+                        <button onclick="editRecord(${record.id})" class="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-transform duration-200 hover:scale-110"><i class="fas fa-edit"></i></button>
+                        <button onclick="deleteRecord(${record.id})" class="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 ml-4 transition-transform duration-200 hover:scale-110"><i class="fas fa-trash"></i></button>
                     </td>
                 `;
                 dataTableBody.appendChild(tr);
@@ -699,7 +861,13 @@
     }
 
     function buildExportPayload() {
-        return { __page: 'registro-inv', exportedAt: new Date().toISOString(), records: state.records, options: state.options };
+        return { 
+            __page: 'registro-inv', 
+            exportedAt: new Date().toISOString(), 
+            records: state.records, 
+            options: state.options,
+            discordWebhookUrl: discordWebhookUrl || ''
+        };
     }
 
     function validatePayloadStructure(payload) {
@@ -765,6 +933,11 @@
         }
         state.records = Array.isArray(parsed.records) ? parsed.records : [];
         state.options = parsed.options || { apps: [], plazos: [], metodosPago: [] };
+        if (parsed.discordWebhookUrl) {
+            discordWebhookUrl = parsed.discordWebhookUrl;
+            localStorage.setItem(DISCORD_WEBHOOK_KEY, discordWebhookUrl);
+            if (discordWebhookInput) discordWebhookInput.value = discordWebhookUrl;
+        }
         normalizePlazosInOptions();
         resetFilters();
         saveState();
@@ -815,7 +988,12 @@
 
     // Send exported JSON file to Discord webhook as multipart/form-data
     async function sendToDiscord() {
-        const webhookUrl = 'https://discord.com/api/webhooks/1429231500120948808/MbKuhnAL60vgoalLazjThfJEM5AMMKJyNz_aYQy3jaWHlJW0ZxlgYTYrOevu9Uzeppu6';
+        if (!discordWebhookUrl) {
+            document.getElementById('storageMessage').textContent = 'Error: Webhook de Discord no configurado.';
+            logMessage('Envío a Discord cancelado: Webhook no configurado', 'error');
+            alert('Por favor, configura y guarda la URL del webhook de Discord antes de realizar el envío.');
+            return;
+        }
         const payload = buildExportPayload();
         if (!validatePayloadStructure(payload)) {
             document.getElementById('storageMessage').textContent = 'Validación fallida: payload inválido.';
@@ -831,7 +1009,7 @@
         form.append('payload_json', JSON.stringify(embed));
         document.getElementById('storageMessage').textContent = 'Enviando a Discord...';
         try {
-            const res = await fetch(webhookUrl, { method: 'POST', body: form });
+            const res = await fetch(discordWebhookUrl, { method: 'POST', body: form });
             if (!res.ok) throw new Error('HTTP ' + res.status + ' ' + res.statusText);
             document.getElementById('storageMessage').textContent = 'Enviado a Discord correctamente.';
             logMessage('Backup enviado a Discord correctamente');
@@ -839,7 +1017,7 @@
             // CORS or network error - show helpful fallback
             document.getElementById('storageMessage').textContent = 'No se pudo enviar a Discord desde el navegador (posible CORS). Puedes descargar el archivo y enviarlo manualmente. Error: ' + err.message;
             // provide curl fallback
-            const curlCmd = `curl -H "Content-Type: multipart/form-data" -F "file=@registro-inv-backup.json" -F 'payload_json=${JSON.stringify(embed).replace(/"/g, '\\"')}' ${webhookUrl}`;
+            const curlCmd = `curl -H "Content-Type: multipart/form-data" -F "file=@registro-inv-backup.json" -F 'payload_json=${JSON.stringify(embed).replace(/"/g, '\\"')}' ${discordWebhookUrl}`;
             console.error('Discord send failed:', err);
             logMessage('Error enviando a Discord: ' + err.message, 'error');
             // show fallback as an alert with copy instruction
@@ -872,7 +1050,397 @@
         }
     }
 
-    
+    // --- Lógica del Webhook de Discord ---
+    if (discordWebhookInput) {
+        discordWebhookInput.value = discordWebhookUrl;
+    }
+    if (saveWebhookBtn) {
+        saveWebhookBtn.addEventListener('click', () => {
+            const val = (discordWebhookInput.value || '').trim();
+            discordWebhookUrl = val;
+            localStorage.setItem(DISCORD_WEBHOOK_KEY, val);
+            logMessage('✓ URL del webhook de Discord guardada localmente.');
+            alert('Webhook de Discord guardado correctamente.');
+        });
+    }
+
+    // --- Lógica de Sincronización en la Nube ---
+    const estaAutenticadoEnNube = () => {
+        const pwd = localStorage.getItem(CLOUD_PASSWORD_KEY);
+        const dateStr = localStorage.getItem(CLOUD_PASSWORD_DATE_KEY);
+        if (!pwd || !dateStr) return false;
+        const date = parseInt(dateStr, 10);
+        if (isNaN(date)) return false;
+        return (Date.now() - date) / MS_PER_DAY <= EXPIRATION_DAYS;
+    };
+
+    const obtenerPasswordNube = () => estaAutenticadoEnNube() ? localStorage.getItem(CLOUD_PASSWORD_KEY) : null;
+    const guardarPasswordNube = (password) => {
+        if (!password) return;
+        localStorage.setItem(CLOUD_PASSWORD_KEY, password);
+        localStorage.setItem(CLOUD_PASSWORD_DATE_KEY, Date.now().toString());
+    };
+    const cerrarSesionNube = () => {
+        localStorage.removeItem(CLOUD_PASSWORD_KEY);
+        localStorage.removeItem(CLOUD_PASSWORD_DATE_KEY);
+    };
+
+    const updateAuthUICloud = () => {
+        if (authMessageCloud) authMessageCloud.textContent = '';
+        if (syncMessageCloud) {
+            syncMessageCloud.textContent = '';
+            syncMessageCloud.className = 'text-sm text-center';
+        }
+
+        if (estaAutenticadoEnNube()) {
+            if (authGuestCloud) authGuestCloud.classList.add('hidden');
+            if (authUserCloud) authUserCloud.classList.remove('hidden');
+        } else {
+            if (authGuestCloud) authGuestCloud.classList.remove('hidden');
+            if (authUserCloud) authUserCloud.classList.add('hidden');
+        }
+    };
+
+    const verificarSeguridadSincronizacionCloud = async () => {
+        if (!estaAutenticadoEnNube()) {
+            return { safe: false, reason: 'No hay sesión activa' };
+        }
+
+        try {
+            const password = obtenerPasswordNube();
+            const response = await fetch('/api/sync?module=cryptotab&index=true', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${password}`
+                }
+            });
+
+            if (!response.ok) {
+                return { safe: false, reason: 'Error al contactar con la nube' };
+            }
+
+            const data = await response.json();
+            
+            if (!data.exists) {
+                return { safe: true, hasCloudData: false };
+            }
+
+            const cloudTimestamp = data.data.exportadoEn || new Date().toISOString();
+            
+            return { safe: true, cloudTimestamp, hasCloudData: true };
+        } catch (error) {
+            return { safe: false, reason: error.message };
+        }
+    };
+
+    const respaldarDatosNube = async () => {
+        const showSyncMessage = (msg, isError = false) => {
+            if (!syncMessageCloud) return;
+            syncMessageCloud.textContent = msg;
+            syncMessageCloud.className = `text-sm text-center ${isError ? 'text-red-600 dark:text-red-400 font-semibold' : 'text-green-600 dark:text-green-400'}`;
+        };
+
+        if (!estaAutenticadoEnNube()) {
+            showSyncMessage('Debes autorizar la sesión primero.', true);
+            return;
+        }
+
+        if (btnBackupCloud) btnBackupCloud.disabled = true;
+        showSyncMessage('Generando respaldo y conectando con la nube...', false);
+        const password = obtenerPasswordNube();
+
+        try {
+            const exportState = buildExportPayload();
+            const jsonString = JSON.stringify(exportState);
+
+            const CHUNK_SIZE_CHARS = 3 * 1024 * 1024; // 3MB
+            const chunks = [];
+            for (let i = 0; i < jsonString.length; i += CHUNK_SIZE_CHARS) {
+                chunks.push(jsonString.slice(i, i + CHUNK_SIZE_CHARS));
+            }
+
+            for (let i = 0; i < chunks.length; i++) {
+                showSyncMessage(`Subiendo parte ${i + 1}/${chunks.length}...`, false);
+                const res = await fetch(`/api/sync?module=cryptotab&part=${i}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain',
+                        'Authorization': `Bearer ${password}`
+                    },
+                    body: chunks[i]
+                });
+                const result = await res.json();
+                if (!res.ok) throw new Error(result.error || `Error al subir la parte ${i+1}/${chunks.length}`);
+            }
+
+            showSyncMessage('Subiendo índice de sincronización...', false);
+            const exportTimestamp = new Date().toISOString();
+            const indexObj = {
+                parts: chunks.length,
+                exportadoEn: exportTimestamp,
+                version: 1
+            };
+            const indexRes = await fetch(`/api/sync?module=cryptotab&index=true`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${password}`
+                },
+                body: JSON.stringify(indexObj)
+            });
+            const indexResult = await indexRes.json();
+            if (!indexRes.ok) throw new Error(indexResult.error || 'Error al guardar el índice en la nube.');
+
+            localStorage.setItem(LAST_SYNC_TIMESTAMP_KEY, exportTimestamp);
+            showSyncMessage(`✓ Sincronizado correctamente.`, false);
+            logMessage('Respaldo subido a la nube correctamente: ' + exportTimestamp);
+            alert('Sincronizado correctamente con la nube.');
+        } catch (err) {
+            showSyncMessage(`❌ Error: ${err.message}`, true);
+            logMessage('Error al respaldar en la nube: ' + err.message, 'error');
+            alert('Error al respaldar en la nube: ' + err.message);
+        } finally {
+            if (btnBackupCloud) btnBackupCloud.disabled = false;
+        }
+    };
+
+    const restaurarDatosNube = async () => {
+        const showSyncMessage = (msg, isError = false) => {
+            if (!syncMessageCloud) return;
+            syncMessageCloud.textContent = msg;
+            syncMessageCloud.className = `text-sm text-center ${isError ? 'text-red-600 dark:text-red-400 font-semibold' : 'text-green-600 dark:text-green-400'}`;
+        };
+
+        if (!estaAutenticadoEnNube()) {
+            showSyncMessage('Debes autorizar la sesión primero.', true);
+            return;
+        }
+
+        if (!confirm('Esta acción reemplazará todos tus datos locales de CryptoTab con el respaldo guardado en la nube. ¿Continuar?')) {
+            return;
+        }
+
+        if (btnRestoreCloud) btnRestoreCloud.disabled = true;
+        showSyncMessage('Descargando índice de respaldo...', false);
+        const password = obtenerPasswordNube();
+
+        try {
+            const indexRes = await fetch(`/api/sync?module=cryptotab&index=true`, {
+                method: 'GET',
+                headers: { 'Authorization': `Bearer ${password}` }
+            });
+            const indexResult = await indexRes.json();
+            if (!indexRes.ok) throw new Error(indexResult.error || 'Error al obtener el índice de la nube');
+
+            if (!indexResult.exists || !indexResult.data) {
+                throw new Error('No se encontraron datos de respaldo en la nube.');
+            }
+
+            const partsCount = indexResult.data.parts || 1;
+            const chunks = [];
+
+            for (let i = 0; i < partsCount; i++) {
+                showSyncMessage(`Descargando parte ${i + 1}/${partsCount}...`, false);
+                const partRes = await fetch(`/api/sync?module=cryptotab&part=${i}`, {
+                    method: 'GET',
+                    headers: { 'Authorization': `Bearer ${password}` }
+                });
+                const partResult = await partRes.json();
+                if (!partRes.ok) throw new Error(partResult.error || `Error al descargar parte ${i + 1}`);
+                if (!partResult.exists) throw new Error(`Parte ${i + 1} no encontrada.`);
+
+                chunks.push(partResult.raw || JSON.stringify(partResult.data));
+            }
+
+            showSyncMessage('Procesando datos...', false);
+            const fullJsonStr = chunks.join('');
+            const parsedData = JSON.parse(fullJsonStr);
+            
+            performImport(parsedData);
+
+            localStorage.setItem(LAST_SYNC_TIMESTAMP_KEY, indexResult.data.exportadoEn);
+
+            showSyncMessage('✓ Restauración completada.', false);
+            logMessage('Respaldo descargado e importado desde la nube.');
+            alert('Datos descargados e importados de la nube correctamente.');
+        } catch (err) {
+            showSyncMessage(`❌ Error: ${err.message}`, true);
+            logMessage('Error al descargar de la nube: ' + err.message, 'error');
+            alert('Error al descargar de la nube: ' + err.message);
+        } finally {
+            if (btnRestoreCloud) btnRestoreCloud.disabled = false;
+        }
+    };
+
+    const verificarNubeInicioCloud = async () => {
+        if (sessionStorage.getItem('bt_local_session_only') === 'true') {
+            return;
+        }
+
+        const crearModalBloqueante = (htmlContent) => {
+            const overlay = document.createElement('div');
+            overlay.className = 'fixed inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center z-[100] animate-fade-in';
+            overlay.id = 'modal-inicio-nube-cloud';
+
+            const modal = document.createElement('div');
+            modal.className = 'bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full mx-4 p-6 relative overflow-hidden text-gray-900 dark:text-white border border-gray-100 dark:border-slate-800';
+            modal.innerHTML = htmlContent;
+
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+            document.body.style.overflow = 'hidden';
+            return overlay;
+        };
+
+        const cerrarModal = (overlay) => {
+            overlay.remove();
+            document.body.style.overflow = '';
+        };
+
+        const chequearDatosNuevosCloud = async () => {
+            const check = await verificarSeguridadSincronizacionCloud();
+            if (!check.safe || !check.hasCloudData) return;
+
+            const lastSyncStr = localStorage.getItem(LAST_SYNC_TIMESTAMP_KEY);
+            const cloudDate = new Date(check.cloudTimestamp);
+            
+            let hasNewerData = false;
+            if (!lastSyncStr) {
+                hasNewerData = true;
+            } else {
+                const localDate = new Date(lastSyncStr);
+                if (cloudDate.getTime() > localDate.getTime() + 5000) {
+                    hasNewerData = true;
+                }
+            }
+
+            if (hasNewerData) {
+                return new Promise((resolve) => {
+                    const overlay = crearModalBloqueante(`
+                        <div class="text-center">
+                            <div class="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mx-auto mb-4 text-amber-600 dark:text-amber-400">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                            </div>
+                            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Datos en la nube más recientes</h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-6">
+                                Se detectó un respaldo de inversiones de CryptoTab más actualizado en la nube (${cloudDate.toLocaleString()}). ¿Deseas restaurarlo ahora?
+                            </p>
+                            <div id="restore-loading-cloud" class="hidden mb-4 text-sm font-medium text-blue-600">Descargando datos...</div>
+                            <div class="flex flex-col gap-3 mt-2" id="restore-actions-cloud">
+                                <button type="button" id="btn-do-restore-cloud" class="w-full px-4 py-2.5 rounded-xl text-sm font-bold bg-amber-600 hover:bg-amber-700 text-white shadow-sm transition-all">
+                                    Sí, restaurar datos de CryptoTab
+                                </button>
+                                <button type="button" id="btn-skip-restore-cloud" class="w-full px-4 py-2.5 rounded-xl text-sm font-bold border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all">
+                                    Continuar en local
+                                </button>
+                            </div>
+                        </div>
+                    `);
+
+                    document.getElementById('btn-skip-restore-cloud').addEventListener('click', () => {
+                        sessionStorage.setItem('bt_local_session_only', 'true');
+                        cerrarModal(overlay);
+                        resolve();
+                    });
+
+                    document.getElementById('btn-do-restore-cloud').addEventListener('click', async () => {
+                        const actions = document.getElementById('restore-actions-cloud');
+                        const loading = document.getElementById('restore-loading-cloud');
+                        if (actions) actions.classList.add('hidden');
+                        if (loading) loading.classList.remove('hidden');
+
+                        try {
+                            const password = obtenerPasswordNube();
+                            const indexRes = await fetch(`/api/sync?module=cryptotab&index=true`, {
+                                method: 'GET',
+                                headers: { 'Authorization': `Bearer ${password}` }
+                            });
+                            const indexResult = await indexRes.json();
+                            if (!indexRes.ok) throw new Error(indexResult.error);
+
+                            const partsCount = indexResult.data.parts || 1;
+                            const chunks = [];
+                            for (let i = 0; i < partsCount; i++) {
+                                const partRes = await fetch(`/api/sync?module=cryptotab&part=${i}`, {
+                                    method: 'GET',
+                                    headers: { 'Authorization': `Bearer ${password}` }
+                                });
+                                const partResult = await partRes.json();
+                                if (!partRes.ok) throw new Error(partResult.error);
+                                chunks.push(partResult.raw || JSON.stringify(partResult.data));
+                            }
+
+                            const fullJsonStr = chunks.join('');
+                            const parsedData = JSON.parse(fullJsonStr);
+                            
+                            performImport(parsedData);
+                            
+                            localStorage.setItem(LAST_SYNC_TIMESTAMP_KEY, indexResult.data.exportadoEn);
+
+                            logMessage('Sincronización inicial exitosa.');
+                            alert('Datos sincronizados e importados de la nube.');
+                        } catch (e) {
+                            logMessage('Error al sincronizar: ' + e.message, 'error');
+                            alert('Error al sincronizar al inicio: ' + e.message);
+                        } finally {
+                            cerrarModal(overlay);
+                            resolve();
+                        }
+                    });
+                });
+            }
+        };
+
+        if (!estaAutenticadoEnNube()) {
+            return new Promise((resolve) => {
+                const overlay = crearModalBloqueante(`
+                    <div class="text-center">
+                        <div class="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mx-auto mb-4 text-blue-600 dark:text-blue-400">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Seguridad de Sincronización</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-6">Por favor, ingresa tu contraseña para habilitar la sincronización en la nube. Esta sesión durará 15 días.</p>
+                        
+                        <form id="form-auth-inicio-cloud" class="space-y-4">
+                            <div>
+                                <input type="password" id="input-password-inicio-cloud" required placeholder="Contraseña de la nube" 
+                                    class="w-full rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2 text-sm text-gray-700 dark:text-slate-200 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm">
+                            </div>
+                            <div class="flex flex-col gap-3 mt-6">
+                                <button type="submit" class="w-full px-4 py-2.5 rounded-xl text-sm font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-colors">
+                                    Ingresar y Sincronizar
+                                </button>
+                                <button type="button" id="btn-local-only-cloud" class="w-full px-4 py-2.5 rounded-xl text-sm font-bold border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                    Trabajar en local por esta sesión
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                `);
+
+                const form = document.getElementById('form-auth-inicio-cloud');
+                const btnLocal = document.getElementById('btn-local-only-cloud');
+
+                btnLocal.addEventListener('click', () => {
+                    sessionStorage.setItem('bt_local_session_only', 'true');
+                    cerrarModal(overlay);
+                    resolve();
+                });
+
+                form.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const pwd = document.getElementById('input-password-inicio-cloud').value;
+                    guardarPasswordNube(pwd);
+                    cerrarModal(overlay);
+                    updateAuthUICloud();
+                    await chequearDatosNuevosCloud();
+                    resolve();
+                });
+            });
+        } else {
+            await chequearDatosNuevosCloud();
+        }
+    };
 
     // --- Gestión de Opciones (Ajustes) ---
     function renderOptions() {
@@ -898,8 +1466,8 @@
                         <div class="flex items-center gap-1">
                             <button ${isFirst ? 'disabled' : ''} onclick="moveOption('${key}', ${option.id}, 'up')" class="text-slate-800/80 hover:text-slate-900 ${isFirst ? 'opacity-40 cursor-not-allowed' : ''}"><i class="fas fa-arrow-up"></i></button>
                             <button ${isLast ? 'disabled' : ''} onclick="moveOption('${key}', ${option.id}, 'down')" class="text-slate-800/80 hover:text-slate-900 ${isLast ? 'opacity-40 cursor-not-allowed' : ''}"><i class="fas fa-arrow-down"></i></button>
-                            <button onclick="editOption('${key}', ${option.id})" class="text-indigo-700 hover:text-indigo-900"><i class="fas fa-edit"></i></button>
-                            <button onclick="deleteOption('${key}', ${option.id})" class="text-red-600 hover:text-red-800"><i class="fas fa-trash"></i></button>
+                            <button onclick="editOption('${key}', ${option.id})" class="text-blue-600 hover:text-blue-800 dark:text-blue-500 dark:hover:text-blue-400"><i class="fas fa-edit"></i></button>
+                            <button onclick="deleteOption('${key}', ${option.id})" class="text-red-600 hover:text-red-800 dark:text-red-500 dark:hover:text-red-400"><i class="fas fa-trash"></i></button>
                         </div>
                     </div>
                 `;
@@ -1107,10 +1675,45 @@
 
     // --- Inicialización ---
     function init() {
+        // Registrar Eventos de la Nube
+        if (formLoginCloud) {
+            formLoginCloud.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const pwd = inputCloudPassword.value;
+                if (pwd) {
+                    guardarPasswordNube(pwd);
+                    inputCloudPassword.value = '';
+                    updateAuthUICloud();
+                    logMessage('Sesión de la nube autorizada correctamente.');
+                    alert('Sesión autorizada correctamente.');
+                    verificarNubeInicioCloud().catch(err => console.error(err));
+                }
+            });
+        }
+
+        if (btnLogoutCloud) {
+            btnLogoutCloud.addEventListener('click', () => {
+                cerrarSesionNube();
+                updateAuthUICloud();
+                logMessage('Sesión de nube revocada.');
+                alert('Sesión de nube cerrada y credenciales locales eliminadas.');
+            });
+        }
+
+        if (btnBackupCloud) {
+            btnBackupCloud.addEventListener('click', respaldarDatosNube);
+        }
+
+        if (btnRestoreCloud) {
+            btnRestoreCloud.addEventListener('click', restaurarDatosNube);
+        }
+
+        updateAuthUICloud();
         switchTab('dashboard');
         renderTable();
         renderOptions();
         updateStorageSummary();
+        verificarNubeInicioCloud().catch(err => console.error("Error en verificarNubeInicioCloud:", err));
     }
 
     init();
