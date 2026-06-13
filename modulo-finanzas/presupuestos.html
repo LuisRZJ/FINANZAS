@@ -7,8 +7,10 @@
   <link rel="icon" href="../pwa/logo-app.png">
   <meta name="theme-color" content="#2563eb">
   <title>Presupuestos — GTR Finanzas</title>
-  <script src="https://cdn.tailwindcss.com"></script>
   <script src="js/sistema/theme.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = window.GTRTheme._twConfig</script>
+  <script src="https://unpkg.com/lucide@latest"></script>
   <link rel="stylesheet" href="css/estilos.css">
 </head>
 
@@ -72,16 +74,18 @@
       });
     </script>
   </header>
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <h1 class="text-2xl font-bold mb-2">Presupuestos</h1>
-    <p class="text-sm text-gray-600 dark:text-gray-300 mb-6">
-      Define un presupuesto general de gastos para un periodo y repártelo entre etiquetas de gasto
-      específicas. El sistema compara automáticamente tus gastos reales contra estos límites.
-    </p>
+  <main class="max-w-2xl mx-auto px-4 sm:px-6 py-8 relative z-10">
+    <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-xl border border-gray-100 dark:border-gray-800/80 p-6 md:p-8 relative">
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-white tracking-tight mb-2">Presupuestos</h2>
+      <p class="text-xs text-gray-500 dark:text-gray-400 mb-6 leading-relaxed">
+        Define un presupuesto general de gastos para un periodo y repártelo entre etiquetas de gasto
+        específicas. El sistema compara tus gastos reales contra estos límites.
+      </p>
 
-    <section id="presupuesto-general" class="mb-10"></section>
+      <div id="presupuesto-general" class="mb-8"></div>
 
-    <section id="presupuestos-categorias"></section>
+      <div id="presupuestos-categorias"></div>
+    </div>
   </main>
   <nav id="mobile-menu" class="hidden md:hidden fixed inset-0 top-16 z-40 bg-white dark:bg-gray-900 overflow-y-auto">
     <div class="px-4 py-6 space-y-1">

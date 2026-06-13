@@ -7,8 +7,10 @@
   <link rel="icon" href="../pwa/logo-app.png">
   <meta name="theme-color" content="#2563eb">
   <title>Reportes — GTR Finanzas</title>
-  <script src="https://cdn.tailwindcss.com"></script>
   <script src="js/sistema/theme.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = window.GTRTheme._twConfig</script>
+  <script src="https://unpkg.com/lucide@latest"></script>
   <link rel="stylesheet" href="css/estilos.css">
 </head>
 
@@ -72,277 +74,277 @@
       });
     </script>
   </header>
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <!-- Header y Filtros -->
-    <div class="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-      <div>
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Reportes Financieros</h1>
-        <p class="text-gray-500 dark:text-gray-400">Analiza tus ingresos y gastos</p>
-      </div>
-      <div
-        class="flex items-center bg-white dark:bg-gray-800 rounded-lg p-1 border border-gray-200 dark:border-gray-700 shadow-sm">
-        <button
-          class="px-4 py-2 text-sm font-medium rounded-md text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-          data-period="semana">Esta Semana</button>
-        <button
-          class="px-4 py-2 text-sm font-medium rounded-md text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-          data-period="mes">Este Mes</button>
-        <button
-          class="px-4 py-2 text-sm font-medium rounded-md text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-          data-period="anio">Este Año</button>
-        <button
-          class="px-4 py-2 text-sm font-medium rounded-md text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-          data-period="todo">Todo</button>
-      </div>
-    </div>
-
-    <!-- Navegación Temporal -->
-    <div class="mb-6 flex items-center justify-center gap-3">
-      <button id="btn-prev-period"
-        class="p-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white transition-colors shadow-sm">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-        </svg>
-      </button>
-      <div id="period-label"
-        class="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm min-w-[220px] text-center">
-        <span class="text-sm font-semibold text-gray-900 dark:text-white">Cargando...</span>
-      </div>
-      <button id="btn-next-period"
-        class="p-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-        disabled>
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-        </svg>
-      </button>
-    </div>
-
-    <!-- Tarjetas de Resumen -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-      <!-- Balance -->
-      <div
-        class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm flex flex-col justify-between">
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 py-8 relative z-10">
+    <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-xl border border-gray-100 dark:border-gray-800/80 p-6 md:p-8 relative">
+      <!-- Header y Filtros -->
+      <div class="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div class="flex justify-between items-start mb-2">
-            <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Balance Total</h3>
-            <span id="stat-trend-balance" class="text-xs font-medium px-2 py-0.5 rounded-full hidden"></span>
-          </div>
-          <p class="text-3xl font-bold text-gray-900 dark:text-white" id="stat-balance">$0.00</p>
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Reportes Financieros</h2>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Analiza tus ingresos y gastos</p>
         </div>
-        <p class="text-xs font-medium text-gray-400 dark:text-gray-500 mt-3" id="stat-balance-daily">
-          —
-        </p>
-      </div>
-      <!-- Ingresos -->
-      <div
-        class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm flex flex-col justify-between">
-        <div>
-          <div class="flex justify-between items-start mb-2">
-            <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Ingresos</h3>
-            <span id="stat-trend-ingresos" class="text-xs font-medium px-2 py-0.5 rounded-full hidden"></span>
-          </div>
-          <p class="text-3xl font-bold text-green-600 dark:text-green-400" id="stat-ingresos">$0.00</p>
-        </div>
-        <p class="text-xs font-medium text-gray-400 dark:text-gray-500 mt-3" id="stat-ingresos-daily">
-          —
-        </p>
-      </div>
-      <!-- Gastos -->
-      <div
-        class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm flex flex-col justify-between">
-        <div>
-          <div class="flex justify-between items-start mb-2">
-            <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Gastos</h3>
-            <span id="stat-trend-gastos" class="text-xs font-medium px-2 py-0.5 rounded-full hidden"></span>
-          </div>
-          <p class="text-3xl font-bold text-red-600 dark:text-red-400" id="stat-gastos">$0.00</p>
-        </div>
-        <p class="text-xs font-medium text-gray-400 dark:text-gray-500 mt-3" id="stat-gastos-daily">
-          —
-        </p>
-      </div>
-    </div>
-
-    <!-- Gráficos -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8 mb-8">
-      <!-- Gráfico de Evolución -->
-      <div
-        class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm xl:col-span-1">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">Evolución de Finanzas</h3>
-        <!-- Balance Neto -->
-        <div class="text-center mb-6">
-          <p class="text-sm text-gray-500 dark:text-gray-400">Balance del Periodo</p>
-          <p class="text-3xl font-bold text-gray-900 dark:text-white" id="total-balance-evolution">$0.00</p>
-        </div>
-        <div class="relative h-72 w-full">
-          <canvas id="chart-evolution"></canvas>
+        <div
+          class="flex bg-gray-100 dark:bg-gray-900/60 rounded-2xl p-1 border border-gray-200/15">
+          <button
+            class="px-4 py-2 text-xs font-semibold rounded-xl text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors focus:outline-none"
+            data-period="semana">Esta Semana</button>
+          <button
+            class="px-4 py-2 text-xs font-semibold rounded-xl text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors focus:outline-none"
+            data-period="mes">Este Mes</button>
+          <button
+            class="px-4 py-2 text-xs font-semibold rounded-xl text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors focus:outline-none"
+            data-period="anio">Este Año</button>
+          <button
+            class="px-4 py-2 text-xs font-semibold rounded-xl text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors focus:outline-none"
+            data-period="todo">Todo</button>
         </div>
       </div>
 
-      <!-- Gráfico de Ingresos por Categoría -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">Ingresos por Categoría</h3>
-        <!-- Total -->
-        <div class="text-center mb-6">
-          <p class="text-sm text-gray-500 dark:text-gray-400">Total Ingresos</p>
-          <p class="text-3xl font-bold text-green-600 dark:text-green-400" id="total-income-chart">$0.00</p>
+      <!-- Navegación Temporal -->
+      <div class="flex justify-between items-center bg-gray-50 dark:bg-gray-900/60 rounded-2xl p-1.5 border border-gray-100 dark:border-gray-800/80 mb-8 max-w-xs mx-auto">
+        <button id="btn-prev-period"
+          class="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-800 dark:hover:text-gray-200 transition-colors hover:bg-white dark:hover:bg-gray-800 rounded-xl">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+          </svg>
+        </button>
+        <div id="period-label"
+          class="text-sm font-semibold text-gray-700 dark:text-gray-300 min-w-[150px] text-center capitalize">
+          Cargando...
         </div>
-        <div class="relative h-64 w-full flex justify-center mb-6">
-          <canvas id="chart-income-categories"></canvas>
-        </div>
-        <!-- Leyenda Detallada -->
-        <div id="legend-income-categories" class="space-y-3 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
-          <!-- Items generados dinámicamente -->
-        </div>
+        <button id="btn-next-period"
+          class="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-800 dark:hover:text-gray-200 transition-colors hover:bg-white dark:hover:bg-gray-800 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+          </svg>
+        </button>
       </div>
 
-      <!-- Gráfico de Gastos por Categoría -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">Gastos por Categoría</h3>
-        <!-- Total -->
-        <div class="text-center mb-6">
-          <p class="text-sm text-gray-500 dark:text-gray-400">Total Gastos</p>
-          <p class="text-3xl font-bold text-red-600 dark:text-red-400" id="total-expense-chart">$0.00</p>
-        </div>
-        <div class="relative h-64 w-full flex justify-center mb-6">
-          <canvas id="chart-categories"></canvas>
-        </div>
-        <!-- Leyenda Detallada -->
-        <div id="legend-expense-categories" class="space-y-3 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
-          <!-- Items generados dinámicamente -->
-        </div>
-      </div>
-    </div>
-
-    <!-- Gráfico de Evolución de Balance Histórico (Fila completa) -->
-    <div class="mb-8">
-      <div class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Balance a lo Largo del Tiempo</h3>
-
-          <!-- Barra de Controles Horizontal -->
-          <div class="flex flex-wrap items-center gap-3">
-            <!-- Toggle Lineal / Barras -->
-            <div class="flex items-center bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
-              <button data-chart-mode="lineal"
-                class="px-3 py-1.5 text-xs font-medium rounded-md bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm transition-colors">
-                📈 Lineal
-              </button>
-              <button data-chart-mode="barras"
-                class="px-3 py-1.5 text-xs font-medium rounded-md text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
-                📊 Barras
-              </button>
+      <!-- Tarjetas de Resumen -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <!-- Balance -->
+        <div
+          class="bg-gray-50 dark:bg-gray-900/60 rounded-2xl p-6 border border-gray-100/80 dark:border-gray-800/60 flex flex-col justify-between transition-all hover:shadow-md">
+          <div>
+            <div class="flex justify-between items-start mb-2">
+              <span class="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Balance Total</span>
+              <span id="stat-trend-balance" class="text-[10px] font-bold px-2 py-0.5 rounded-full hidden"></span>
             </div>
+            <p class="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white" id="stat-balance">$0.00</p>
+          </div>
+          <p class="text-[11px] text-gray-400 dark:text-gray-500 mt-3" id="stat-balance-daily">
+            —
+          </p>
+        </div>
+        <!-- Ingresos -->
+        <div
+          class="bg-gray-50 dark:bg-gray-900/60 rounded-2xl p-6 border border-gray-100/80 dark:border-gray-800/60 flex flex-col justify-between transition-all hover:shadow-md">
+          <div>
+            <div class="flex justify-between items-start mb-2">
+              <span class="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Ingresos</span>
+              <span id="stat-trend-ingresos" class="text-[10px] font-bold px-2 py-0.5 rounded-full hidden"></span>
+            </div>
+            <p class="text-3xl font-extrabold tracking-tight text-green-600 dark:text-green-400" id="stat-ingresos">$0.00</p>
+          </div>
+          <p class="text-[11px] text-gray-400 dark:text-gray-500 mt-3" id="stat-ingresos-daily">
+            —
+          </p>
+        </div>
+        <!-- Gastos -->
+        <div
+          class="bg-gray-50 dark:bg-gray-900/60 rounded-2xl p-6 border border-gray-100/80 dark:border-gray-800/60 flex flex-col justify-between transition-all hover:shadow-md">
+          <div>
+            <div class="flex justify-between items-start mb-2">
+              <span class="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Gastos</span>
+              <span id="stat-trend-gastos" class="text-[10px] font-bold px-2 py-0.5 rounded-full hidden"></span>
+            </div>
+            <p class="text-3xl font-extrabold tracking-tight text-red-600 dark:text-red-400" id="stat-gastos">$0.00</p>
+          </div>
+          <p class="text-[11px] text-gray-400 dark:text-gray-500 mt-3" id="stat-gastos-daily">
+            —
+          </p>
+        </div>
+      </div>
 
-            <!-- Separador vertical -->
-            <div class="hidden sm:block h-6 w-px bg-gray-300 dark:bg-gray-600"></div>
+      <!-- Gráficos -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
+        <!-- Gráfico de Evolución -->
+        <div
+          class="bg-gray-50 dark:bg-gray-900/60 rounded-2xl p-6 border border-gray-100/80 dark:border-gray-800/60 shadow-sm flex flex-col justify-between xl:col-span-1">
+          <h3 class="text-base font-bold text-gray-950 dark:text-white tracking-tight mb-4">Evolución de Finanzas</h3>
+          <!-- Balance Neto -->
+          <div class="text-center mb-4 bg-white/50 dark:bg-gray-900/40 rounded-xl py-3 border border-gray-100/50 dark:border-gray-800/50">
+            <p class="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-0.5">Balance del Periodo</p>
+            <p class="text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white" id="total-balance-evolution">$0.00</p>
+          </div>
+          <div class="relative h-64 w-full">
+            <canvas id="chart-evolution"></canvas>
+          </div>
+        </div>
 
-            <!-- Switch SMA 30d -->
-            <label class="flex items-center gap-2 cursor-pointer group">
-              <div class="relative">
-                <input type="checkbox" id="toggle-sma" class="sr-only peer">
-                <div
-                  class="w-11 h-6 bg-gray-200 dark:bg-gray-700 rounded-full peer peer-focus:ring-2 peer-focus:ring-purple-300 dark:peer-focus:ring-purple-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600 peer-disabled:opacity-50 peer-disabled:cursor-not-allowed">
-                </div>
+        <!-- Gráfico de Ingresos por Categoría -->
+        <div class="bg-gray-50 dark:bg-gray-900/60 rounded-2xl p-6 border border-gray-100/80 dark:border-gray-800/60 shadow-sm flex flex-col justify-between">
+          <h3 class="text-base font-bold text-gray-950 dark:text-white tracking-tight mb-4">Ingresos por Categoría</h3>
+          <!-- Total -->
+          <div class="text-center mb-4 bg-white/50 dark:bg-gray-900/40 rounded-xl py-3 border border-gray-100/50 dark:border-gray-800/50">
+            <p class="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-0.5">Total Ingresos</p>
+            <p class="text-2xl font-extrabold tracking-tight text-green-600 dark:text-green-400" id="total-income-chart">$0.00</p>
+          </div>
+          <div class="relative h-56 w-full flex justify-center mb-4">
+            <canvas id="chart-income-categories"></canvas>
+          </div>
+          <!-- Leyenda Detallada -->
+          <div id="legend-income-categories" class="space-y-2.5 max-h-48 overflow-y-auto pr-2 custom-scrollbar text-xs">
+            <!-- Items generados dinámicamente -->
+          </div>
+        </div>
+
+        <!-- Gráfico de Gastos por Categoría -->
+        <div class="bg-gray-50 dark:bg-gray-900/60 rounded-2xl p-6 border border-gray-100/80 dark:border-gray-800/60 shadow-sm flex flex-col justify-between">
+          <h3 class="text-base font-bold text-gray-950 dark:text-white tracking-tight mb-4">Gastos por Categoría</h3>
+          <!-- Total -->
+          <div class="text-center mb-4 bg-white/50 dark:bg-gray-900/40 rounded-xl py-3 border border-gray-100/50 dark:border-gray-800/50">
+            <p class="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-0.5">Total Gastos</p>
+            <p class="text-2xl font-extrabold tracking-tight text-red-600 dark:text-red-400" id="total-expense-chart">$0.00</p>
+          </div>
+          <div class="relative h-56 w-full flex justify-center mb-4">
+            <canvas id="chart-categories"></canvas>
+          </div>
+          <!-- Leyenda Detallada -->
+          <div id="legend-expense-categories" class="space-y-2.5 max-h-48 overflow-y-auto pr-2 custom-scrollbar text-xs">
+            <!-- Items generados dinámicamente -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Gráfico de Evolución de Balance Histórico (Fila completa) -->
+      <div class="mb-8">
+        <div class="bg-gray-50 dark:bg-gray-900/60 rounded-2xl p-6 border border-gray-100/80 dark:border-gray-800/60 shadow-sm">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <h3 class="text-base font-bold text-gray-950 dark:text-white tracking-tight">Balance a lo Largo del Tiempo</h3>
+
+            <!-- Barra de Controles Horizontal -->
+            <div class="flex flex-wrap items-center gap-4">
+              <!-- Toggle Lineal / Barras -->
+              <div class="flex items-center bg-gray-150 dark:bg-gray-900 rounded-xl p-1 border border-gray-200/10">
+                <button data-chart-mode="lineal"
+                  class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm transition-all focus:outline-none">
+                  📈 Lineal
+                </button>
+                <button data-chart-mode="barras"
+                  class="px-3 py-1.5 text-xs font-semibold rounded-lg text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all focus:outline-none">
+                  📊 Barras
+                </button>
               </div>
-              <span
-                class="text-xs font-medium text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white transition-colors select-none">
-                SMA 30d
-              </span>
-            </label>
 
-            <!-- Switch Bollinger -->
-            <label class="flex items-center gap-2 cursor-pointer group">
-              <div class="relative">
-                <input type="checkbox" id="toggle-bollinger" class="sr-only peer">
-                <div
-                  class="w-11 h-6 bg-gray-200 dark:bg-gray-700 rounded-full peer peer-focus:ring-2 peer-focus:ring-gray-300 dark:peer-focus:ring-gray-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gray-500 peer-disabled:opacity-50 peer-disabled:cursor-not-allowed">
+              <!-- Separador vertical -->
+              <div class="hidden sm:block h-6 w-px bg-gray-200 dark:bg-gray-800"></div>
+
+              <!-- Switch SMA 30d -->
+              <label class="flex items-center gap-2 cursor-pointer group">
+                <div class="relative">
+                  <input type="checkbox" id="toggle-sma" class="sr-only peer">
+                  <div
+                    class="w-9 h-5 bg-gray-200 dark:bg-gray-750 rounded-full peer peer-focus:ring-2 peer-focus:ring-purple-300 dark:peer-focus:ring-purple-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600 peer-disabled:opacity-50 peer-disabled:cursor-not-allowed">
+                  </div>
                 </div>
+                <span
+                  class="text-xs font-semibold text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-white transition-colors select-none">
+                  SMA 30d
+                </span>
+              </label>
+
+              <!-- Switch Bollinger -->
+              <label class="flex items-center gap-2 cursor-pointer group">
+                <div class="relative">
+                  <input type="checkbox" id="toggle-bollinger" class="sr-only peer">
+                  <div
+                    class="w-9 h-5 bg-gray-200 dark:bg-gray-750 rounded-full peer peer-focus:ring-2 peer-focus:ring-gray-300 dark:peer-focus:ring-gray-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-gray-500 peer-disabled:opacity-50 peer-disabled:cursor-not-allowed">
+                  </div>
+                </div>
+                <span
+                  class="text-xs font-semibold text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-white transition-colors select-none">
+                  Bollinger
+                </span>
+              </label>
+            </div>
+          </div>
+          <div class="relative h-80 w-full">
+            <canvas id="chart-balance-history"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Proyección a 1 Año -->
+      <div class="mb-8">
+        <div class="bg-gray-50 dark:bg-gray-900/60 rounded-2xl p-6 border border-gray-100/80 dark:border-gray-800/60 shadow-sm">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <h3 class="text-base font-bold text-gray-950 dark:text-white tracking-tight">Proyección a 1 Año</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 text-right">
+              <div>
+                <p class="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">PNL Promedio (3 periodos)</p>
+                <p class="text-xl font-extrabold tracking-tight text-gray-900 dark:text-white mt-0.5" id="stat-run-rate">$0.00</p>
               </div>
-              <span
-                class="text-xs font-medium text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white transition-colors select-none">
-                Bollinger
-              </span>
-            </label>
+              <div>
+                <p class="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Balance Final</p>
+                <p class="text-xl font-extrabold tracking-tight text-gray-900 dark:text-white mt-0.5" id="stat-projection-final">$0.00</p>
+              </div>
+              <div>
+                <p class="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Crecimiento Final</p>
+                <p class="text-xl font-extrabold tracking-tight text-gray-900 dark:text-white mt-0.5" id="stat-projection-growth">0.0%</p>
+              </div>
+            </div>
+          </div>
+          <div class="relative h-72 w-full">
+            <canvas id="chart-projection-year"></canvas>
           </div>
         </div>
-        <div class="relative h-80 w-full">
-          <canvas id="chart-balance-history"></canvas>
-        </div>
       </div>
-    </div>
 
-    <div class="mb-8">
-      <div class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Proyección a 1 Año</h3>
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-right">
+      <!-- Máximos y Mínimos del Periodo -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- Máximos -->
+        <div class="bg-gray-50 dark:bg-gray-900/60 rounded-2xl p-6 border border-gray-100/80 dark:border-gray-800/60 shadow-sm">
+          <h3 class="text-base font-bold text-gray-950 dark:text-white tracking-tight mb-4 flex items-center gap-2">
+            <i data-lucide="trending-up" class="w-4 h-4 text-emerald-500"></i> Máximos del Periodo
+          </h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <!-- Top Ingresos -->
             <div>
-              <p class="text-xs font-medium text-gray-500 dark:text-gray-400">PNL Promedio (3 periodos)</p>
-              <p class="text-2xl font-bold text-gray-900 dark:text-white" id="stat-run-rate">$0.00</p>
+              <p class="text-[10px] font-semibold text-green-600 dark:text-green-400 uppercase tracking-wider mb-2.5">Top 3 Ingresos</p>
+              <ul id="list-max-ingresos" class="space-y-2 text-xs">
+                <li class="text-gray-400 dark:text-gray-500 italic">Sin datos</li>
+              </ul>
             </div>
+            <!-- Top Gastos -->
             <div>
-              <p class="text-xs font-medium text-gray-500 dark:text-gray-400">Balance Final</p>
-              <p class="text-2xl font-bold text-gray-900 dark:text-white" id="stat-projection-final">$0.00</p>
-            </div>
-            <div>
-              <p class="text-xs font-medium text-gray-500 dark:text-gray-400">Crecimiento Final</p>
-              <p class="text-2xl font-bold text-gray-900 dark:text-white" id="stat-projection-growth">0.0%</p>
+              <p class="text-[10px] font-semibold text-red-600 dark:text-red-400 uppercase tracking-wider mb-2.5">Top 3 Gastos</p>
+              <ul id="list-max-gastos" class="space-y-2 text-xs">
+                <li class="text-gray-400 dark:text-gray-500 italic">Sin datos</li>
+              </ul>
             </div>
           </div>
         </div>
-        <div class="relative h-72 w-full">
-          <canvas id="chart-projection-year"></canvas>
-        </div>
-      </div>
-    </div>
-
-    <!-- Máximos y Mínimos del Periodo -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-      <!-- Máximos -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-          <span class="text-xl">🔺</span> Máximos del Periodo
-        </h3>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <!-- Top Ingresos -->
-          <div>
-            <p class="text-xs font-medium text-green-600 dark:text-green-400 uppercase tracking-wide mb-2">Top 3
-              Ingresos</p>
-            <ul id="list-max-ingresos" class="space-y-2 text-sm">
-              <li class="text-gray-400 dark:text-gray-500 italic">Sin datos</li>
-            </ul>
-          </div>
-          <!-- Top Gastos -->
-          <div>
-            <p class="text-xs font-medium text-red-600 dark:text-red-400 uppercase tracking-wide mb-2">Top 3 Gastos</p>
-            <ul id="list-max-gastos" class="space-y-2 text-sm">
-              <li class="text-gray-400 dark:text-gray-500 italic">Sin datos</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-      <!-- Mínimos -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-          <span class="text-xl">🔻</span> Mínimos del Periodo
-        </h3>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <!-- Min Ingresos -->
-          <div>
-            <p class="text-xs font-medium text-green-600 dark:text-green-400 uppercase tracking-wide mb-2">Bottom 3
-              Ingresos</p>
-            <ul id="list-min-ingresos" class="space-y-2 text-sm">
-              <li class="text-gray-400 dark:text-gray-500 italic">Sin datos</li>
-            </ul>
-          </div>
-          <!-- Min Gastos -->
-          <div>
-            <p class="text-xs font-medium text-red-600 dark:text-red-400 uppercase tracking-wide mb-2">Bottom 3 Gastos
-            </p>
-            <ul id="list-min-gastos" class="space-y-2 text-sm">
-              <li class="text-gray-400 dark:text-gray-500 italic">Sin datos</li>
-            </ul>
+        <!-- Mínimos -->
+        <div class="bg-gray-50 dark:bg-gray-900/60 rounded-2xl p-6 border border-gray-100/80 dark:border-gray-800/60 shadow-sm">
+          <h3 class="text-base font-bold text-gray-950 dark:text-white tracking-tight mb-4 flex items-center gap-2">
+            <i data-lucide="trending-down" class="w-4 h-4 text-rose-500"></i> Mínimos del Periodo
+          </h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <!-- Min Ingresos -->
+            <div>
+              <p class="text-[10px] font-semibold text-green-600 dark:text-green-400 uppercase tracking-wider mb-2.5">Bottom 3 Ingresos</p>
+              <ul id="list-min-ingresos" class="space-y-2 text-xs">
+                <li class="text-gray-400 dark:text-gray-500 italic">Sin datos</li>
+              </ul>
+            </div>
+            <!-- Min Gastos -->
+            <div>
+              <p class="text-[10px] font-semibold text-red-600 dark:text-red-400 uppercase tracking-wider mb-2.5">Bottom 3 Gastos</p>
+              <ul id="list-min-gastos" class="space-y-2 text-xs">
+                <li class="text-gray-400 dark:text-gray-500 italic">Sin datos</li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>
@@ -355,28 +357,26 @@
     <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
       <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
         <div
-          class="relative transform overflow-hidden rounded-2xl bg-white dark:bg-gray-800 text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-2xl scale-95 opacity-0"
+          class="relative transform overflow-hidden rounded-3xl bg-white dark:bg-gray-900 border border-gray-150 dark:border-gray-800/80 text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-2xl scale-95 opacity-0"
           id="modal-categoria-panel">
           <div
-            class="bg-gray-50 dark:bg-gray-800/50 px-4 py-3 sm:px-6 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
+            class="bg-gray-50 dark:bg-gray-950/50 px-6 py-4 border-b border-gray-100 dark:border-gray-800/60 flex justify-between items-center">
             <div>
-              <h3 class="text-lg font-semibold leading-6 text-gray-900 dark:text-white" id="modal-categoria-title">
+              <h3 class="text-lg font-bold text-gray-900 dark:text-white" id="modal-categoria-title">
                 Operaciones por categoría</h3>
-              <p id="modal-categoria-subtitle" class="text-xs text-gray-500 dark:text-gray-400"></p>
+              <p id="modal-categoria-subtitle" class="text-xs text-gray-500 dark:text-gray-400 mt-1"></p>
             </div>
             <button type="button" id="modal-categoria-close"
-              class="text-gray-400 hover:text-gray-500 focus:outline-none">
-              <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              class="text-gray-400 hover:text-gray-505 hover:bg-gray-100 dark:hover:bg-gray-850 p-2 rounded-full transition-all focus:outline-none">
+              <i data-lucide="x" class="h-5 w-5"></i>
             </button>
           </div>
-          <div class="p-6">
-            <div class="flex items-center justify-between mb-4">
-              <p class="text-sm text-gray-600 dark:text-gray-300">Total</p>
-              <p class="text-lg font-semibold text-gray-900 dark:text-white" id="modal-categoria-total">$0.00</p>
+          <div class="p-6 bg-white dark:bg-gray-900">
+            <div class="flex items-center justify-between mb-4 bg-gray-50 dark:bg-gray-950/40 p-4 rounded-2xl border border-gray-100 dark:border-gray-800/40">
+              <p class="text-sm font-semibold text-gray-600 dark:text-gray-400">Total acumulado</p>
+              <p class="text-xl font-extrabold text-gray-900 dark:text-white" id="modal-categoria-total">$0.00</p>
             </div>
-            <div id="modal-categoria-list" class="space-y-2 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+            <div id="modal-categoria-list" class="space-y-2 max-h-[50vh] overflow-y-auto pr-2 custom-scrollbar">
             </div>
           </div>
         </div>

@@ -45,20 +45,18 @@ async function renderLista() {
     }
     const sepContainer = crearSeparadorVisual(systemSep, mainAccounts, subAccounts, true)
     cont.appendChild(sepContainer)
-  }
-
-  // Render orphan sub-accounts
+  }  // Render orphan sub-accounts
   const orphans = subAccounts.filter(s => !mainAccounts.some(m => m.id === s.parentId))
   if (orphans.length > 0) {
     const orphansContainer = document.createElement('div')
     orphansContainer.className = 'mt-8'
     const title = document.createElement('h3')
-    title.className = 'text-lg font-semibold mb-4 text-gray-500'
+    title.className = 'text-sm font-semibold mb-4 text-gray-400 uppercase tracking-wider'
     title.textContent = 'Subcuentas sin asignar'
     orphansContainer.appendChild(title)
 
     const grid = document.createElement('div')
-    grid.className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'
+    grid.className = 'grid grid-cols-1 sm:grid-cols-2 gap-4'
 
     orphans.forEach((sub) => {
       const subCard = crearTarjetaCuenta(sub, true)
@@ -66,6 +64,10 @@ async function renderLista() {
     })
     orphansContainer.appendChild(grid)
     cont.appendChild(orphansContainer)
+  }
+
+  if (window.lucide) {
+    window.lucide.createIcons()
   }
 }
 
@@ -77,18 +79,17 @@ function crearSeparadorVisual(sep, mainAccounts, subAccounts, isSystem = false) 
 
   // Separator header
   const header = document.createElement('div')
-  header.className = 'flex items-center justify-between mb-4 pb-2 border-b-2'
-  header.style.borderColor = sepColor
+  header.className = 'flex items-center justify-between mb-4 pb-2 border-b border-gray-150 dark:border-gray-800'
 
   const titleWrapper = document.createElement('div')
-  titleWrapper.className = 'flex items-center gap-3'
+  titleWrapper.className = 'flex items-center gap-2.5'
 
   const icon = document.createElement('div')
-  icon.className = 'w-2 h-8 rounded-full'
+  icon.className = 'w-1.5 h-5 rounded-full'
   icon.style.backgroundColor = sepColor
 
   const title = document.createElement('h3')
-  title.className = 'text-lg font-bold text-gray-800 dark:text-gray-200'
+  title.className = 'text-sm font-bold text-gray-800 dark:text-gray-200 tracking-tight'
   title.textContent = sep.nombre
 
   // Get accounts in this separator
@@ -110,8 +111,8 @@ function crearSeparadorVisual(sep, mainAccounts, subAccounts, isSystem = false) 
   badgesWrapper.className = 'flex items-center gap-2 flex-wrap'
 
   const countBadge = document.createElement('span')
-  countBadge.className = 'text-xs px-2 py-0.5 rounded-full'
-  countBadge.style.backgroundColor = sepColor + '20'
+  countBadge.className = 'text-[10px] font-semibold px-2 py-0.5 rounded-full'
+  countBadge.style.backgroundColor = sepColor + '15'
   countBadge.style.color = sepColor
 
   let countText = `${sepAccounts.length} cuenta(s)`
@@ -121,7 +122,7 @@ function crearSeparadorVisual(sep, mainAccounts, subAccounts, isSystem = false) 
   countBadge.textContent = countText
 
   const totalBadge = document.createElement('span')
-  totalBadge.className = 'text-xs font-bold px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
+  totalBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800/80 text-gray-600 dark:text-gray-400'
   totalBadge.textContent = formatoMoneda(totalDinero)
 
   badgesWrapper.appendChild(countBadge)
@@ -135,7 +136,7 @@ function crearSeparadorVisual(sep, mainAccounts, subAccounts, isSystem = false) 
 
   // Separator accounts grid
   const grid = document.createElement('div')
-  grid.className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'
+  grid.className = 'grid grid-cols-1 sm:grid-cols-2 gap-4'
 
   // Sort accounts by balance (already filtered above)
   sepAccounts.sort((a, b) => (b.dinero || 0) - (a.dinero || 0))
@@ -147,7 +148,7 @@ function crearSeparadorVisual(sep, mainAccounts, subAccounts, isSystem = false) 
 
   if (sepAccounts.length === 0) {
     const empty = document.createElement('p')
-    empty.className = 'text-sm text-gray-400 italic col-span-full'
+    empty.className = 'text-xs text-gray-400 italic col-span-full py-2'
     empty.textContent = 'Sin cuentas en esta categoría'
     grid.appendChild(empty)
   }
@@ -282,11 +283,11 @@ function renderGraficoDistribucion(cuentas, subcuentas, separadores = []) {
       const percentage = totalReal > 0 ? ((item.dinero / totalReal) * 100).toFixed(1) : 0
 
       const itemContainer = document.createElement('div')
-      itemContainer.className = 'text-xs text-gray-600 dark:text-gray-400'
+      itemContainer.className = 'p-3 rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 flex flex-col gap-1 transition-all hover:shadow-sm'
 
       // Fila principal
       const mainRow = document.createElement('div')
-      mainRow.className = 'flex items-center justify-between font-medium text-gray-800 dark:text-gray-200'
+      mainRow.className = 'flex items-center justify-between text-xs font-semibold text-gray-800 dark:text-white'
 
       const left = document.createElement('div')
       left.className = 'flex items-center gap-2'
@@ -294,16 +295,24 @@ function renderGraficoDistribucion(cuentas, subcuentas, separadores = []) {
       dot.className = 'w-2 h-2 rounded-full'
       dot.style.backgroundColor = item.color
       const name = document.createElement('span')
+      name.className = 'truncate max-w-[120px]'
       name.textContent = item.nombre
       left.appendChild(dot)
       left.appendChild(name)
 
       const right = document.createElement('div')
-      right.textContent = `${formatoMoneda(item.dinero)} (${percentage}%)`
+      right.className = 'font-bold text-gray-900 dark:text-white'
+      right.textContent = formatoMoneda(item.dinero)
 
       mainRow.appendChild(left)
       mainRow.appendChild(right)
       itemContainer.appendChild(mainRow)
+
+      // Porcentaje y desglose
+      const subRow = document.createElement('div')
+      subRow.className = 'flex items-center justify-between text-[10px] text-gray-400 dark:text-gray-500 font-medium'
+      subRow.innerHTML = `<span>Distribución</span><span>${percentage}% del total</span>`
+      itemContainer.appendChild(subRow)
 
       // Desglose (Solo para vista de Cuentas, por ahora)
       if (item.tipo === 'cuenta' && item.montoSubs > 0) {
@@ -311,16 +320,16 @@ function renderGraficoDistribucion(cuentas, subcuentas, separadores = []) {
         const pctSubs = ((item.montoSubs / item.dinero) * 100).toFixed(0)
 
         const breakdown = document.createElement('div')
-        breakdown.className = 'pl-4 mt-1 space-y-0.5 border-l-2 border-gray-100 dark:border-gray-700 ml-1'
+        breakdown.className = 'mt-2 pt-2 border-t border-gray-50 dark:border-gray-800 text-[9px] text-gray-400 dark:text-gray-500 space-y-1'
 
         breakdown.innerHTML = `
           <div class="flex justify-between">
-             <span>↳ Propio</span>
-             <span>${formatoMoneda(item.montoPropio)} (${pctPropio}%)</span>
+             <span>Propio</span>
+             <span class="font-semibold text-gray-600 dark:text-gray-400">${formatoMoneda(item.montoPropio)} (${pctPropio}%)</span>
           </div>
           <div class="flex justify-between">
-             <span>↳ Subcuentas</span>
-             <span>${formatoMoneda(item.montoSubs)} (${pctSubs}%)</span>
+             <span>Subcuentas</span>
+             <span class="font-semibold text-gray-600 dark:text-gray-400">${formatoMoneda(item.montoSubs)} (${pctSubs}%)</span>
           </div>
         `
         itemContainer.appendChild(breakdown)
@@ -336,7 +345,7 @@ function renderGraficoDistribucion(cuentas, subcuentas, separadores = []) {
       chartDistribucion.destroy()
       chartDistribucion = null
     }
-    if (legendEl) legendEl.innerHTML = '<p class="text-xs text-center text-gray-400 italic">Sin fondos disponibles</p>'
+    if (legendEl) legendEl.innerHTML = '<p class="text-xs text-center text-gray-400 italic col-span-full py-4">Sin fondos disponibles</p>'
     return
   }
 
@@ -345,7 +354,7 @@ function renderGraficoDistribucion(cuentas, subcuentas, separadores = []) {
   const data = dataPoints.map(d => d.dinero)
   const backgroundColors = dataPoints.map(d => d.color)
   const isDark = document.documentElement.classList.contains('dark')
-  const borderColor = isDark ? '#1f2937' : '#ffffff'
+  const borderColor = isDark ? '#111827' : '#ffffff'
 
   // Crear o Actualizar Gráfico
   if (chartDistribucion) {
@@ -372,17 +381,17 @@ function renderGraficoDistribucion(cuentas, subcuentas, separadores = []) {
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        cutout: '70%',
+        cutout: '75%',
         plugins: {
           legend: { display: false },
           tooltip: {
-            backgroundColor: isDark ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+            backgroundColor: isDark ? 'rgba(17, 24, 39, 0.95)' : 'rgba(255, 255, 255, 0.95)',
             titleColor: isDark ? '#e2e8f0' : '#1e293b',
             bodyColor: isDark ? '#e2e8f0' : '#1e293b',
-            borderColor: isDark ? '#334155' : '#e2e8f0',
+            borderColor: isDark ? '#374151' : '#e5e7eb',
             borderWidth: 1,
             padding: 10,
-            cornerRadius: 8,
+            cornerRadius: 12,
             callbacks: {
               label: function (context) {
                 const index = context.dataIndex
@@ -411,15 +420,15 @@ function crearTarjetaCuentaConSubs(c, subAccounts) {
 
   if (subs.length > 0) {
     const subsContainer = document.createElement('div')
-    subsContainer.className = 'mt-6 pt-4 border-t border-gray-100 dark:border-gray-800 space-y-3'
+    subsContainer.className = 'mt-4 pt-3 border-t border-gray-100 dark:border-gray-800/60 space-y-2'
 
     const subsTitle = document.createElement('h4')
-    subsTitle.className = 'text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3'
+    subsTitle.className = 'text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2'
     subsTitle.textContent = `Subcuentas (${subs.length})`
     subsContainer.appendChild(subsTitle)
 
     const grid = document.createElement('div')
-    grid.className = `grid grid-cols-1 ${subs.length > 1 ? 'lg:grid-cols-2' : ''} gap-3`
+    grid.className = `grid grid-cols-1 ${subs.length > 1 ? 'sm:grid-cols-2' : ''} gap-2.5`
 
     subs.forEach((sub) => {
       const subItem = crearItemSubcuenta(sub)
@@ -434,22 +443,22 @@ function crearTarjetaCuentaConSubs(c, subAccounts) {
 
 function crearItemSubcuenta(c) {
   const item = document.createElement('div')
-  item.className = 'flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800 group hover:border-sky-200 dark:hover:border-sky-900 transition-colors'
+  item.className = 'flex items-center justify-between p-2.5 rounded-xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800/85 group hover:border-sky-200 dark:hover:border-sky-900 transition-colors'
 
   const left = document.createElement('div')
-  left.className = 'flex items-center gap-3'
+  left.className = 'flex items-center gap-2.5'
 
   const color = document.createElement('div')
-  color.className = 'w-2 h-8 rounded-full'
+  color.className = 'w-1 h-6 rounded-full flex-shrink-0'
   color.style.backgroundColor = c.color || '#0ea5e9'
 
   const info = document.createElement('div')
   const name = document.createElement('div')
-  name.className = 'font-medium text-sm text-gray-900 dark:text-gray-100'
+  name.className = 'font-bold text-xs text-gray-900 dark:text-gray-100 truncate max-w-[100px]'
   name.textContent = c.nombre
 
   const money = document.createElement('div')
-  money.className = 'text-xs font-bold text-gray-500 dark:text-gray-400'
+  money.className = 'text-[10px] font-bold text-gray-400 dark:text-gray-500'
   money.textContent = formatoMoneda(c.dinero)
 
   info.appendChild(name)
@@ -461,19 +470,22 @@ function crearItemSubcuenta(c) {
   actions.className = 'flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity'
 
   const btnEdit = document.createElement('button')
-  btnEdit.className = 'p-1.5 text-gray-400 hover:text-sky-600 hover:bg-sky-50 dark:hover:bg-sky-900/20 rounded block'
-  btnEdit.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>`
-  btnEdit.onclick = () => abrirModalEdicion(c)
+  btnEdit.className = 'p-1 text-gray-400 hover:text-sky-600 hover:bg-sky-50 dark:hover:bg-sky-900/20 rounded-md transition-colors'
+  btnEdit.innerHTML = `<i data-lucide="pencil" class="w-3 h-3"></i>`
+  btnEdit.title = 'Editar'
+  btnEdit.onclick = (e) => { e.stopPropagation(); abrirModalEdicion(c); }
 
   const btnHistory = document.createElement('button')
-  btnHistory.className = 'p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded block'
-  btnHistory.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`
-  btnHistory.onclick = () => abrirModalHistorial(c)
+  btnHistory.className = 'p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors'
+  btnHistory.innerHTML = `<i data-lucide="history" class="w-3 h-3"></i>`
+  btnHistory.title = 'Historial'
+  btnHistory.onclick = (e) => { e.stopPropagation(); abrirModalHistorial(c); }
 
   const btnDel = document.createElement('button')
-  btnDel.className = 'p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded block'
-  btnDel.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>`
-  btnDel.onclick = () => abrirModalEliminar(c)
+  btnDel.className = 'p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors'
+  btnDel.innerHTML = `<i data-lucide="trash-2" class="w-3 h-3"></i>`
+  btnDel.title = 'Eliminar'
+  btnDel.onclick = (e) => { e.stopPropagation(); abrirModalEliminar(c); }
 
   actions.appendChild(btnEdit)
   actions.appendChild(btnHistory)
@@ -488,66 +500,68 @@ function crearItemSubcuenta(c) {
 function crearTarjetaCuenta(c, esSubcuenta) {
   const card = document.createElement('div')
   card.className = esSubcuenta
-    ? 'rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-6 shadow-sm ml-6 border-l-4 border-l-sky-400'
-    : 'rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-6 shadow-sm'
+    ? 'rounded-2xl bg-gray-50/50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-800 p-5 ml-4 relative overflow-hidden transition-all'
+    : 'rounded-2xl bg-gray-50/50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-800 p-5 relative overflow-hidden transition-all hover:shadow-md hover:border-gray-200 dark:hover:border-gray-700/80'
+
+  const accountColor = c.color || '#0ea5e9'
+  card.style.borderLeft = `4px solid ${accountColor}`
 
   const header = document.createElement('div')
-  header.className = 'flex items-center justify-between'
+  header.className = 'flex items-center justify-between gap-2'
   const titleWrapper = document.createElement('div')
-  titleWrapper.className = 'flex items-center gap-2'
+  titleWrapper.className = 'flex items-center gap-2 min-w-0'
 
   if (esSubcuenta) {
     // Only used for orphans now
     const subIcon = document.createElement('span')
-    subIcon.className = 'text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-full'
+    subIcon.className = 'text-[9px] bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 px-1.5 py-0.5 rounded-full font-bold'
     subIcon.textContent = 'Huérfana'
     titleWrapper.appendChild(subIcon)
   }
 
   const title = document.createElement('div')
-  title.className = 'font-semibold'
+  title.className = 'font-bold text-sm text-gray-900 dark:text-white truncate'
   title.textContent = c.nombre || 'Sin nombre'
   titleWrapper.appendChild(title)
-
-  const badge = document.createElement('div')
-  badge.className = 'w-4 h-4 rounded-full'
-  badge.style.backgroundColor = c.color || '#0ea5e9'
   header.appendChild(titleWrapper)
-  header.appendChild(badge)
-
-  const desc = document.createElement('div')
-  desc.className = 'mt-2 text-sm text-gray-600 dark:text-gray-400'
-  desc.textContent = c.descripcion || ''
-
-  const money = document.createElement('div')
-  money.className = 'mt-4 text-lg font-bold'
-  money.textContent = formatoMoneda(c.dinero)
 
   const actions = document.createElement('div')
-  actions.className = 'mt-4 flex flex-wrap items-center gap-3'
+  actions.className = 'flex items-center gap-1'
 
   const btnEdit = document.createElement('button')
-  btnEdit.className = 'inline-flex rounded-md px-3 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-sm font-medium'
-  btnEdit.textContent = 'Editar'
-  btnEdit.addEventListener('click', () => abrirModalEdicion(c))
+  btnEdit.className = 'p-1.5 text-gray-400 hover:text-sky-600 hover:bg-sky-50 dark:hover:bg-sky-900/20 rounded-lg transition-colors'
+  btnEdit.innerHTML = `<i data-lucide="pencil" class="w-3.5 h-3.5"></i>`
+  btnEdit.title = 'Editar'
+  btnEdit.addEventListener('click', (e) => { e.stopPropagation(); abrirModalEdicion(c); })
 
   const btnHistory = document.createElement('button')
-  btnHistory.className = 'inline-flex rounded-md px-3 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors text-sm font-medium'
-  btnHistory.textContent = 'Ver historial'
-  btnHistory.addEventListener('click', () => abrirModalHistorial(c))
+  btnHistory.className = 'p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors'
+  btnHistory.innerHTML = `<i data-lucide="history" class="w-3.5 h-3.5"></i>`
+  btnHistory.title = 'Historial'
+  btnHistory.addEventListener('click', (e) => { e.stopPropagation(); abrirModalHistorial(c); })
 
   const btnDel = document.createElement('button')
-  btnDel.className = 'inline-flex rounded-md px-3 py-2 bg-red-600 text-white hover:bg-red-700 transition-colors text-sm font-medium'
-  btnDel.textContent = 'Eliminar'
-  btnDel.addEventListener('click', () => abrirModalEliminar(c))
+  btnDel.className = 'p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors'
+  btnDel.innerHTML = `<i data-lucide="trash-2" class="w-3.5 h-3.5"></i>`
+  btnDel.title = 'Eliminar'
+  btnDel.addEventListener('click', (e) => { e.stopPropagation(); abrirModalEliminar(c); })
 
   actions.appendChild(btnEdit)
   actions.appendChild(btnHistory)
   actions.appendChild(btnDel)
+  header.appendChild(actions)
+
+  const desc = document.createElement('div')
+  desc.className = 'mt-1 text-[11px] text-gray-400 dark:text-gray-500 line-clamp-1'
+  desc.textContent = c.descripcion || ''
+
+  const money = document.createElement('div')
+  money.className = 'mt-3 text-lg font-black text-gray-900 dark:text-white tracking-tight'
+  money.textContent = formatoMoneda(c.dinero)
+
   card.appendChild(header)
   card.appendChild(desc)
   card.appendChild(money)
-  card.appendChild(actions)
   return card
 }
 async function abrirModalHistorial(c) {

@@ -7,8 +7,10 @@
   <link rel="icon" href="../pwa/logo-app.png">
   <meta name="theme-color" content="#2563eb">
   <title>Transacciones — GTR Finanzas</title>
-  <script src="https://cdn.tailwindcss.com"></script>
   <script src="js/sistema/theme.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = window.GTRTheme._twConfig</script>
+  <script src="https://unpkg.com/lucide@latest"></script>
   <link rel="stylesheet" href="css/estilos.css">
 </head>
 
@@ -72,40 +74,46 @@
       });
     </script>
   </header>
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="flex justify-between items-center mb-6">
-      <h1
-        class="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
-        Transacciones</h1>
-      <button onclick="window.abrirModal()"
-        class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-all shadow-lg hover:shadow-blue-500/30 transform hover:-translate-y-0.5">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-        </svg>
-        Nueva Operación
-      </button>
-    </div>
+  <main class="max-w-2xl mx-auto px-4 sm:px-6 py-8 relative z-10">
+    <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-xl border border-gray-100 dark:border-gray-800/80 p-6 md:p-8 relative">
+      <!-- Cabecera de Página -->
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Transacciones</h2>
+        <button onclick="window.abrirModal()"
+          class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-4 rounded-full transition-all flex items-center gap-1.5 shadow-md shadow-blue-500/20 active:scale-95">
+          <i data-lucide="plus" class="w-4 h-4"></i>
+          <span>Nueva</span>
+        </button>
+      </div>
 
-    <!-- Navegación Mensual -->
-    <div
-      class="flex items-center justify-between bg-white dark:bg-gray-800 rounded-xl p-2 shadow-sm border border-gray-100 dark:border-gray-700 mb-8 max-w-sm mx-auto sm:mx-0">
-      <button id="btn-prev-mes"
-        class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-500 dark:text-gray-400 transition-colors">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-        </svg>
-      </button>
-      <span id="label-mes"
-        class="text-lg font-semibold text-gray-800 dark:text-gray-200 capitalize min-w-[140px] text-center">
-        <!-- Cargado por JS -->
-      </span>
-      <button id="btn-next-mes"
-        class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-500 dark:text-gray-400 transition-colors">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-        </svg>
-      </button>
-    </div>
+      <!-- Selector de Vista (Tabs) -->
+      <div class="flex bg-gray-100 dark:bg-gray-900 rounded-2xl p-1 mb-6 border border-gray-200/15">
+        <button id="tab-historial" type="button"
+          class="flex-1 py-2 text-xs font-semibold rounded-xl bg-white dark:bg-gray-700 text-blue-600 dark:text-white shadow-sm transition-all focus:outline-none">
+          Historial de Operaciones
+        </button>
+        <button id="tab-recurrentes" type="button"
+          class="flex-1 py-2 text-xs font-semibold rounded-xl text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-all focus:outline-none">
+          Transacciones Recurrentes
+        </button>
+      </div>
+
+      <!-- Selector de Mes (Elegante y minimalista) -->
+      <div id="contenedor-mes-selector" class="flex justify-between items-center bg-gray-50 dark:bg-gray-900/60 rounded-2xl p-1.5 border border-gray-100 dark:border-gray-800/80 mb-6">
+        <button id="btn-prev-mes"
+          class="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-800 dark:hover:text-gray-200 transition-colors hover:bg-white dark:hover:bg-gray-800 rounded-xl">
+          <i data-lucide="chevron-left" class="w-4 h-4"></i>
+        </button>
+        <span id="label-mes" class="text-sm font-semibold text-gray-700 dark:text-gray-300 min-w-[130px] text-center capitalize">
+          <!-- Cargado por JS -->
+        </span>
+        <button id="btn-next-mes"
+          class="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-800 dark:hover:text-gray-200 transition-colors hover:bg-white dark:hover:bg-gray-800 rounded-xl">
+          <i data-lucide="chevron-right" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- El modal y el historial quedaran aqui dentro o se cerraran adecuadamente -->
 
     <!-- Modal Overlay -->
     <div id="modal-operacion" class="fixed inset-0 z-[100] hidden" aria-labelledby="modal-title" role="dialog"
@@ -174,7 +182,7 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cantidad</label>
                     <div class="relative rounded-md shadow-sm">
                       <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                        <span class="text-gray-500 sm:text-sm">$</span>
+                        <span class="text-gray-500 dark:text-gray-400 sm:text-sm">$</span>
                       </div>
                       <input type="number" id="op-cantidad" required step="0.01" min="0.01"
                         class="block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700/50 pl-7 text-gray-900 dark:text-white focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2"
@@ -385,10 +393,18 @@
         </div>
       </div>
     </div>
-    <section class="mt-10">
-      <h2 class="text-lg font-semibold mb-3">Historial</h2>
-      <div id="ops-historial" class="space-y-3"></div>
-    </section>
+      <!-- Contenedor de la Vista de Historial -->
+      <div id="vista-historial" class="mt-8">
+        <h3 class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-widest px-1 mb-4">Historial</h3>
+        <div id="ops-historial" class="space-y-6"></div>
+      </div>
+
+      <!-- Contenedor de la Vista de Recurrentes -->
+      <div id="vista-recurrentes" class="mt-8 hidden">
+        <h3 class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-widest px-1 mb-4">Plantillas Recurrentes</h3>
+        <div id="lista-recurrencias" class="space-y-4"></div>
+      </div>
+    </div>
   </main>
 
   <!-- Modal de Decisión de Serie (Bug 5) -->

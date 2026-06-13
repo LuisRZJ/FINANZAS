@@ -1,9 +1,10 @@
 import { listarCuentas } from '../servicios/cuentas.js'
 import { listarEtiquetas } from '../servicios/etiquetas.js'
 import { listarOperaciones, crearIngreso, crearGasto, crearTransferencia, eliminarOperacion, actualizarOperacion, ejecutarPendientes } from '../servicios/operaciones.js'
-import { crearRecurrencia, generarInstanciasRecurrentes, obtenerRecurrencia, listarRecurrencias, eliminarRecurrencia, eliminarRecurrenciaCompleta, eliminarDesdeciCiclo, desactivarRecurrencia, actualizarRecurrencia } from '../servicios/recurrencias.js'
+import { crearRecurrencia, generarInstanciasRecurrentes, obtenerRecurrencia, listarRecurrencias, eliminarRecurrencia, eliminarRecurrenciaCompleta, eliminarDesdeciCiclo, desactivarRecurrencia, reactivarRecurrencia, actualizarRecurrencia } from '../servicios/recurrencias.js'
 
 let editandoId = null
+let currentTab = 'historial'
 // Fecha filtro: día 1 del mes actual
 let filtroFecha = new Date()
 filtroFecha.setDate(1)
@@ -11,6 +12,9 @@ filtroFecha.setDate(1)
 // Bug 5: Variables para modal de decisión de series
 let operacionEnTransito = null
 let accionEnTransito = null // 'editar' o 'borrar'
+// Flags de decisión de series (a nivel de módulo para que persistan hasta handleFormSubmit)
+let _flagSoloEsta = false
+let _flagActualizarSerie = false
 
 // === FUNCIONES DEL MODAL DE DECISIÓN ===
 
@@ -77,14 +81,16 @@ async function ejecutarDecision(decision) {
         // Editar solo esta operación - abrir modal de edición normal
         window.cerrarModalDecision()
         // Marcar que NO debe actualizar la serie
-        op._soloEsta = true
+        _flagSoloEsta = true
+        _flagActualizarSerie = false
         setTimeout(() => window.abrirModal('editar', op), 250)
         break
 
       case 'esta-y-futuras':
         // Editar esta y futuras - abrir modal de edición con flag
         window.cerrarModalDecision()
-        op._actualizarSerie = true
+        _flagSoloEsta = false
+        _flagActualizarSerie = true
         setTimeout(() => window.abrirModal('editar', op), 250)
         break
 
@@ -164,8 +170,42 @@ function updateCustomLabel(selectEl) {
   const label = custom.querySelector('[data-select-label]')
   if (!label) return
   const selectedOption = selectEl.options[selectEl.selectedIndex]
-  label.textContent = selectedOption ? selectedOption.textContent : 'Selecciona una opción'
-  label.classList.toggle('text-gray-400', !selectEl.value)
+  
+  if (!selectedOption || !selectEl.value) {
+    label.innerHTML = 'Selecciona una opción'
+    label.classList.add('text-gray-400')
+    updateCustomSelection(custom, '')
+    return
+  }
+  
+  label.classList.remove('text-gray-400')
+  
+  const icon = selectedOption.getAttribute('data-icono')
+  const color = selectedOption.getAttribute('data-color')
+  const nombreLimpio = selectedOption.getAttribute('data-nombre-limpio')
+  const displayName = nombreLimpio || selectedOption.textContent
+  
+  let html = ''
+  if (icon) {
+    const bgStyle = color ? `background-color: ${color}15; color: ${color};` : 'background-color: rgba(156,163,175,0.1); color: inherit;'
+    html = `
+      <span class="flex items-center gap-2">
+        <span class="inline-flex items-center justify-center shrink-0 w-5 h-5 rounded-full text-xs" style="${bgStyle}">${icon}</span>
+        <span class="truncate">${displayName}</span>
+      </span>
+    `
+  } else if (color) {
+    html = `
+      <span class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full shrink-0" style="background-color: ${color}"></span>
+        <span class="truncate">${displayName}</span>
+      </span>
+    `
+  } else {
+    html = `<span class="truncate">${displayName}</span>`
+  }
+  
+  label.innerHTML = html
   updateCustomSelection(custom, selectEl.value)
 }
 
@@ -180,8 +220,35 @@ function rebuildCustomOptions(selectEl) {
     const btn = document.createElement('button')
     btn.type = 'button'
     btn.setAttribute('data-value', opt.value)
-    btn.className = 'w-full text-left px-3 py-2 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700'
-    btn.textContent = opt.textContent
+    btn.className = 'w-full text-left px-3 py-2 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2'
+    
+    const icon = opt.getAttribute('data-icono')
+    const color = opt.getAttribute('data-color')
+    const nombreLimpio = opt.getAttribute('data-nombre-limpio')
+    
+    if (icon) {
+      const iconSpan = document.createElement('span')
+      iconSpan.className = 'inline-flex items-center justify-center shrink-0 w-6 h-6 rounded-full text-sm'
+      if (color) {
+        iconSpan.style.backgroundColor = `${color}15`
+        iconSpan.style.color = color
+      } else {
+        iconSpan.className += ' bg-gray-100 dark:bg-gray-800'
+      }
+      iconSpan.textContent = icon
+      btn.appendChild(iconSpan)
+    } else if (color && opt.value !== '') {
+      const dotSpan = document.createElement('span')
+      dotSpan.className = 'w-2.5 h-2.5 rounded-full shrink-0'
+      dotSpan.style.backgroundColor = color
+      btn.appendChild(dotSpan)
+    }
+    
+    const textSpan = document.createElement('span')
+    textSpan.className = 'truncate'
+    textSpan.textContent = opt.textContent
+    btn.appendChild(textSpan)
+    
     btn.addEventListener('click', () => {
       selectEl.value = opt.value
       selectEl.dispatchEvent(new Event('change', { bubbles: true }))
@@ -250,11 +317,23 @@ function fillSelect(el, options, getLabel, getValue) {
   options.forEach(o => {
     const opt = document.createElement('option')
     opt.value = getValue(o)
+    
+    if (o.icono) {
+      opt.setAttribute('data-icono', o.icono)
+    }
+    if (o.color) {
+      opt.setAttribute('data-color', o.color)
+    }
+    if (o.padreId) {
+      opt.setAttribute('data-padre-id', o.padreId)
+    }
+
     opt.textContent = getLabel(o)
 
     // Jerarquía visual para etiquetas
     if (o.padreId && o.nombre) {
       opt.textContent = `  ↳ ${o.nombre}`
+      opt.setAttribute('data-nombre-limpio', o.nombre)
     } else if (getLabel(o)) {
       opt.textContent = getLabel(o)
     }
@@ -360,6 +439,8 @@ window.abrirModal = async function (modo = 'crear', op = null) {
   document.getElementById('form-operacion').reset()
   document.getElementById('op-error').classList.add('hidden')
   document.body.style.overflow = 'hidden' // Disable scroll
+  const seccionRecurrencia = document.getElementById('seccion-recurrencia')
+  if (seccionRecurrencia) seccionRecurrencia.classList.remove('hidden')
   const inputFrecuenciaValor = document.getElementById('op-rec-frecuencia-valor')
   const selectFrecuenciaTipo = document.getElementById('op-rec-frecuencia-tipo')
   if (inputFrecuenciaValor && selectFrecuenciaTipo) {
@@ -383,7 +464,55 @@ window.abrirModal = async function (modo = 'crear', op = null) {
   })
 
   // Mode Logic
-  if (modo === 'editar' && op) {
+  if (modo === 'editar-recurrencia' && op) {
+    const rec = op
+    editandoId = rec.id
+    title.textContent = 'Editar Transacción Recurrente'
+
+    document.querySelectorAll('input[name="tipo"]').forEach(el => el.disabled = true)
+
+    const radio = document.querySelector(`input[name="tipo"][value="${rec.tipo}"]`)
+    if (radio) radio.checked = true
+
+    document.getElementById('op-nombre').value = rec.nombre
+    document.getElementById('op-desc').value = rec.descripcion || ''
+    document.getElementById('op-cantidad').value = rec.cantidad
+    document.getElementById('op-fecha').value = rec.fechaInicio + 'T' + (rec.horaPreferida || '12:00')
+
+    if (rec.tipo === 'ingreso' || rec.tipo === 'gasto') {
+      setSelectValue(document.getElementById('op-cuenta'), rec.cuentaId)
+      setSelectValue(document.getElementById('op-etiqueta'), rec.etiquetaId)
+    } else if (rec.tipo === 'transferencia') {
+      setSelectValue(document.getElementById('op-origen'), rec.origenId)
+      setSelectValue(document.getElementById('op-destino'), rec.destinoId)
+    }
+
+    const toggleRecurrencia = document.getElementById('op-es-recurrente')
+    const camposRecurrencia = document.getElementById('campos-recurrencia')
+    if (toggleRecurrencia && camposRecurrencia) {
+      toggleRecurrencia.checked = true
+      toggleRecurrencia.disabled = true
+      camposRecurrencia.classList.remove('hidden')
+
+      document.getElementById('op-rec-frecuencia-valor').value = rec.frecuenciaValor || 1
+      setSelectValue(document.getElementById('op-rec-frecuencia-tipo'), rec.frecuenciaTipo || 'meses')
+      document.getElementById('op-rec-ultimo-dia').checked = rec.ultimoDiaMes || false
+
+      const radioFin = document.querySelector(`input[name="op-rec-fin"][value="${rec.finTipo || 'nunca'}"]`)
+      if (radioFin) radioFin.checked = true
+
+      if (rec.finCiclos) document.getElementById('op-rec-fin-ciclos').value = rec.finCiclos
+      if (rec.finFecha) document.getElementById('op-rec-fin-fecha').value = rec.finFecha
+
+      if (rec.ultimoDiaMes) {
+        document.getElementById('op-rec-frecuencia-valor').disabled = true
+        document.getElementById('op-rec-frecuencia-tipo').disabled = true
+        document.getElementById('op-rec-frecuencia-valor').classList.add('opacity-50')
+        document.getElementById('op-rec-frecuencia-tipo').classList.add('opacity-50')
+        setCustomSelectDisabled(document.getElementById('op-rec-frecuencia-tipo'), true)
+      }
+    }
+  } else if (modo === 'editar' && op) {
     editandoId = op.id
     title.textContent = 'Editar Operación'
 
@@ -416,11 +545,11 @@ window.abrirModal = async function (modo = 'crear', op = null) {
       setSelectValue(document.getElementById('op-destino'), op.destinoId)
     }
 
-    // Bug 1 Fix: Cargar estado de recurrencia si existe
+    // Cargar estado de recurrencia si existe y se seleccionó actualizar la serie completa
     const toggleRecurrencia = document.getElementById('op-es-recurrente')
     const camposRecurrencia = document.getElementById('campos-recurrencia')
 
-    if (op.recurrenciaId) {
+    if (op.recurrenciaId && _flagActualizarSerie) {
       const rec = await obtenerRecurrencia(op.recurrenciaId)
       if (rec && toggleRecurrencia && camposRecurrencia) {
         // Activar toggle y mostrar campos
@@ -449,7 +578,8 @@ window.abrirModal = async function (modo = 'crear', op = null) {
         }
       }
     } else {
-      // Operación no recurrente - asegurar que toggle está apagado
+      // Operación no recurrente o edición de "Solo esta" - ocultar sección completa
+      if (seccionRecurrencia) seccionRecurrencia.classList.add('hidden')
       if (toggleRecurrencia) toggleRecurrencia.checked = false
       if (camposRecurrencia) camposRecurrencia.classList.add('hidden')
     }
@@ -476,6 +606,11 @@ window.cerrarModal = function () {
   const panel = document.getElementById('modal-panel')
 
   if (!modal) return
+
+  // Re-enable inputs disabled during editing recurrence
+  document.querySelectorAll('input[name="tipo"]').forEach(el => el.disabled = false)
+  const toggleRecurrencia = document.getElementById('op-es-recurrente')
+  if (toggleRecurrencia) toggleRecurrencia.disabled = false
 
   // Reverse animations
   backdrop.classList.add('opacity-0')
@@ -523,17 +658,52 @@ async function updateFormVisibility() {
     // Refresh Etiqueta Select based on Type
     const etiquetas = await listarEtiquetas()
     const etiquetasFiltradas = etiquetas.filter(e => e.tipo === tipo)
+    // Organizar jerárquicamente: cada padre seguido inmediatamente por sus hijos
+    const padres = etiquetasFiltradas.filter(e => !e.padreId)
+    const hijos = etiquetasFiltradas.filter(e => e.padreId)
+    
+    // Agrupar hijos por padreId
+    const hijosPorPadre = {}
+    hijos.forEach(h => {
+      if (!hijosPorPadre[h.padreId]) {
+        hijosPorPadre[h.padreId] = []
+      }
+      hijosPorPadre[h.padreId].push(h)
+    })
 
-    // Sort logic to group parent/child if needed, but fillSelect simple handles it
-    fillSelect(selEtiquetas, etiquetasFiltradas, e => e.nombre, e => e.id)
+    const etiquetasOrdenadas = []
+    
+    // 1. Agregar cada padre y luego sus hijos ordenados alfabéticamente
+    padres.sort((a, b) => a.nombre.localeCompare(b.nombre)).forEach(p => {
+      etiquetasOrdenadas.push(p)
+      if (hijosPorPadre[p.id]) {
+        const hijosOrdenados = hijosPorPadre[p.id].sort((a, b) => a.nombre.localeCompare(b.nombre))
+        etiquetasOrdenadas.push(...hijosOrdenados)
+        delete hijosPorPadre[p.id]
+      }
+    })
+    
+    // 2. Por si queda algún hijo huérfano
+    Object.keys(hijosPorPadre).forEach(padreId => {
+      const hijosHuerfanos = hijosPorPadre[padreId].sort((a, b) => a.nombre.localeCompare(b.nombre))
+      etiquetasOrdenadas.push(...hijosHuerfanos)
+    })
+
+    fillSelect(selEtiquetas, etiquetasOrdenadas, e => e.nombre, e => e.id)
 
     // If editing, re-set value because options changed
     if (editandoId) {
-      // For now, simple re-fetch from ID (not optimal but safes)
-      const ops = await listarOperaciones()
-      const op = ops.find(o => o.id === editandoId)
-      if (op && op.tipo === tipo) {
-        setSelectValue(selEtiquetas, op.etiquetaId)
+      if (editandoId.startsWith('rec_')) {
+        const rec = await obtenerRecurrencia(editandoId)
+        if (rec && rec.tipo === tipo) {
+          setSelectValue(selEtiquetas, rec.etiquetaId)
+        }
+      } else {
+        const ops = await listarOperaciones()
+        const op = ops.find(o => o.id === editandoId)
+        if (op && op.tipo === tipo) {
+          setSelectValue(selEtiquetas, op.etiquetaId)
+        }
       }
     }
   }
@@ -642,52 +812,119 @@ async function handleFormSubmit(e) {
     }
 
     if (editandoId) {
+      if (editandoId.startsWith('rec_')) {
+        let finTipoSeleccionado = document.querySelector('input[name="op-rec-fin"]:checked')?.value || 'nunca'
+        let finCiclosValor = null
+        let finFechaValor = null
+
+        if (finTipoSeleccionado === 'ciclos') {
+          finCiclosValor = parseInt(val('op-rec-fin-ciclos') || '12', 10)
+          if (isNaN(finCiclosValor) || finCiclosValor < 1) finCiclosValor = 12
+        } else if (finTipoSeleccionado === 'fecha') {
+          finFechaValor = val('op-rec-fin-fecha') || null
+          if (!finFechaValor) {
+            finTipoSeleccionado = 'nunca'
+          }
+        }
+
+        const [fechaParte, horaParte] = payload.fecha.split('T')
+
+        const recPayload = {
+          nombre: payload.nombre,
+          descripcion: payload.descripcion,
+          cantidad: payload.cantidad,
+          cuentaId: payload.cuentaId || null,
+          etiquetaId: payload.etiquetaId || null,
+          origenId: payload.origenId || null,
+          destinoId: payload.destinoId || null,
+          fechaInicio: fechaParte,
+          horaPreferida: horaParte || '12:00',
+          frecuenciaTipo: val('op-rec-frecuencia-tipo'),
+          frecuenciaValor: parseInt(val('op-rec-frecuencia-valor') || '1', 10),
+          ultimoDiaMes: document.getElementById('op-rec-ultimo-dia')?.checked || false,
+          finTipo: finTipoSeleccionado,
+          finCiclos: finCiclosValor,
+          finFecha: finFechaValor
+        }
+
+        await actualizarRecurrencia(editandoId, recPayload)
+        window.cerrarModal()
+        if (currentTab === 'recurrentes') {
+          await renderRecurrencias()
+        } else {
+          await renderHistorial()
+        }
+        return
+      }
+
       // Edición de operación existente
       const ops = await listarOperaciones()
       const opActual = ops.find(o => o.id === editandoId)
 
       if (opActual && opActual.recurrenciaId) {
         // Es una operación recurrente
-        // Verificar flags puestos por el modal de decisión
-        const soloEsta = opActual._soloEsta
-        const actualizarSerie = opActual._actualizarSerie
+        // Verificar flags puestos por el modal de decisión (variables de módulo)
+        const soloEsta = _flagSoloEsta
+        const actualizarSerie = _flagActualizarSerie
 
         // Limpiar flags temporales
-        delete opActual._soloEsta
-        delete opActual._actualizarSerie
+        _flagSoloEsta = false
+        _flagActualizarSerie = false
 
         if (actualizarSerie) {
-          // Actualizar plantilla de recurrencia + operación actual
-          // EXTRAER valores primero para evitar errores de referencia
-          const finTipoSeleccionado = document.querySelector('input[name="op-rec-fin"]:checked')?.value || 'nunca'
-          const finCiclosValor = finTipoSeleccionado === 'ciclos' ? parseInt(val('op-rec-fin-ciclos') || '0', 10) : null
-          const finFechaValor = finTipoSeleccionado === 'fecha' ? val('op-rec-fin-fecha') : null
+          const esRecurrenteActualmente = check('op-es-recurrente')
+          if (!esRecurrenteActualmente) {
+            // Desactivar la recurrencia (esto limpia las futuras pendientes y desactiva la serie)
+            await desactivarRecurrencia(opActual.recurrenciaId)
+            await actualizarOperacion(editandoId, { ...payload, tipo, recurrenciaId: null })
+          } else {
+            // Actualizar plantilla de recurrencia + operación actual
+            // EXTRAER y sanitizar valores primero para evitar errores de referencia o valores basura
+            let finTipoSeleccionado = document.querySelector('input[name="op-rec-fin"]:checked')?.value || 'nunca'
+            let finCiclosValor = null
+            let finFechaValor = null
 
-          const recPayload = {
-            nombre: payload.nombre,
-            descripcion: payload.descripcion,
-            cantidad: payload.cantidad,
-            cuentaId: payload.cuentaId || null,
-            etiquetaId: payload.etiquetaId || null,
-            origenId: payload.origenId || null,
-            destinoId: payload.destinoId || null,
+            if (finTipoSeleccionado === 'ciclos') {
+              finCiclosValor = parseInt(val('op-rec-fin-ciclos') || '12', 10)
+              if (isNaN(finCiclosValor) || finCiclosValor < 1) finCiclosValor = 12
+            } else if (finTipoSeleccionado === 'fecha') {
+              finFechaValor = val('op-rec-fin-fecha') || null
+              if (!finFechaValor) {
+                finTipoSeleccionado = 'nunca'
+              }
+            }
 
-            // Campos de frecuencia
-            frecuenciaTipo: val('op-rec-frecuencia-tipo'),
-            frecuenciaValor: parseInt(val('op-rec-frecuencia-valor') || '1', 10),
-            ultimoDiaMes: document.getElementById('op-rec-ultimo-dia')?.checked || false,
+            const recPayload = {
+              nombre: payload.nombre,
+              descripcion: payload.descripcion,
+              cantidad: payload.cantidad,
+              cuentaId: payload.cuentaId || null,
+              etiquetaId: payload.etiquetaId || null,
+              origenId: payload.origenId || null,
+              destinoId: payload.destinoId || null,
 
-            // Campos de límite (usando variables extraídas)
-            finTipo: finTipoSeleccionado,
-            finCiclos: finCiclosValor,
-            finFecha: finFechaValor
+              // Campos de frecuencia
+              frecuenciaTipo: val('op-rec-frecuencia-tipo'),
+              frecuenciaValor: parseInt(val('op-rec-frecuencia-valor') || '1', 10),
+              ultimoDiaMes: document.getElementById('op-rec-ultimo-dia')?.checked || false,
+
+              // Campos de límite
+              finTipo: finTipoSeleccionado,
+              finCiclos: finCiclosValor,
+              finFecha: finFechaValor
+            }
+
+            // También actualizar la instancia actual primero para que las operaciones en almacenamiento tengan los nuevos datos
+            await actualizarOperacion(editandoId, { ...payload, tipo })
+
+            // Actualizar plantilla de recurrencia (pasamos editandoId para evitar que sea eliminado si es futura y pendiente)
+            // Incluyendo fechaInicio y horaPreferida actualizadas a partir de la nueva fecha de la operación
+            const [fechaParte, horaParte] = payload.fecha.split('T')
+            recPayload.fechaInicio = fechaParte
+            recPayload.horaPreferida = horaParte || '12:00'
+
+            await actualizarRecurrencia(opActual.recurrenciaId, recPayload, editandoId)
           }
-
-          // Actualizar plantilla de recurrencia (esto ahora limpia zombis y regenera)
-          await actualizarRecurrencia(opActual.recurrenciaId, recPayload)
-
-          // También actualizar la instancia actual
-          await actualizarOperacion(editandoId, { ...payload, tipo })
         } else {
           // Solo actualizar esta operación (por defecto o si _soloEsta está activo)
           await actualizarOperacion(editandoId, { ...payload, tipo })
@@ -699,7 +936,19 @@ async function handleFormSubmit(e) {
     } else if (esRecurrente) {
       // === CREAR RECURRENCIA ===
       const ultimoDiaMes = check('op-rec-ultimo-dia')
-      const finTipo = document.querySelector('input[name="op-rec-fin"]:checked')?.value || 'nunca'
+      let finTipo = document.querySelector('input[name="op-rec-fin"]:checked')?.value || 'nunca'
+      let finCiclos = null
+      let finFecha = null
+
+      if (finTipo === 'ciclos') {
+        finCiclos = parseInt(val('op-rec-fin-ciclos') || '12', 10)
+        if (isNaN(finCiclos) || finCiclos < 1) finCiclos = 12
+      } else if (finTipo === 'fecha') {
+        finFecha = val('op-rec-fin-fecha') || null
+        if (!finFecha) {
+          finTipo = 'nunca'
+        }
+      }
 
       // Extraer fecha y hora del datetime-local
       const [fechaParte, horaParte] = fechaStr.split('T')
@@ -722,8 +971,8 @@ async function handleFormSubmit(e) {
         ultimoDiaMes: ultimoDiaMes,
 
         finTipo: finTipo,
-        finCiclos: finTipo === 'ciclos' ? parseInt(val('op-rec-fin-ciclos') || '12', 10) : null,
-        finFecha: finTipo === 'fecha' ? val('op-rec-fin-fecha') : null
+        finCiclos: finCiclos,
+        finFecha: finFecha
       }
 
       await crearRecurrencia(recPayload)
@@ -746,11 +995,182 @@ async function handleFormSubmit(e) {
   }
 }
 
+async function renderRecurrencias() {
+  const cont = document.getElementById('lista-recurrencias')
+  if (!cont) return
+
+  cont.innerHTML = ''
+
+  const recurrencias = await listarRecurrencias()
+  const cuentas = await listarCuentas()
+  const cuentaMap = new Map(cuentas.map(c => [c.id, c]))
+  const etiquetas = await listarEtiquetas()
+  const etiquetaMap = new Map(etiquetas.map(e => [e.id, e]))
+
+  if (recurrencias.length === 0) {
+    const p = document.createElement('p')
+    p.className = 'text-center text-sm text-gray-500 dark:text-gray-400 italic py-8'
+    p.textContent = 'No hay transacciones recurrentes registradas.'
+    cont.appendChild(p)
+    return
+  }
+
+  recurrencias.forEach(rec => {
+    const item = document.createElement('div')
+    let borderColor = 'border-l-blue-500'
+    let iconBg = 'bg-blue-100 dark:bg-blue-900/30'
+    let iconColor = 'text-blue-600 dark:text-blue-400'
+    let iconName = 'arrow-left-right'
+    let prefix = ''
+
+    if (rec.tipo === 'ingreso') {
+      borderColor = 'border-l-green-500'
+      iconBg = 'bg-green-100 dark:bg-green-900/30'
+      iconColor = 'text-green-600 dark:text-green-400'
+      iconName = 'arrow-up-right'
+      prefix = '+'
+    } else if (rec.tipo === 'gasto') {
+      borderColor = 'border-l-red-500'
+      iconBg = 'bg-red-100 dark:bg-red-900/30'
+      iconColor = 'text-red-600 dark:text-red-400'
+      iconName = 'arrow-down-left'
+      prefix = '-'
+    }
+
+    const formatFrecuencia = () => {
+      const tipo = rec.frecuenciaTipo
+      const valor = rec.frecuenciaValor || 1
+      let tipoStr = tipo
+      if (tipo === 'dias') tipoStr = valor > 1 ? 'días' : 'día'
+      if (tipo === 'semanas') tipoStr = valor > 1 ? 'semanas' : 'semana'
+      if (tipo === 'meses') tipoStr = valor > 1 ? 'meses' : 'mes'
+      if (tipo === 'anios') tipoStr = valor > 1 ? 'años' : 'año'
+
+      let res = `Cada ${valor > 1 ? valor + ' ' : ''}${tipoStr}`
+      if (rec.ultimoDiaMes) {
+        res += ' (último día)'
+      }
+      return res
+    }
+
+    const formatFin = () => {
+      if (rec.finTipo === 'nunca') return 'Siempre activa'
+      if (rec.finTipo === 'ciclos') return `Hasta ${rec.finCiclos} ciclos (Generados: ${rec.ciclosGenerados})`
+      if (rec.finTipo === 'fecha') {
+        const f = new Date(rec.finFecha)
+        return `Hasta ${f.toLocaleDateString()}`
+      }
+      return ''
+    }
+
+    let descRelacion = ''
+    if (rec.tipo === 'ingreso' || rec.tipo === 'gasto') {
+      const cNom = cuentaMap.get(rec.cuentaId)?.nombre || 'Sin cuenta'
+      const eNom = etiquetaMap.get(rec.etiquetaId)?.nombre || 'Sin categoría'
+      descRelacion = `${cNom} • ${eNom}`
+    } else if (rec.tipo === 'transferencia') {
+      const origNom = cuentaMap.get(rec.origenId)?.nombre || '?'
+      const destNom = cuentaMap.get(rec.destinoId)?.nombre || '?'
+      descRelacion = `${origNom} ➔ ${destNom}`
+    }
+
+    item.className = `bg-gray-50 dark:bg-gray-900/40 rounded-2xl border border-gray-100 dark:border-gray-800/80 p-4 flex items-center justify-between border-l-4 ${borderColor} hover:shadow-md transition-all gap-4`
+    item.innerHTML = `
+      <div class="flex items-center gap-3 min-w-0 flex-1">
+        <div class="w-10 h-10 rounded-full ${iconBg} flex items-center justify-center flex-shrink-0">
+          <i data-lucide="${iconName}" class="w-5 h-5 ${iconColor}"></i>
+        </div>
+        <div class="min-w-0 flex-1">
+          <h4 class="font-bold text-sm text-gray-900 dark:text-white truncate">${rec.nombre}</h4>
+          <p class="text-xs text-gray-500 dark:text-gray-400 truncate mb-1">${rec.descripcion || 'Sin descripción'}</p>
+          <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-gray-400 dark:text-gray-500">
+            <span class="font-semibold text-gray-600 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5 rounded">${formatFrecuencia()}</span>
+            <span>•</span>
+            <span class="truncate">${descRelacion}</span>
+            <span>•</span>
+            <span>${formatFin()}</span>
+          </div>
+        </div>
+      </div>
+      <div class="flex items-center gap-3 flex-shrink-0">
+        <div class="text-right">
+          <div class="font-bold text-sm ${rec.tipo === 'ingreso' ? 'text-green-600 dark:text-green-400' : rec.tipo === 'gasto' ? 'text-red-600 dark:text-red-400' : 'text-blue-600 dark:text-blue-400'}">
+            ${prefix}${formatCurrency(rec.cantidad)}
+          </div>
+          <span class="inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium ${rec.activa ? 'bg-green-50 dark:bg-green-950/20 text-green-700 dark:text-green-400 border border-green-200/50' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border border-gray-200/50'}">
+            ${rec.activa ? 'Activa' : 'Pausada'}
+          </span>
+        </div>
+
+        <div class="flex items-center gap-1">
+          <button data-action="toggle-status" title="${rec.activa ? 'Pausar' : 'Activar'}"
+            class="p-2 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-white dark:hover:bg-gray-800 rounded-xl transition-colors">
+            <i data-lucide="${rec.activa ? 'pause' : 'play'}" class="w-4 h-4"></i>
+          </button>
+          <button data-action="edit" title="Editar serie"
+            class="p-2 text-gray-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-white dark:hover:bg-gray-800 rounded-xl transition-colors">
+            <i data-lucide="pencil" class="w-4 h-4"></i>
+          </button>
+          <button data-action="delete" title="Eliminar"
+            class="p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-white dark:hover:bg-gray-800 rounded-xl transition-colors">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+    `
+
+    const toggleBtn = item.querySelector('[data-action="toggle-status"]')
+    toggleBtn.onclick = async (e) => {
+      e.stopPropagation()
+      if (rec.activa) {
+        await desactivarRecurrencia(rec.id)
+      } else {
+        await reactivarRecurrencia(rec.id)
+      }
+      await renderRecurrencias()
+    }
+
+    const editBtn = item.querySelector('[data-action="edit"]')
+    editBtn.onclick = async (e) => {
+      e.stopPropagation()
+      window.abrirModal('editar-recurrencia', rec)
+    }
+
+    const deleteBtn = item.querySelector('[data-action="delete"]')
+    deleteBtn.onclick = async (e) => {
+      e.stopPropagation()
+      abrirModalDecision('borrar', { recurrenciaId: rec.id, nombre: rec.nombre })
+    }
+
+    cont.appendChild(item)
+  })
+
+  if (window.lucide && typeof window.lucide.createIcons === 'function') {
+    window.lucide.createIcons()
+  }
+}
+
 // === Historial Logic ===
 
 async function renderHistorial() {
+  if (currentTab === 'recurrentes') {
+    await renderRecurrencias()
+    return
+  }
+
   const cont = document.getElementById('ops-historial')
   if (!cont) return
+
+  // Limpiar intervalos de badges anteriores para evitar fugas de memoria
+  if (window._badgeIntervals && window._badgeIntervals.length > 0) {
+    window._badgeIntervals.forEach(id => clearInterval(id))
+  }
+  window._badgeIntervals = []
+
+  // Inicializar iconos Lucide estáticos del HTML
+  if (window.lucide && typeof window.lucide.createIcons === 'function') {
+    window.lucide.createIcons()
+  }
 
   const ops = await listarOperaciones()
   const etiquetas = await listarEtiquetas()
@@ -775,6 +1195,33 @@ async function renderHistorial() {
 
   cont.innerHTML = ''
 
+  // Calcular diferencia en meses para aviso de límite de proyección de recurrencias
+  const ahora = new Date()
+  const totalMonthDiff = (targetYear - ahora.getFullYear()) * 12 + (targetMonth - ahora.getMonth())
+  if (totalMonthDiff >= 1) {
+    let mensaje = ''
+    if (totalMonthDiff < 3) {
+      mensaje = 'Estás viendo un periodo a futuro. Por optimización, las transacciones recurrentes diarias no se proyectan más allá de 1 mes. El resto aparecerá automáticamente conforme transcurra el tiempo.'
+    } else if (totalMonthDiff < 12) {
+      mensaje = 'Estás viendo un periodo a futuro. Por optimización, las transacciones recurrentes diarias y semanales no se proyectan a este mes (límites de 1 y 3 meses). El resto aparecerá automáticamente conforme transcurra el tiempo.'
+    } else if (totalMonthDiff < 24) {
+      mensaje = 'Estás viendo un periodo a futuro lejano. Por optimización, en este mes solo se muestran transacciones recurrentes mensuales y anuales. Las de mayor frecuencia (diarias/semanales) no se proyectan a largo plazo.'
+    } else {
+      mensaje = 'Estás viendo un periodo a futuro muy lejano. Por optimización, en este mes solo se muestran transacciones recurrentes anuales. Las demás aparecerán automáticamente conforme transcurra el tiempo.'
+    }
+
+    const warningBanner = document.createElement('div')
+    warningBanner.className = 'mb-5 p-4 rounded-2xl bg-amber-50/80 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-900/40 text-amber-800 dark:text-amber-300 text-xs flex items-start gap-3 text-left'
+    warningBanner.innerHTML = `
+      <i data-lucide="info" class="w-4 h-4 flex-shrink-0 mt-0.5 text-amber-600 dark:text-amber-400"></i>
+      <div>
+        <p class="font-bold text-xs mb-0.5">Optimización de proyección de recurrencias</p>
+        <p class="leading-relaxed opacity-95">${mensaje}</p>
+      </div>
+    `
+    cont.appendChild(warningBanner)
+  }
+
   // 1. Sort by date desc (using full datetime)
   const sorted = [...filteredOps].sort((a, b) => {
     // Treat legacy dates as T00:00:00 for sorting stability, if needed
@@ -786,9 +1233,14 @@ async function renderHistorial() {
 
   if (sorted.length === 0) {
     const p = document.createElement('p')
-    p.className = 'text-center text-sm text-gray-500 italic py-8'
+    p.className = 'text-center text-sm text-gray-500 dark:text-gray-400 italic py-8'
     p.textContent = 'No hay transacciones registradas en este mes.'
     cont.appendChild(p)
+
+    // Inicializar iconos Lucide por si acaso antes de retornar
+    if (window.lucide && typeof window.lucide.createIcons === 'function') {
+      window.lucide.createIcons()
+    }
     return
   }
 
@@ -835,23 +1287,24 @@ async function renderHistorial() {
 
     // Render Separator
     const dateObj = new Date(dateKey + 'T00:00:00')
-    const dateStr = dateObj.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+    const weekday = dateObj.toLocaleDateString('es-ES', { weekday: 'long' })
+    const dayNum = dateObj.getDate()
     const capitalize = s => s.charAt(0).toUpperCase() + s.slice(1)
 
     const separator = document.createElement('div')
-    separator.className = 'sticky top-0 z-20 bg-gray-50/95 dark:bg-black/80 backdrop-blur-md py-3 px-1 border-b border-gray-200 dark:border-gray-800 flex flex-wrap items-center justify-between mt-6 mb-2 first:mt-0'
+    separator.className = 'flex justify-between items-end px-2 mb-3 mt-6 first:mt-0'
 
-    const pnlClass = pnl >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+    const pnlClass = pnl >= 0 ? 'text-emerald-500 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'
     const pnlSign = pnl >= 0 ? '+' : ''
 
     separator.innerHTML = `
-      <div class="flex flex-col">
-        <span class="text-sm font-bold text-gray-900 dark:text-white capitalize">${capitalize(dateStr)}</span>
-        <span class="text-xs text-gray-500 dark:text-gray-400">${countStr}</span>
+      <div>
+        <h4 class="text-sm font-semibold text-gray-800 dark:text-gray-200 capitalize">${capitalize(weekday)}, ${dayNum}</h4>
+        <span class="text-xs text-gray-400 dark:text-gray-500">${countStr}</span>
       </div>
       <div class="text-right">
-        <span class="text-xs font-semibold uppercase tracking-wider text-gray-400 block">PNL Diario</span>
-        <span class="text-sm font-bold ${pnlClass}">${pnlSign}${formatCurrency(pnl)}</span>
+        <span class="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wider block mb-0.5">PNL Diario</span>
+        <span class="text-sm font-medium ${pnlClass}">${pnlSign}${formatCurrency(pnl)}</span>
       </div>
     `
     cont.appendChild(separator)
@@ -859,163 +1312,259 @@ async function renderHistorial() {
     // Render Operations
     groupOps.forEach(op => {
       const row = document.createElement('div')
-      row.className = 'p-4 rounded-xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between hover:shadow-md transition-shadow group mb-3'
+      row.className = 'group bg-white dark:bg-gray-900 rounded-2xl p-3 mb-2 flex items-center gap-3 border border-gray-100/50 dark:border-gray-800/60 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] dark:shadow-none hover:shadow-[0_4px_15px_-4px_rgba(0,0,0,0.08)] transition-all relative overflow-hidden'
 
-      // Info Left
-      const info = document.createElement('div')
-      info.className = 'flex items-center gap-3'
-
-      // Icon
-      const iconDiv = document.createElement('div')
-      let iconClass = ''
-      let iconSvg = ''
-
-      if (op.tipo === 'ingreso') {
-        iconClass = 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
-        iconSvg = '<path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />'
-      } else if (op.tipo === 'gasto') {
-        iconClass = 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
-        iconSvg = '<path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12h-15" />'
-      } else {
-        iconClass = 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
-        iconSvg = '<path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />'
+      if (op.estado === 'pendiente') {
+        row.classList.add('opacity-75', 'border-dashed')
       }
 
-      iconDiv.className = `w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${iconClass}`
-      iconDiv.innerHTML = `<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">${iconSvg}</svg>`
+      // 1. Decorador lateral
+      let decoradorColor = ''
+      if (op.tipo === 'ingreso') {
+        decoradorColor = 'bg-emerald-400 dark:bg-emerald-500'
+      } else if (op.tipo === 'gasto') {
+        decoradorColor = 'bg-red-400 dark:bg-red-500'
+      } else {
+        decoradorColor = 'bg-blue-400 dark:bg-blue-500'
+      }
+      const decorador = document.createElement('div')
+      decorador.className = `absolute left-0 top-0 bottom-0 w-1 ${decoradorColor} opacity-40 group-hover:opacity-100 transition-opacity rounded-l-2xl`
+      row.appendChild(decorador)
 
-      const textDiv = document.createElement('div')
-      const title = document.createElement('div')
-      title.className = 'font-semibold text-gray-900 dark:text-white'
+      // 2. Icono o emoji
+      const iconDiv = document.createElement('div')
+      const et = op.tipo !== 'transferencia' ? etiquetaMap.get(op.etiquetaId) : null
+
+      if (et && et.icono) {
+        // Es un emoji
+        iconDiv.className = 'w-10 h-10 rounded-full bg-gray-50 dark:bg-gray-800 flex items-center justify-center shrink-0 text-lg border border-gray-100/40 dark:border-gray-700/40'
+        iconDiv.textContent = et.icono
+      } else {
+        // Es un icono de Lucide
+        let iconName = ''
+        let iconColorClass = ''
+        let iconBgClass = ''
+
+        if (op.tipo === 'ingreso') {
+          iconName = 'arrow-down-left'
+          iconColorClass = 'text-emerald-500 dark:text-emerald-400'
+          iconBgClass = 'bg-emerald-50 dark:bg-emerald-950/40'
+        } else if (op.tipo === 'gasto') {
+          iconName = 'arrow-up-right'
+          iconColorClass = 'text-red-500 dark:text-red-400'
+          iconBgClass = 'bg-red-50 dark:bg-red-950/40'
+        } else {
+          iconName = 'arrow-left-right'
+          iconColorClass = 'text-blue-500 dark:text-blue-400'
+          iconBgClass = 'bg-blue-50 dark:bg-blue-950/40'
+        }
+        iconDiv.className = `w-10 h-10 rounded-full ${iconBgClass} flex items-center justify-center shrink-0 border border-gray-100/40 dark:border-gray-700/40`
+        iconDiv.innerHTML = `<i data-lucide="${iconName}" class="w-5 h-5 ${iconColorClass}"></i>`
+      }
+      row.appendChild(iconDiv)
+
+      // 3. Info (Centro)
+      const infoDiv = document.createElement('div')
+      infoDiv.className = 'flex-1 min-w-0'
+
+      const titleWrapper = document.createElement('div')
+      titleWrapper.className = 'flex items-center gap-2'
+
+      const title = document.createElement('h5')
+      title.className = 'text-sm font-medium text-gray-800 dark:text-gray-200 truncate'
       title.textContent = op.nombre
+      titleWrapper.appendChild(title)
 
-      const meta = document.createElement('div')
-      meta.className = 'text-xs text-gray-500 dark:text-gray-400 flex flex-wrap gap-1 items-center mt-0.5'
+      if (op.estado === 'pendiente') {
+        const pendingBadge = document.createElement('span')
+        pendingBadge.className = 'inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-900/20 shrink-0 ml-1.5'
+
+        const ahora = new Date()
+        ahora.setHours(0, 0, 0, 0)
+        const fechaOp = new Date(op.fecha.includes('T') ? op.fecha : op.fecha + 'T00:00:00')
+        fechaOp.setHours(0, 0, 0, 0)
+
+        const diffTime = fechaOp.getTime() - ahora.getTime()
+        const diffDays = diffTime > 0 ? Math.ceil(diffTime / (1000 * 60 * 60 * 24)) : 0
+
+        let textoAlterno = 'Próximamente'
+        if (diffDays === 0) {
+          textoAlterno = 'Hoy'
+        } else if (diffDays === 1) {
+          textoAlterno = 'Mañana'
+        } else if (diffDays > 1) {
+          textoAlterno = `En ${diffDays} días`
+        }
+
+        pendingBadge.innerHTML = `<i data-lucide="clock" class="w-2.5 h-2.5"></i><span class="transition-opacity duration-300 opacity-100" data-badge-text>Próximamente</span>`
+        pendingBadge.title = 'Pendiente'
+        titleWrapper.appendChild(pendingBadge)
+
+        if (textoAlterno !== 'Próximamente') {
+          const spanText = pendingBadge.querySelector('[data-badge-text]')
+          let mostrandoProximamente = true
+
+          const intervalId = setInterval(() => {
+            if (!spanText || !spanText.isConnected) {
+              clearInterval(intervalId)
+              return
+            }
+
+            // Fade out
+            spanText.classList.remove('opacity-100')
+            spanText.classList.add('opacity-0')
+
+            setTimeout(() => {
+              if (!spanText || !spanText.isConnected) return
+              mostrandoProximamente = !mostrandoProximamente
+              spanText.textContent = mostrandoProximamente ? 'Próximamente' : textoAlterno
+              // Fade in
+              spanText.classList.remove('opacity-0')
+              spanText.classList.add('opacity-100')
+            }, 300)
+          }, 3500)
+
+          window._badgeIntervals.push(intervalId)
+        }
+      }
+      infoDiv.appendChild(titleWrapper)
+
+      // Subtext / Metadata
+      const metaDiv = document.createElement('div')
+      metaDiv.className = 'text-[11px] text-gray-400 dark:text-gray-500 mt-0.5 flex flex-wrap items-center gap-1.5 truncate'
 
       let cuentasStr = ''
       if (op.tipo === 'transferencia') {
         const o = cuentaMap.get(op.origenId)
         const d = cuentaMap.get(op.destinoId)
-        cuentasStr = `${o?.nombre || '?'} -> ${d?.nombre || '?'}`
+        cuentasStr = `${o?.nombre || '?'} → ${d?.nombre || '?'}`
       } else {
         const c = cuentaMap.get(op.cuentaId)
         cuentasStr = c?.nombre || '?'
       }
+      const spanCuenta = document.createElement('span')
+      spanCuenta.textContent = cuentasStr
+      metaDiv.appendChild(spanCuenta)
 
-      let etiquetaBadge = ''
-      if (op.tipo !== 'transferencia') {
-        const et = etiquetaMap.get(op.etiquetaId)
-        if (et) {
-          etiquetaBadge = `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 ml-1.5">${et.icono || ''} ${et.nombre}</span>`
-        }
+      const dot1 = document.createElement('span')
+      dot1.className = 'w-0.5 h-0.5 rounded-full bg-gray-300 dark:bg-gray-750'
+      metaDiv.appendChild(dot1)
+
+      if (op.tipo !== 'transferencia' && et) {
+        const spanCat = document.createElement('span')
+        spanCat.className = 'text-blue-500/85 dark:text-blue-400/85'
+        spanCat.textContent = et.nombre
+        metaDiv.appendChild(spanCat)
+        
+        const dot2 = document.createElement('span')
+        dot2.className = 'w-0.5 h-0.5 rounded-full bg-gray-300 dark:bg-gray-750'
+        metaDiv.appendChild(dot2)
       }
 
-      // Show Time in Meta? User asked for precision, usually showing time is good.
-      // Extract time from op.fecha if present
-      let timeStr = ''
+      let timeStr = '00:00'
       if (op.fecha.includes('T')) {
-        // Extraer solo HH:MM, eliminando segundos y zona horaria (+00:00)
-        const parteHora = op.fecha.split('T')[1] || ''
-        const horaLimpia = parteHora.slice(0, 5) // Solo HH:MM
-        timeStr = `<span class="text-gray-400 mx-1">@ ${horaLimpia}</span>`
+        timeStr = op.fecha.split('T')[1].slice(0, 5)
       }
+      const spanTime = document.createElement('span')
+      spanTime.textContent = timeStr
+      metaDiv.appendChild(spanTime)
 
-      // Badge de Estado
-      let estadoBadge = ''
-      if (op.estado === 'pendiente') {
-        estadoBadge = `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 ml-1.5">🕐 Pendiente</span>`
-        // Añadir estilo a la fila para indicar que está pendiente
-        row.classList.add('opacity-70', 'border-dashed')
-      }
-
-      // Badge de Recurrencia
-      let recurrenciaBadge = ''
+      // Recurrencia badge compacto
       if (op.recurrenciaId) {
+        const dot3 = document.createElement('span')
+        dot3.className = 'w-0.5 h-0.5 rounded-full bg-gray-300 dark:bg-gray-750'
+        metaDiv.appendChild(dot3)
+
         const rec = recurrencias.find(r => r.id === op.recurrenciaId)
         const cicloInfo = op.cicloNumero ? ` #${op.cicloNumero}` : ''
-        const finInfo = rec?.finCiclos ? `/${rec.finCiclos}` : '/∞'
-        recurrenciaBadge = `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 ml-1.5">🔄${cicloInfo}${finInfo}</span>`
+        const finInfo = rec?.finCiclos ? `/${rec.finCiclos}` : ''
+        const spanRec = document.createElement('span')
+        spanRec.className = 'text-blue-500 dark:text-blue-400 flex items-center gap-0.5 font-medium'
+        spanRec.innerHTML = `<i data-lucide="refresh-cw" class="w-2.5 h-2.5"></i>${cicloInfo}${finInfo}`
+        metaDiv.appendChild(spanRec)
       }
 
-      meta.innerHTML = `
-          <span>${cuentasStr}</span>
-          ${etiquetaBadge}
-          ${timeStr}
-          ${estadoBadge}
-          ${recurrenciaBadge}
-        `
+      infoDiv.appendChild(metaDiv)
 
-      textDiv.appendChild(title)
-      textDiv.appendChild(meta)
+      // Descripción discreta si existe
+      if (op.descripcion) {
+        const descEl = document.createElement('div')
+        descEl.className = 'text-[10px] text-gray-400 dark:text-gray-500 italic truncate mt-0.5'
+        descEl.textContent = op.descripcion
+        infoDiv.appendChild(descEl)
+      }
 
-      const descDiv = document.createElement('div')
-      descDiv.className = 'text-xs text-gray-400 dark:text-gray-500 mt-1 italic'
-      descDiv.textContent = op.descripcion ? op.descripcion : 'Sin descripción'
-      textDiv.appendChild(descDiv)
+      row.appendChild(infoDiv)
 
-      info.appendChild(iconDiv)
-      info.appendChild(textDiv)
+      // 4. Monto y Acciones a la derecha
+      const rightDiv = document.createElement('div')
+      rightDiv.className = 'text-right flex flex-col items-end shrink-0 relative'
 
-      // Right Side
-      const rightSide = document.createElement('div')
-      rightSide.className = 'flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end mt-2 sm:mt-0'
-
-      const amountDiv = document.createElement('div')
       const esNegativo = op.tipo === 'gasto'
-      amountDiv.className = `font-bold text-lg ${esNegativo ? 'text-gray-900 dark:text-white' : (op.tipo === 'ingreso' ? 'text-green-600 dark:text-green-400' : 'text-blue-600 dark:text-blue-400')}`
-      amountDiv.textContent = (esNegativo ? '- ' : '+ ') + formatCurrency(op.cantidad)
+      const amountEl = document.createElement('span')
+      let amountColorClass = ''
+      if (op.tipo === 'ingreso') amountColorClass = 'text-emerald-600 dark:text-emerald-400'
+      else if (op.tipo === 'gasto') amountColorClass = 'text-gray-800 dark:text-gray-200'
+      else amountColorClass = 'text-blue-600 dark:text-blue-400'
 
-      const actions = document.createElement('div')
-      actions.className = 'flex items-center gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity'
+      amountEl.className = `text-sm font-semibold ${amountColorClass} group-hover:-translate-x-12 transition-transform duration-200`
+      amountEl.textContent = (esNegativo ? '-' : '+') + formatCurrency(op.cantidad)
+      rightDiv.appendChild(amountEl)
+
+      // Botones de acción al hover
+      const actionsDiv = document.createElement('div')
+      actionsDiv.className = 'absolute right-0 top-1/2 -translate-y-1/2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white dark:bg-gray-900 pl-2'
 
       const btnEdit = document.createElement('button')
-      btnEdit.className = 'p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors'
-      btnEdit.innerHTML = '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" stroke-linecap="round" stroke-linejoin="round"></path></svg>'
-      btnEdit.onclick = () => {
+      btnEdit.className = 'p-1 text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors'
+      btnEdit.innerHTML = '<i data-lucide="pencil" class="w-3.5 h-3.5"></i>'
+      btnEdit.onclick = (e) => {
+        e.stopPropagation()
         if (op.recurrenciaId) {
-          // Operación recurrente - mostrar modal de decisión
           abrirModalDecision('editar', op)
         } else {
-          // Operación simple - abrir modal de edición directamente
           window.abrirModal('editar', op)
         }
       }
 
       const btnDel = document.createElement('button')
-      btnDel.className = 'p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors'
-      btnDel.innerHTML = '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-linecap="round" stroke-linejoin="round"></path></svg>'
-      btnDel.onclick = async () => {
+      btnDel.className = 'p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors'
+      btnDel.innerHTML = '<i data-lucide="trash-2" class="w-3.5 h-3.5"></i>'
+      btnDel.onclick = async (e) => {
+        e.stopPropagation()
         if (op.recurrenciaId) {
-          // Operación recurrente - mostrar modal de decisión
           abrirModalDecision('borrar', op)
         } else {
-          // Operación simple
           if (confirm('¿Borrar esta operación?')) {
             try {
               await eliminarOperacion(op.id)
               await renderHistorial()
-            } catch (e) {
-              alert(e.message)
+            } catch (ex) {
+              alert(ex.message)
             }
           }
         }
       }
 
-      actions.appendChild(btnEdit)
-      actions.appendChild(btnDel)
+      actionsDiv.appendChild(btnEdit)
+      actionsDiv.appendChild(btnDel)
+      rightDiv.appendChild(actionsDiv)
 
-      rightSide.appendChild(amountDiv)
-      rightSide.appendChild(actions)
-
-      row.appendChild(info)
-      row.appendChild(rightSide)
-
+      row.appendChild(rightDiv)
       cont.appendChild(row)
     })
   })
+
+  // Inicializar iconos Lucide dinámicos
+  if (window.lucide && typeof window.lucide.createIcons === 'function') {
+    window.lucide.createIcons()
+  }
 }
 
 async function init() {
+  if (window.lucide && typeof window.lucide.createIcons === 'function') {
+    window.lucide.createIcons()
+  }
   if (window.GTRTheme && typeof window.GTRTheme.applyThemeOnLoad === 'function') window.GTRTheme.applyThemeOnLoad()
   const toggleBtn = document.getElementById('theme-toggle')
   if (toggleBtn && window.GTRTheme && typeof window.GTRTheme.toggleTheme === 'function') {
@@ -1037,6 +1586,37 @@ async function init() {
 
   if (btnPrev) btnPrev.addEventListener('click', async () => { await cambiarMes(-1) })
   if (btnNext) btnNext.addEventListener('click', async () => { await cambiarMes(1) })
+
+  const tabHistorial = document.getElementById('tab-historial')
+  const tabRecurrentes = document.getElementById('tab-recurrentes')
+
+  if (tabHistorial && tabRecurrentes) {
+    tabHistorial.addEventListener('click', async () => {
+      currentTab = 'historial'
+
+      tabHistorial.className = "flex-1 py-2 text-xs font-semibold rounded-xl bg-white dark:bg-gray-700 text-blue-600 dark:text-white shadow-sm transition-all focus:outline-none"
+      tabRecurrentes.className = "flex-1 py-2 text-xs font-semibold rounded-xl text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-all focus:outline-none"
+
+      document.getElementById('contenedor-mes-selector')?.classList.remove('hidden')
+      document.getElementById('vista-historial')?.classList.remove('hidden')
+      document.getElementById('vista-recurrentes')?.classList.add('hidden')
+
+      await renderHistorial()
+    })
+
+    tabRecurrentes.addEventListener('click', async () => {
+      currentTab = 'recurrentes'
+
+      tabRecurrentes.className = "flex-1 py-2 text-xs font-semibold rounded-xl bg-white dark:bg-gray-700 text-blue-600 dark:text-white shadow-sm transition-all focus:outline-none"
+      tabHistorial.className = "flex-1 py-2 text-xs font-semibold rounded-xl text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-all focus:outline-none"
+
+      document.getElementById('contenedor-mes-selector')?.classList.add('hidden')
+      document.getElementById('vista-historial')?.classList.add('hidden')
+      document.getElementById('vista-recurrentes')?.classList.remove('hidden')
+
+      await renderRecurrencias()
+    })
+  }
 
   bindModalEvents()
   bindCustomSelects()

@@ -1,9 +1,9 @@
 // Servicio de Recurrencias - GTR Finanzas
 import { STORAGE_KEYS } from '../sistema/constantes.js'
 import { leer, escribir } from './almacenamiento.js'
-import { listarOperaciones, crearIngreso, crearGasto, crearTransferencia } from './operaciones.js'
+import { listarOperaciones, crearIngreso, crearGasto, crearTransferencia, revertirEfecto } from './operaciones.js'
 
-async function uid() {
+function uid() {
     return 'rec_' + Math.random().toString(36).slice(2) + Date.now().toString(36)
 }
 
@@ -36,9 +36,13 @@ function toLocalISOString(date) {
 
 export function calcularProximaFecha(recurrencia) {
     const ultima = new Date(recurrencia.ultimaFechaGenerada)
-    const diaOriginal = new Date(recurrencia.fechaInicio).getDate()
+    const diaOriginal = parseInt(recurrencia.fechaInicio.split('-')[2], 10)
 
     if (recurrencia.ultimoDiaMes) {
+        // "Último día del mes" solo es compatible con frecuencia en meses o años
+        if (recurrencia.frecuenciaTipo !== 'meses' && recurrencia.frecuenciaTipo !== 'anios') {
+            console.warn(`ultimoDiaMes no es compatible con frecuencia "${recurrencia.frecuenciaTipo}". Se usará avance mensual por defecto.`)
+        }
         let mesesAvanzar = 1
         if (recurrencia.frecuenciaTipo === 'meses') {
             mesesAvanzar = recurrencia.frecuenciaValor || 1
@@ -66,8 +70,11 @@ export function calcularProximaFecha(recurrencia) {
             break
 
         case 'meses': {
-            const targetMonth = resultado.getMonth() + recurrencia.frecuenciaValor
-            resultado.setMonth(targetMonth)
+            // Fijar día a 1 antes de cambiar mes para evitar overflow de JS
+            // (ej: 31 enero + setMonth(1) sin esto → 3 marzo en vez de 28 febrero)
+            const mesActual = resultado.getMonth()
+            resultado.setDate(1)
+            resultado.setMonth(mesActual + recurrencia.frecuenciaValor)
 
             const maxDia = new Date(resultado.getFullYear(), resultado.getMonth() + 1, 0).getDate()
             resultado.setDate(Math.min(diaOriginal, maxDia))
@@ -75,6 +82,8 @@ export function calcularProximaFecha(recurrencia) {
         }
 
         case 'anios': {
+            // Misma protección contra overflow de día
+            resultado.setDate(1)
             resultado.setFullYear(resultado.getFullYear() + recurrencia.frecuenciaValor)
             const maxDiaAnio = new Date(resultado.getFullYear(), resultado.getMonth() + 1, 0).getDate()
             resultado.setDate(Math.min(diaOriginal, maxDiaAnio))
@@ -138,21 +147,102 @@ function haAlcanzadoLimite(rec) {
     return false
 }
 
+function calcularLimiteProyeccion(rec) {
+    const limite = new Date()
+    limite.setHours(23, 59, 59, 999)
+
+    let mesesBase = 6
+    switch (rec.frecuenciaTipo) {
+        case 'dias':
+            mesesBase = 1
+            break
+        case 'semanas':
+            mesesBase = 3
+            break
+        case 'meses':
+            mesesBase = 12
+            break
+        case 'anios':
+            mesesBase = 24
+            break
+    }
+
+    const valor = rec.frecuenciaValor || 1
+    let mesesCiclos = 0
+    switch (rec.frecuenciaTipo) {
+        case 'dias':
+            mesesCiclos = Math.ceil((valor * 2) / 30)
+            break
+        case 'semanas':
+            mesesCiclos = Math.ceil((valor * 2) / 4.3)
+            break
+        case 'meses':
+            mesesCiclos = valor * 2
+            break
+        case 'anios':
+            mesesCiclos = valor * 12 * 2
+            break
+    }
+
+    const mesesFinales = Math.max(mesesBase, mesesCiclos)
+    limite.setMonth(limite.getMonth() + mesesFinales)
+    return limite
+}
+
 export async function generarInstanciasRecurrentes() {
     const ahora = new Date()
-    const limiteProyeccion = new Date()
-    limiteProyeccion.setMonth(limiteProyeccion.getMonth() + 6)
     const MAX_OPERACIONES_POR_RECURRENCIA = 200
 
     const recurrencias = await obtenerTodas()
-    const operaciones = await listarOperaciones()
-    let huboCambios = false
+    let operaciones = await listarOperaciones()
+    let huboCambiosRecurrencias = false
+    let huboCambiosOperaciones = false
+
+    // Podar operaciones que exceden el nuevo límite dinámico para cada recurrencia activa
+    for (const rec of recurrencias) {
+        if (!rec.activa) continue
+
+        const limiteProyeccion = calcularLimiteProyeccion(rec)
+
+        const opsExcedentes = operaciones.filter(op =>
+            op.recurrenciaId === rec.id &&
+            op.estado === 'pendiente' &&
+            op.modificadaManualmente !== true &&
+            new Date(op.fecha.includes('T') ? op.fecha : op.fecha + 'T23:59:59') > limiteProyeccion
+        )
+
+        if (opsExcedentes.length > 0) {
+            const excedentesIds = new Set(opsExcedentes.map(op => op.id))
+            operaciones = operaciones.filter(op => !excedentesIds.has(op.id))
+            huboCambiosOperaciones = true
+
+            const opsRestantes = operaciones.filter(op => op.recurrenciaId === rec.id)
+            const maxCiclo = opsRestantes.reduce((max, op) => Math.max(max, op.cicloNumero || 0), 0)
+            rec.ciclosGenerados = maxCiclo
+
+            if (opsRestantes.length > 0) {
+                const fechaMax = opsRestantes.reduce((max, op) => {
+                    const f = new Date(op.fecha)
+                    return f > max ? f : max
+                }, new Date(0))
+                rec.ultimaFechaGenerada = toLocalISOString(fechaMax)
+            } else {
+                rec.ultimaFechaGenerada = toLocalISOString(calcularFechaAnterior(rec))
+            }
+            huboCambiosRecurrencias = true
+        }
+    }
+
+    if (huboCambiosOperaciones) {
+        await escribir(STORAGE_KEYS.operaciones, operaciones)
+    }
 
     for (const rec of recurrencias) {
         if (!rec.activa) continue
 
         let operacionesGeneradas = 0
         let continuar = true
+        const limiteProyeccion = calcularLimiteProyeccion(rec)
 
         while (continuar) {
             if (operacionesGeneradas >= MAX_OPERACIONES_POR_RECURRENCIA) {
@@ -176,8 +266,8 @@ export async function generarInstanciasRecurrentes() {
                 if (yaExiste || esExcepcion) {
                     if (rec.ciclosGenerados < proximoCiclo) {
                         rec.ciclosGenerados = proximoCiclo
-                        rec.ultimaFechaGenerada = proximaFecha.toISOString()
-                        huboCambios = true
+                        rec.ultimaFechaGenerada = toLocalISOString(proximaFecha)
+                        huboCambiosRecurrencias = true
                     }
                     if (haAlcanzadoLimite(rec)) {
                         rec.activa = false
@@ -188,11 +278,11 @@ export async function generarInstanciasRecurrentes() {
 
                 try {
                     const opCreada = await crearOperacionDesdeRecurrencia(rec, proximoCiclo, proximaFecha)
-                    operaciones.push(opCreada) 
+                    operaciones.push(opCreada)
 
                     rec.ciclosGenerados = proximoCiclo
-                    rec.ultimaFechaGenerada = proximaFecha.toISOString()
-                    huboCambios = true
+                    rec.ultimaFechaGenerada = toLocalISOString(proximaFecha)
+                    huboCambiosRecurrencias = true
                     operacionesGeneradas++
 
                     if (haAlcanzadoLimite(rec)) {
@@ -209,11 +299,11 @@ export async function generarInstanciasRecurrentes() {
         }
     }
 
-    if (huboCambios) {
+    if (huboCambiosRecurrencias) {
         await guardarTodas(recurrencias)
     }
 
-    return huboCambios
+    return huboCambiosRecurrencias
 }
 
 export async function crearRecurrencia(payload) {
@@ -227,7 +317,7 @@ export async function crearRecurrencia(payload) {
     }
 
     const now = new Date().toISOString()
-    const recId = await uid()
+    const recId = uid()
 
     const rec = {
         id: recId,
@@ -257,11 +347,11 @@ export async function crearRecurrencia(payload) {
         creadaEn: now
     }
 
+    // Calcular ultimaFechaGenerada antes de guardar para evitar doble escritura
+    rec.ultimaFechaGenerada = toLocalISOString(calcularFechaAnterior(rec))
+
     const list = await obtenerTodas()
     list.push(rec)
-    await guardarTodas(list)
-
-    rec.ultimaFechaGenerada = calcularFechaAnterior(rec).toISOString()
     await guardarTodas(list)
 
     return rec
@@ -269,6 +359,7 @@ export async function crearRecurrencia(payload) {
 
 function calcularFechaAnterior(rec) {
     const inicio = new Date(rec.fechaInicio + 'T' + (rec.horaPreferida || '12:00'))
+    const diaOriginal = parseInt(rec.fechaInicio.split('-')[2], 10)
 
     if (rec.ultimoDiaMes) {
         return new Date(inicio.getFullYear(), inicio.getMonth(), 0)
@@ -282,28 +373,42 @@ function calcularFechaAnterior(rec) {
         case 'semanas':
             resultado.setDate(resultado.getDate() - (rec.frecuenciaValor * 7))
             break
-        case 'meses':
-            resultado.setMonth(resultado.getMonth() - rec.frecuenciaValor)
+        case 'meses': {
+            // Misma protección anti-overflow que calcularProximaFecha
+            const mesActual = resultado.getMonth()
+            resultado.setDate(1)
+            resultado.setMonth(mesActual - rec.frecuenciaValor)
+            const maxDia = new Date(resultado.getFullYear(), resultado.getMonth() + 1, 0).getDate()
+            resultado.setDate(Math.min(diaOriginal, maxDia))
             break
-        case 'anios':
+        }
+        case 'anios': {
+            resultado.setDate(1)
             resultado.setFullYear(resultado.getFullYear() - rec.frecuenciaValor)
+            const maxDiaAnio = new Date(resultado.getFullYear(), resultado.getMonth() + 1, 0).getDate()
+            resultado.setDate(Math.min(diaOriginal, maxDiaAnio))
             break
+        }
     }
     return resultado
 }
 
-export async function actualizarRecurrencia(id, payload) {
+export async function actualizarRecurrencia(id, payload, excluirOperacionId = null) {
     const list = await obtenerTodas()
     const idx = list.findIndex(r => r.id === id)
     if (idx === -1) throw new Error('Recurrencia no encontrada')
 
     const prev = list[idx]
     const updated = { ...prev, ...payload, id: prev.id, creadaEn: prev.creadaEn }
-
     list[idx] = updated
-    await guardarTodas(list)
 
-    if (updated.activa) {
+    if (!updated.activa) {
+        // Si no está activa, solo guardar y salir
+        await guardarTodas(list)
+        return updated
+    }
+
+    {
         const ops = await listarOperaciones()
 
         const excepcionesIds = new Set(
@@ -316,6 +421,7 @@ export async function actualizarRecurrencia(id, payload) {
 
         const opsLimpias = ops.filter(op => {
             if (op.recurrenciaId !== id) return true
+            if (op.id === excluirOperacionId) return true // Preservar la operación actual que se está editando
             if (op.estado !== 'pendiente') return true
             if (op.modificadaManualmente === true) return true
             return false
@@ -333,11 +439,26 @@ export async function actualizarRecurrencia(id, payload) {
 
         updated.ciclosGenerados = maxCiclo
         updated._ciclosExcluidos = Array.from(ciclosConExcepcion)
+
+        // Recalcular ultimaFechaGenerada para que calcularProximaFecha
+        // use un punto de referencia correcto tras cambios de frecuencia/fechaInicio
+        if (opsRestantes.length > 0) {
+            const fechaMax = opsRestantes.reduce((max, op) => {
+                const f = new Date(op.fecha)
+                return f > max ? f : max
+            }, new Date(0))
+            updated.ultimaFechaGenerada = toLocalISOString(fechaMax)
+        } else {
+            // Sin operaciones restantes: posicionar para que el primer ciclo sea fechaInicio
+            updated.ultimaFechaGenerada = toLocalISOString(calcularFechaAnterior(updated))
+        }
+
         list[idx] = updated
         await guardarTodas(list)
 
         await generarInstanciasRecurrentes()
 
+        // Limpiar campo temporal y guardar estado final
         delete updated._ciclosExcluidos
         list[idx] = updated
         await guardarTodas(list)
@@ -370,6 +491,15 @@ export async function eliminarRecurrencia(id) {
 
 export async function eliminarRecurrenciaCompleta(id) {
     const ops = await listarOperaciones()
+
+    // Revertir saldos de operaciones pagadas antes de eliminarlas
+    const opsDeSerie = ops.filter(op => op.recurrenciaId === id)
+    for (const op of opsDeSerie) {
+        if (op.estado === 'pagado') {
+            await revertirEfecto(op)
+        }
+    }
+
     const opsRestantes = ops.filter(op => op.recurrenciaId !== id)
     await escribir(STORAGE_KEYS.operaciones, opsRestantes)
 
@@ -378,6 +508,18 @@ export async function eliminarRecurrenciaCompleta(id) {
 
 export async function eliminarDesdeciCiclo(recurrenciaId, desdeCiclo) {
     const ops = await listarOperaciones()
+
+    // Revertir saldos de operaciones pagadas que se van a eliminar
+    const opsAEliminar = ops.filter(op =>
+        op.recurrenciaId === recurrenciaId &&
+        op.cicloNumero && op.cicloNumero >= desdeCiclo
+    )
+    for (const op of opsAEliminar) {
+        if (op.estado === 'pagado') {
+            await revertirEfecto(op)
+        }
+    }
+
     const opsRestantes = ops.filter(op =>
         op.recurrenciaId !== recurrenciaId ||
         (op.cicloNumero && op.cicloNumero < desdeCiclo)
@@ -389,8 +531,20 @@ export async function eliminarDesdeciCiclo(recurrenciaId, desdeCiclo) {
     if (rec && desdeCiclo <= 1) {
         rec.activa = false
         rec.ciclosGenerados = 0
+        rec.ultimaFechaGenerada = null
     } else if (rec) {
         rec.ciclosGenerados = desdeCiclo - 1
+        // Recalcular ultimaFechaGenerada basándose en las operaciones restantes de esta serie
+        const opsSerieRestantes = opsRestantes.filter(op => op.recurrenciaId === recurrenciaId)
+        if (opsSerieRestantes.length > 0) {
+            const fechaMax = opsSerieRestantes.reduce((max, op) => {
+                const f = new Date(op.fecha)
+                return f > max ? f : max
+            }, new Date(0))
+            rec.ultimaFechaGenerada = toLocalISOString(fechaMax)
+        } else {
+            rec.ultimaFechaGenerada = null
+        }
     }
     await guardarTodas(list)
 }

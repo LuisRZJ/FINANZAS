@@ -7,8 +7,10 @@
   <link rel="icon" href="../pwa/logo-app.png">
   <meta name="theme-color" content="#2563eb">
   <title>Metas — GTR Finanzas</title>
-  <script src="https://cdn.tailwindcss.com"></script>
   <script src="js/sistema/theme.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = window.GTRTheme._twConfig</script>
+  <script src="https://unpkg.com/lucide@latest"></script>
   <link rel="stylesheet" href="css/estilos.css">
 </head>
 
@@ -72,34 +74,36 @@
       });
     </script>
   </header>
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <h1 class="text-2xl font-bold mb-2">Metas</h1>
-    <p class="text-sm text-gray-600 dark:text-gray-300 mb-6">
-      Desde aquí puedes definir metas de rendimiento (ganancias, gastos y PNL) basadas en periodos, y metas simples
-      vinculadas al saldo de una cuenta concreta. Las metas por periodo no pueden iniciar en el pasado y nacen apagadas
-      hasta que configures sus parámetros.
-    </p>
+  <main class="max-w-2xl mx-auto px-4 sm:px-6 py-8 relative z-10">
+    <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-xl border border-gray-100 dark:border-gray-800/80 p-6 md:p-8 relative">
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-white tracking-tight mb-2">Metas</h2>
+      <p class="text-xs text-gray-500 dark:text-gray-400 mb-6 leading-relaxed">
+        Desde aquí puedes definir metas de rendimiento (ganancias, gastos y PNL) basadas en periodos, y metas simples
+        vinculadas al saldo de una cuenta concreta. Las metas por periodo no pueden iniciar en el pasado y nacen apagadas
+        hasta que configures sus parámetros.
+      </p>
 
-    <section class="mb-10">
-      <h2 class="text-lg font-semibold mb-3">Metas de rendimiento por periodo</h2>
-      <div id="metas-contenedor" class="space-y-6"></div>
-    </section>
+      <section class="mb-10">
+        <h3 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3 mt-6">Metas de rendimiento por periodo</h3>
+        <div id="metas-contenedor" class="space-y-6"></div>
+      </section>
 
-    <section>
-      <h2 class="text-lg font-semibold mb-3">Metas simples por cuenta</h2>
-      <div class="mb-4 rounded-lg border border-dashed border-gray-300 dark:border-gray-700 p-4">
-        <p class="text-xs text-gray-600 dark:text-gray-300">
-          Crea metas ligadas al saldo de una cuenta. Define un objetivo de balance y deja que el sistema registre
-          cómo te acercas o te alejas de ese objetivo. Al alcanzarlo, la meta se congela y pasa a la sección de
-          completadas.
-        </p>
-      </div>
-      <div id="metas-simples-activas" class="space-y-4 mb-8"></div>
-      <div>
-        <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">Metas completadas</h3>
-        <div id="metas-simples-completadas" class="space-y-3"></div>
-      </div>
-    </section>
+      <section>
+        <h3 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3 mt-8">Metas simples por cuenta</h3>
+        <div class="mb-4 rounded-2xl border border-dashed border-gray-200 dark:border-gray-800 p-4 bg-gray-50/30 dark:bg-gray-900/10">
+          <p class="text-[11px] text-gray-500 dark:text-gray-400 leading-relaxed">
+            Crea metas ligadas al saldo de una cuenta. Define un objetivo de balance y deja que el sistema registre
+            cómo te acercas o te alejas de ese objetivo. Al alcanzarlo, la meta se congela y pasa a la sección de
+            completadas.
+          </p>
+        </div>
+        <div id="metas-simples-activas" class="space-y-4 mb-8"></div>
+        <div>
+          <h4 class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2.5 mt-6">Metas completadas</h4>
+          <div id="metas-simples-completadas" class="space-y-3"></div>
+        </div>
+      </section>
+    </div>
   </main>
   <nav id="mobile-menu" class="hidden md:hidden fixed inset-0 top-16 z-40 bg-white dark:bg-gray-900 overflow-y-auto">
     <div class="px-4 py-6 space-y-1">

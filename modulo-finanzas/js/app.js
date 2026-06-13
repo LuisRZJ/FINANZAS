@@ -4,6 +4,7 @@ import { listarCuentas } from './servicios/cuentas.js'
 import { formatoMoneda } from './utilidades/formato.js'
 import { estaAutenticadoEnNube, guardarPasswordNube } from './servicios/auth.js'
 import { verificarSeguridadSincronizacion, restaurarDatos } from './servicios/sincronizacion.js'
+import { listarRecurrencias } from './servicios/recurrencias.js'
 
 function formatDate(s) {
   // Soportar formato nuevo (YYYY-MM-DDTHH:MM) y antiguo (YYYY-MM-DD)
@@ -66,101 +67,319 @@ function renderSummary(data) {
   if (expenseEl) expenseEl.textContent = '$' + formatoMoneda(data.expense)
 }
 
+function formatCurrency(n) {
+  return Number(n || 0).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })
+}
+
 async function renderTransactions(ops) {
-  const tbody = document.getElementById('transactions-body')
-  if (!tbody) return
-  tbody.innerHTML = ''
+  const cont = document.getElementById('transactions-list')
+  if (!cont) return
+
+  // Limpiar intervalos de badges anteriores para evitar fugas de memoria
+  if (window._indexBadgeIntervals && window._indexBadgeIntervals.length > 0) {
+    window._indexBadgeIntervals.forEach(id => clearInterval(id))
+  }
+  window._indexBadgeIntervals = []
+
+  // Inicializar iconos Lucide estáticos del HTML si estuvieran cargados
+  if (window.lucide && typeof window.lucide.createIcons === 'function') {
+    window.lucide.createIcons()
+  }
+
+  cont.innerHTML = ''
 
   if (ops.length === 0) {
-    const tr = document.createElement('tr')
-    const td = document.createElement('td')
-    td.colSpan = 5
-    td.className = 'px-4 py-8 text-center text-sm text-gray-500 italic'
-    td.textContent = 'No hay transacciones este mes.'
-    tr.appendChild(td)
-    tbody.appendChild(tr)
+    const p = document.createElement('p')
+    p.className = 'text-center text-sm text-gray-500 italic py-8'
+    p.textContent = 'No hay transacciones registradas en este mes.'
+    cont.appendChild(p)
     return
   }
 
-  // Sort by date desc
+  // 1. Sort by date desc
   const sorted = [...ops].sort((a, b) => {
-    // Soportar formato nuevo y antiguo
-    const fechaA = a.fecha.includes('T') ? a.fecha : a.fecha + 'T00:00:00'
-    const fechaB = b.fecha.includes('T') ? b.fecha : b.fecha + 'T00:00:00'
-    const da = new Date(fechaA).getTime()
-    const db = new Date(fechaB).getTime()
+    const da = new Date(a.fecha.includes('T') ? a.fecha : a.fecha + 'T00:00:00').getTime()
+    const db = new Date(b.fecha.includes('T') ? b.fecha : b.fecha + 'T00:00:00').getTime()
     return db - da
   })
 
-  const etiquetas = await listarEtiquetas()
-  const etMap = new Map(etiquetas.map(e => [e.id, e.nombre]))
-  const cuentas = await listarCuentas()
-  const ctMap = new Map(cuentas.map(c => [c.id, c.nombre]))
-
-  sorted.forEach((tx) => {
-    const tr = document.createElement('tr')
-    tr.className = 'hover:bg-gray-50 dark:hover:bg-gray-800'
-
-    // Fecha
-    const tdDate = document.createElement('td')
-    tdDate.className = 'px-4 py-3 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap snap-start'
-    tdDate.textContent = formatDate(tx.fecha)
-
-    // Cuenta
-    const tdAccount = document.createElement('td')
-    tdAccount.className = 'px-4 py-3 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap snap-start'
-    let accText = ''
-    if (tx.tipo === 'transferencia') {
-      const o = ctMap.get(tx.origenId) || '?'
-      const d = ctMap.get(tx.destinoId) || '?'
-      accText = `${o} → ${d}`
-    } else {
-      accText = ctMap.get(tx.cuentaId) || 'Cuenta borrada'
-    }
-    tdAccount.textContent = accText
-
-    // Categoría / Etiqueta
-    const tdCat = document.createElement('td')
-    tdCat.className = 'px-4 py-3 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap snap-start'
-    let catText = tx.tipo.charAt(0).toUpperCase() + tx.tipo.slice(1)
-    if (tx.etiquetaId) {
-      const etName = etMap.get(tx.etiquetaId)
-      if (etName) catText = etName
-    } else if (tx.tipo === 'transferencia') {
-      catText = 'Transferencia'
-    }
-    tdCat.textContent = catText
-
-    // Descripción
-    const tdDesc = document.createElement('td')
-    tdDesc.className = 'px-4 py-3 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap snap-start'
-    tdDesc.textContent = tx.descripcion || tx.nombre
-
-    // Monto
-    const tdAmount = document.createElement('td')
-    let amtClass = 'px-4 py-3 text-sm font-medium text-right whitespace-nowrap snap-start '
-    let sign = ''
-
-    if (tx.tipo === 'ingreso') {
-      amtClass += 'text-green-600 dark:text-green-400'
-      sign = '+'
-    } else if (tx.tipo === 'gasto') {
-      amtClass += 'text-red-600 dark:text-red-400'
-      sign = '-'
-    } else {
-      amtClass += 'text-gray-600 dark:text-gray-400'
-    }
-
-    tdAmount.className = amtClass
-    tdAmount.textContent = sign + '$' + formatoMoneda(tx.cantidad)
-
-    tr.appendChild(tdDate)
-    tr.appendChild(tdAccount)
-    tr.appendChild(tdCat)
-    tr.appendChild(tdDesc)
-    tr.appendChild(tdAmount)
-    tbody.appendChild(tr)
+  // 2. Group by date (Day only)
+  const grouped = {}
+  sorted.forEach(op => {
+    const dateKey = op.fecha.split('T')[0]
+    if (!grouped[dateKey]) grouped[dateKey] = []
+    grouped[dateKey].push(op)
   })
+
+  const etiquetas = await listarEtiquetas()
+  const etiquetaMap = new Map(etiquetas.map(e => [e.id, e]))
+  const cuentas = await listarCuentas()
+  const cuentaMap = new Map(cuentas.map(c => [c.id, c]))
+  const recurrencias = await listarRecurrencias()
+
+  // 3. Render Groups
+  Object.keys(grouped).forEach(dateKey => {
+    const groupOps = grouped[dateKey]
+
+    // Calculate Day Stats
+    let dayIngreso = 0
+    let dayGasto = 0
+    let countIngreso = 0
+    let countGasto = 0
+    let countTransf = 0
+
+    groupOps.forEach(op => {
+      if (op.tipo === 'ingreso') {
+        dayIngreso += op.cantidad
+        countIngreso++
+      } else if (op.tipo === 'gasto') {
+        dayGasto += op.cantidad
+        countGasto++
+      } else if (op.tipo === 'transferencia') {
+        countTransf++
+      }
+    })
+
+    const pnl = dayIngreso - dayGasto
+
+    // Summary Strings
+    const counts = []
+    if (countIngreso > 0) counts.push(`${countIngreso} Ingreso${countIngreso > 1 ? 's' : ''}`)
+    if (countGasto > 0) counts.push(`${countGasto} Gasto${countGasto > 1 ? 's' : ''}`)
+    if (countTransf > 0) counts.push(`${countTransf} Transferencia${countTransf > 1 ? 's' : ''}`)
+    const countStr = counts.join(', ')
+
+    // Render Separator
+    const dateObj = new Date(dateKey + 'T00:00:00')
+    const weekday = dateObj.toLocaleDateString('es-ES', { weekday: 'long' })
+    const dayNum = dateObj.getDate()
+    const capitalize = s => s.charAt(0).toUpperCase() + s.slice(1)
+
+    const separator = document.createElement('div')
+    separator.className = 'flex justify-between items-end px-2 mb-3 mt-6 first:mt-0'
+
+    const pnlClass = pnl >= 0 ? 'text-emerald-500 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'
+    const pnlSign = pnl >= 0 ? '+' : ''
+
+    separator.innerHTML = `
+      <div>
+        <h4 class="text-sm font-semibold text-gray-800 dark:text-gray-200 capitalize">${capitalize(weekday)}, ${dayNum}</h4>
+        <span class="text-xs text-gray-400 dark:text-gray-500">${countStr}</span>
+      </div>
+      <div class="text-right">
+        <span class="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wider block mb-0.5">PNL Diario</span>
+        <span class="text-sm font-medium ${pnlClass}">${pnlSign}${formatCurrency(pnl)}</span>
+      </div>
+    `
+    cont.appendChild(separator)
+
+    // Render Operations
+    groupOps.forEach(op => {
+      const row = document.createElement('div')
+      row.className = 'group bg-white dark:bg-gray-900 rounded-2xl p-3 mb-2 flex items-center gap-3 border border-gray-100/50 dark:border-gray-800/60 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] dark:shadow-none hover:shadow-[0_4px_15px_-4px_rgba(0,0,0,0.08)] transition-all relative overflow-hidden'
+
+      if (op.estado === 'pendiente') {
+        row.classList.add('opacity-75', 'border-dashed')
+      }
+
+      // 1. Decorador lateral
+      let decoradorColor = ''
+      if (op.tipo === 'ingreso') {
+        decoradorColor = 'bg-emerald-400 dark:bg-emerald-500'
+      } else if (op.tipo === 'gasto') {
+        decoradorColor = 'bg-red-400 dark:bg-red-500'
+      } else {
+        decoradorColor = 'bg-blue-400 dark:bg-blue-500'
+      }
+      const decorador = document.createElement('div')
+      decorador.className = `absolute left-0 top-0 bottom-0 w-1 ${decoradorColor} opacity-40 group-hover:opacity-100 transition-opacity rounded-l-2xl`
+      row.appendChild(decorador)
+
+      // 2. Icono o emoji
+      const iconDiv = document.createElement('div')
+      const et = op.tipo !== 'transferencia' ? etiquetaMap.get(op.etiquetaId) : null
+
+      if (et && et.icono) {
+        iconDiv.className = 'w-10 h-10 rounded-full bg-gray-50 dark:bg-gray-800 flex items-center justify-center shrink-0 text-lg border border-gray-100/40 dark:border-gray-700/40'
+        iconDiv.textContent = et.icono
+      } else {
+        let iconName = ''
+        let iconColorClass = ''
+        let iconBgClass = ''
+
+        if (op.tipo === 'ingreso') {
+          iconName = 'arrow-down-left'
+          iconColorClass = 'text-emerald-500 dark:text-emerald-400'
+          iconBgClass = 'bg-emerald-50 dark:bg-emerald-950/40'
+        } else if (op.tipo === 'gasto') {
+          iconName = 'arrow-up-right'
+          iconColorClass = 'text-red-500 dark:text-red-400'
+          iconBgClass = 'bg-red-50 dark:bg-red-950/40'
+        } else {
+          iconName = 'arrow-left-right'
+          iconColorClass = 'text-blue-500 dark:text-blue-400'
+          iconBgClass = 'bg-blue-50 dark:bg-blue-950/40'
+        }
+        iconDiv.className = `w-10 h-10 rounded-full ${iconBgClass} flex items-center justify-center shrink-0 border border-gray-100/40 dark:border-gray-700/40`
+        iconDiv.innerHTML = `<i data-lucide="${iconName}" class="w-5 h-5 ${iconColorClass}"></i>`
+      }
+      row.appendChild(iconDiv)
+
+      // 3. Info (Centro)
+      const infoDiv = document.createElement('div')
+      infoDiv.className = 'flex-1 min-w-0'
+
+      const titleWrapper = document.createElement('div')
+      titleWrapper.className = 'flex items-center gap-2'
+
+      const title = document.createElement('h5')
+      title.className = 'text-sm font-medium text-gray-800 dark:text-gray-200 truncate'
+      title.textContent = op.nombre
+      titleWrapper.appendChild(title)
+
+      if (op.estado === 'pendiente') {
+        const pendingBadge = document.createElement('span')
+        pendingBadge.className = 'inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-900/20 shrink-0 ml-1.5'
+
+        const ahora = new Date()
+        ahora.setHours(0, 0, 0, 0)
+        const fechaOp = new Date(op.fecha.includes('T') ? op.fecha : op.fecha + 'T00:00:00')
+        fechaOp.setHours(0, 0, 0, 0)
+
+        const diffTime = fechaOp.getTime() - ahora.getTime()
+        const diffDays = diffTime > 0 ? Math.ceil(diffTime / (1000 * 60 * 60 * 24)) : 0
+
+        let textoAlterno = 'Próximamente'
+        if (diffDays === 0) {
+          textoAlterno = 'Hoy'
+        } else if (diffDays === 1) {
+          textoAlterno = 'Mañana'
+        } else if (diffDays > 1) {
+          textoAlterno = `En ${diffDays} días`
+        }
+
+        pendingBadge.innerHTML = `<i data-lucide="clock" class="w-2.5 h-2.5"></i><span class="transition-opacity duration-300 opacity-100" data-badge-text>Próximamente</span>`
+        pendingBadge.title = 'Pendiente'
+        titleWrapper.appendChild(pendingBadge)
+
+        if (textoAlterno !== 'Próximamente') {
+          const spanText = pendingBadge.querySelector('[data-badge-text]')
+          let mostrandoProximamente = true
+
+          const intervalId = setInterval(() => {
+            if (!spanText || !spanText.isConnected) {
+              clearInterval(intervalId)
+              return
+            }
+
+            spanText.classList.remove('opacity-100')
+            spanText.classList.add('opacity-0')
+
+            setTimeout(() => {
+              if (!spanText || !spanText.isConnected) return
+              mostrandoProximamente = !mostrandoProximamente
+              spanText.textContent = mostrandoProximamente ? 'Próximamente' : textoAlterno
+              spanText.classList.remove('opacity-0')
+              spanText.classList.add('opacity-100')
+            }, 300)
+          }, 3500)
+
+          window._indexBadgeIntervals.push(intervalId)
+        }
+      }
+      infoDiv.appendChild(titleWrapper)
+
+      // Subtext / Metadata
+      const metaDiv = document.createElement('div')
+      metaDiv.className = 'text-[11px] text-gray-400 dark:text-gray-500 mt-0.5 flex flex-wrap items-center gap-1.5 truncate'
+
+      let cuentasStr = ''
+      if (op.tipo === 'transferencia') {
+        const o = cuentaMap.get(op.origenId)
+        const d = cuentaMap.get(op.destinoId)
+        cuentasStr = `${o?.nombre || '?'} → ${d?.nombre || '?'}`
+      } else {
+        const c = cuentaMap.get(op.cuentaId)
+        cuentasStr = c?.nombre || 'Cuenta borrada'
+      }
+      const spanCuentas = document.createElement('span')
+      spanCuentas.textContent = cuentasStr
+      metaDiv.appendChild(spanCuentas)
+
+      if (op.tipo !== 'transferencia') {
+        const dot1 = document.createElement('span')
+        dot1.className = 'w-0.5 h-0.5 rounded-full bg-gray-300 dark:bg-gray-700'
+        metaDiv.appendChild(dot1)
+
+        const spanCat = document.createElement('span')
+        spanCat.textContent = et?.nombre || 'General'
+        metaDiv.appendChild(spanCat)
+      }
+
+      const dot2 = document.createElement('span')
+      dot2.className = 'w-0.5 h-0.5 rounded-full bg-gray-300 dark:bg-gray-700'
+      metaDiv.appendChild(dot2)
+
+      let timeStr = '00:00'
+      if (op.fecha.includes('T')) {
+        timeStr = op.fecha.split('T')[1].slice(0, 5)
+      }
+      const spanTime = document.createElement('span')
+      spanTime.textContent = timeStr
+      metaDiv.appendChild(spanTime)
+
+      // Recurrencia badge compacto
+      if (op.recurrenciaId) {
+        const dot3 = document.createElement('span')
+        dot3.className = 'w-0.5 h-0.5 rounded-full bg-gray-300 dark:bg-gray-750'
+        metaDiv.appendChild(dot3)
+
+        const rec = recurrencias.find(r => r.id === op.recurrenciaId)
+        const cicloInfo = op.cicloNumero ? ` #${op.cicloNumero}` : ''
+        const finInfo = rec?.finCiclos ? `/${rec.finCiclos}` : ''
+        const spanRec = document.createElement('span')
+        spanRec.className = 'text-blue-500 dark:text-blue-400 flex items-center gap-0.5 font-medium'
+        spanRec.innerHTML = `<i data-lucide="refresh-cw" class="w-2.5 h-2.5"></i>${cicloInfo}${finInfo}`
+        metaDiv.appendChild(spanRec)
+      }
+
+      infoDiv.appendChild(metaDiv)
+
+      if (op.descripcion) {
+        const descEl = document.createElement('div')
+        descEl.className = 'text-[10px] text-gray-400 dark:text-gray-500 italic truncate mt-0.5'
+        descEl.textContent = op.descripcion
+        infoDiv.appendChild(descEl)
+      }
+
+      row.appendChild(infoDiv)
+
+      // 4. Monto (Derecha)
+      const rightDiv = document.createElement('div')
+      rightDiv.className = 'text-right flex flex-col items-end shrink-0 relative'
+
+      const amountEl = document.createElement('span')
+      amountEl.className = 'text-sm font-semibold whitespace-nowrap'
+      const esNegativo = op.tipo === 'gasto'
+      if (op.tipo === 'ingreso') {
+        amountEl.classList.add('text-emerald-500', 'dark:text-emerald-400')
+      } else if (op.tipo === 'gasto') {
+        amountEl.classList.add('text-red-500', 'dark:text-red-400')
+      } else {
+        amountEl.classList.add('text-gray-650', 'dark:text-gray-400')
+      }
+      amountEl.textContent = (esNegativo ? '-' : '+') + formatCurrency(op.cantidad)
+      rightDiv.appendChild(amountEl)
+
+      row.appendChild(rightDiv)
+      cont.appendChild(row)
+    })
+  })
+
+  // Inicializar iconos Lucide
+  if (window.lucide && typeof window.lucide.createIcons === 'function') {
+    window.lucide.createIcons()
+  }
 }
 
 function setActiveNav() {

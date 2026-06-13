@@ -127,6 +127,17 @@ function inicializarEventos() {
             if (e.target === modal || e.target.id === 'modal-categoria-backdrop') cerrarModalCategoria();
         });
     }
+
+    if (window.lucide && typeof window.lucide.createIcons === 'function') {
+        window.lucide.createIcons();
+    }
+
+    // Respaldo por si Lucide tarda en cargar por red
+    window.addEventListener('load', () => {
+        if (window.lucide && typeof window.lucide.createIcons === 'function') {
+            window.lucide.createIcons();
+        }
+    });
 }
 
 async function cargarDatos(periodo) {
@@ -150,6 +161,10 @@ async function cargarDatos(periodo) {
     await actualizarGraficoBalanceHistorico(operaciones, periodo); // Usa TODAS las operaciones para calcular balance inicial
     await actualizarProyeccionFinanciera(operaciones, periodo);
     actualizarMaximosMinimos(filteredOps);
+
+    if (window.lucide && typeof window.lucide.createIcons === 'function') {
+        window.lucide.createIcons();
+    }
 }
 
 async function calcularRangoPeriodo(periodo, offset = 0) {
@@ -839,7 +854,7 @@ function abrirModalCategoria(tipo, tagId, label) {
             const etiqueta = op.etiquetaId ? etiquetasCache.find(t => t.id === op.etiquetaId) : null;
             const subEtiqueta = etiqueta && etiqueta.padreId ? etiqueta.nombre : null;
             const etiquetaTexto = subEtiqueta ? ` • ${subEtiqueta}` : '';
-            item.className = 'flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700';
+            item.className = 'flex items-center justify-between p-3 rounded-2xl bg-gray-50 dark:bg-gray-900/60 border border-gray-100 dark:border-gray-800/60';
             item.innerHTML = `
                 <div class="min-w-0">
                     <p class="text-sm font-medium text-gray-900 dark:text-white truncate">${op.nombre || 'Sin nombre'}</p>

@@ -18,8 +18,10 @@
   function applyThemeOnLoad() {
     applyTheme(getPreferredTheme())
   }
-  window.GTRTheme = { applyTheme, toggleTheme, getPreferredTheme, applyThemeOnLoad }
-  tailwind.config = {
+
+  // Configuración de Tailwind — se expone aquí para ser aplicada
+  // DESPUÉS de que cargue el CDN (ver tag <script> en cada HTML)
+  const twConfig = {
     darkMode: 'class',
     theme: {
       extend: {
@@ -62,4 +64,10 @@
       }
     }
   }
+
+  window.GTRTheme = { applyTheme, toggleTheme, getPreferredTheme, applyThemeOnLoad, _twConfig: twConfig }
+
+  // Aplicar tema al cargar (antes de que renderice para evitar flash)
+  applyThemeOnLoad()
 })()
+

@@ -43,7 +43,7 @@ async function validarFechaCuentas(fechaStr, cuentaIds) {
   return { ok: true }
 }
 
-async function revertirEfecto(op) {
+export async function revertirEfecto(op) {
   const opInfo = { nombre: op.nombre, tipo: op.tipo, cantidad: op.cantidad, fecha: op.fecha, accion: 'revertir' }
 
   if (op.tipo === 'ingreso') {

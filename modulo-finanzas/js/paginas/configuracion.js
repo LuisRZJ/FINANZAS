@@ -27,41 +27,35 @@ async function renderSeccion(tipo, containerId) {
   cont.innerHTML = ''
 
   if (padres.length === 0 && hijos.length === 0) {
-    cont.innerHTML = `<p class="text-sm text-gray-500 italic py-2">No hay etiquetas de ${tipo} registradas.</p>`
+    cont.innerHTML = `<p class="text-xs text-gray-400 dark:text-gray-500 italic py-3 text-center border border-dashed border-gray-100 dark:border-gray-800 rounded-2xl">No hay etiquetas de ${tipo} registradas.</p>`
     return
   }
 
   const grid = document.createElement('div')
-  grid.className = 'flex flex-col gap-3'
+  grid.className = 'flex flex-col gap-3.5'
 
   padres.forEach(tag => {
     const card = document.createElement('div')
-    card.className = 'flex flex-col p-4 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm transition-colors'
-    // Si hay icono, usar el color para el borde izquierdo de la tarjeta
-    if (tag.icono) {
-      card.style.borderLeft = `4px solid ${tag.color}`
-    } else {
-      card.style.borderLeft = `4px solid ${tag.color}` // Siempre mostrar borde de color para consistencia
-    }
+    card.className = 'flex flex-col p-4 rounded-3xl bg-gray-50/40 dark:bg-gray-900/15 border border-gray-200/60 dark:border-gray-800/60 shadow-sm transition-all duration-300 hover:shadow-md'
+    card.style.borderLeft = `4px solid ${tag.color}`
 
     const header = document.createElement('div')
-    header.className = 'flex items-center justify-between mb-2'
+    header.className = 'flex items-center justify-between mb-1.5'
 
     const nameArea = document.createElement('div')
-    nameArea.className = 'flex items-center gap-3'
+    nameArea.className = 'flex items-center gap-2.5'
 
     const badge = document.createElement('div')
     if (tag.icono) {
       badge.textContent = tag.icono
-      badge.className = 'text-xl leading-none'
-      badge.style.color = tag.color
+      badge.className = 'text-lg leading-none w-7 h-7 flex items-center justify-center rounded-xl bg-white dark:bg-gray-800 shadow-sm border border-gray-100 dark:border-gray-800'
     } else {
-      badge.className = 'w-4 h-4 rounded-full shadow-sm'
+      badge.className = 'w-3.5 h-3.5 rounded-full shadow-sm'
       badge.style.backgroundColor = tag.color
     }
 
     const name = document.createElement('span')
-    name.className = 'font-semibold text-gray-900 dark:text-gray-100 text-lg'
+    name.className = 'font-bold text-gray-900 dark:text-white text-sm tracking-tight'
     name.textContent = tag.nombre
 
     nameArea.appendChild(badge)
@@ -70,26 +64,26 @@ async function renderSeccion(tipo, containerId) {
 
     // Acciones principales
     const actions = document.createElement('div')
-    actions.className = 'flex flex-wrap items-center gap-2 mt-2 pb-2 border-b border-gray-100 dark:border-gray-700'
+    actions.className = 'flex flex-wrap items-center gap-1.5 mt-2.5 pt-2.5 border-t border-gray-100 dark:border-gray-800/80'
 
     const btnEdit = document.createElement('button')
-    btnEdit.className = 'text-xs px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors'
-    btnEdit.textContent = 'Editar'
+    btnEdit.className = 'text-[10px] px-2 py-1.5 rounded-xl bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-600 flex items-center gap-1 font-semibold'
+    btnEdit.innerHTML = '<i data-lucide="pencil" class="w-3 h-3 text-gray-500 dark:text-gray-400"></i>Editar'
     btnEdit.onclick = async () => await abrirEdicion(tag)
 
     const btnHist = document.createElement('button')
-    btnHist.className = 'text-xs px-2 py-1 rounded bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors'
-    btnHist.textContent = 'Historial'
+    btnHist.className = 'text-[10px] px-2 py-1.5 rounded-xl bg-blue-50/60 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100/60 dark:hover:bg-blue-950/40 transition-colors border border-blue-100 dark:border-blue-900/50 flex items-center gap-1 font-semibold'
+    btnHist.innerHTML = '<i data-lucide="history" class="w-3 h-3 text-blue-500"></i>Historial'
     btnHist.onclick = () => abrirHistorial(tag)
 
     const btnAddSub = document.createElement('button')
-    btnAddSub.className = 'text-xs px-2 py-1 rounded bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/50 transition-colors flex items-center gap-1'
-    btnAddSub.innerHTML = '<span>➕</span> Sub-etiqueta'
-    btnAddSub.onclick = () => abrirModalCreacion(tag.tipo, tag.id, tag.nombre) // Pasar padreId y nombrePadre
+    btnAddSub.className = 'text-[10px] px-2 py-1.5 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100/60 dark:hover:bg-emerald-950/40 transition-colors border border-emerald-100 dark:border-emerald-900/50 flex items-center gap-1 font-semibold'
+    btnAddSub.innerHTML = '<i data-lucide="plus" class="w-3 h-3 text-emerald-500"></i>Sub-etiqueta'
+    btnAddSub.onclick = () => abrirModalCreacion(tag.tipo, tag.id, tag.nombre)
 
     const btnDel = document.createElement('button')
-    btnDel.className = 'text-xs px-2 py-1 rounded bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors ml-auto'
-    btnDel.textContent = 'Eliminar'
+    btnDel.className = 'text-[10px] px-2 py-1.5 rounded-xl bg-rose-50/60 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 hover:bg-rose-100/60 dark:hover:bg-rose-950/40 transition-colors border border-rose-100 dark:border-rose-900/50 flex items-center gap-1 ml-auto font-semibold'
+    btnDel.innerHTML = '<i data-lucide="trash-2" class="w-3 h-3 text-rose-500"></i>Eliminar'
     btnDel.onclick = async () => await confirmarEliminacionEtiqueta(tag)
 
     actions.appendChild(btnEdit)
@@ -104,11 +98,11 @@ async function renderSeccion(tipo, containerId) {
     const subTags = hijosMap[tag.id] || []
     if (subTags.length > 0) {
       const subContainer = document.createElement('div')
-      subContainer.className = 'mt-3 pl-4 border-l-2 border-gray-100 dark:border-gray-700 space-y-2'
+      subContainer.className = 'mt-3 pl-3.5 border-l border-gray-200 dark:border-gray-800 space-y-2'
 
       subTags.forEach(sub => {
         const subRow = document.createElement('div')
-        subRow.className = 'flex items-center justify-between p-2 rounded hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group'
+        subRow.className = 'flex items-center justify-between p-2 rounded-xl hover:bg-white dark:hover:bg-gray-800/60 border border-transparent hover:border-gray-100 dark:hover:border-gray-800 transition-all group'
 
         const subLeft = document.createElement('div')
         subLeft.className = 'flex items-center gap-2'
@@ -118,12 +112,12 @@ async function renderSeccion(tipo, containerId) {
           subBadge.textContent = sub.icono
           subBadge.className = 'text-sm leading-none'
         } else {
-          subBadge.className = 'w-2 h-2 rounded-full'
+          subBadge.className = 'w-2 h-2 rounded-full shadow-sm'
           subBadge.style.backgroundColor = sub.color
         }
 
         const subName = document.createElement('span')
-        subName.className = 'text-sm font-medium text-gray-700 dark:text-gray-300'
+        subName.className = 'text-xs font-semibold text-gray-700 dark:text-gray-300'
         subName.textContent = sub.nombre
 
         subLeft.appendChild(subBadge)
@@ -134,12 +128,12 @@ async function renderSeccion(tipo, containerId) {
 
         const btnSubEdit = document.createElement('button')
         btnSubEdit.className = 'p-1 text-gray-400 hover:text-blue-500 transition-colors'
-        btnSubEdit.innerHTML = '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>'
+        btnSubEdit.innerHTML = '<i data-lucide="pencil" class="w-3.5 h-3.5"></i>'
         btnSubEdit.onclick = async () => await abrirEdicion(sub)
 
         const btnSubDel = document.createElement('button')
-        btnSubDel.className = 'p-1 text-gray-400 hover:text-red-500 transition-colors'
-        btnSubDel.innerHTML = '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>'
+        btnSubDel.className = 'p-1 text-gray-400 hover:text-rose-500 transition-colors'
+        btnSubDel.innerHTML = '<i data-lucide="trash-2" class="w-3.5 h-3.5"></i>'
         btnSubDel.onclick = async () => await confirmarEliminacionEtiqueta(sub)
 
         subActions.appendChild(btnSubEdit)
@@ -155,23 +149,16 @@ async function renderSeccion(tipo, containerId) {
     grid.appendChild(card)
   })
 
-  // Renderizar Huérfanos (por si acaso hay inconsistencias de datos, mostrarlos al final)
-  // Aunque en teoría siempre deberían tener padre o ser null.
-  // Si padreId existe pero no se encuentra en 'padres', son huérfanos reales por borrado de padre.
-  // Deberíamos mostrarlos como raíces para no perderlos
+  // Renderizar Huérfanos
   const padresIds = new Set(padres.map(p => p.id))
   const huerfanosReales = hijos.filter(h => !padresIds.has(h.padreId))
 
   if (huerfanosReales.length > 0) {
-    // Logic for orphans could be rendering them as roots or separate section
-    // For now, render as roots to allow recovery/editing
     huerfanosReales.forEach(tag => {
-      // Simplificado: Renderizar como root básico
       const card = document.createElement('div')
-      card.className = 'flex items-center justify-between p-4 rounded-lg bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 border-dashed'
-
-      /* ... render básico ... */
-      // Por brevedad, omitimos detalle, pero es bueno saber que existen.
+      card.className = 'flex items-center justify-between p-3.5 rounded-3xl bg-gray-50/20 dark:bg-gray-900/10 border border-gray-200 dark:border-gray-800 border-dashed text-xs text-gray-500 dark:text-gray-400 italic'
+      card.textContent = `Categoría huérfana: ${tag.nombre}`
+      grid.appendChild(card)
     })
   }
 
@@ -181,6 +168,9 @@ async function renderSeccion(tipo, containerId) {
 async function renderTodas() {
   await renderSeccion('ingreso', 'lista-ingresos')
   await renderSeccion('gasto', 'lista-gastos')
+  if (window.lucide) {
+    window.lucide.createIcons()
+  }
 }
 
 async function abrirEdicion(tag) {
@@ -196,8 +186,8 @@ async function abrirEdicion(tag) {
     : ''
   const bloquePadre = tag.padreId ? `
       <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Etiqueta padre</label>
-        <select id="edit-tag-padre" required class="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 px-3 py-2 text-sm">
+        <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5">Etiqueta padre</label>
+        <select id="edit-tag-padre" required class="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 px-3 py-2.5 text-xs focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all">
           ${opcionPadreActual}
           ${opcionesPadre}
         </select>
@@ -205,48 +195,48 @@ async function abrirEdicion(tag) {
   ` : ''
 
   const overlay = document.createElement('div')
-  overlay.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[60] animate-fade-in'
+  overlay.className = 'fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] animate-fade-in'
   overlay.id = `modal-editar-etiqueta-${tag.id}`
 
   const modal = document.createElement('div')
-  modal.className = 'bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4 p-6'
+  modal.className = 'bg-white dark:bg-gray-800 rounded-3xl shadow-xl max-w-md w-full mx-4 p-6'
 
   modal.innerHTML = `
-    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Editar Etiqueta</h3>
+    <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">Editar Etiqueta</h3>
     <form id="form-edit-tag" class="space-y-4">
       <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre</label>
+        <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5">Nombre</label>
         <input type="text" id="edit-tag-nombre" value="${tag.nombre}" required 
-          class="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 outline-none">
+          class="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 px-3 py-2.5 text-xs focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all">
       </div>
       <div class="grid grid-cols-6 gap-4">
         <div class="col-span-1">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Icono</label>
+          <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5">Icono</label>
           <input type="text" id="edit-tag-icono" value="${tag.icono || ''}" placeholder="📝" maxlength="2"
-            class="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 px-2 py-2 text-center text-lg focus:ring-2 focus:ring-primary-500 outline-none">
+            class="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 px-2 py-2 text-center text-base focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all">
         </div>
         <div class="col-span-2">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Color</label>
+          <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5">Color</label>
           <input type="color" id="edit-tag-color" value="${tag.color}" 
-            class="w-full h-10 rounded-md border border-gray-300 dark:border-gray-700 p-1 bg-white dark:bg-gray-950 cursor-pointer">
+            class="w-full h-10 rounded-xl border border-gray-200 dark:border-gray-700 p-1 bg-white dark:bg-gray-950 cursor-pointer">
         </div>
         <div class="col-span-3">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Tipo ${tag.padreId ? '<span class="text-xs font-normal text-gray-500 ml-1">(Heredado)</span>' : ''}
+          <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5">
+            Tipo ${tag.padreId ? '<span class="text-[10px] font-normal text-gray-400 ml-1">(Heredado)</span>' : ''}
           </label>
-          <select id="edit-tag-tipo" ${tag.padreId ? 'disabled' : ''} class="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 px-3 py-2 text-sm ${tag.padreId ? 'opacity-60 cursor-not-allowed' : ''}">
+          <select id="edit-tag-tipo" ${tag.padreId ? 'disabled' : ''} class="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 px-3 py-2.5 text-xs focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all ${tag.padreId ? 'opacity-60 cursor-not-allowed' : ''}">
             <option value="ingreso" ${tag.tipo === 'ingreso' ? 'selected' : ''}>Ingreso</option>
             <option value="gasto" ${tag.tipo === 'gasto' ? 'selected' : ''}>Gasto</option>
           </select>
         </div>
       </div>
       ${bloquePadre}
-      <div class="flex gap-3 justify-end pt-2">
+      <div class="flex gap-2.5 justify-end pt-2">
         <button type="button" id="btn-cancel-edit" 
-          class="px-4 py-2 rounded-md text-sm font-medium border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+          class="px-4 py-2.5 rounded-xl text-xs font-semibold border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
           Cancelar
         </button>
-        <button type="submit" class="px-4 py-2 rounded-md text-sm font-medium bg-primary-600 text-white hover:bg-primary-700 transition-colors shadow-sm">
+        <button type="submit" class="px-4 py-2.5 rounded-xl text-xs font-semibold bg-primary-600 text-white hover:bg-primary-700 transition-colors shadow-sm">
           Guardar cambios
         </button>
       </div>
@@ -296,11 +286,11 @@ async function abrirEdicion(tag) {
 
 function abrirHistorial(tag) {
   const overlay = document.createElement('div')
-  overlay.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[60] animate-fade-in'
+  overlay.className = 'fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] animate-fade-in'
   overlay.id = `modal-historial-etiqueta-${tag.id}`
 
   const modal = document.createElement('div')
-  modal.className = 'bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4 flex flex-col max-h-[80vh]'
+  modal.className = 'bg-white dark:bg-gray-800 rounded-3xl shadow-xl max-w-md w-full mx-4 flex flex-col max-h-[80vh]'
 
   let tableContent = ''
   let historial = [...(tag.historial || [])]
@@ -310,15 +300,15 @@ function abrirHistorial(tag) {
   historial.sort((a, b) => new Date(b.fecha) - new Date(a.fecha))
 
   if (historial.length === 0) {
-    tableContent = '<p class="text-sm text-gray-500 italic text-center py-8">Sin registros registrados en el historial.</p>'
+    tableContent = '<p class="text-xs text-gray-400 dark:text-gray-500 italic text-center py-10">Sin registros registrados en el historial.</p>'
   } else {
     tableContent = `
-      <div class="overflow-y-auto px-6 pb-6 space-y-4">
+      <div class="overflow-y-auto px-5 pb-5 pt-2 space-y-4">
         ${historial.map(h => `
-          <div class="border-l-2 border-primary-500 pl-4 py-1 relative">
-            <div class="absolute -left-[9px] top-2 w-4 h-4 rounded-full bg-primary-500 border-4 border-white dark:border-gray-800"></div>
-            <div class="text-[10px] font-mono text-gray-400 uppercase mb-1">${new Date(h.fecha).toLocaleString()}</div>
-            <div class="text-sm text-gray-700 dark:text-gray-200">${h.mensaje}</div>
+          <div class="border-l border-primary-500 pl-4.5 py-1 relative">
+            <div class="absolute -left-[5.5px] top-2 w-2.5 h-2.5 rounded-full bg-primary-500 border-2 border-white dark:border-gray-800"></div>
+            <div class="text-[9px] font-bold font-mono text-gray-400 uppercase mb-0.5">${new Date(h.fecha).toLocaleString()}</div>
+            <div class="text-xs font-medium text-gray-700 dark:text-gray-200">${h.mensaje}</div>
           </div>
         `).join('')}
       </div>
@@ -326,15 +316,15 @@ function abrirHistorial(tag) {
   }
 
   modal.innerHTML = `
-    <div class="p-6 flex items-center justify-between border-b border-gray-100 dark:border-gray-700 mb-4">
-      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Historial: ${tag.nombre}</h3>
+    <div class="p-5 flex items-center justify-between border-b border-gray-100 dark:border-gray-800 mb-3">
+      <h3 class="text-base font-bold text-gray-900 dark:text-gray-100">Historial: ${tag.nombre}</h3>
       <button id="btn-close-hist-x" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
       </button>
     </div>
     ${tableContent}
-    <div class="p-6 border-t border-gray-100 dark:border-gray-700 flex justify-end">
-      <button id="btn-close-hist" class="px-4 py-2 rounded-md text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+    <div class="p-5 border-t border-gray-100 dark:border-gray-800 flex justify-end">
+      <button id="btn-close-hist" class="px-4 py-2.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
         Cerrar
       </button>
     </div>
@@ -362,42 +352,42 @@ async function confirmarEliminacionEtiqueta(tag) {
   const numOperaciones = await contarOperacionesPorEtiqueta(tag.id)
 
   const overlay = document.createElement('div')
-  overlay.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[60] animate-fade-in'
+  overlay.className = 'fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] animate-fade-in'
   overlay.id = `modal-eliminar-etiqueta-${tag.id}`
 
   const modal = document.createElement('div')
-  modal.className = 'bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4 p-6'
+  modal.className = 'bg-white dark:bg-gray-800 rounded-3xl shadow-xl max-w-md w-full mx-4 p-6'
 
   // Construir HTML del modal
   let operacionesHTML = ''
   if (numOperaciones > 0) {
     operacionesHTML = `
-      <div class="mt-4 p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-left">
-        <div class="flex items-start gap-2">
+      <div class="mt-4 p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-900/40 text-left">
+        <div class="flex items-start gap-2.5">
           <svg class="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
           </svg>
           <div>
-            <p class="text-sm font-medium text-amber-800 dark:text-amber-200">Transacciones asociadas</p>
-            <p class="text-xs text-amber-700 dark:text-amber-300">Esta etiqueta tiene <span class="font-bold">${numOperaciones}</span> transacción(es) registradas.</p>
+            <p class="text-xs font-bold text-amber-800 dark:text-amber-300">Transacciones asociadas</p>
+            <p class="text-[11px] text-amber-700 dark:text-amber-400 mt-0.5">Esta etiqueta tiene <span class="font-bold">${numOperaciones}</span> transacción(es) registradas.</p>
           </div>
         </div>
       </div>
-      <div class="mt-4 p-3 rounded-lg bg-gray-50 dark:bg-gray-700 text-left">
-        <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">¿Qué hacer con las transacciones?</p>
-        <div class="space-y-2">
-          <label class="flex items-start gap-3 cursor-pointer p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-600">
-            <input type="radio" name="eliminar-etiqueta-ops" value="conservar" checked class="mt-0.5 w-4 h-4 text-sky-600 border-gray-300 focus:ring-sky-500">
+      <div class="mt-4 p-4 rounded-2xl bg-gray-50/60 dark:bg-gray-900/30 border border-gray-200 dark:border-gray-800 text-left">
+        <p class="text-xs font-bold text-gray-700 dark:text-gray-300 mb-3">¿Qué hacer con las transacciones?</p>
+        <div class="space-y-2.5">
+          <label class="flex items-start gap-3 cursor-pointer p-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+            <input type="radio" name="eliminar-etiqueta-ops" value="conservar" checked class="mt-0.5 w-4 h-4 text-primary-600 border-gray-300 dark:border-gray-700 focus:ring-primary-500 bg-white dark:bg-gray-950">
             <div>
-              <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Conservar transacciones</p>
-              <p class="text-xs text-gray-500 dark:text-gray-400">Las transacciones quedarán sin etiqueta asignada</p>
+              <p class="text-xs font-bold text-gray-800 dark:text-gray-200">Conservar transacciones</p>
+              <p class="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5 leading-normal">Las transacciones quedarán sin etiqueta asignada</p>
             </div>
           </label>
-          <label class="flex items-start gap-3 cursor-pointer p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-600">
-            <input type="radio" name="eliminar-etiqueta-ops" value="eliminar" class="mt-0.5 w-4 h-4 text-red-600 border-gray-300 focus:ring-red-500">
+          <label class="flex items-start gap-3 cursor-pointer p-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+            <input type="radio" name="eliminar-etiqueta-ops" value="eliminar" class="mt-0.5 w-4 h-4 text-rose-600 border-gray-300 dark:border-gray-700 focus:ring-rose-500 bg-white dark:bg-gray-950">
             <div>
-              <p class="text-sm font-medium text-red-600 dark:text-red-400">Eliminar transacciones</p>
-              <p class="text-xs text-gray-500 dark:text-gray-400">Se borrarán permanentemente todas las transacciones con esta etiqueta</p>
+              <p class="text-xs font-bold text-rose-600 dark:text-rose-400">Eliminar transacciones</p>
+              <p class="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5 leading-normal">Se borrarán permanentemente todas las transacciones con esta etiqueta</p>
             </div>
           </label>
         </div>
@@ -407,21 +397,21 @@ async function confirmarEliminacionEtiqueta(tag) {
 
   modal.innerHTML = `
     <div class="flex flex-col items-center text-center">
-      <div class="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mb-4 text-red-600">
+      <div class="w-12 h-12 rounded-full bg-rose-100 dark:bg-rose-950/40 flex items-center justify-center mb-4 text-rose-600 dark:text-rose-400">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
         </svg>
       </div>
-      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">¿Eliminar etiqueta?</h3>
-      <p class="text-sm text-gray-600 dark:text-gray-400">
+      <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">¿Eliminar etiqueta?</h3>
+      <p class="text-xs text-gray-500 dark:text-gray-400 px-2 leading-relaxed">
         Esta acción eliminará "<span class="font-bold">${tag.nombre}</span>" permanentemente. No se puede deshacer.
       </p>
       ${operacionesHTML}
       <div class="flex flex-col w-full gap-2 mt-6">
-        <button id="btn-confirm-delete" class="w-full px-4 py-2 rounded-md text-sm font-medium bg-red-600 text-white hover:bg-red-700 transition-colors shadow-sm">
+        <button id="btn-confirm-delete" class="w-full px-4 py-2.5 rounded-xl text-xs font-semibold bg-rose-600 text-white hover:bg-rose-700 transition-colors shadow-sm">
           Eliminar permanentemente
         </button>
-        <button id="btn-cancel-delete" class="w-full px-4 py-2 rounded-md text-sm font-medium border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+        <button id="btn-cancel-delete" class="w-full px-4 py-2.5 rounded-xl text-xs font-semibold border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
           Cancelar
         </button>
       </div>
@@ -467,48 +457,48 @@ async function confirmarEliminacionEtiqueta(tag) {
 
 function abrirModalCreacion(tipoDefault = 'gasto', padreId = null, nombrePadre = null) {
   const overlay = document.createElement('div')
-  overlay.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[60] animate-fade-in'
+  overlay.className = 'fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] animate-fade-in'
   overlay.id = 'modal-crear-etiqueta'
 
   const modal = document.createElement('div')
-  modal.className = 'bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4 p-6'
+  modal.className = 'bg-white dark:bg-gray-800 rounded-3xl shadow-xl max-w-md w-full mx-4 p-6'
 
   const colorSugerido = tipoDefault === 'ingreso' ? '#22c55e' : '#ef4444'
   const titulo = padreId ? `Nueva Sub-etiqueta de "${nombrePadre}"` : 'Nueva Categoría'
 
   modal.innerHTML = `
-    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">${titulo}</h3>
+    <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">${titulo}</h3>
     <form id="form-create-tag" class="space-y-4">
       <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre</label>
+        <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5">Nombre</label>
         <input type="text" id="create-tag-nombre" placeholder="Ej. Salario, Comida..." required 
-          class="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 outline-none">
+          class="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 px-3 py-2.5 text-xs focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all">
       </div>
       <div class="grid grid-cols-6 gap-4">
         <div class="col-span-1">
-           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Icono</label>
+           <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5">Icono</label>
            <input type="text" id="create-tag-icono" placeholder="📝" maxlength="2"
-             class="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 px-2 py-2 text-center text-lg focus:ring-2 focus:ring-primary-500 outline-none">
+             class="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 px-2 py-2 text-center text-base focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all">
         </div>
         <div class="col-span-2">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Color</label>
+          <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5">Color</label>
           <input type="color" id="create-tag-color" value="${colorSugerido}" 
-            class="w-full h-10 rounded-md border border-gray-300 dark:border-gray-700 p-1 bg-white dark:bg-gray-950 cursor-pointer">
+            class="w-full h-10 rounded-xl border border-gray-200 dark:border-gray-700 p-1.5 bg-white dark:bg-gray-950 cursor-pointer">
         </div>
         <div class="col-span-3">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tipo</label>
-          <select id="create-tag-tipo" ${padreId ? 'disabled' : ''} class="w-full h-10 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 outline-none ${padreId ? 'opacity-60 cursor-not-allowed' : ''}">
+          <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5">Tipo</label>
+          <select id="create-tag-tipo" ${padreId ? 'disabled' : ''} class="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 px-3 py-2.5 text-xs focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all ${padreId ? 'opacity-60 cursor-not-allowed' : ''}">
             <option value="ingreso" ${tipoDefault === 'ingreso' ? 'selected' : ''}>Ingreso</option>
             <option value="gasto" ${tipoDefault === 'gasto' ? 'selected' : ''}>Gasto</option>
           </select>
         </div>
       </div>
-      <div class="flex gap-3 justify-end pt-2">
+      <div class="flex gap-2.5 justify-end pt-2">
         <button type="button" id="btn-cancel-create" 
-          class="px-4 py-2 rounded-md text-sm font-medium border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+          class="px-4 py-2.5 rounded-xl text-xs font-semibold border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
           Cancelar
         </button>
-        <button type="submit" class="px-4 py-2 rounded-md text-sm font-medium bg-primary-600 text-white hover:bg-primary-700 transition-colors shadow-sm">
+        <button type="submit" class="px-4 py-2.5 rounded-xl text-xs font-semibold bg-primary-600 text-white hover:bg-primary-700 transition-colors shadow-sm">
           ${padreId ? 'Crear sub-etiqueta' : 'Crear etiqueta'}
         </button>
       </div>
@@ -846,33 +836,33 @@ async function inicializarPanelDatos() {
     btnClear.addEventListener('click', () => {
       // Crear modal de confirmación
       const overlay = document.createElement('div')
-      overlay.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50'
+      overlay.className = 'fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] animate-fade-in'
       overlay.id = 'modal-borrar-datos'
 
       const modal = document.createElement('div')
-      modal.className = 'bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4 p-6'
+      modal.className = 'bg-white dark:bg-gray-800 rounded-3xl shadow-xl max-w-md w-full mx-4 p-6'
 
       modal.innerHTML = `
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Borrar todos los datos</h3>
-        <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+        <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">Borrar todos los datos</h3>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mb-5 leading-relaxed">
           Esta acción borrará todos tus datos de cuentas, etiquetas, operaciones, metas y presupuestos.
         </p>
         <div class="space-y-3 mb-6">
           <label class="flex items-center gap-3 cursor-pointer">
-            <input type="checkbox" id="chk-borrar-local" checked disabled class="w-4 h-4 rounded border-gray-300">
-            <span class="text-sm text-gray-700 dark:text-gray-300">Borrar datos locales (navegador)</span>
+            <input type="checkbox" id="chk-borrar-local" checked disabled class="w-4 h-4 rounded border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-900 text-primary-600 focus:ring-primary-500">
+            <span class="text-xs font-semibold text-gray-700 dark:text-gray-300">Borrar datos locales (navegador)</span>
           </label>
           <label class="flex items-center gap-3 cursor-pointer">
-            <input type="checkbox" id="chk-borrar-nube" class="w-4 h-4 rounded border-red-300 text-red-600 focus:ring-red-500">
-            <span class="text-sm text-red-600 dark:text-red-400 font-medium">También borrar datos en la nube</span>
+            <input type="checkbox" id="chk-borrar-nube" class="w-4 h-4 rounded border-gray-300 dark:border-gray-700 text-rose-600 focus:ring-rose-500 bg-white dark:bg-gray-950">
+            <span class="text-xs text-rose-600 dark:text-rose-400 font-semibold">También borrar datos en la nube</span>
           </label>
-          <p id="warning-nube" class="hidden text-xs text-red-500 ml-7">⚠️ Los datos en la nube se perderán permanentemente.</p>
+          <p id="warning-nube" class="hidden text-[10px] text-rose-500 dark:text-rose-400 ml-7 leading-normal">⚠️ Los datos en la nube se perderán permanentemente.</p>
         </div>
-        <div class="flex gap-3 justify-end">
-          <button id="btn-cancelar-borrado" class="px-4 py-2 rounded-md text-sm font-medium border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+        <div class="flex gap-2.5 justify-end">
+          <button id="btn-cancelar-borrado" class="px-4 py-2.5 rounded-xl text-xs font-semibold border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
             Cancelar
           </button>
-          <button id="btn-confirmar-borrado" class="px-4 py-2 rounded-md text-sm font-medium bg-red-600 text-white hover:bg-red-700">
+          <button id="btn-confirmar-borrado" class="px-4 py-2.5 rounded-xl text-xs font-semibold bg-rose-600 text-white hover:bg-rose-700 transition-colors shadow-sm">
             Borrar datos
           </button>
         </div>
@@ -1083,34 +1073,34 @@ async function inicializarAuth() {
       } else if (result.conflicto) {
         // Mostrar modal de conflicto
         const overlay = document.createElement('div')
-        overlay.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[60] animate-fade-in'
+        overlay.className = 'fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] animate-fade-in'
         overlay.id = 'modal-conflicto-sync'
 
         const modal = document.createElement('div')
-        modal.className = 'bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4 p-6'
+        modal.className = 'bg-white dark:bg-gray-800 rounded-3xl shadow-xl max-w-md w-full mx-4 p-6'
 
         modal.innerHTML = `
           <div class="flex flex-col items-center text-center">
-            <div class="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mb-4 text-amber-600">
+            <div class="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-950/40 flex items-center justify-center mb-4 text-amber-600 dark:text-amber-400">
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
               </svg>
             </div>
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Conflicto de Sincronización</h3>
-            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">Conflicto de Sincronización</h3>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mb-4 px-2 leading-relaxed">
               ${result.error}
             </p>
-            <p class="text-xs text-gray-500 dark:text-gray-500 mb-6">
+            <p class="text-[10px] text-gray-500 dark:text-gray-500 mb-6 font-semibold">
               ${result.conflicto.accionRecomendada}
             </p>
             <div class="flex flex-col w-full gap-2">
-              <button id="btn-descargar-primero" class="w-full px-4 py-2 rounded-md text-sm font-medium bg-primary-600 text-white hover:bg-primary-700 transition-colors shadow-sm">
+              <button id="btn-descargar-primero" class="w-full px-4 py-2.5 rounded-xl text-xs font-semibold bg-primary-600 text-white hover:bg-primary-700 transition-colors shadow-sm">
                 Descargar datos de la nube primero
               </button>
-              <button id="btn-forzar-subida" class="w-full px-4 py-2 rounded-md text-sm font-medium border border-red-300 dark:border-red-600 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+              <button id="btn-forzar-subida" class="w-full px-4 py-2.5 rounded-xl text-xs font-semibold border border-rose-200 dark:border-rose-900 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-colors">
                 Forzar subida (sobrescribir nube)
               </button>
-              <button id="btn-cancelar-sync" class="w-full px-4 py-2 rounded-md text-sm font-medium text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
+              <button id="btn-cancelar-sync" class="w-full px-4 py-2.5 rounded-xl text-xs font-semibold text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
                 Cancelar
               </button>
             </div>
