@@ -390,6 +390,44 @@
         <div>
             <!-- Tab 1: Resumen General -->
             <div id="tab-content-general" class="tab-content">
+                <!-- Tarjetas Patrimoniales y de Escala (Premium Dashboard) -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <!-- Tarjeta 1: PNL Patrimonial Real -->
+                    <div class="card bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800/40 dark:to-slate-900/40 border-l-4 border-cyan-500 shadow-md">
+                        <div class="flex items-center justify-between mb-3">
+                            <h2 class="text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400">PNL Patrimonial Real (30d)</h2>
+                            <i class="fas fa-wallet text-cyan-500 text-lg"></i>
+                        </div>
+                        <div class="text-3xl font-black text-slate-800 dark:text-white" id="pnl-patrimonial-valor">$0.00</div>
+                        <div class="text-xs text-gray-500 dark:text-slate-400 mt-2 leading-relaxed" id="pnl-patrimonial-formula">
+                            Cargando desglose...
+                        </div>
+                    </div>
+
+                    <!-- Tarjeta 2: Autosuficiencia & Escala -->
+                    <div class="card bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800/40 dark:to-slate-900/40 border-l-4 border-emerald-500 shadow-md">
+                        <div class="flex items-center justify-between mb-3">
+                            <h2 class="text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400">Escala y Autosuficiencia</h2>
+                            <i class="fas fa-chart-line text-emerald-500 text-lg"></i>
+                        </div>
+                        <div class="text-3xl font-black text-slate-800 dark:text-white" id="escala-autosuficiencia-valor">0.00%</div>
+                        <div class="mt-2 text-xs text-gray-500 dark:text-slate-400" id="escala-autosuficiencia-detalles">
+                            Cargando análisis de escala...
+                        </div>
+                    </div>
+
+                    <!-- Tarjeta 3: PNL Trading por Estrategia -->
+                    <div class="card bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800/40 dark:to-slate-900/40 border-l-4 border-orange-500 shadow-md">
+                        <div class="flex items-center justify-between mb-3">
+                            <h2 class="text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400">Desglose PNL Trading (30d)</h2>
+                            <i class="fas fa-exchange-alt text-orange-500 text-lg"></i>
+                        </div>
+                        <div class="max-h-[80px] overflow-y-auto space-y-1 text-xs text-gray-600 dark:text-slate-300" id="pnl-trading-desglose">
+                            Cargando desglose de cuentas...
+                        </div>
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <!-- Left Column -->
                     <div class="lg:col-span-1 flex flex-col gap-6">
@@ -602,6 +640,91 @@
             minimumFractionDigits: 2
         });
 
+        // --- Lectores Asíncronos de IndexedDB ---
+        let finanzasOperations = [];
+        let fttAccountState = { accounts: [], data: {} };
+
+        function getPersonalFinanceOperations() {
+            return new Promise((resolve) => {
+                try {
+                    const request = indexedDB.open('GTRFinanzasDB', 2);
+                    request.onsuccess = function (event) {
+                        const db = event.target.result;
+                        if (!db.objectStoreNames.contains('keyval')) {
+                            resolve([]);
+                            return;
+                        }
+                        const transaction = db.transaction(['keyval'], 'readonly');
+                        const store = transaction.objectStore('keyval');
+                        const getRequest = store.get('gtr-operaciones');
+                        getRequest.onsuccess = function () {
+                            resolve(getRequest.result || []);
+                        };
+                        getRequest.onerror = function () {
+                            resolve([]);
+                        };
+                    };
+                    request.onerror = function () {
+                        resolve([]);
+                    };
+                } catch (e) {
+                    resolve([]);
+                }
+            });
+        }
+
+        function getFttAccountStateFromDB() {
+            return new Promise((resolve) => {
+                try {
+                    const request = indexedDB.open('GTRTradingFTTDB', 1);
+                    request.onsuccess = function (event) {
+                        const db = event.target.result;
+                        if (!db.objectStoreNames.contains('keyval')) {
+                            resolve({ accounts: [], data: {} });
+                            return;
+                        }
+                        const transaction = db.transaction(['keyval'], 'readonly');
+                        const store = transaction.objectStore('keyval');
+                        const getRequest = store.get('btMultiAccountState_v1');
+                        getRequest.onsuccess = function () {
+                            const raw = getRequest.result;
+                            if (raw) {
+                                try {
+                                    const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+                                    resolve(parsed);
+                                    return;
+                                } catch (e) {
+                                    console.error('Error parsing FTT state:', e);
+                                }
+                            }
+                            resolve({ accounts: [], data: {} });
+                        };
+                        getRequest.onerror = function () {
+                            resolve({ accounts: [], data: {} });
+                        };
+                    };
+                    request.onerror = function () {
+                        resolve({ accounts: [], data: {} });
+                    };
+                } catch (e) {
+                    resolve({ accounts: [], data: {} });
+                }
+            });
+        }
+
+        async function loadExternalData() {
+            try {
+                finanzasOperations = await getPersonalFinanceOperations();
+            } catch (e) {
+                console.error('Error cargando operaciones de finanzas:', e);
+            }
+            try {
+                fttAccountState = await getFttAccountStateFromDB();
+            } catch (e) {
+                console.error('Error cargando cuentas de FTT:', e);
+            }
+        }
+
         // Function to calculate total daily income from a specific mining type
         function calculateMiningDailyIncome(storageKey) {
             try {
@@ -627,33 +750,23 @@
         }
 
         // --- Módulo Finanzas Personales: Lectura de Ingresos ---
-        const FTI_OPERATIONS_STORAGE_KEY = 'fti-operations-v1';
-
         function getFinanzasOperations() {
-            try {
-                const raw = localStorage.getItem(FTI_OPERATIONS_STORAGE_KEY);
-                if (!raw) return [];
-                const parsed = JSON.parse(raw);
-                return Array.isArray(parsed) ? parsed : [];
-            } catch (e) {
-                console.error('Error reading finanzas operations:', e);
-                return [];
-            }
+            return finanzasOperations;
         }
 
         // Calcular ingreso diario promedio de finanzas personales (últimos 30 días)
         function calculateFinanzasDailyIncome() {
-            const operations = getFinanzasOperations();
+            const operations = finanzasOperations;
             const now = new Date();
             const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
             const recentIncomeOps = operations.filter(op => {
-                if (op.type !== 'income') return false;
-                const opDate = new Date(op.datetime);
+                if (op.tipo !== 'ingreso' || op.estado === 'en_espera') return false;
+                const opDate = new Date(op.fecha);
                 return opDate >= thirtyDaysAgo && opDate <= now;
             });
 
-            const totalIncome = recentIncomeOps.reduce((sum, op) => sum + (op.amount || 0), 0);
+            const totalIncome = recentIncomeOps.reduce((sum, op) => sum + (Number(op.cantidad) || 0), 0);
 
             // Promedio diario = total / 30 días
             return totalIncome / 30;
@@ -661,15 +774,15 @@
 
         // Construir serie diaria de ingresos de finanzas para gráfico de evolución
         function buildFinanzasDailySeries(dates) {
-            const operations = getFinanzasOperations();
+            const operations = finanzasOperations;
             return dates.map(date => {
                 const dateKey = getDateKey(date);
                 const dayOps = operations.filter(op => {
-                    if (op.type !== 'income') return false;
-                    const opDate = new Date(op.datetime);
+                    if (op.tipo !== 'ingreso' || op.estado === 'en_espera') return false;
+                    const opDate = new Date(op.fecha);
                     return getDateKey(opDate) === dateKey;
                 });
-                return dayOps.reduce((sum, op) => sum + (op.amount || 0), 0);
+                return dayOps.reduce((sum, op) => sum + (Number(op.cantidad) || 0), 0);
             });
         }
 
@@ -735,10 +848,7 @@
         const FTT_LOSS_RATE = -1.00;
 
         function getFttAccountState() {
-            try {
-                const raw = localStorage.getItem(FTT_ACCOUNT_STORAGE_KEY);
-                return raw ? JSON.parse(raw) : { accounts: [], data: {} };
-            } catch (e) { return { accounts: [], data: {} }; }
+            return fttAccountState;
         }
 
         function getAllFttTrades() {
@@ -1721,6 +1831,29 @@
                 }
             ];
 
+            // Agregar servicios de minería individuales del usuario
+            const userMiningServices = [
+                { storageKey: 'btcMiningInvestments', title: 'BTC Mining', color: 'text-orange-500', icon: 'fas fa-server', roiMethod: 'linear' },
+                { storageKey: 'cloudPowerMinerInvestments', title: 'Cloud Power Miner', color: 'text-cyan-400', icon: 'fas fa-server', roiMethod: 'linear' },
+                { storageKey: 'goMiningInvestments', title: 'GO Mining', color: 'text-blue-500', icon: 'fas fa-server', roiMethod: 'cagr' },
+                { storageKey: 'tapMiningInvestments', title: 'TAP Mining', color: 'text-emerald-400', icon: 'fas fa-server', roiMethod: 'cagr' }
+            ];
+
+            userMiningServices.forEach(s => {
+                const summary = computeOneTimeCostSummary(s.storageKey, s.roiMethod);
+                const roiVal = summary.annualizedRoiPct;
+                if (roiVal !== null && summary.totalCost > 0) {
+                    data.push({
+                        name: `${s.title} (Mi Inversión)`,
+                        roi: roiVal,
+                        annRoi: roiVal,
+                        color: s.color,
+                        icon: s.icon,
+                        details: `<b>Detalles de Inversión:</b><br>• Costo Total: ${currencyFormatter.format(summary.totalCost)}<br>• Activas: ${summary.activeCount}/${summary.count}`
+                    });
+                }
+            });
+
             // Agregar datos de criptos
             Object.keys(cryptoRois).forEach(symbol => {
                 const config = assetConfigs[symbol];
@@ -2424,23 +2557,413 @@
             }
         }
 
+        function calculateFinanzasExpenses(days = 30) {
+            const now = new Date();
+            const startDate = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+            
+            const recentExpenseOps = finanzasOperations.filter(op => {
+                if (op.tipo !== 'gasto' || op.estado === 'en_espera') return false;
+                const opDate = new Date(op.fecha);
+                return opDate >= startDate && opDate <= now;
+            });
+            
+            return recentExpenseOps.reduce((sum, op) => sum + (Number(op.cantidad) || 0), 0);
+        }
+
+        function calculateInvestmentExpenses30d() {
+            try {
+                const records = JSON.parse(localStorage.getItem('records')) || [];
+                const options = JSON.parse(localStorage.getItem('options')) || { plazos: [] };
+                let total = 0;
+                records.forEach(rec => {
+                    const costo = parseFloat(rec.costo) || 0;
+                    const plazo = options.plazos.find(o => o.name === rec.plazo) || { length: 30, unit: 'months' };
+                    let monthlyEquivalent = 0;
+                    if (plazo.unit === 'days') {
+                        monthlyEquivalent = (costo / plazo.length) * 30.4375;
+                    } else if (plazo.unit === 'months') {
+                        monthlyEquivalent = costo / plazo.length;
+                    } else {
+                        const fallbackDays = parseInt(plazo.name) || 30;
+                        monthlyEquivalent = (costo / fallbackDays) * 30.4375;
+                    }
+                    total += monthlyEquivalent;
+                });
+                return total;
+            } catch (e) {
+                return 0;
+            }
+        }
+
+        function calculateTotalInvestedCapital() {
+            const services = ['btcMiningInvestments', 'cloudPowerMinerInvestments', 'goMiningInvestments', 'tapMiningInvestments'];
+            let total = 0;
+            services.forEach(key => {
+                const investments = parseInvestmentsFromStorage(key);
+                const now = new Date();
+                now.setUTCHours(0, 0, 0, 0);
+                investments.forEach(inv => {
+                    const cost = Number(inv && inv.cost);
+                    const hasExpiration = Boolean(inv && inv.hasExpiration);
+                    const expirationDate = parseValidDate(inv && inv.expirationDate);
+                    const isActive = !hasExpiration || !expirationDate || now <= expirationDate;
+                    if (isActive && Number.isFinite(cost)) {
+                        total += cost;
+                    }
+                });
+            });
+            return total;
+        }
+
+        async function updatePnlPatrimonial() {
+            const pnlValEl = document.getElementById('pnl-patrimonial-valor');
+            const pnlFormulaEl = document.getElementById('pnl-patrimonial-formula');
+            if (!pnlValEl || !pnlFormulaEl) return;
+
+            const tradingPnl = (calculateTradingDailyPnl() + calculateFttDailyPnl()) * 30;
+            
+            const btcDailyIncome = calculateMiningDailyIncome('btcMiningInvestments');
+            const goDailyIncome = calculateMiningDailyIncome('goMiningInvestments');
+            const tapDailyIncome = calculateMiningDailyIncome('tapMiningInvestments');
+            const cloudPowerMinerDailyIncome = calculateMiningDailyIncome('cloudPowerMinerInvestments');
+            const ctFarmIncome = await getCryptotabDailyIncome('ctFarm_registroDiario_db_v1');
+            const ctPoolIncome = await getCryptotabDailyIncome('ctPool_registroDiario_db_v1');
+            const ctBrowserIncome = await getCryptotabDailyIncome('ctBrowser_registroDiario_db_v1');
+            const ctNftIncome = await getCryptotabDailyIncome('ctNft_registroDiario_db_v1');
+            
+            const invReturn = (btcDailyIncome + goDailyIncome + tapDailyIncome + cloudPowerMinerDailyIncome + ctFarmIncome + ctPoolIncome + ctBrowserIncome + ctNftIncome) * 30;
+            
+            const invCosts = calculateInvestmentExpenses30d();
+            const lifeExpenses = calculateFinanzasExpenses(30);
+            
+            const pnlPatrimonial = tradingPnl + invReturn - invCosts - lifeExpenses;
+            
+            pnlValEl.textContent = currencyFormatter.format(pnlPatrimonial);
+            
+            if (pnlPatrimonial >= 0) {
+                pnlValEl.className = 'text-3xl font-black text-green-600 dark:text-green-400';
+            } else {
+                pnlValEl.className = 'text-3xl font-black text-red-600 dark:text-red-400';
+            }
+            
+            pnlFormulaEl.innerHTML = `
+                <div class="grid grid-cols-2 gap-x-2 gap-y-1 text-[11px] mt-1 opacity-90">
+                    <div>📈 Trading: <span class="font-bold text-green-600 dark:text-green-400">+${currencyFormatter.format(tradingPnl)}</span></div>
+                    <div>⛏️ Retorno Inv: <span class="font-bold text-green-600 dark:text-green-400">+${currencyFormatter.format(invReturn)}</span></div>
+                    <div>💸 Costos Inv: <span class="font-bold text-red-600 dark:text-red-400">-${currencyFormatter.format(invCosts)}</span></div>
+                    <div>🏠 Gastos Vida: <span class="font-bold text-red-600 dark:text-red-400">-${currencyFormatter.format(lifeExpenses)}</span></div>
+                </div>
+            `;
+        }
+
+        function updateScaleAndSelfSufficiency(tradingPnl, invReturn, invCosts, lifeExpenses) {
+            const scaleValEl = document.getElementById('escala-autosuficiencia-valor');
+            const scaleDetailsEl = document.getElementById('escala-autosuficiencia-detalles');
+            if (!scaleValEl || !scaleDetailsEl) return;
+
+            const monthlyIncome = tradingPnl + invReturn - invCosts;
+            const selfSufficiencyPct = lifeExpenses > 0 ? Math.max(0, (monthlyIncome / lifeExpenses) * 100) : 100;
+            
+            scaleValEl.textContent = `${selfSufficiencyPct.toFixed(1)}%`;
+            if (selfSufficiencyPct >= 100) {
+                scaleValEl.className = 'text-3xl font-black text-green-600 dark:text-green-400';
+            } else if (selfSufficiencyPct >= 50) {
+                scaleValEl.className = 'text-3xl font-black text-amber-500';
+            } else {
+                scaleValEl.className = 'text-3xl font-black text-red-600 dark:text-red-400';
+            }
+
+            // Calcular capital requerido basado en el ROI anualizado actual
+            const services = [
+                { storageKey: 'btcMiningInvestments', roiMethod: 'linear' },
+                { storageKey: 'cloudPowerMinerInvestments', roiMethod: 'linear' },
+                { storageKey: 'goMiningInvestments', roiMethod: 'cagr' },
+                { storageKey: 'tapMiningInvestments', roiMethod: 'cagr' }
+            ];
+            let totalCost = 0;
+            let totalAnnualReturn = 0;
+            services.forEach(s => {
+                const summary = computeOneTimeCostSummary(s.storageKey, s.roiMethod);
+                totalCost += summary.totalCost;
+                const roiPct = summary.annualizedRoiPct;
+                if (roiPct !== null) {
+                    totalAnnualReturn += summary.totalCost * (roiPct / 100);
+                }
+            });
+
+            const totalRoiPct = totalCost > 0 ? (totalAnnualReturn / totalCost) * 100 : 0;
+            const currentCapital = calculateTotalInvestedCapital();
+            
+            let capitalText = '';
+            if (totalRoiPct > 0 && lifeExpenses > 0) {
+                const requiredCapital = (lifeExpenses * 12) / (totalRoiPct / 100);
+                const additionalCapital = Math.max(0, requiredCapital - currentCapital);
+                capitalText = `
+                    <div>💼 Cap. Actual: <span class="font-bold text-gray-800 dark:text-white text-[10px]">${currencyFormatter.format(currentCapital)}</span></div>
+                    <div>🎯 Cap. Necesario: <span class="font-bold text-gray-800 dark:text-white text-[10px]">${currencyFormatter.format(requiredCapital)}</span></div>
+                    <div class="col-span-2">➕ Capital Faltante: <span class="font-bold text-cyan-600">${additionalCapital > 0 ? currencyFormatter.format(additionalCapital) : 'Autosuficiente'}</span></div>
+                `;
+            } else {
+                capitalText = `
+                    <div>💼 Cap. Actual: <span class="font-bold text-gray-800 dark:text-white text-[10px]">${currencyFormatter.format(currentCapital)}</span></div>
+                    <div class="col-span-2 text-gray-400 italic text-[9px]">Insuficiente ROI o gastos para calcular capital necesario.</div>
+                `;
+            }
+
+            scaleDetailsEl.innerHTML = `
+                <div class="grid grid-cols-2 gap-x-2 gap-y-1 text-[11px] mt-1 opacity-90">
+                    ${capitalText}
+                </div>
+            `;
+        }
+
+        function updateTradingPnlDesglose() {
+            const container = document.getElementById('pnl-trading-desglose');
+            if (!container) return;
+
+            container.innerHTML = '';
+            
+            const now = new Date();
+            const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+            
+            // 1. Cuentas de trading tradicional (localStorage)
+            const tradingAccounts = getTradingAccountsMeta();
+            const list = [];
+            
+            tradingAccounts.forEach(acc => {
+                const data = getTradingAccountData(acc.id);
+                const trades = Array.isArray(data.trades) ? data.trades : [];
+                const recentTrades = trades.filter(t => {
+                    const closeDate = new Date(t.closeTime);
+                    return closeDate >= thirtyDaysAgo && closeDate <= now;
+                });
+                const pnl = recentTrades.reduce((sum, t) => sum + (parseFloat(t.resultMxn) || 0), 0);
+                list.push({ name: `${acc.nombre} (Trad)`, pnl });
+            });
+            
+            // 2. Cuentas de FTT (IndexedDB/State)
+            const fttState = getFttAccountState();
+            const fttAccounts = Array.isArray(fttState.accounts) ? fttState.accounts : [];
+            
+            const fttAccountKeys = fttState.data ? Object.keys(fttState.data) : [];
+            fttAccountKeys.forEach(accId => {
+                const accountData = fttState.data[accId] || {};
+                const trades = Array.isArray(accountData.trades) ? accountData.trades : [];
+                const recentTrades = trades.filter(t => {
+                    const tradeDate = new Date(t.fecha);
+                    return tradeDate >= thirtyDaysAgo && tradeDate <= now;
+                });
+                const pnl = recentTrades.reduce((sum, t) => sum + calculateFttTradePnl(t), 0);
+                
+                const accMeta = fttAccounts.find(a => String(a.id) === String(accId));
+                const name = accMeta ? accMeta.nombre : `FTT Cuenta ${accId}`;
+                list.push({ name: `${name} (FTT)`, pnl });
+            });
+            
+            if (list.length === 0) {
+                container.innerHTML = '<p class="text-[10px] text-gray-400 italic">No hay trades en los últimos 30 días.</p>';
+                return;
+            }
+            
+            list.forEach(item => {
+                const row = document.createElement('div');
+                row.className = 'flex justify-between items-center py-0.5 border-b border-gray-100 dark:border-slate-800/30';
+                const pnlClass = item.pnl >= 0 ? 'text-green-600 dark:text-green-400 font-bold' : 'text-red-600 dark:text-red-400 font-bold';
+                row.innerHTML = `
+                    <span class="truncate pr-2">${item.name}</span>
+                    <span class="${pnlClass}">${currencyFormatter.format(item.pnl)}</span>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        async function refreshPatrimonialData() {
+            const tradingPnl = (calculateTradingDailyPnl() + calculateFttDailyPnl()) * 30;
+            
+            const btcDailyIncome = calculateMiningDailyIncome('btcMiningInvestments');
+            const goDailyIncome = calculateMiningDailyIncome('goMiningInvestments');
+            const tapDailyIncome = calculateMiningDailyIncome('tapMiningInvestments');
+            const cloudPowerMinerDailyIncome = calculateMiningDailyIncome('cloudPowerMinerInvestments');
+            const ctFarmIncome = await getCryptotabDailyIncome('ctFarm_registroDiario_db_v1');
+            const ctPoolIncome = await getCryptotabDailyIncome('ctPool_registroDiario_db_v1');
+            const ctBrowserIncome = await getCryptotabDailyIncome('ctBrowser_registroDiario_db_v1');
+            const ctNftIncome = await getCryptotabDailyIncome('ctNft_registroDiario_db_v1');
+            
+            const invReturn = (btcDailyIncome + goDailyIncome + tapDailyIncome + cloudPowerMinerDailyIncome + ctFarmIncome + ctPoolIncome + ctBrowserIncome + ctNftIncome) * 30;
+            const invCosts = calculateInvestmentExpenses30d();
+            const lifeExpenses = calculateFinanzasExpenses(30);
+
+            await updatePnlPatrimonial();
+            updateScaleAndSelfSufficiency(tradingPnl, invReturn, invCosts, lifeExpenses);
+            updateTradingPnlDesglose();
+        }
+
+        let roiEvolutionChart = null;
+
+        async function updateRoiEvolutionChart(days = 30) {
+            try {
+                const dates = getLastNDates(days);
+                const labels = dates.map(d => d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }));
+
+                const services = [
+                    { storageKey: 'btcMiningInvestments', label: 'BTC Mining', color: '#F7931A' },
+                    { storageKey: 'cloudPowerMinerInvestments', label: 'Cloud Power Miner', color: '#06b6d4' },
+                    { storageKey: 'goMiningInvestments', label: 'GO Mining', color: '#4285F4' },
+                    { storageKey: 'tapMiningInvestments', label: 'TAP Mining', color: '#34A853' }
+                ];
+
+                const datasets = [];
+
+                // 1. Calcular series de capital y de ingreso diario para cada servicio
+                const serviceSeries = services.map(s => {
+                    const dailyIncomeSeries = buildSeriesFromLocalStorage(s.storageKey, dates);
+                    
+                    // Construir serie de capital activo para cada fecha
+                    const capitalSeries = dates.map(date => {
+                        const key = getDateKey(date);
+                        const investments = parseInvestmentsFromStorage(s.storageKey);
+                        let activeCapital = 0;
+                        investments.forEach(inv => {
+                            const cost = Number(inv.cost);
+                            const startDate = inv.date ? getDateKey(new Date(inv.date)) : null;
+                            const endKey = (inv.hasExpiration && inv.expirationDate) ? getDateKey(new Date(inv.expirationDate)) : null;
+                            
+                            const started = !startDate || startDate <= key;
+                            const notExpired = !endKey || endKey >= key;
+                            if (started && notExpired && Number.isFinite(cost)) {
+                                activeCapital += cost;
+                            }
+                        });
+                        return activeCapital;
+                    });
+
+                    // Calcular ROI diario anualizado en %
+                    const roiSeries = dates.map((_, idx) => {
+                        const income = dailyIncomeSeries[idx] || 0;
+                        const capital = capitalSeries[idx] || 0;
+                        return capital > 0 ? (income * 365 / capital) * 100 : 0;
+                    });
+
+                    return {
+                        label: s.label,
+                        data: roiSeries,
+                        borderColor: s.color,
+                        backgroundColor: s.color,
+                        fill: false,
+                        tension: 0.2
+                    };
+                });
+
+                // 2. Calcular el ROI total ponderado diario
+                const totalRoiSeries = dates.map((_, idx) => {
+                    let totalIncome = 0;
+                    let totalCapital = 0;
+                    services.forEach((s) => {
+                        const dailyIncomeSeries = buildSeriesFromLocalStorage(s.storageKey, dates);
+                        const investments = parseInvestmentsFromStorage(s.storageKey);
+                        const key = getDateKey(dates[idx]);
+                        
+                        let activeCapital = 0;
+                        investments.forEach(inv => {
+                            const cost = Number(inv.cost);
+                            const startDate = inv.date ? getDateKey(new Date(inv.date)) : null;
+                            const endKey = (inv.hasExpiration && inv.expirationDate) ? getDateKey(new Date(inv.expirationDate)) : null;
+                            
+                            const started = !startDate || startDate <= key;
+                            const notExpired = !endKey || endKey >= key;
+                            if (started && notExpired && Number.isFinite(cost)) {
+                                activeCapital += cost;
+                            }
+                        });
+
+                        totalIncome += dailyIncomeSeries[idx] || 0;
+                        totalCapital += activeCapital;
+                    });
+                    return totalCapital > 0 ? (totalIncome * 365 / totalCapital) * 100 : 0;
+                });
+
+                const totalDataset = {
+                    label: 'ROI Total Ponderado',
+                    data: totalRoiSeries,
+                    borderColor: '#0891b2',
+                    backgroundColor: '#0891b2',
+                    fill: true,
+                    tension: 0.15,
+                    pointRadius: 2
+                };
+
+                const allDatasets = [...serviceSeries, totalDataset];
+
+                // Crear o actualizar gráfico de Chart.js
+                const ctx = document.getElementById('roiEvolutionChart').getContext('2d');
+                const parent = document.getElementById('roiEvolutionChart').parentElement;
+                parent.style.minHeight = '220px';
+
+                if (roiEvolutionChart) {
+                    roiEvolutionChart.data.labels = labels;
+                    roiEvolutionChart.data.datasets = allDatasets;
+                    roiEvolutionChart.update();
+                } else {
+                    document.getElementById('roi-evolution-chart-title').textContent = 'Evolución de ROI Anualizado (últimos 30 días)';
+                    roiEvolutionChart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: allDatasets
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            interaction: { mode: 'index', intersect: false },
+                            stacked: false,
+                            plugins: {
+                                legend: { position: 'top', labels: { usePointStyle: true } },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function (context) {
+                                            const v = context.parsed.y || 0;
+                                            return context.dataset.label + ': ' + v.toFixed(2) + '%';
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                x: { title: { display: true, text: 'Fecha' } },
+                                y: { title: { display: true, text: 'ROI Anualizado (%)' }, ticks: { callback: value => value.toFixed(1) + '%' } }
+                            }
+                        }
+                    });
+                }
+            } catch (err) {
+                console.error('Error updating ROI evolution chart:', err);
+            }
+        }
+
         // Initialize when DOM is loaded
         document.addEventListener('DOMContentLoaded', async function () {
+            await loadExternalData();
+            
             await updateStatistics();
             await updateIncomeSourceChart();
-            // Create and update income evolution chart (últimos 30 días)
             await updateIncomeEvolutionChart();
+            await updateRoiEvolutionChart();
             updateOneTimeCostsUI();
             updateMonthlyExpensesUI();
             updateRoiContributionChart();
+            await refreshPatrimonialData();
 
             // Update statistics and charts every 1 minute for efficiency
-            setInterval(updateStatistics, 60000);
-            setInterval(updateIncomeSourceChart, 60000);
-            setInterval(updateIncomeEvolutionChart, 60000);
-            setInterval(updateOneTimeCostsUI, 60000);
-            setInterval(updateMonthlyExpensesUI, 60000);
-            setInterval(updateRoiContributionChart, 60000);
+            setInterval(async () => {
+                await loadExternalData();
+                await updateStatistics();
+                await updateIncomeSourceChart();
+                await updateIncomeEvolutionChart();
+                await updateRoiEvolutionChart();
+                updateOneTimeCostsUI();
+                updateMonthlyExpensesUI();
+                updateRoiContributionChart();
+                await refreshPatrimonialData();
+            }, 60000);
         });
 
         // Tab functionality

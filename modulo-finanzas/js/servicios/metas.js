@@ -78,14 +78,14 @@ export async function guardarMetaParametros(id, payload) {
   const fin = parseFecha(fechaFinStr)
   if (!inicio || !fin) throw new Error('Fechas inválidas')
 
-  const hoyFecha = hoy()
-  if (inicio < hoyFecha) throw new Error('La fecha de inicio no puede estar en el pasado')
-  if (fin < inicio) throw new Error('La fecha de fin no puede ser anterior al inicio')
-
   const list = await obtenerTodas()
   const idx = list.findIndex((m) => m.id === id)
   if (idx === -1) throw new Error('Meta no encontrada')
   const prev = list[idx]
+
+  const hoyFecha = hoy()
+  if (prev.fechaInicio !== fechaInicioStr && inicio < hoyFecha) throw new Error('La fecha de inicio no puede estar en el pasado')
+  if (fin < inicio) throw new Error('La fecha de fin no puede ser anterior al inicio')
 
   const cambios = []
   if (prev.objetivo !== objetivo) cambios.push('objetivo')
@@ -244,7 +244,7 @@ export async function crearMetaSimple(payload) {
 
   const list = await obtenerTodas()
   const existeDuplicada = list.some(
-    (m) => m.tipo === 'simple' && m.cuentaId === cuentaId && Number(m.objetivo || 0) === objetivo
+    (m) => m.tipo === 'simple' && m.cuentaId === cuentaId && Number(m.objetivo || 0) === objetivo && !m.completada
   )
   if (existeDuplicada) throw new Error('Ya existe una meta simple para esta cuenta con ese objetivo')
 
@@ -300,7 +300,8 @@ export async function actualizarMetaSimple(id, payload) {
       m.id !== id &&
       m.tipo === 'simple' &&
       m.cuentaId === cuentaId &&
-      Number(m.objetivo || 0) === objetivo
+      Number(m.objetivo || 0) === objetivo &&
+      !m.completada
   )
   if (existeDuplicada) throw new Error('Ya existe otra meta simple para esta cuenta con ese objetivo')
 
@@ -340,7 +341,6 @@ export async function eliminarMetaSimple(id) {
   const list = await obtenerTodas()
   const meta = list.find((m) => m.id === id && m.tipo === 'simple')
   if (!meta) return false
-  if (meta.completada) throw new Error('No se puede eliminar una meta simple completada')
   const next = list.filter((m) => m.id !== id)
   await guardarTodas(next)
   return true
@@ -371,16 +371,43 @@ export async function evaluarMetasSimples() {
     }
 
     const saldoActual = Number(cuenta.dinero || 0)
+    const objetivo = Number(meta.objetivo || 0)
+    const now = new Date().toISOString()
+    const fmt = (n) => Number(n).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })
+
+    // 1. Verificar si la meta ya se cumplió (incluso si el saldo no ha cambiado)
+    if (saldoActual >= objetivo) {
+      const historial = Array.isArray(meta.historial) ? [...meta.historial] : []
+      const extra = saldoActual - objetivo
+      const msgExito =
+        'Meta alcanzada. Saldo ' +
+        fmt(saldoActual) +
+        ', objetivo ' +
+        fmt(objetivo) +
+        (extra > 0 ? '. Superaste por ' + fmt(extra) + '.' : '.')
+      historial.push({
+        fecha: now,
+        tipo: 'sistema',
+        mensaje: msgExito
+      })
+      cambiado = true
+      return {
+        ...meta,
+        ultimoSaldo: saldoActual,
+        completada: true,
+        activo: false,
+        historial
+      }
+    }
+
+    // 2. Si no se ha cumplido, verificar si el saldo cambió desde la última evaluación
     const ultimo = Number(meta.ultimoSaldo != null ? meta.ultimoSaldo : saldoActual)
     if (saldoActual === ultimo) return meta
 
-    const objetivo = Number(meta.objetivo || 0)
     const distAntes = Math.abs(objetivo - ultimo)
     const distAhora = Math.abs(objetivo - saldoActual)
     const acercado = distAhora < distAntes
     const delta = Math.abs(distAntes - distAhora)
-
-    const fmt = (n) => Number(n).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })
 
     let mensaje
     if (acercado) {
@@ -403,7 +430,6 @@ export async function evaluarMetasSimples() {
         '.'
     }
 
-    const now = new Date().toISOString()
     const historial = Array.isArray(meta.historial) ? [...meta.historial] : []
     historial.push({
       fecha: now,
@@ -411,31 +437,10 @@ export async function evaluarMetasSimples() {
       mensaje
     })
 
-    let completada = meta.completada
-    let activo = meta.activo
-    if (saldoActual >= objetivo) {
-      completada = true
-      activo = false
-      const extra = saldoActual - objetivo
-      const msgExito =
-        'Meta alcanzada. Saldo ' +
-        fmt(saldoActual) +
-        ', objetivo ' +
-        fmt(objetivo) +
-        (extra > 0 ? '. Superaste por ' + fmt(extra) + '.' : '.')
-      historial.push({
-        fecha: now,
-        tipo: 'sistema',
-        mensaje: msgExito
-      })
-    }
-
     cambiado = true
     return {
       ...meta,
       ultimoSaldo: saldoActual,
-      completada,
-      activo,
       historial
     }
   })

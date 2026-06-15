@@ -348,6 +348,102 @@
           </div>
         </div>
       </div>
+
+      <!-- Separador de Sección -->
+      <hr class="border-gray-100 dark:border-gray-800/80 my-8">
+
+      <!-- Análisis por Cuenta -->
+      <div class="space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h3 class="text-lg font-bold text-gray-950 dark:text-white tracking-tight flex items-center gap-2">
+              <i data-lucide="wallet" class="w-5 h-5 text-purple-500"></i> Análisis por Cuenta
+            </h3>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Consulta métricas y evolución de cuentas individuales</p>
+          </div>
+          <!-- Selector de Cuenta Estilizado -->
+          <div class="relative min-w-[220px]">
+            <select id="select-cuenta-reporte" class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-250 dark:border-gray-800 rounded-xl px-3 py-2 text-sm font-semibold text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 cursor-pointer appearance-none pr-8 shadow-sm">
+              <option value="todas">Todas las cuentas</option>
+            </select>
+            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-gray-500 dark:text-gray-400">
+              <i data-lucide="chevron-down" class="w-4 h-4"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tarjetas de Métricas Individuales de Cuenta (Solo visible al seleccionar una cuenta específica) -->
+        <div id="metricas-cuenta-container" class="grid grid-cols-1 md:grid-cols-3 gap-6 hidden">
+          <!-- Saldo Actual -->
+          <div class="bg-gray-50 dark:bg-gray-900/60 rounded-2xl p-6 border border-gray-100/80 dark:border-gray-800/60 flex flex-col justify-between transition-all hover:shadow-md">
+            <div>
+              <div class="flex justify-between items-start mb-2">
+                <span class="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Saldo de la Cuenta</span>
+                <span id="stat-cuenta-saldo-trend" class="text-[10px] font-bold px-2 py-0.5 rounded-full hidden"></span>
+              </div>
+              <p class="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white" id="stat-cuenta-saldo">$0.00</p>
+            </div>
+            <p class="text-[11px] text-gray-400 dark:text-gray-500 mt-3" id="stat-cuenta-saldo-referencia">—</p>
+          </div>
+          <!-- Flujo Neto -->
+          <div class="bg-gray-50 dark:bg-gray-900/60 rounded-2xl p-6 border border-gray-100/80 dark:border-gray-800/60 flex flex-col justify-between transition-all hover:shadow-md">
+            <div>
+              <div class="flex justify-between items-start mb-2">
+                <span class="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Flujo Neto del Periodo</span>
+                <span id="stat-cuenta-flujo-trend" class="text-[10px] font-bold px-2 py-0.5 rounded-full hidden"></span>
+              </div>
+              <p class="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white" id="stat-cuenta-flujo">$0.00</p>
+            </div>
+            <p class="text-[11px] text-gray-400 dark:text-gray-500 mt-3" id="stat-cuenta-flujo-referencia">—</p>
+          </div>
+          <!-- Número de Transacciones -->
+          <div class="bg-gray-50 dark:bg-gray-900/60 rounded-2xl p-6 border border-gray-100/80 dark:border-gray-800/60 flex flex-col justify-between transition-all hover:shadow-md">
+            <div>
+              <div class="flex justify-between items-start mb-2">
+                <span class="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Transacciones</span>
+                <span id="stat-cuenta-transacciones-trend" class="text-[10px] font-bold px-2 py-0.5 rounded-full hidden"></span>
+              </div>
+              <p class="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white" id="stat-cuenta-transacciones">0</p>
+            </div>
+            <p class="text-[11px] text-gray-400 dark:text-gray-500 mt-3" id="stat-cuenta-transacciones-referencia">—</p>
+          </div>
+        </div>
+
+        <!-- Gráfico de Evolución del Saldo (Solo visible al seleccionar una cuenta específica) -->
+        <div id="grafico-cuenta-container" class="bg-gray-50 dark:bg-gray-900/60 rounded-2xl p-6 border border-gray-100/80 dark:border-gray-800/60 shadow-sm hidden">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <h4 class="text-sm font-bold text-gray-950 dark:text-white tracking-tight flex items-center gap-1.5">
+              <i data-lucide="trending-up" class="w-4 h-4 text-purple-500"></i> Historial y Evolución del Saldo
+            </h4>
+          </div>
+          <div class="relative h-72 w-full">
+            <canvas id="chart-cuenta-evolucion"></canvas>
+          </div>
+        </div>
+
+        <!-- Tabla Comparativa de Cuentas (Solo visible cuando se selecciona "Todas las cuentas") -->
+        <div id="tabla-cuentas-container" class="bg-gray-50 dark:bg-gray-900/60 rounded-2xl p-6 border border-gray-100/80 dark:border-gray-800/60 shadow-sm">
+          <h4 class="text-sm font-bold text-gray-950 dark:text-white tracking-tight mb-4 flex items-center gap-1.5">
+            <i data-lucide="list" class="w-4 h-4 text-purple-500"></i> Tabla Comparativa de Cuentas
+          </h4>
+          <div class="overflow-x-auto pr-2 custom-scrollbar">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr class="border-b border-gray-200 dark:border-gray-800 text-gray-400 dark:text-gray-500 font-semibold uppercase tracking-wider">
+                  <th class="py-3 px-4">Cuenta</th>
+                  <th class="py-3 px-4 text-right">Saldo Actual</th>
+                  <th class="py-3 px-4 text-right">Flujo Neto Periodo</th>
+                  <th class="py-3 px-4 text-right">Transacciones</th>
+                  <th class="py-3 px-4 text-right">Variación vs Periodo Anterior</th>
+                </tr>
+              </thead>
+              <tbody id="tabla-cuentas-comparativa" class="divide-y divide-gray-150 dark:divide-gray-800/50 text-gray-700 dark:text-gray-300">
+                <!-- Se poblará dinámicamente -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
   </main>
   <div id="modal-categoria" class="fixed inset-0 z-[100] hidden" aria-labelledby="modal-categoria-title" role="dialog"

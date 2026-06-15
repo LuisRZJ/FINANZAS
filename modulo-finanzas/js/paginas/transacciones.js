@@ -1316,6 +1316,8 @@ async function renderHistorial() {
 
       if (op.estado === 'pendiente') {
         row.classList.add('opacity-75', 'border-dashed')
+      } else if (op.estado === 'en_espera') {
+        row.classList.add('border-dashed', 'bg-amber-50/15', 'dark:bg-amber-950/5', 'border-amber-300/60', 'dark:border-amber-900/40')
       }
 
       // 1. Decorador lateral
@@ -1426,6 +1428,11 @@ async function renderHistorial() {
 
           window._badgeIntervals.push(intervalId)
         }
+      } else if (op.estado === 'en_espera') {
+        const pendingBadge = document.createElement('span')
+        pendingBadge.className = 'inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 shrink-0 ml-1.5'
+        pendingBadge.innerHTML = `<i data-lucide="alert-circle" class="w-2.5 h-2.5"></i><span>Por Confirmar</span>`
+        titleWrapper.appendChild(pendingBadge)
       }
       infoDiv.appendChild(titleWrapper)
 
@@ -1434,7 +1441,9 @@ async function renderHistorial() {
       metaDiv.className = 'text-[11px] text-gray-400 dark:text-gray-500 mt-0.5 flex flex-wrap items-center gap-1.5 truncate'
 
       let cuentasStr = ''
-      if (op.tipo === 'transferencia') {
+      if (op.estado === 'en_espera') {
+        cuentasStr = 'Cuenta por definir'
+      } else if (op.tipo === 'transferencia') {
         const o = cuentaMap.get(op.origenId)
         const d = cuentaMap.get(op.destinoId)
         cuentasStr = `${o?.nombre || '?'} → ${d?.nombre || '?'}`
@@ -1444,13 +1453,25 @@ async function renderHistorial() {
       }
       const spanCuenta = document.createElement('span')
       spanCuenta.textContent = cuentasStr
+      if (op.estado === 'en_espera') {
+        spanCuenta.classList.add('italic', 'text-gray-400', 'dark:text-gray-505')
+      }
       metaDiv.appendChild(spanCuenta)
 
       const dot1 = document.createElement('span')
       dot1.className = 'w-0.5 h-0.5 rounded-full bg-gray-300 dark:bg-gray-750'
       metaDiv.appendChild(dot1)
 
-      if (op.tipo !== 'transferencia' && et) {
+      if (op.estado === 'en_espera') {
+        const spanCat = document.createElement('span')
+        spanCat.className = 'italic text-gray-400 dark:text-gray-505'
+        spanCat.textContent = 'Categoría por definir'
+        metaDiv.appendChild(spanCat)
+
+        const dot2 = document.createElement('span')
+        dot2.className = 'w-0.5 h-0.5 rounded-full bg-gray-300 dark:bg-gray-750'
+        metaDiv.appendChild(dot2)
+      } else if (op.tipo !== 'transferencia' && et) {
         const spanCat = document.createElement('span')
         spanCat.className = 'text-blue-500/85 dark:text-blue-400/85'
         spanCat.textContent = et.nombre
@@ -1507,35 +1528,23 @@ async function renderHistorial() {
       else if (op.tipo === 'gasto') amountColorClass = 'text-gray-800 dark:text-gray-200'
       else amountColorClass = 'text-blue-600 dark:text-blue-400'
 
-      amountEl.className = `text-sm font-semibold ${amountColorClass} group-hover:-translate-x-12 transition-transform duration-200`
-      amountEl.textContent = (esNegativo ? '-' : '+') + formatCurrency(op.cantidad)
-      rightDiv.appendChild(amountEl)
-
-      // Botones de acción al hover
-      const actionsDiv = document.createElement('div')
-      actionsDiv.className = 'absolute right-0 top-1/2 -translate-y-1/2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white dark:bg-gray-900 pl-2'
-
-      const btnEdit = document.createElement('button')
-      btnEdit.className = 'p-1 text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors'
-      btnEdit.innerHTML = '<i data-lucide="pencil" class="w-3.5 h-3.5"></i>'
-      btnEdit.onclick = (e) => {
-        e.stopPropagation()
-        if (op.recurrenciaId) {
-          abrirModalDecision('editar', op)
-        } else {
+      if (op.estado === 'en_espera') {
+        amountEl.className = `text-sm font-semibold ${amountColorClass}`
+        
+        const btnConfirmar = document.createElement('button')
+        btnConfirmar.className = 'mt-1 px-2.5 py-1 text-[10px] font-bold bg-orange-600 hover:bg-orange-700 text-white rounded-xl transition-all shadow-sm flex items-center gap-1 focus:outline-none'
+        btnConfirmar.innerHTML = `<i data-lucide="check" class="w-3 h-3"></i> Confirmar`
+        btnConfirmar.onclick = (e) => {
+          e.stopPropagation()
           window.abrirModal('editar', op)
         }
-      }
-
-      const btnDel = document.createElement('button')
-      btnDel.className = 'p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors'
-      btnDel.innerHTML = '<i data-lucide="trash-2" class="w-3.5 h-3.5"></i>'
-      btnDel.onclick = async (e) => {
-        e.stopPropagation()
-        if (op.recurrenciaId) {
-          abrirModalDecision('borrar', op)
-        } else {
-          if (confirm('¿Borrar esta operación?')) {
+        
+        const btnDelEnEspera = document.createElement('button')
+        btnDelEnEspera.className = 'mt-1 px-2 py-1 text-[10px] font-bold border border-gray-200 dark:border-gray-700 text-gray-500 hover:text-red-500 rounded-xl transition-all flex items-center gap-1 focus:outline-none'
+        btnDelEnEspera.innerHTML = `<i data-lucide="trash-2" class="w-3 h-3"></i>`
+        btnDelEnEspera.onclick = async (e) => {
+          e.stopPropagation()
+          if (confirm('¿Borrar esta operación pendiente?')) {
             try {
               await eliminarOperacion(op.id)
               await renderHistorial()
@@ -1544,11 +1553,19 @@ async function renderHistorial() {
             }
           }
         }
-      }
 
-      actionsDiv.appendChild(btnEdit)
-      actionsDiv.appendChild(btnDel)
-      rightDiv.appendChild(actionsDiv)
+        const buttonsRow = document.createElement('div')
+        buttonsRow.className = 'flex items-center gap-1'
+        buttonsRow.appendChild(btnConfirmar)
+        buttonsRow.appendChild(btnDelEnEspera)
+        rightDiv.appendChild(buttonsRow)
+      } else {
+        amountEl.className = `text-sm font-semibold ${amountColorClass} group-hover:-translate-x-12 transition-transform duration-200`
+        
+        actionsDiv.appendChild(btnEdit)
+        actionsDiv.appendChild(btnDel)
+        rightDiv.appendChild(actionsDiv)
+      }
 
       row.appendChild(rightDiv)
       cont.appendChild(row)
@@ -1626,6 +1643,19 @@ async function init() {
   actualizarLabelMes() // Init Label
   actualizarFondoEstacional() // Fondo estacional
   await renderHistorial()
+
+  // Auto-confirmar si viene ?confirmar=opId en los query params
+  const params = new URLSearchParams(location.search)
+  const confirmarId = params.get('confirmar')
+  if (confirmarId) {
+    const ops = await listarOperaciones()
+    const op = ops.find(o => o.id === confirmarId)
+    if (op) {
+      setTimeout(() => {
+        window.abrirModal('editar', op)
+      }, 300)
+    }
+  }
 }
 
 document.addEventListener('DOMContentLoaded', init)

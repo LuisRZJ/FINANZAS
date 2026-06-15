@@ -8,7 +8,18 @@ async function obtenerTodas() {
   return Array.isArray(data) ? data : []
 }
 async function guardarTodas(list) {
-  return await escribir(STORAGE_KEYS.cuentas, list)
+  const res = await escribir(STORAGE_KEYS.cuentas, list)
+  // Desencadenar la evaluación de metas de forma perezosa para evitar dependencias circulares
+  import('./metas.js').then(async ({ evaluarMetasSimples }) => {
+    try {
+      await evaluarMetasSimples()
+    } catch (err) {
+      console.error('Error al evaluar metas de forma perezosa:', err)
+    }
+  }).catch(err => {
+    console.error('Error al importar metas.js:', err)
+  })
+  return res
 }
 export async function listarCuentas() {
   return await obtenerTodas()

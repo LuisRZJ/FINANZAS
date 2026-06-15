@@ -14,26 +14,56 @@ function formatDate(s) {
   return date.toLocaleDateString('es-MX', { year: 'numeric', month: 'short', day: '2-digit' })
 }
 
+function calcularDiferencia(actual, anterior) {
+  if (anterior === 0) {
+    if (actual > 0) return { pct: 100, clase: 'subio', texto: '▲ 100%' }
+    if (actual < 0) return { pct: -100, clase: 'bajo', texto: '▼ 100%' }
+    return { pct: 0, clase: 'neutro', texto: '0%' }
+  }
+  const pct = ((actual - anterior) / Math.abs(anterior)) * 100
+  if (pct > 0) {
+    return { pct, clase: 'subio', texto: `▲ ${pct.toFixed(0)}%` }
+  } else if (pct < 0) {
+    return { pct, clase: 'bajo', texto: `▼ ${Math.abs(pct).toFixed(0)}%` }
+  } else {
+    return { pct, clase: 'neutro', texto: '0%' }
+  }
+}
+
 async function getMonthData() {
   const now = new Date()
   const currentMonth = now.getMonth()
   const currentYear = now.getFullYear()
 
+  // Calcular mes y año anteriores
+  let prevMonth = currentMonth - 1
+  let prevYear = currentYear
+  if (prevMonth < 0) {
+    prevMonth = 11
+    prevYear = currentYear - 1
+  }
+
   const allOps = await listarOperaciones()
 
-  // Filter for current month
+  // Filtrar operaciones del mes actual
   const monthOps = allOps.filter(op => {
-    // Limpiar fecha: extraer solo YYYY-MM-DD
     const fechaLimpia = op.fecha.split('T')[0]
     const [y, m, d] = fechaLimpia.split('-')
     const opDate = new Date(y, m - 1, d)
     return opDate.getMonth() === currentMonth && opDate.getFullYear() === currentYear
   })
 
-  // Calculate totals
+  // Filtrar operaciones del mes anterior
+  const prevMonthOps = allOps.filter(op => {
+    const fechaLimpia = op.fecha.split('T')[0]
+    const [y, m, d] = fechaLimpia.split('-')
+    const opDate = new Date(y, m - 1, d)
+    return opDate.getMonth() === prevMonth && opDate.getFullYear() === prevYear
+  })
+
+  // Calcular totales del mes actual
   let income = 0
   let expense = 0
-
   monthOps.forEach(op => {
     const amount = Number(op.cantidad || 0)
     if (op.tipo === 'ingreso') {
@@ -41,15 +71,29 @@ async function getMonthData() {
     } else if (op.tipo === 'gasto') {
       expense += amount
     }
-    // Transfers are neutral for PNL
   })
-
   const pnl = income - expense
+
+  // Calcular totales del mes anterior
+  let prevIncome = 0
+  let prevExpense = 0
+  prevMonthOps.forEach(op => {
+    const amount = Number(op.cantidad || 0)
+    if (op.tipo === 'ingreso') {
+      prevIncome += amount
+    } else if (op.tipo === 'gasto') {
+      prevExpense += amount
+    }
+  })
+  const prevPnl = prevIncome - prevExpense
 
   return {
     pnl,
     income,
     expense,
+    prevPnl,
+    prevIncome,
+    prevExpense,
     ops: monthOps
   }
 }
@@ -59,12 +103,85 @@ function renderSummary(data) {
   const incomeEl = document.getElementById('income-amount')
   const expenseEl = document.getElementById('expense-amount')
 
+  const balanceBadge = document.getElementById('balance-badge')
+  const incomeBadge = document.getElementById('income-badge')
+  const expenseBadge = document.getElementById('expense-badge')
+
+  const balanceBadgeCont = document.getElementById('balance-badge-container')
+  const incomeBadgeCont = document.getElementById('income-badge-container')
+  const expenseBadgeCont = document.getElementById('expense-badge-container')
+
+  const balanceTooltipText = document.getElementById('balance-tooltip-text')
+  const incomeTooltipText = document.getElementById('income-tooltip-text')
+  const expenseTooltipText = document.getElementById('expense-tooltip-text')
+
   if (balanceEl) {
     balanceEl.textContent = '$' + formatoMoneda(data.pnl)
-    balanceEl.className = `mt-2 text-2xl font-bold ${data.pnl >= 0 ? 'text-gray-900 dark:text-gray-100' : 'text-red-600 dark:text-red-400'}`
+    balanceEl.className = `mt-2 text-3xl font-extrabold tracking-tight ${data.pnl >= 0 ? 'text-gray-900 dark:text-white' : 'text-red-655 dark:text-red-400'}`
   }
   if (incomeEl) incomeEl.textContent = '$' + formatoMoneda(data.income)
   if (expenseEl) expenseEl.textContent = '$' + formatoMoneda(data.expense)
+
+  // Renderizar badges comparativos
+  if (data.prevPnl !== undefined) {
+    // 1. PNL
+    const diffPnl = calcularDiferencia(data.pnl, data.prevPnl)
+    if (balanceBadge) {
+      balanceBadge.textContent = `${diffPnl.texto} vs mes pasado`
+      balanceBadge.className = `inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+        diffPnl.clase === 'subio'
+          ? 'bg-emerald-55/90 text-emerald-700 dark:bg-emerald-950/35 dark:text-emerald-400'
+          : diffPnl.clase === 'bajo'
+          ? 'bg-red-55/90 text-red-700 dark:bg-red-950/35 dark:text-red-450'
+          : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
+      }`
+    }
+    if (balanceTooltipText) {
+      balanceTooltipText.textContent = `Mes anterior: $${formatoMoneda(data.prevPnl)}`
+    }
+    if (balanceBadgeCont) {
+      balanceBadgeCont.classList.remove('hidden')
+    }
+
+    // 2. Ingresos
+    const diffIncome = calcularDiferencia(data.income, data.prevIncome)
+    if (incomeBadge) {
+      incomeBadge.textContent = diffIncome.texto
+      incomeBadge.className = `inline-flex items-center px-1.5 py-0.2 rounded-full text-[9px] font-extrabold ${
+        diffIncome.clase === 'subio'
+          ? 'bg-emerald-55/90 text-emerald-700 dark:bg-emerald-950/35 dark:text-emerald-400'
+          : diffIncome.clase === 'bajo'
+          ? 'bg-red-55/90 text-red-700 dark:bg-red-950/35 dark:text-red-450'
+          : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
+      }`
+    }
+    if (incomeTooltipText) {
+      incomeTooltipText.textContent = `Mes anterior: $${formatoMoneda(data.prevIncome)}`
+    }
+    if (incomeBadgeCont) {
+      incomeBadgeCont.classList.remove('hidden')
+    }
+
+    // 3. Gastos
+    const diffExpense = calcularDiferencia(data.expense, data.prevExpense)
+    if (expenseBadge) {
+      expenseBadge.textContent = diffExpense.texto
+      // Para gastos, si subió es malo (rojo), si bajó es bueno (verde)
+      expenseBadge.className = `inline-flex items-center px-1.5 py-0.2 rounded-full text-[9px] font-extrabold ${
+        diffExpense.clase === 'subio'
+          ? 'bg-red-55/90 text-red-700 dark:bg-red-950/35 dark:text-red-450'
+          : diffExpense.clase === 'bajo'
+          ? 'bg-emerald-55/90 text-emerald-700 dark:bg-emerald-950/35 dark:text-emerald-400'
+          : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
+      }`
+    }
+    if (expenseTooltipText) {
+      expenseTooltipText.textContent = `Mes anterior: $${formatoMoneda(data.prevExpense)}`
+    }
+    if (expenseBadgeCont) {
+      expenseBadgeCont.classList.remove('hidden')
+    }
+  }
 }
 
 function formatCurrency(n) {
@@ -180,6 +297,8 @@ async function renderTransactions(ops) {
 
       if (op.estado === 'pendiente') {
         row.classList.add('opacity-75', 'border-dashed')
+      } else if (op.estado === 'en_espera') {
+        row.classList.add('border-dashed', 'bg-amber-50/15', 'dark:bg-amber-950/5', 'border-amber-300/60', 'dark:border-amber-900/40')
       }
 
       // 1. Decorador lateral
@@ -286,6 +405,11 @@ async function renderTransactions(ops) {
 
           window._indexBadgeIntervals.push(intervalId)
         }
+      } else if (op.estado === 'en_espera') {
+        const pendingBadge = document.createElement('span')
+        pendingBadge.className = 'inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 shrink-0 ml-1.5'
+        pendingBadge.innerHTML = `<i data-lucide="alert-circle" class="w-2.5 h-2.5"></i><span>Por Confirmar</span>`
+        titleWrapper.appendChild(pendingBadge)
       }
       infoDiv.appendChild(titleWrapper)
 
@@ -294,7 +418,9 @@ async function renderTransactions(ops) {
       metaDiv.className = 'text-[11px] text-gray-400 dark:text-gray-500 mt-0.5 flex flex-wrap items-center gap-1.5 truncate'
 
       let cuentasStr = ''
-      if (op.tipo === 'transferencia') {
+      if (op.estado === 'en_espera') {
+        cuentasStr = 'Cuenta por definir'
+      } else if (op.tipo === 'transferencia') {
         const o = cuentaMap.get(op.origenId)
         const d = cuentaMap.get(op.destinoId)
         cuentasStr = `${o?.nombre || '?'} → ${d?.nombre || '?'}`
@@ -304,9 +430,21 @@ async function renderTransactions(ops) {
       }
       const spanCuentas = document.createElement('span')
       spanCuentas.textContent = cuentasStr
+      if (op.estado === 'en_espera') {
+        spanCuentas.classList.add('italic', 'text-gray-400', 'dark:text-gray-550')
+      }
       metaDiv.appendChild(spanCuentas)
 
-      if (op.tipo !== 'transferencia') {
+      if (op.estado === 'en_espera') {
+        const dot1 = document.createElement('span')
+        dot1.className = 'w-0.5 h-0.5 rounded-full bg-gray-300 dark:bg-gray-700'
+        metaDiv.appendChild(dot1)
+
+        const spanCat = document.createElement('span')
+        spanCat.className = 'italic text-gray-400 dark:text-gray-550'
+        spanCat.textContent = 'Categoría por definir'
+        metaDiv.appendChild(spanCat)
+      } else if (op.tipo !== 'transferencia') {
         const dot1 = document.createElement('span')
         dot1.className = 'w-0.5 h-0.5 rounded-full bg-gray-300 dark:bg-gray-700'
         metaDiv.appendChild(dot1)
@@ -366,10 +504,26 @@ async function renderTransactions(ops) {
       } else if (op.tipo === 'gasto') {
         amountEl.classList.add('text-red-500', 'dark:text-red-400')
       } else {
-        amountEl.classList.add('text-gray-650', 'dark:text-gray-400')
+        amountEl.classList.add('text-gray-600', 'dark:text-gray-400')
       }
       amountEl.textContent = (esNegativo ? '-' : '+') + formatCurrency(op.cantidad)
       rightDiv.appendChild(amountEl)
+
+      if (op.estado === 'en_espera') {
+        const btnConfirmar = document.createElement('a')
+        btnConfirmar.href = `transacciones.html?confirmar=${op.id}`
+        btnConfirmar.className = 'mt-1 px-2.5 py-1 text-[10px] font-bold bg-orange-600 hover:bg-orange-700 text-white rounded-xl transition-all shadow-sm flex items-center gap-1 focus:outline-none'
+        btnConfirmar.innerHTML = `<i data-lucide="check" class="w-3 h-3"></i> Confirmar`
+        rightDiv.appendChild(btnConfirmar)
+        
+        // Hacer toda la fila clickable para redirigir
+        row.style.cursor = 'pointer'
+        row.addEventListener('click', (e) => {
+          if (!e.target.closest('a') && !e.target.closest('button')) {
+            location.href = `transacciones.html?confirmar=${op.id}`
+          }
+        })
+      }
 
       row.appendChild(rightDiv)
       cont.appendChild(row)

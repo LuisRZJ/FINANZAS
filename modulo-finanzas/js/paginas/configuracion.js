@@ -5,6 +5,8 @@ import { estaAutenticadoEnNube, guardarPasswordNube, cerrarSesionNube } from '..
 import { respaldarDatos, restaurarDatos } from '../servicios/sincronizacion.js'
 import { leer, escribir, eliminar } from '../servicios/almacenamiento.js'
 import { procesarCSVBudge } from '../servicios/migracion.js'
+import { listarCuentas } from '../servicios/cuentas.js'
+
 
 async function renderSeccion(tipo, containerId) {
   const cont = document.getElementById(containerId)
@@ -587,6 +589,31 @@ async function construirSnapshotDatos() {
   }
 }
 
+async function sincronizarConfiguracionDesdeIndexedDB() {
+  try {
+    const config = await leer(STORAGE_KEYS.configuracion)
+    if (config) {
+      localStorage.setItem(STORAGE_KEYS.configuracion, JSON.stringify(config))
+      if (config.syncTradesActive !== undefined) {
+        localStorage.setItem('gtr_sync_trades_active', config.syncTradesActive ? 'true' : 'false')
+      } else {
+        localStorage.removeItem('gtr_sync_trades_active')
+      }
+      if (config.cuentaRelaciones !== undefined) {
+        localStorage.setItem('gtr_cuenta_relaciones', JSON.stringify(config.cuentaRelaciones))
+      } else {
+        localStorage.removeItem('gtr_cuenta_relaciones')
+      }
+    } else {
+      localStorage.removeItem(STORAGE_KEYS.configuracion)
+      localStorage.removeItem('gtr_sync_trades_active')
+      localStorage.removeItem('gtr_cuenta_relaciones')
+    }
+  } catch (err) {
+    console.error('Error al sincronizar configuración desde IndexedDB:', err)
+  }
+}
+
 async function restaurarDesdeSnapshot(snapshot) {
   if (!snapshot || typeof snapshot !== 'object' || !snapshot.datos) {
     throw new Error('Archivo de respaldo inválido')
@@ -600,6 +627,7 @@ async function restaurarDesdeSnapshot(snapshot) {
       await eliminar(k)
     }
   }
+  await sincronizarConfiguracionDesdeIndexedDB()
 }
 
 async function inicializarPanelDatos() {
@@ -895,6 +923,7 @@ async function inicializarPanelDatos() {
           for (const k of keys) {
             await eliminar(k)
           }
+          await sincronizarConfiguracionDesdeIndexedDB()
 
           // Si se marcó, también borrar en la nube
           if (borrarNube) {
@@ -940,11 +969,12 @@ async function inicializarPanelDatos() {
   }
 
   // Guardar webhook
-  const saveWebhook = (url) => {
+  const saveWebhook = async (url) => {
     try {
       const config = JSON.parse(localStorage.getItem(STORAGE_KEYS.configuracion) || '{}')
       config.discordWebhook = url
       localStorage.setItem(STORAGE_KEYS.configuracion, JSON.stringify(config))
+      await escribir(STORAGE_KEYS.configuracion, config)
       return true
     } catch { return false }
   }
@@ -954,9 +984,9 @@ async function inicializarPanelDatos() {
   }
 
   if (btnSaveWebhook && inputWebhook) {
-    btnSaveWebhook.addEventListener('click', () => {
+    btnSaveWebhook.addEventListener('click', async () => {
       const url = inputWebhook.value.trim()
-      if (saveWebhook(url)) {
+      if (await saveWebhook(url)) {
         if (discordMsgEl) discordMsgEl.textContent = url ? '✅ Webhook guardado.' : 'Webhook eliminado.'
         setTimeout(() => { if (discordMsgEl) discordMsgEl.textContent = '' }, 3000)
       }
@@ -1168,6 +1198,8 @@ async function inicializarAuth() {
 }
 
 async function init() {
+  await sincronizarConfiguracionDesdeIndexedDB()
+
   if (window.GTRTheme && typeof window.GTRTheme.applyThemeOnLoad === 'function') window.GTRTheme.applyThemeOnLoad()
 
   const toggleBtn = document.getElementById('theme-toggle')
@@ -1190,9 +1222,40 @@ async function init() {
   const btnCrearGasto = document.getElementById('btn-abrir-crear-gasto')
   if (btnCrearGasto) btnCrearGasto.addEventListener('click', () => abrirModalCreacion('gasto'))
 
+  const btnAbrirModalEtiquetas = document.getElementById('btn-abrir-modal-etiquetas')
+  const modalGestionEtiquetas = document.getElementById('modal-gestion-etiquetas')
+  const btnCerrarModalEtiquetas = document.getElementById('btn-cerrar-modal-etiquetas')
+  const btnCerrarModalEtiquetasFooter = document.getElementById('btn-cerrar-modal-etiquetas-footer')
+
+  if (btnAbrirModalEtiquetas && modalGestionEtiquetas) {
+    btnAbrirModalEtiquetas.addEventListener('click', () => {
+      modalGestionEtiquetas.classList.remove('hidden')
+      document.body.style.overflow = 'hidden'
+    })
+  }
+
+  const cerrarModalEtiquetas = () => {
+    if (modalGestionEtiquetas) {
+      modalGestionEtiquetas.classList.add('hidden')
+      document.body.style.overflow = ''
+    }
+  }
+
+  if (btnCerrarModalEtiquetas) btnCerrarModalEtiquetas.addEventListener('click', cerrarModalEtiquetas)
+  if (btnCerrarModalEtiquetasFooter) btnCerrarModalEtiquetasFooter.addEventListener('click', cerrarModalEtiquetas)
+
+  if (modalGestionEtiquetas) {
+    modalGestionEtiquetas.addEventListener('click', (e) => {
+      if (e.target === modalGestionEtiquetas) {
+        cerrarModalEtiquetas()
+      }
+    })
+  }
+
   await renderTodas()
   await inicializarPanelDatos()
   await inicializarAuth()
+  await inicializarSyncTrading()
 
   // Toggle de fondos dinámicos (cookie)
   const toggleFondos = document.getElementById('toggle-fondos-dinamicos')
@@ -1209,4 +1272,159 @@ async function init() {
   }
 }
 
+async function inicializarSyncTrading() {
+  const toggle = document.getElementById('sync-trading-toggle')
+  const container = document.getElementById('container-relacion-trading')
+  const btnConfigurar = document.getElementById('btn-configurar-relaciones-trading')
+  const modal = document.getElementById('modal-vincular-cuentas-trading')
+  const form = document.getElementById('form-vincular-trading')
+  const btnCerrar = document.getElementById('btn-cerrar-modal-vincular')
+  const btnCancelar = document.getElementById('btn-cancelar-modal-vincular')
+  const listaContainer = document.getElementById('lista-vinculacion-cuentas')
+
+  if (!toggle) return
+
+  // 1. Cargar estado inicial del toggle
+  const syncActive = localStorage.getItem('gtr_sync_trades_active') === 'true'
+  toggle.checked = syncActive
+  if (syncActive) {
+    container?.classList.remove('hidden')
+  } else {
+    container?.classList.add('hidden')
+  }
+
+  // 2. Manejar cambio en el toggle
+  toggle.addEventListener('change', async () => {
+    const active = toggle.checked
+    localStorage.setItem('gtr_sync_trades_active', active ? 'true' : 'false')
+    
+    try {
+      const config = JSON.parse(localStorage.getItem(STORAGE_KEYS.configuracion) || '{}')
+      config.syncTradesActive = active
+      localStorage.setItem(STORAGE_KEYS.configuracion, JSON.stringify(config))
+      await escribir(STORAGE_KEYS.configuracion, config)
+    } catch (err) {
+      console.error('Error al guardar syncTradesActive en IndexedDB:', err)
+    }
+
+    if (active) {
+      container?.classList.remove('hidden')
+    } else {
+      container?.classList.add('hidden')
+    }
+  })
+
+  // 3. Cerrar modal
+  const cerrarModal = () => {
+    modal?.classList.add('hidden')
+    document.body.style.overflow = ''
+  }
+
+  btnCerrar?.addEventListener('click', cerrarModal)
+  btnCancelar?.addEventListener('click', cerrarModal)
+  modal?.addEventListener('click', (e) => {
+    if (e.target === modal) cerrarModal()
+  })
+
+  // 4. Abrir modal y cargar cuentas
+  btnConfigurar?.addEventListener('click', async () => {
+    if (!listaContainer) return
+
+    listaContainer.innerHTML = '<p class="text-xs text-gray-500 italic">Cargando cuentas...</p>'
+    modal?.classList.remove('hidden')
+    document.body.style.overflow = 'hidden'
+
+    try {
+      // Cargar cuentas de finanzas
+      const cuentasFinanzas = await listarCuentas()
+      // Cargar cuentas de trading
+      const accountsMetaRaw = localStorage.getItem('tradingAccountsMeta')
+      const tradingAccounts = accountsMetaRaw ? JSON.parse(accountsMetaRaw) : []
+      // Cargar relaciones guardadas
+      const relaciones = JSON.parse(localStorage.getItem('gtr_cuenta_relaciones') || '{}')
+
+      if (tradingAccounts.length === 0) {
+        listaContainer.innerHTML = `
+          <div class="text-center py-6 text-xs text-gray-500 dark:text-gray-400">
+            No tienes cuentas de trading virtuales creadas en este navegador. 
+            Crea una primero en el Diario de Trading.
+          </div>
+        `
+        return
+      }
+
+      listaContainer.innerHTML = ''
+      tradingAccounts.forEach(ta => {
+        const item = document.createElement('div')
+        item.className = 'flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-gray-50/50 dark:bg-gray-900/40 border border-gray-100 dark:border-gray-800'
+        
+        const label = document.createElement('div')
+        label.className = 'flex flex-col'
+        label.innerHTML = `
+          <span class="text-xs font-bold text-gray-900 dark:text-white">${ta.nombre}</span>
+          <span class="text-[10px] text-gray-500 dark:text-gray-400">Cuenta de Trading Virtual</span>
+        `
+
+        const selectContainer = document.createElement('div')
+        selectContainer.className = 'relative w-full sm:w-64'
+        
+        let selectHtml = `<select name="trading-rel-${ta.id}" class="w-full pl-3 pr-8 py-2 text-xs bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-1 focus:ring-orange-500 focus:border-orange-500 text-gray-700 dark:text-gray-200 cursor-pointer">`
+        selectHtml += `<option value="">🚫 No sincronizar</option>`
+        
+        // Agregar cuentas de finanzas ordenadas por nombre
+        const cuentasOrdenadas = [...cuentasFinanzas].sort((a, b) => a.nombre.localeCompare(b.nombre))
+        cuentasOrdenadas.forEach(cf => {
+          const selected = relaciones[ta.id] === cf.id ? 'selected' : ''
+          selectHtml += `<option value="${cf.id}" ${selected}>🏦 ${cf.nombre} (${cf.moneda || 'MXN'})</option>`
+        })
+        
+        selectHtml += `</select>`
+        selectContainer.innerHTML = selectHtml
+
+        item.appendChild(label)
+        item.appendChild(selectContainer)
+        listaContainer.appendChild(item)
+      })
+
+    } catch (err) {
+      listaContainer.innerHTML = `<p class="text-xs text-rose-500 font-medium">Error al cargar datos: ${err.message || err}</p>`
+    }
+  })
+
+  // 5. Guardar relaciones
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault()
+    const formData = new FormData(form)
+    const relaciones = {}
+    
+    for (const [key, value] of formData.entries()) {
+      if (key.startsWith('trading-rel-') && value) {
+        const tradingId = key.replace('trading-rel-', '')
+        relaciones[tradingId] = value
+      }
+    }
+
+    localStorage.setItem('gtr_cuenta_relaciones', JSON.stringify(relaciones))
+    
+    try {
+      const config = JSON.parse(localStorage.getItem(STORAGE_KEYS.configuracion) || '{}')
+      config.cuentaRelaciones = relaciones
+      localStorage.setItem(STORAGE_KEYS.configuracion, JSON.stringify(config))
+      await escribir(STORAGE_KEYS.configuracion, config)
+    } catch (err) {
+      console.error('Error al guardar cuentaRelaciones en IndexedDB:', err)
+    }
+
+    cerrarModal()
+    
+    // Mostrar feedback visual temporal en la tarjeta
+    const msgEl = document.createElement('div')
+    msgEl.className = 'text-xs text-emerald-600 dark:text-emerald-400 font-semibold mt-2 animate-fade-in'
+    msgEl.textContent = '✓ Relaciones de cuentas actualizadas con éxito.'
+    container?.appendChild(msgEl)
+    setTimeout(() => msgEl.remove(), 3000)
+  })
+}
+
 document.addEventListener('DOMContentLoaded', init)
+

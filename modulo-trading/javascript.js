@@ -1002,6 +1002,11 @@ function addTrade() {
   trades.push(trade);
   localStorage.setItem('trades', JSON.stringify(trades));
 
+  // Sincronización con Finanzas
+  if (localStorage.getItem('gtr_sync_trades_active') === 'true') {
+    crearOperacionFinanzasDesdeTrade(trade);
+  }
+
   // Disparar cálculo de MAE/MFE en segundo plano (solo para cripto)
   if (typeof triggerMAEMFECalculation === 'function') {
     triggerMAEMFECalculation(trade);
@@ -4583,6 +4588,9 @@ function addMovement() {
     }
   }
 
+  const syncSelect = document.getElementById('vincular-finanzas-cuenta');
+  const syncCuentaId = syncSelect ? syncSelect.value : '';
+
   const movement = {
     id: createMovementId(),
     type: type,
@@ -4590,9 +4598,17 @@ function addMovement() {
     date: date.toISOString()
   };
 
+  if (syncCuentaId) {
+    movement.origenSync = 'trading';
+  }
+
   const movements = getCapitalMovementsNormalized();
   movements.push(movement);
   localStorage.setItem('capitalMovements', JSON.stringify(movements));
+
+  if (syncCuentaId) {
+    registrarTransferenciaFinanzas(type, amount, date.toISOString(), syncCuentaId);
+  }
 
   // Limpiar el formulario
   document.getElementById('movement-amount').value = '0.00';
@@ -6622,4 +6638,206 @@ async function verificarNubeInicioCloud() {
 // Iniciar verificación al arrancar
 document.addEventListener('DOMContentLoaded', () => {
   verificarNubeInicioCloud().catch(err => console.error("Error en verificarNubeInicioCloud:", err));
+  inicializarVinculacionDepositoRetiro();
 });
+
+function crearOperacionFinanzasDesdeTrade(trade) {
+  try {
+    const activeAccountId = getActiveAccountId ? getActiveAccountId() : localStorage.getItem('activeTradingAccountId');
+    if (!activeAccountId) return;
+    
+    const relaciones = JSON.parse(localStorage.getItem('gtr_cuenta_relaciones') || '{}');
+    const cuentaFinanzasId = relaciones[activeAccountId];
+    if (!cuentaFinanzasId) return; // Cuenta de trading activa no vinculada, no sincronizamos
+
+    const dbRequest = indexedDB.open('GTRFinanzasDB', 2);
+    dbRequest.onerror = (e) => console.error('Error al abrir DB de finanzas desde trading:', e);
+    
+    dbRequest.onsuccess = (e) => {
+      const db = e.target.result;
+      const transaction = db.transaction(['keyval'], 'readwrite');
+      const store = transaction.objectStore('keyval');
+      
+      const getReq = store.get('gtr-operaciones');
+      getReq.onsuccess = () => {
+        let ops = getReq.result || [];
+        if (!Array.isArray(ops)) ops = [];
+        
+        const resultVal = parseFloat(trade.resultMxn) || 0;
+        if (resultVal === 0) return; // Sin ganancias ni pérdidas
+        
+        const tipo = resultVal > 0 ? 'ingreso' : 'gasto';
+        const cantidad = Math.abs(resultVal);
+        const nombre = `Trade: ${trade.asset} ${trade.direction}`;
+        const descripcion = `Generado automáticamente desde Diario de Trading. Trade ID: ${trade.id}`;
+        const fecha = trade.closeTime || new Date().toISOString().slice(0, 16);
+        
+        const idStr = 'op_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+        
+        const op = {
+          id: idStr,
+          tipo: tipo,
+          nombre: nombre,
+          descripcion: descripcion,
+          cantidad: cantidad,
+          fecha: fecha,
+          cuentaId: cuentaFinanzasId,
+          etiquetaId: '',
+          estado: 'en_espera',
+          origenSync: 'trading',
+          creadaEn: new Date().toISOString()
+        };
+        
+        ops.push(op);
+        const putReq = store.put(ops, 'gtr-operaciones');
+        putReq.onsuccess = () => {
+          console.log('Operación de trade sincronizada con finanzas (en_espera):', op.id);
+        };
+        putReq.onerror = (err) => {
+          console.error('Error al guardar operaciones sincronizadas:', err);
+        };
+      };
+    };
+  } catch (err) {
+    console.error('Error en crearOperacionFinanzasDesdeTrade:', err);
+  }
+}
+
+function registrarTransferenciaFinanzas(tipo, cantidad, fecha, cuentaGeneralId) {
+  try {
+    const activeAccountId = getActiveAccountId ? getActiveAccountId() : localStorage.getItem('activeTradingAccountId');
+    const relaciones = JSON.parse(localStorage.getItem('gtr_cuenta_relaciones') || '{}');
+    const cuentaFinanzasId = relaciones[activeAccountId];
+    if (!cuentaFinanzasId || !cuentaGeneralId) return;
+
+    const dbRequest = indexedDB.open('GTRFinanzasDB', 2);
+    dbRequest.onerror = (e) => console.error('Error al abrir DB de finanzas para transferencia:', e);
+    
+    dbRequest.onsuccess = (e) => {
+      const db = e.target.result;
+      const transaction = db.transaction(['keyval'], 'readwrite');
+      const store = transaction.objectStore('keyval');
+      
+      const getCuentasReq = store.get('gtr-cuentas');
+      getCuentasReq.onsuccess = () => {
+        let cuentas = getCuentasReq.result || [];
+        if (!Array.isArray(cuentas)) return;
+        
+        // Determinar origen y destino de la transferencia
+        const origenId = tipo === 'deposito' ? cuentaGeneralId : cuentaFinanzasId;
+        const destinoId = tipo === 'deposito' ? cuentaFinanzasId : cuentaGeneralId;
+        
+        const origenIdx = cuentas.findIndex(c => c.id === origenId);
+        const destinoIdx = cuentas.findIndex(c => c.id === destinoId);
+        
+        if (origenIdx === -1 || destinoIdx === -1) {
+          console.error('No se encontró cuenta de origen o destino en finanzas.');
+          return;
+        }
+        
+        const cant = Number(cantidad);
+        cuentas[origenIdx].dinero = Number((cuentas[origenIdx].dinero - cant).toFixed(2));
+        cuentas[destinoIdx].dinero = Number((cuentas[destinoIdx].dinero + cant).toFixed(2));
+        
+        const nowStr = new Date().toISOString();
+        const msgHist = `Sincronización de capital desde trading: ${tipo === 'deposito' ? 'Depósito' : 'Retiro'} de $${cant.toFixed(2)}`;
+        
+        if (!cuentas[origenIdx].historial) cuentas[origenIdx].historial = [];
+        cuentas[origenIdx].historial.push({
+          fecha: nowStr,
+          tipo: 'ajuste',
+          mensaje: `${msgHist} (Origen)`,
+          cambio: `Saldo ajustado a ${cuentas[origenIdx].dinero}`
+        });
+        
+        if (!cuentas[destinoIdx].historial) cuentas[destinoIdx].historial = [];
+        cuentas[destinoIdx].historial.push({
+          fecha: nowStr,
+          tipo: 'ajuste',
+          mensaje: `${msgHist} (Destino)`,
+          cambio: `Saldo ajustado a ${cuentas[destinoIdx].dinero}`
+        });
+
+        store.put(cuentas, 'gtr-cuentas');
+        
+        const getOpsReq = store.get('gtr-operaciones');
+        getOpsReq.onsuccess = () => {
+          let ops = getOpsReq.result || [];
+          if (!Array.isArray(ops)) ops = [];
+          
+          const idStr = 'op_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+          const op = {
+            id: idStr,
+            tipo: 'transferencia',
+            nombre: `${tipo === 'deposito' ? 'Depósito' : 'Retiro'} de Trading: ${cuentas[destinoIdx].nombre}`,
+            descripcion: `Sincronizado automáticamente desde depósito/retiro de trading. Cuenta de trading: ${activeAccountId}`,
+            cantidad: cant,
+            fecha: new Date(fecha).toISOString().slice(0, 16),
+            origenId: origenId,
+            destinoId: destinoId,
+            estado: 'pagado',
+            origenSync: 'trading',
+            creadaEn: nowStr
+          };
+          
+          ops.push(op);
+          store.put(ops, 'gtr-operaciones');
+          console.log('Transferencia automática de sincronización registrada en finanzas:', op.id);
+        };
+      };
+    };
+  } catch (err) {
+    console.error('Error al registrar transferencia de sincronización en finanzas:', err);
+  }
+}
+
+function inicializarVinculacionDepositoRetiro() {
+  const container = document.getElementById('vincular-finanzas-container');
+  const select = document.getElementById('vincular-finanzas-cuenta');
+  if (!select) return;
+
+  const syncActive = localStorage.getItem('gtr_sync_trades_active') === 'true';
+  if (!syncActive) {
+    if (container) container.classList.add('hidden');
+    return;
+  }
+
+  if (container) container.classList.remove('hidden');
+
+  try {
+    const dbRequest = indexedDB.open('GTRFinanzasDB', 2);
+    dbRequest.onerror = (e) => console.error('Error al abrir DB de finanzas para selector:', e);
+    
+    dbRequest.onsuccess = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains('keyval')) return;
+      
+      const transaction = db.transaction(['keyval'], 'readonly');
+      const store = transaction.objectStore('keyval');
+      const getReq = store.get('gtr-cuentas');
+      
+      getReq.onsuccess = () => {
+        const cuentas = getReq.result || [];
+        if (!Array.isArray(cuentas)) return;
+
+        const activeAccountId = getActiveAccountId ? getActiveAccountId() : localStorage.getItem('activeTradingAccountId');
+        const relaciones = JSON.parse(localStorage.getItem('gtr_cuenta_relaciones') || '{}');
+        const defaultCuentaId = relaciones[activeAccountId] || '';
+
+        select.innerHTML = '<option value="">🚫 No registrar en finanzas</option>';
+        cuentas.sort((a, b) => a.nombre.localeCompare(b.nombre)).forEach(c => {
+          // No listar la propia cuenta de trading CFT como origen/destino de la cuenta general
+          if (c.id === defaultCuentaId) return;
+
+          const opt = document.createElement('option');
+          opt.value = c.id;
+          opt.textContent = `🏦 ${c.nombre} (${c.moneda || 'MXN'})`;
+          select.appendChild(opt);
+        });
+      };
+    };
+  } catch (err) {
+    console.error('Error al poblar selector de cuentas de finanzas:', err);
+  }
+}
+

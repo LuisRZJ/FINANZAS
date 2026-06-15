@@ -9,6 +9,7 @@ let chartCategories = null;
 let chartIncomeCategories = null;
 let chartBalanceHistory = null;
 let chartProjection = null;
+let chartCuentaEvolucion = null;
 let chartBalanceMode = 'lineal'; // 'lineal' or 'barras'
 let showSMA = false; // Control para mostrar SMA 30d
 let showBollinger = false; // Control para mostrar Bandas de Bollinger
@@ -113,6 +114,14 @@ function inicializarEventos() {
         });
     }
 
+    // Evento selector cuenta
+    const selectCuenta = document.getElementById('select-cuenta-reporte');
+    if (selectCuenta) {
+        selectCuenta.addEventListener('change', () => {
+            actualizarSeccionCuentas(operacionesPeriodo, currentPeriodo);
+        });
+    }
+
     // Set default active
     const defaultBtn = document.querySelector('[data-period="semana"]');
     if (defaultBtn) {
@@ -161,6 +170,8 @@ async function cargarDatos(periodo) {
     await actualizarGraficoBalanceHistorico(operaciones, periodo); // Usa TODAS las operaciones para calcular balance inicial
     await actualizarProyeccionFinanciera(operaciones, periodo);
     actualizarMaximosMinimos(filteredOps);
+    actualizarSelectorCuentaOptions(cuentas);
+    await actualizarSeccionCuentas(filteredOps, periodo);
 
     if (window.lucide && typeof window.lucide.createIcons === 'function') {
         window.lucide.createIcons();
@@ -1390,5 +1401,493 @@ function actualizarMaximosMinimos(operaciones) {
     renderList('list-max-gastos', gastosDesc, 'text-red-600 dark:text-red-400');
     renderList('list-min-ingresos', ingresosAsc, 'text-green-600 dark:text-green-400');
     renderList('list-min-gastos', gastosAsc, 'text-red-600 dark:text-red-400');
+}
+
+// === SECCIÓN DE ANÁLISIS POR CUENTA ===
+
+function hexToRGBA(hex, alpha) {
+    if (!hex || typeof hex !== 'string') return `rgba(139, 92, 246, ${alpha})`;
+    let cleanHex = hex.replace('#', '');
+    if (cleanHex.length === 3) {
+        cleanHex = cleanHex.split('').map(c => c + c).join('');
+    }
+    if (cleanHex.length !== 6) return `rgba(139, 92, 246, ${alpha})`;
+    
+    const r = parseInt(cleanHex.substring(0, 2), 16);
+    const g = parseInt(cleanHex.substring(2, 4), 16);
+    const b = parseInt(cleanHex.substring(4, 6), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function formatearFechaLocal(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+}
+
+function calcularDiferenciaPorcentual(curr, prev) {
+    if (prev === 0) {
+        if (curr === 0) return 0;
+        return curr > 0 ? 100 : -100;
+    }
+    return ((curr - prev) / Math.abs(prev)) * 100;
+}
+
+function renderBadgeCuentas(percent, isExpense = false) {
+    const isPositive = percent > 0;
+    const isZero = percent === 0;
+    const sign = isPositive ? '+' : '';
+    const fixed = percent.toFixed(1) + '%';
+
+    let colorClass = '';
+    if (isZero) {
+        colorClass = 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400';
+    } else if (isExpense) {
+        colorClass = isPositive
+            ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+            : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
+    } else {
+        colorClass = isPositive
+            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+            : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
+    }
+
+    return `<span class="text-xs font-semibold px-2 py-0.5 rounded-full ${colorClass}">${sign}${fixed}</span>`;
+}
+
+function actualizarSelectorCuentaOptions(cuentas) {
+    const select = document.getElementById('select-cuenta-reporte');
+    if (!select) return;
+
+    const currentValue = select.value || 'todas';
+    const numOptions = select.options.length - 1;
+    if (numOptions === cuentas.length) {
+        return; // Sin cambios
+    }
+
+    select.innerHTML = '<option value="todas">Todas las cuentas</option>';
+
+    const mainAccounts = cuentas.filter(c => !c.esSubcuenta);
+    const subAccounts = cuentas.filter(c => c.esSubcuenta);
+
+    mainAccounts.forEach(main => {
+        const opt = document.createElement('option');
+        opt.value = main.id;
+        opt.textContent = main.nombre;
+        select.appendChild(opt);
+
+        const subs = subAccounts.filter(s => s.parentId === main.id);
+        subs.forEach(sub => {
+            const subOpt = document.createElement('option');
+            subOpt.value = sub.id;
+            subOpt.textContent = `  ↳ ${sub.nombre}`;
+            select.appendChild(subOpt);
+        });
+    });
+
+    const orphans = subAccounts.filter(s => !mainAccounts.some(m => m.id === s.parentId));
+    orphans.forEach(sub => {
+        const subOpt = document.createElement('option');
+        subOpt.value = sub.id;
+        subOpt.textContent = `  ↳ ${sub.nombre} (Sin cuenta padre)`;
+        select.appendChild(subOpt);
+    });
+
+    if ([...select.options].some(o => o.value === currentValue)) {
+        select.value = currentValue;
+    } else {
+        select.value = 'todas';
+    }
+}
+
+async function actualizarSeccionCuentas(filteredOps, periodo) {
+    const select = document.getElementById('select-cuenta-reporte');
+    if (!select) return;
+
+    const valorSelect = select.value || 'todas';
+    const todasOperaciones = await listarOperaciones();
+    
+    const rangoCorr = await calcularRangoPeriodo(periodo, periodOffset);
+    const rangoPrev = await calcularRangoPeriodo(periodo, periodOffset - 1);
+
+    const metricasContainer = document.getElementById('metricas-cuenta-container');
+    const graficoContainer = document.getElementById('grafico-cuenta-container');
+    const tablaContainer = document.getElementById('tabla-cuentas-container');
+
+    if (valorSelect === 'todas') {
+        if (metricasContainer) metricasContainer.classList.add('hidden');
+        if (graficoContainer) graficoContainer.classList.add('hidden');
+        if (tablaContainer) tablaContainer.classList.remove('hidden');
+
+        renderizarTablaCuentas(cuentasCache, todasOperaciones, periodo, rangoCorr, rangoPrev);
+    } else {
+        if (metricasContainer) metricasContainer.classList.remove('hidden');
+        if (graficoContainer) graficoContainer.classList.remove('hidden');
+        if (tablaContainer) tablaContainer.classList.add('hidden');
+
+        const cuenta = cuentasCache.find(c => c.id === valorSelect);
+        if (cuenta) {
+            actualizarMetricasIndividualesCuenta(cuenta, todasOperaciones, periodo, rangoCorr, rangoPrev);
+            actualizarGraficoSaldoCuenta(cuenta, todasOperaciones, periodo, rangoCorr);
+        }
+    }
+
+    if (window.lucide && typeof window.lucide.createIcons === 'function') {
+        window.lucide.createIcons();
+    }
+}
+
+function calcularSaldoCuentaEnFecha(cuenta, todasOperaciones, fechaLimite) {
+    let balance = Number(cuenta.dinero || 0);
+    
+    const opsFuturas = todasOperaciones.filter(op => {
+        const fechaStr = op.fecha.includes('T') ? op.fecha : op.fecha + 'T23:59:59';
+        const fechaOp = new Date(fechaStr);
+        return fechaOp > fechaLimite;
+    });
+
+    opsFuturas.forEach(op => {
+        const cantidad = Number(op.cantidad || 0);
+        if (op.tipo === 'ingreso' && op.cuentaId === cuenta.id) {
+            balance -= cantidad;
+        } else if (op.tipo === 'gasto' && op.cuentaId === cuenta.id) {
+            balance += cantidad;
+        } else if (op.tipo === 'transferencia') {
+            if (op.origenId === cuenta.id) {
+                balance += cantidad;
+            }
+            if (op.destinoId === cuenta.id) {
+                balance -= cantidad;
+            }
+        }
+    });
+
+    return balance;
+}
+
+function calcularFlujoNetoPeriodo(cuenta, todasOperaciones, rango) {
+    let ingresos = 0;
+    let gastos = 0;
+
+    todasOperaciones.forEach(op => {
+        const fechaNormalizada = op.fecha.includes('T') ? op.fecha : op.fecha + 'T12:00:00';
+        const d = new Date(fechaNormalizada);
+        if (d >= rango.start && d <= rango.end) {
+            if (op.cuentaId === cuenta.id || op.origenId === cuenta.id || op.destinoId === cuenta.id) {
+                if (op.tipo === 'ingreso' && op.cuentaId === cuenta.id) {
+                    ingresos += Number(op.cantidad);
+                } else if (op.tipo === 'gasto' && op.cuentaId === cuenta.id) {
+                    gastos += Number(op.cantidad);
+                } else if (op.tipo === 'transferencia') {
+                    if (op.origenId === cuenta.id) {
+                        gastos += Number(op.cantidad);
+                    }
+                    if (op.destinoId === cuenta.id) {
+                        ingresos += Number(op.cantidad);
+                    }
+                }
+            }
+        }
+    });
+
+    return ingresos - gastos;
+}
+
+function calcularTransaccionesPeriodo(cuenta, todasOperaciones, rango) {
+    let count = 0;
+    todasOperaciones.forEach(op => {
+        const fechaNormalizada = op.fecha.includes('T') ? op.fecha : op.fecha + 'T12:00:00';
+        const d = new Date(fechaNormalizada);
+        if (d >= rango.start && d <= rango.end) {
+            if (op.cuentaId === cuenta.id || op.origenId === cuenta.id || op.destinoId === cuenta.id) {
+                count++;
+            }
+        }
+    });
+    return count;
+}
+
+function actualizarMetricasIndividualesCuenta(cuenta, todasOperaciones, periodo, rangoCorr, rangoPrev) {
+    let saldoCorr;
+    let saldoPrev;
+    
+    if (periodo === 'todo') {
+        saldoCorr = Number(cuenta.dinero || 0);
+        saldoPrev = saldoCorr;
+    } else {
+        saldoCorr = calcularSaldoCuentaEnFecha(cuenta, todasOperaciones, rangoCorr.end);
+        saldoPrev = calcularSaldoCuentaEnFecha(cuenta, todasOperaciones, rangoPrev.end);
+    }
+
+    const flujoCorr = calcularFlujoNetoPeriodo(cuenta, todasOperaciones, rangoCorr);
+    const flujoPrev = calcularFlujoNetoPeriodo(cuenta, todasOperaciones, rangoPrev);
+
+    const txsCorr = calcularTransaccionesPeriodo(cuenta, todasOperaciones, rangoCorr);
+    const txsPrev = calcularTransaccionesPeriodo(cuenta, todasOperaciones, rangoPrev);
+
+    const saldoEl = document.getElementById('stat-cuenta-saldo');
+    const flujoEl = document.getElementById('stat-cuenta-flujo');
+    const txsEl = document.getElementById('stat-cuenta-transacciones');
+
+    if (saldoEl) saldoEl.textContent = formatoMoneda(saldoCorr);
+    if (flujoEl) {
+        flujoEl.textContent = (flujoCorr > 0 ? '+' : '') + formatoMoneda(flujoCorr);
+        flujoEl.className = "text-3xl font-extrabold tracking-tight " + 
+            (flujoCorr > 0 ? "text-green-600 dark:text-green-400" : 
+             flujoCorr < 0 ? "text-red-600 dark:text-red-400" : "text-gray-900 dark:text-white");
+    }
+    if (txsEl) txsEl.textContent = txsCorr;
+
+    const refSaldoEl = document.getElementById('stat-cuenta-saldo-referencia');
+    const refFlujoEl = document.getElementById('stat-cuenta-flujo-referencia');
+    const refTxsEl = document.getElementById('stat-cuenta-transacciones-referencia');
+
+    if (periodo === 'todo') {
+        if (refSaldoEl) refSaldoEl.textContent = 'Historial completo';
+        if (refFlujoEl) refFlujoEl.textContent = 'Historial completo';
+        if (refTxsEl) refTxsEl.textContent = 'Historial completo';
+
+        ['stat-cuenta-saldo-trend', 'stat-cuenta-flujo-trend', 'stat-cuenta-transacciones-trend'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.classList.add('hidden');
+        });
+    } else {
+        const textRef = periodo === 'semana' ? 'semana anterior' : periodo === 'mes' ? 'mes anterior' : 'año anterior';
+        if (refSaldoEl) refSaldoEl.textContent = `Saldo al final de la ${textRef}: ${formatoMoneda(saldoPrev)}`;
+        if (refFlujoEl) refFlujoEl.textContent = `Flujo neto ${textRef}: ${flujoPrev > 0 ? '+' : ''}${formatoMoneda(flujoPrev)}`;
+        if (refTxsEl) refTxsEl.textContent = `Txs ${textRef}: ${txsPrev}`;
+
+        const pSaldo = calcularDiferenciaPorcentual(saldoCorr, saldoPrev);
+        const pFlujo = calcularDiferenciaPorcentual(flujoCorr, flujoPrev);
+        const pTxs = calcularDiferenciaPorcentual(txsCorr, txsPrev);
+
+        const renderAndShowBadge = (id, percent, isExpense = false) => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            
+            const isPositive = percent > 0;
+            const isZero = percent === 0;
+            const sign = isPositive ? '+' : '';
+            const fixed = percent.toFixed(1) + '%';
+
+            let colorClass = '';
+            if (isZero) {
+                colorClass = 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400';
+            } else if (isExpense) {
+                colorClass = isPositive
+                    ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                    : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
+            } else {
+                colorClass = isPositive
+                    ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                    : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
+            }
+
+            el.textContent = `${sign}${fixed}`;
+            el.className = `text-[10px] font-bold px-2 py-0.5 rounded-full ${colorClass}`;
+            el.classList.remove('hidden');
+        };
+
+        renderAndShowBadge('stat-cuenta-saldo-trend', pSaldo);
+        renderAndShowBadge('stat-cuenta-flujo-trend', pFlujo);
+        
+        const txsTrendEl = document.getElementById('stat-cuenta-transacciones-trend');
+        if (txsTrendEl) {
+            const sign = pTxs > 0 ? '+' : '';
+            txsTrendEl.textContent = `${sign}${pTxs.toFixed(1)}%`;
+            txsTrendEl.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 dark:bg-gray-750 dark:text-gray-400';
+            txsTrendEl.classList.remove('hidden');
+        }
+    }
+}
+
+function generarDatosEvolucionSaldoCuenta(cuenta, todasOperaciones, rangoCorr) {
+    const labels = [];
+    const data = [];
+
+    const startMs = rangoCorr.start.getTime();
+    const fechaLimiteInicio = new Date(startMs - 1);
+    let saldoAcumulado = calcularSaldoCuentaEnFecha(cuenta, todasOperaciones, fechaLimiteInicio);
+
+    const opsPeriodo = todasOperaciones.filter(op => {
+        if (op.cuentaId !== cuenta.id && op.origenId !== cuenta.id && op.destinoId !== cuenta.id) {
+            return false;
+        }
+        const fechaStr = op.fecha.includes('T') ? op.fecha : op.fecha + 'T12:00:00';
+        const fechaOp = new Date(fechaStr);
+        return fechaOp >= rangoCorr.start && fechaOp <= rangoCorr.end;
+    });
+
+    const opsPorDia = {};
+    opsPeriodo.forEach(op => {
+        const datePart = op.fecha.split('T')[0];
+        if (!opsPorDia[datePart]) opsPorDia[datePart] = [];
+        opsPorDia[datePart].push(op);
+    });
+
+    const curr = new Date(rangoCorr.start);
+    const end = new Date(rangoCorr.end);
+    
+    let maxIter = 1000; 
+    while (curr <= end && maxIter-- > 0) {
+        const dateStr = formatearFechaLocal(curr);
+        
+        const opsDia = opsPorDia[dateStr] || [];
+        opsDia.forEach(op => {
+            const cantidad = Number(op.cantidad || 0);
+            if (op.tipo === 'ingreso' && op.cuentaId === cuenta.id) {
+                saldoAcumulado += cantidad;
+            } else if (op.tipo === 'gasto' && op.cuentaId === cuenta.id) {
+                saldoAcumulado -= cantidad;
+            } else if (op.tipo === 'transferencia') {
+                if (op.origenId === cuenta.id) {
+                    saldoAcumulado -= cantidad;
+                }
+                if (op.destinoId === cuenta.id) {
+                    saldoAcumulado += cantidad;
+                }
+            }
+        });
+
+        const labelDia = curr.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+        labels.push(labelDia);
+        data.push(Number(saldoAcumulado.toFixed(2)));
+
+        curr.setDate(curr.getDate() + 1);
+    }
+
+    return { labels, data };
+}
+
+function actualizarGraficoSaldoCuenta(cuenta, todasOperaciones, periodo, rangoCorr) {
+    const canvas = document.getElementById('chart-cuenta-evolucion');
+    if (!canvas) return;
+
+    const { labels, data } = generarDatosEvolucionSaldoCuenta(cuenta, todasOperaciones, rangoCorr);
+
+    if (chartCuentaEvolucion) {
+        chartCuentaEvolucion.destroy();
+    }
+
+    const accountColor = cuenta.color || '#8b5cf6';
+    const areaColor = hexToRGBA(accountColor, 0.15);
+
+    chartCuentaEvolucion = new Chart(canvas.getContext('2d'), {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: `Saldo de ${cuenta.nombre}`,
+                data: data,
+                borderColor: accountColor,
+                backgroundColor: areaColor,
+                fill: true,
+                tension: 0.3,
+                pointRadius: labels.length > 60 ? 0 : 3,
+                pointHoverRadius: 5,
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    grid: { color: 'rgba(156, 163, 175, 0.1)' }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { maxTicksLimit: 10 }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function (context) {
+                            return context.dataset.label + ': ' + formatoMoneda(context.parsed.y);
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function renderizarTablaCuentas(cuentas, todasOperaciones, periodo, rangoCorr, rangoPrev) {
+    const tbody = document.getElementById('tabla-cuentas-comparativa');
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+
+    const mainAccounts = cuentas.filter(c => !c.esSubcuenta);
+    const subAccounts = cuentas.filter(c => c.esSubcuenta);
+
+    const renderFila = (c, esSub = false) => {
+        let saldoActual;
+        let saldoPrev;
+        if (periodo === 'todo') {
+            saldoActual = Number(c.dinero || 0);
+            saldoPrev = saldoActual;
+        } else {
+            saldoActual = calcularSaldoCuentaEnFecha(c, todasOperaciones, rangoCorr.end);
+            saldoPrev = calcularSaldoCuentaEnFecha(c, todasOperaciones, rangoPrev.end);
+        }
+
+        const flujoNeto = calcularFlujoNetoPeriodo(c, todasOperaciones, rangoCorr);
+        const txs = calcularTransaccionesPeriodo(c, todasOperaciones, rangoCorr);
+        
+        let badgeVar = '—';
+        if (periodo !== 'todo') {
+            const varPercent = calcularDiferenciaPorcentual(saldoActual, saldoPrev);
+            badgeVar = renderBadgeCuentas(varPercent);
+        }
+
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-gray-100/30 dark:hover:bg-gray-800/20 transition-colors";
+
+        const nombreHtml = esSub 
+            ? `<div class="flex items-center gap-2 pl-6">
+                 <span class="w-1.5 h-1.5 rounded-full" style="background-color: ${c.color || '#9ca3af'}"></span>
+                 <span class="text-gray-500 dark:text-gray-400 font-medium">${c.nombre}</span>
+               </div>`
+            : `<div class="flex items-center gap-2 font-semibold text-gray-950 dark:text-white">
+                 <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${c.color || '#3b82f6'}"></span>
+                 <span>${c.nombre}</span>
+               </div>`;
+
+        let flujoClass = 'text-right ';
+        if (flujoNeto > 0) flujoClass += 'text-green-600 dark:text-green-400 font-medium';
+        else if (flujoNeto < 0) flujoClass += 'text-red-600 dark:text-red-400 font-medium';
+        else flujoClass += 'text-gray-500 dark:text-gray-400';
+
+        tr.innerHTML = `
+            <td class="py-3.5 px-4">${nombreHtml}</td>
+            <td class="py-3.5 px-4 text-right font-medium text-gray-900 dark:text-white">${formatoMoneda(saldoActual)}</td>
+            <td class="py-3.5 px-4 ${flujoClass}">${flujoNeto > 0 ? '+' : ''}${formatoMoneda(flujoNeto)}</td>
+            <td class="py-3.5 px-4 text-right text-gray-600 dark:text-gray-400">${txs}</td>
+            <td class="py-3.5 px-4 text-right">${badgeVar}</td>
+        `;
+        tbody.appendChild(tr);
+    };
+
+    mainAccounts.forEach(main => {
+        renderFila(main, false);
+        
+        const subs = subAccounts.filter(s => s.parentId === main.id);
+        subs.forEach(sub => {
+            renderFila(sub, true);
+        });
+    });
+
+    const orphans = subAccounts.filter(s => !mainAccounts.some(m => m.id === s.parentId));
+    if (orphans.length > 0) {
+        orphans.forEach(sub => {
+            renderFila(sub, true);
+        });
+    }
 }
 

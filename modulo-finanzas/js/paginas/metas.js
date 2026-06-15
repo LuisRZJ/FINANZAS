@@ -13,6 +13,30 @@ import { listarOperaciones } from '../servicios/operaciones.js'
 import { listarCuentas } from '../servicios/cuentas.js'
 import { parseFecha, formatFechaLegible } from '../sistema/fechas.js'
 
+let formSimpleVisible = false
+
+function actualizarBotonNuevaMetaSimple() {
+  const btn = document.getElementById('btn-nueva-meta-simple')
+  if (!btn) return
+  if (formSimpleVisible) {
+    btn.className = 'inline-flex items-center gap-1 bg-gray-500 hover:bg-gray-600 text-white rounded-2xl py-1.5 px-3 text-xs font-semibold shadow-sm transition-all'
+    btn.innerHTML = `
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+      </svg>
+      <span>Cancelar</span>
+    `
+  } else {
+    btn.className = 'inline-flex items-center gap-1 bg-sky-600 dark:bg-sky-500 hover:bg-sky-700 dark:hover:bg-sky-600 text-white rounded-2xl py-1.5 px-3 text-xs font-semibold shadow-sm transition-all'
+    btn.innerHTML = `
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+      </svg>
+      <span>Nueva meta simple</span>
+    `
+  }
+}
+
 function formatCurrency(n) {
   return Number(n || 0).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })
 }
@@ -527,8 +551,14 @@ async function renderMetasSimples() {
   errorGlobal.id = 'error-meta-simple'
   errorGlobal.className = 'mt-2 text-xs font-semibold text-red-500 hidden'
 
-  contActivas.appendChild(form)
-  contActivas.appendChild(errorGlobal)
+  const contForm = document.getElementById('form-meta-simple-container')
+  if (contForm) {
+    contForm.innerHTML = ''
+    contForm.appendChild(form)
+    contForm.appendChild(errorGlobal)
+    contForm.classList.toggle('hidden', !formSimpleVisible)
+  }
+  actualizarBotonNuevaMetaSimple()
 
   activas.forEach((meta) => {
     const cuenta = cuentas.find((c) => c.id === meta.cuentaId)
@@ -830,6 +860,7 @@ function bindMetasSimplesHandlers() {
           errorBox.classList.add('hidden')
         }
         form.reset()
+        formSimpleVisible = false
         await renderMetasSimples()
       } catch (err) {
         if (errorBox) {
@@ -891,6 +922,17 @@ async function init() {
   const toggleBtn = document.getElementById('theme-toggle')
   if (toggleBtn && window.GTRTheme && typeof window.GTRTheme.toggleTheme === 'function') {
     toggleBtn.addEventListener('click', window.GTRTheme.toggleTheme)
+  }
+  const btnToggleForm = document.getElementById('btn-nueva-meta-simple')
+  if (btnToggleForm) {
+    btnToggleForm.addEventListener('click', () => {
+      formSimpleVisible = !formSimpleVisible
+      const contForm = document.getElementById('form-meta-simple-container')
+      if (contForm) {
+        contForm.classList.toggle('hidden', !formSimpleVisible)
+      }
+      actualizarBotonNuevaMetaSimple()
+    })
   }
   setActiveNav()
   await renderMetasAvanzadas()

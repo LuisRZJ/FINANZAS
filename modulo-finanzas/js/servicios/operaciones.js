@@ -12,7 +12,19 @@ async function obtenerTodas() {
 }
 
 async function guardarTodas(list) {
-  return await escribir(STORAGE_KEYS.operaciones, list)
+  const res = await escribir(STORAGE_KEYS.operaciones, list)
+  // Desencadenar la evaluación de metas de forma perezosa para evitar dependencias circulares
+  import('./metas.js').then(async ({ evaluarMetasSimples, revisarPeriodosYActualizar }) => {
+    try {
+      await evaluarMetasSimples()
+      await revisarPeriodosYActualizar()
+    } catch (err) {
+      console.error('Error al evaluar metas de forma perezosa:', err)
+    }
+  }).catch(err => {
+    console.error('Error al importar metas.js:', err)
+  })
+  return res
 }
 
 export async function listarOperaciones() {
@@ -145,6 +157,7 @@ export async function crearIngreso(payload) {
     estado,
     recurrenciaId: payload?.recurrenciaId || null,
     cicloNumero: payload?.cicloNumero || null,
+    origenSync: payload?.origenSync || null,
     creadaEn: now
   }
 
@@ -190,6 +203,7 @@ export async function crearGasto(payload) {
     estado,
     recurrenciaId: payload?.recurrenciaId || null,
     cicloNumero: payload?.cicloNumero || null,
+    origenSync: payload?.origenSync || null,
     creadaEn: now
   }
 
@@ -197,6 +211,39 @@ export async function crearGasto(payload) {
   list.push(op)
   await guardarTodas(list)
   return op
+}
+
+function inyectarMovimientoTrading(tradingAccountId, tipo, cantidad, fecha, origenSync) {
+  const accountKey = 'tradingAccountData:' + tradingAccountId
+  let data = {}
+  try {
+    const raw = localStorage.getItem(accountKey)
+    if (raw) data = JSON.parse(raw)
+  } catch (err) {
+    console.error('Error al leer datos de la cuenta de trading:', err)
+  }
+  
+  if (!data.capitalMovements) data.capitalMovements = []
+  
+  const idStr = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function' 
+    ? crypto.randomUUID() 
+    : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`
+    
+  const movement = {
+    id: idStr,
+    type: tipo, // 'deposito' o 'retiro'
+    amount: Number(cantidad),
+    date: new Date(fecha).toISOString(),
+    origenSync: origenSync // 'finanzas'
+  }
+  
+  data.capitalMovements.push(movement)
+  localStorage.setItem(accountKey, JSON.stringify(data))
+  
+  // Si esta cuenta es la activa en trading, también la escribimos a 'capitalMovements' actual
+  if (localStorage.getItem('activeTradingAccountId') === tradingAccountId) {
+    localStorage.setItem('capitalMovements', JSON.stringify(data.capitalMovements))
+  }
 }
 
 export async function crearTransferencia(payload) {
@@ -238,7 +285,30 @@ export async function crearTransferencia(payload) {
     estado,
     recurrenciaId: payload?.recurrenciaId || null,
     cicloNumero: payload?.cicloNumero || null,
+    origenSync: payload?.origenSync || null,
     creadaEn: now
+  }
+
+  // Sincronización Finanzas -> Trading
+  const syncActive = localStorage.getItem('gtr_sync_trades_active') === 'true'
+  if (syncActive && payload?.origenSync !== 'trading') {
+    try {
+      const relaciones = JSON.parse(localStorage.getItem('gtr_cuenta_relaciones') || '{}')
+      
+      // Si la cuenta destino está vinculada, es un DEPOSITO en trading
+      const tradingIdDestino = Object.keys(relaciones).find(key => relaciones[key] === destinoId)
+      if (tradingIdDestino) {
+        inyectarMovimientoTrading(tradingIdDestino, 'deposito', cantidad, fecha, 'finanzas')
+      }
+      
+      // Si la cuenta origen está vinculada, es un RETIRO en trading
+      const tradingIdOrigen = Object.keys(relaciones).find(key => relaciones[key] === origenId)
+      if (tradingIdOrigen) {
+        inyectarMovimientoTrading(tradingIdOrigen, 'retiro', cantidad, fecha, 'finanzas')
+      }
+    } catch (err) {
+      console.error('Error al sincronizar transferencia con trading:', err)
+    }
   }
 
   const list = await obtenerTodas()
@@ -246,6 +316,7 @@ export async function crearTransferencia(payload) {
   await guardarTodas(list)
   return op
 }
+
 
 // === ELIMINACIÓN ===
 

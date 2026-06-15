@@ -347,6 +347,8 @@
                 budgetSpent: 0,
                 budgetPercent: 0,
                 budgetRemaining: 0,
+                tipoPeriodo: 'mensual',
+                estadoActivo: true,
                 currency: 'MXN'
             });
             const [shortcuts, setShortcuts] = useState([]);
@@ -532,13 +534,14 @@
                             changePercent = 100;
                         }
 
-                        // 3. Presupuesto Mensual
-                        // Intentar ejecutar la revisión de periodos para asegurar que el presupuesto esté al día
+                        // 3. Presupuesto General
                         const budgetPlan = await leerIndexedDB('gtr-presupuestos');
 
                         // Extraer datos del presupuesto general
                         const general = budgetPlan?.general;
                         const budgetTotal = general ? (Number(general.monto || 0)) : 0;
+                        const tipoPeriodo = general?.tipoPeriodo || 'mensual';
+                        const estadoActivo = general?.estadoActivo !== false;
                         
                         let budgetSpent = 0;
                         let budgetPercent = 0;
@@ -546,28 +549,23 @@
                         let isBudgetActive = false;
 
                         if (general && general.fechaInicio && general.fechaFin) {
+                            isBudgetActive = true;
                             const inicio = new Date(general.fechaInicio + 'T00:00:00');
                             const fin = new Date(general.fechaFin + 'T23:59:59');
-                            const hoy = new Date();
 
-                            // Verificar si el presupuesto actual es válido para hoy
-                            if (hoy >= inicio && hoy <= fin) {
-                                isBudgetActive = true;
-                                
-                                // Calcular gasto SOLO dentro del periodo del presupuesto
-                                const periodOps = Array.isArray(operations) ? operations.filter(op => {
-                                    const fechaStr = op.fecha.includes('T') ? op.fecha : op.fecha + 'T00:00:00';
-                                    const opDate = new Date(fechaStr);
-                                    return opDate >= inicio && opDate <= fin && op.tipo === 'gasto' && op.estado === 'pagado';
-                                }) : [];
+                            // Calcular gasto dentro del periodo del presupuesto
+                            const periodOps = Array.isArray(operations) ? operations.filter(op => {
+                                const fechaStr = op.fecha.includes('T') ? op.fecha : op.fecha + 'T00:00:00';
+                                const opDate = new Date(fechaStr);
+                                return opDate >= inicio && opDate <= fin && op.tipo === 'gasto' && op.estado === 'pagado';
+                            }) : [];
 
-                                budgetSpent = periodOps.reduce((acc, op) => acc + (Number(op.cantidad) || 0), 0);
-                                
-                                if (budgetTotal > 0) {
-                                    budgetPercent = Math.min(100, (budgetSpent / budgetTotal) * 100);
-                                }
-                                budgetRemaining = budgetTotal - budgetSpent;
+                            budgetSpent = periodOps.reduce((acc, op) => acc + (Number(op.cantidad) || 0), 0);
+                            
+                            if (budgetTotal > 0) {
+                                budgetPercent = (budgetSpent / budgetTotal) * 100;
                             }
+                            budgetRemaining = budgetTotal - budgetSpent;
                         }
 
                         setFinancials({
@@ -578,6 +576,8 @@
                             budgetSpent,
                             budgetPercent,
                             budgetRemaining,
+                            tipoPeriodo,
+                            estadoActivo,
                             currency: budgetPlan?.currency || 'MXN'
                         });
 
@@ -799,19 +799,68 @@
                                     <p className="text-xs text-gray-400 dark:text-slate-500">Actualizado hace un momento</p>
                                 </div>
 
-                                <div className="mt-6 pt-6 border-t border-gray-100 dark:border-slate-800">
-                                    <div className="flex justify-between text-sm mb-1">
-                                        <span className="text-gray-600 font-medium dark:text-slate-300">Presupuesto Mensual</span>
-                                        <span className="font-bold text-gray-800 dark:text-white">{financials.budgetPercent.toFixed(0)}%</span>
-                                    </div>
-                                    <div className="w-full bg-gray-100 rounded-full h-2 dark:bg-slate-800">
-                                        <div className={`h-2 rounded-full ${financials.budgetPercent > 90 ? 'bg-red-600' : 'bg-blue-600'}`} style={{ width: `${financials.budgetPercent}%` }}></div>
-                                    </div>
-                                    <p className="text-xs text-gray-500 mt-2 text-right dark:text-slate-400">
-                                        {financials.budgetTotal > 0
-                                            ? `Te quedan ${financials.budgetRemaining.toLocaleString('es-MX', { style: 'currency', currency: financials.currency })}`
-                                            : 'Sin presupuesto definido'}
-                                    </p>
+                                <div className="mt-6 pt-6 border-t border-gray-100 dark:border-slate-800 space-y-3">
+                                    {financials.budgetTotal > 0 ? (
+                                        <>
+                                            <div className="flex justify-between items-center text-xs">
+                                                <span className="text-gray-500 font-semibold uppercase tracking-wider dark:text-slate-400">
+                                                    {financials.estadoActivo === false
+                                                        ? 'Presupuesto Pausado'
+                                                        : financials.tipoPeriodo === 'semanal'
+                                                        ? 'Presupuesto Semanal'
+                                                        : financials.tipoPeriodo === 'anual'
+                                                        ? 'Presupuesto Anual'
+                                                        : financials.tipoPeriodo === 'personalizado'
+                                                        ? 'Presupuesto Personalizado'
+                                                        : 'Presupuesto Mensual'}
+                                                </span>
+                                                <span className={`font-bold text-sm ${financials.estadoActivo === false ? 'text-gray-400 dark:text-slate-500' : financials.budgetPercent >= 100 ? 'text-red-500 font-extrabold' : financials.budgetPercent > 90 ? 'text-amber-500 font-extrabold' : 'text-blue-600 dark:text-blue-400'}`}>
+                                                    {financials.budgetPercent.toFixed(0)}%
+                                                </span>
+                                            </div>
+                                            
+                                            <div className="flex justify-between items-baseline text-xs">
+                                                <span className="text-gray-400 dark:text-slate-500 font-medium">Consumo actual</span>
+                                                <span className="font-extrabold text-gray-800 dark:text-slate-200">
+                                                    {financials.budgetSpent.toLocaleString('es-MX', { style: 'currency', currency: financials.currency })}
+                                                    <span className="text-gray-400 dark:text-slate-500 font-medium text-[10px]"> / {financials.budgetTotal.toLocaleString('es-MX', { style: 'currency', currency: financials.currency })}</span>
+                                                </span>
+                                            </div>
+
+                                            <div className="w-full bg-gray-100 rounded-full h-2.5 dark:bg-slate-800 overflow-hidden relative">
+                                                <div 
+                                                    className={`h-full rounded-full transition-all duration-500 ${
+                                                        financials.estadoActivo === false 
+                                                            ? 'bg-gray-400 dark:bg-slate-600' 
+                                                            : financials.budgetPercent >= 100 
+                                                            ? 'bg-rose-500' 
+                                                            : financials.budgetPercent > 90 
+                                                            ? 'bg-amber-500' 
+                                                            : 'bg-blue-600'
+                                                    }`} 
+                                                    style={{ width: `${Math.min(100, financials.budgetPercent)}%` }}
+                                                ></div>
+                                            </div>
+
+                                            <div className="flex justify-end text-xs font-bold">
+                                                {financials.estadoActivo === false ? (
+                                                    <span className="text-gray-400 dark:text-slate-500 italic">Presupuesto pausado</span>
+                                                ) : financials.budgetRemaining >= 0 ? (
+                                                    <span className="text-emerald-600 dark:text-emerald-400">
+                                                        Te quedan {financials.budgetRemaining.toLocaleString('es-MX', { style: 'currency', currency: financials.currency })}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-red-500 dark:text-red-400">
+                                                        Excedido por {Math.abs(financials.budgetRemaining).toLocaleString('es-MX', { style: 'currency', currency: financials.currency })}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <div className="text-center py-2">
+                                            <span className="text-xs text-gray-400 dark:text-slate-500 italic">Sin presupuesto definido</span>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 

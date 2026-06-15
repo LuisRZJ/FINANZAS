@@ -89,7 +89,17 @@
       </section>
 
       <section>
-        <h3 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3 mt-8">Metas simples por cuenta</h3>
+        <div class="flex items-center justify-between gap-4 mb-3 mt-8">
+          <h3 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Metas simples por cuenta</h3>
+          <button id="btn-nueva-meta-simple"
+            class="inline-flex items-center gap-1 bg-sky-600 dark:bg-sky-500 hover:bg-sky-700 dark:hover:bg-sky-600 text-white rounded-2xl py-1.5 px-3 text-xs font-semibold shadow-sm transition-all"
+            title="Nueva meta simple">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            <span>Nueva meta simple</span>
+          </button>
+        </div>
         <div class="mb-4 rounded-2xl border border-dashed border-gray-200 dark:border-gray-800 p-4 bg-gray-50/30 dark:bg-gray-900/10">
           <p class="text-[11px] text-gray-500 dark:text-gray-400 leading-relaxed">
             Crea metas ligadas al saldo de una cuenta. Define un objetivo de balance y deja que el sistema registre
@@ -97,6 +107,7 @@
             completadas.
           </p>
         </div>
+        <div id="form-meta-simple-container" class="hidden"></div>
         <div id="metas-simples-activas" class="space-y-4 mb-8"></div>
         <div>
           <h4 class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2.5 mt-6">Metas completadas</h4>

@@ -200,6 +200,30 @@ export async function restaurarDatos() {
             }
         }
 
+        // Sincronizar configuraciones restauradas a localStorage
+        try {
+            const config = datos[STORAGE_KEYS.configuracion];
+            if (config) {
+                localStorage.setItem(STORAGE_KEYS.configuracion, JSON.stringify(config));
+                if (config.syncTradesActive !== undefined) {
+                    localStorage.setItem('gtr_sync_trades_active', config.syncTradesActive ? 'true' : 'false');
+                } else {
+                    localStorage.removeItem('gtr_sync_trades_active');
+                }
+                if (config.cuentaRelaciones !== undefined) {
+                    localStorage.setItem('gtr_cuenta_relaciones', JSON.stringify(config.cuentaRelaciones));
+                } else {
+                    localStorage.removeItem('gtr_cuenta_relaciones');
+                }
+            } else {
+                localStorage.removeItem(STORAGE_KEYS.configuracion);
+                localStorage.removeItem('gtr_sync_trades_active');
+                localStorage.removeItem('gtr_cuenta_relaciones');
+            }
+        } catch (localErr) {
+            console.error('Error al sincronizar configuración en localStorage tras restauración de nube:', localErr);
+        }
+
         const stats = calcularEstadisticas(snapshot);
         return { success: true, error: null, stats };
     } catch (err) {

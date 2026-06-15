@@ -30,6 +30,10 @@ function nuevoHistorialEntry(tipo, mensaje) {
 
 export async function obtenerPresupuestoGeneral() {
   const estado = await leerEstado()
+  if (estado.general && !estado.general.tipoPeriodo) {
+    estado.general.tipoPeriodo = 'personalizado'
+    estado.general.estadoActivo = true
+  }
   return estado.general
 }
 
@@ -51,19 +55,63 @@ function validarPeriodo(fechaInicioStr, fechaFinStr) {
 
 export async function configurarPresupuestoGeneral(payload) {
   const monto = Number(payload?.monto || 0)
-  const fechaInicioStr = String(payload?.fechaInicio || '').trim()
-  const fechaFinStr = String(payload?.fechaFin || '').trim()
+  const tipoPeriodo = String(payload?.tipoPeriodo || 'mensual').trim()
+  const estadoActivo = payload?.estadoActivo !== undefined ? Boolean(payload.estadoActivo) : true
 
   if (!(monto > 0)) throw new Error('El monto del presupuesto general debe ser mayor que cero')
-  if (!fechaInicioStr || !fechaFinStr) throw new Error('Debes definir fecha de inicio y fin del presupuesto general')
-
-  const periodo = validarPeriodo(fechaInicioStr, fechaFinStr)
 
   const estado = await leerEstado()
   const anterior = estado.general
 
-  const totalCategorias = estado.categorias.reduce((acc, c) => acc + Number(c.monto || 0), 0)
-  if (totalCategorias > monto) throw new Error('El monto del presupuesto general no puede ser menor que la suma de los presupuestos por etiqueta')
+  let fechaInicioStr = ''
+  let fechaFinStr = ''
+
+  if (tipoPeriodo === 'personalizado') {
+    fechaInicioStr = String(payload?.fechaInicio || '').trim()
+    fechaFinStr = String(payload?.fechaFin || '').trim()
+    if (!fechaInicioStr || !fechaFinStr) throw new Error('Debes definir fecha de inicio y fin para un periodo personalizado')
+    validarPeriodo(fechaInicioStr, fechaFinStr)
+  } else {
+    const hoyFecha = new Date()
+    const y = hoyFecha.getFullYear()
+    const m = hoyFecha.getMonth()
+
+    if (tipoPeriodo === 'mensual') {
+      const firstDay = new Date(y, m, 1)
+      const lastDay = new Date(y, m + 1, 0)
+      fechaInicioStr = formatFechaISO(firstDay)
+      fechaFinStr = formatFechaISO(lastDay)
+    } else if (tipoPeriodo === 'semanal') {
+      const dayOfWeek = hoyFecha.getDay()
+      const diffToMon = dayOfWeek === 0 ? -6 : 1 - dayOfWeek
+      const monday = new Date(hoyFecha)
+      monday.setDate(hoyFecha.getDate() + diffToMon)
+      const sunday = new Date(monday)
+      sunday.setDate(monday.getDate() + 6)
+      fechaInicioStr = formatFechaISO(monday)
+      fechaFinStr = formatFechaISO(sunday)
+    } else if (tipoPeriodo === 'anual') {
+      fechaInicioStr = `${y}-01-01`
+      fechaFinStr = `${y}-12-31`
+    } else {
+      throw new Error('Tipo de periodo inválido')
+    }
+  }
+
+  // Conservar las fechas si el tipo de periodo no cambió para evitar reiniciar el mes
+  if (anterior && anterior.tipoPeriodo === tipoPeriodo && tipoPeriodo !== 'personalizado') {
+    fechaInicioStr = anterior.fechaInicio
+    fechaFinStr = anterior.fechaFin
+  }
+
+  const parseFechaObj = (str) => {
+    const [año, mes, dia] = str.split('-').map(Number)
+    return new Date(año, mes - 1, dia)
+  }
+
+  const inicio = parseFechaObj(fechaInicioStr)
+  const fin = parseFechaObj(fechaFinStr)
+  const diasPeriodo = Math.max(1, Math.round((fin.getTime() - inicio.getTime()) / 86400000) + 1)
 
   const ahora = new Date().toISOString()
   const historial = anterior && Array.isArray(anterior.historial) ? [...anterior.historial] : []
@@ -73,8 +121,9 @@ export async function configurarPresupuestoGeneral(payload) {
   } else {
     const cambios = []
     if (Number(anterior.monto || 0) !== monto) cambios.push('monto')
-    if (anterior.fechaInicio !== fechaInicioStr) cambios.push('fechaInicio')
-    if (anterior.fechaFin !== fechaFinStr) cambios.push('fechaFin')
+    if (anterior.tipoPeriodo !== tipoPeriodo) cambios.push('tipoPeriodo')
+    if (anterior.estadoActivo !== estadoActivo) cambios.push('estadoActivo')
+    if (anterior.fechaInicio !== fechaInicioStr || anterior.fechaFin !== fechaFinStr) cambios.push('fechas')
     if (cambios.length > 0) {
       historial.push(
         nuevoHistorialEntry(
@@ -88,9 +137,11 @@ export async function configurarPresupuestoGeneral(payload) {
   const general = {
     id: 'general',
     monto,
+    tipoPeriodo,
+    estadoActivo,
     fechaInicio: fechaInicioStr,
     fechaFin: fechaFinStr,
-    diasPeriodo: periodo.dias,
+    diasPeriodo,
     creadoEn: anterior?.creadoEn || ahora,
     actualizadoEn: ahora,
     historial
@@ -113,6 +164,11 @@ export async function calcularResumenPresupuestoActual() {
       gastoTotalPeriodo: 0,
       gastoComprometidoTotal: 0
     }
+  }
+
+  if (!general.tipoPeriodo) {
+    general.tipoPeriodo = 'personalizado'
+    general.estadoActivo = true
   }
 
   const inicio = parseFecha(general.fechaInicio)
@@ -382,8 +438,23 @@ export async function revisarPeriodosPresupuesto() {
 
     historial.push(nuevoHistorialEntry('cierre', detalle))
 
-    const nextInicio = new Date(hasta.getTime() + 86400000)
-    const nextFin = new Date(nextInicio.getTime() + (diasPeriodo - 1) * 86400000)
+    const tipo = general.tipoPeriodo || 'personalizado'
+    let nextInicio, nextFin
+
+    if (tipo === 'mensual') {
+      nextInicio = new Date(desde.getFullYear(), desde.getMonth() + 1, 1)
+      nextFin = new Date(desde.getFullYear(), desde.getMonth() + 2, 0)
+    } else if (tipo === 'semanal') {
+      nextInicio = new Date(desde.getTime() + 7 * 86400000)
+      nextFin = new Date(hasta.getTime() + 7 * 86400000)
+    } else if (tipo === 'anual') {
+      nextInicio = new Date(desde.getFullYear() + 1, 0, 1)
+      nextFin = new Date(desde.getFullYear() + 1, 11, 31)
+    } else { // 'personalizado'
+      nextInicio = new Date(hasta.getTime() + 86400000)
+      nextFin = new Date(nextInicio.getTime() + (diasPeriodo - 1) * 86400000)
+    }
+
     desde = nextInicio
     hasta = nextFin
   }

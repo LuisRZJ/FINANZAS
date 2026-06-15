@@ -278,6 +278,17 @@
                             class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-orange-500 focus:border-orange-500 block p-3">
                     </div>
 
+                    <!-- Vincular con Cuenta de Finanzas (sólo visible si la sincronización está activa) -->
+                    <div id="vincular-finanzas-container" class="hidden">
+                        <label for="vincular-finanzas-cuenta"
+                            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">🏦 Vincular con Cuenta de Finanzas</label>
+                        <select id="vincular-finanzas-cuenta"
+                            class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-orange-500 focus:border-orange-500 block p-3">
+                            <option value="">🚫 No registrar en finanzas</option>
+                        </select>
+                        <p class="text-[10px] text-gray-400 dark:text-gray-500 mt-1 leading-relaxed">Registrará automáticamente una transferencia en el gestor de finanzas para mantener los saldos sincronizados.</p>
+                    </div>
+
                     <button onclick="addMovement()"
                         class="w-full text-white bg-orange-600 hover:bg-orange-700 focus:ring-4 focus:outline-none focus:ring-orange-300 font-medium rounded-lg text-sm px-5 py-3 text-center dark:bg-orange-600 dark:hover:bg-orange-700 dark:focus:ring-orange-800 transition-all shadow-lg hover:shadow-orange-500/30 mt-2">
                         Registrar Movimiento
