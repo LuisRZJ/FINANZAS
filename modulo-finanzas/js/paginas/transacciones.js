@@ -1528,6 +1528,9 @@ async function renderHistorial() {
       else if (op.tipo === 'gasto') amountColorClass = 'text-gray-800 dark:text-gray-200'
       else amountColorClass = 'text-blue-600 dark:text-blue-400'
 
+      amountEl.textContent = (esNegativo ? '-' : '+') + formatCurrency(op.cantidad)
+      rightDiv.appendChild(amountEl)
+
       if (op.estado === 'en_espera') {
         amountEl.className = `text-sm font-semibold ${amountColorClass}`
         
@@ -1562,6 +1565,40 @@ async function renderHistorial() {
       } else {
         amountEl.className = `text-sm font-semibold ${amountColorClass} group-hover:-translate-x-12 transition-transform duration-200`
         
+        const actionsDiv = document.createElement('div')
+        actionsDiv.className = 'absolute right-0 top-1/2 -translate-y-1/2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white dark:bg-gray-900 pl-2'
+
+        const btnEdit = document.createElement('button')
+        btnEdit.className = 'p-1 text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors'
+        btnEdit.innerHTML = '<i data-lucide="pencil" class="w-3.5 h-3.5"></i>'
+        btnEdit.onclick = (e) => {
+          e.stopPropagation()
+          if (op.recurrenciaId) {
+            abrirModalDecision('editar', op)
+          } else {
+            window.abrirModal('editar', op)
+          }
+        }
+
+        const btnDel = document.createElement('button')
+        btnDel.className = 'p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors'
+        btnDel.innerHTML = '<i data-lucide="trash-2" class="w-3.5 h-3.5"></i>'
+        btnDel.onclick = async (e) => {
+          e.stopPropagation()
+          if (op.recurrenciaId) {
+            abrirModalDecision('borrar', op)
+          } else {
+            if (confirm('¿Borrar esta operación?')) {
+              try {
+                await eliminarOperacion(op.id)
+                await renderHistorial()
+              } catch (ex) {
+                alert(ex.message)
+              }
+            }
+          }
+        }
+
         actionsDiv.appendChild(btnEdit)
         actionsDiv.appendChild(btnDel)
         rightDiv.appendChild(actionsDiv)
