@@ -171,6 +171,11 @@
             const [syncPassword, setSyncPassword] = useState('');
             const [saveIntegrationsSuccess, setSaveIntegrationsSuccess] = useState(false);
 
+            // Cloud Sync States
+            const [isSyncing, setIsSyncing] = useState(false);
+            const [syncStatus, setSyncStatus] = useState('');
+            const [syncStatusType, setSyncStatusType] = useState('info');
+
             const utilityShortcuts = [
                 {
                     id: 'conversor-cripto',
@@ -257,6 +262,167 @@
 
                 setSaveIntegrationsSuccess(true);
                 setTimeout(() => setSaveIntegrationsSuccess(false), 2000);
+            };
+
+            const respaldarAjustesNube = async () => {
+                const pwd = syncPassword || localStorage.getItem('fti_cloud_password');
+                if (!pwd) {
+                    setSyncStatus('Por favor ingresa la Contraseña de Nube para realizar el respaldo.');
+                    setSyncStatusType('error');
+                    return;
+                }
+
+                setIsSyncing(true);
+                setSyncStatus('Preparando respaldo...');
+                setSyncStatusType('info');
+
+                try {
+                    const snapshot = {
+                        version: 1,
+                        exportadoEn: new Date().toISOString(),
+                        datos: {
+                            fti_discord_webhook: discordWebhook,
+                            fti_twelvedata_key: twelveDataKey,
+                            fti_googleai_key: googleAiKey,
+                            fti_theme_preference: currentTheme,
+                            fti_shortcuts_utilities: shortcutIds
+                        }
+                    };
+
+                    const jsonString = JSON.stringify(snapshot);
+
+                    const responsePart = await fetch('/api/sync?module=ajustes&part=0', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'text/plain',
+                            'Authorization': `Bearer ${pwd}`
+                        },
+                        body: jsonString
+                    });
+
+                    if (!responsePart.ok) {
+                        const errData = await responsePart.json();
+                        throw new Error(errData.error || 'Error al subir los datos de ajustes a la nube.');
+                    }
+
+                    const indexObj = {
+                        parts: 1,
+                        exportadoEn: snapshot.exportadoEn,
+                        version: snapshot.version
+                    };
+
+                    const indexResponse = await fetch('/api/sync?module=ajustes&index=true', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${pwd}`
+                        },
+                        body: JSON.stringify(indexObj)
+                    });
+
+                    if (!indexResponse.ok) {
+                        const errData = await indexResponse.json();
+                        throw new Error(errData.error || 'Error al subir el índice de ajustes.');
+                    }
+
+                    setSyncStatus('Ajustes respaldados con éxito en la nube.');
+                    setSyncStatusType('success');
+                } catch (err) {
+                    setSyncStatus(`Error: ${err.message}`);
+                    setSyncStatusType('error');
+                } finally {
+                    setIsSyncing(false);
+                }
+            };
+
+            const restaurarAjustesNube = async () => {
+                const pwd = syncPassword || localStorage.getItem('fti_cloud_password');
+                if (!pwd) {
+                    setSyncStatus('Por favor ingresa la Contraseña de Nube para restaurar.');
+                    setSyncStatusType('error');
+                    return;
+                }
+
+                if (!confirm('¿Estás seguro de que deseas restaurar los ajustes de la nube? Esto sobrescribirá las claves API, el webhook de Discord, la preferencia de tema y los accesos directos de este dispositivo.')) {
+                    return;
+                }
+
+                setIsSyncing(true);
+                setSyncStatus('Descargando ajustes...');
+                setSyncStatusType('info');
+
+                try {
+                    const indexRes = await fetch('/api/sync?module=ajustes&index=true', {
+                        method: 'GET',
+                        headers: { 'Authorization': `Bearer ${pwd}` }
+                    });
+
+                    const indexResult = await indexRes.json();
+                    if (!indexRes.ok) {
+                        throw new Error(indexResult.error || 'Error al obtener el índice de la nube');
+                    }
+
+                    if (!indexResult.exists || !indexResult.data) {
+                        throw new Error('No se encontraron ajustes respaldados en la nube para esta contraseña.');
+                    }
+
+                    const partRes = await fetch('/api/sync?module=ajustes&part=0', {
+                        method: 'GET',
+                        headers: { 'Authorization': `Bearer ${pwd}` }
+                    });
+                    const partResult = await partRes.json();
+
+                    if (!partRes.ok) {
+                        throw new Error(partResult.error || 'Error al descargar los ajustes de la nube');
+                    }
+                    if (!partResult.exists) {
+                        throw new Error('Archivo de ajustes no encontrado en el respaldo.');
+                    }
+
+                    const fullJsonStr = partResult.raw || JSON.stringify(partResult.data);
+                    let snapshot;
+                    try {
+                        snapshot = JSON.parse(fullJsonStr);
+                    } catch (e) {
+                        throw new Error('El archivo de respaldo está corrupto o tiene un formato no válido.');
+                    }
+
+                    if (!snapshot.datos) {
+                        throw new Error('Estructura de respaldo inválida.');
+                    }
+
+                    const {
+                        fti_discord_webhook = '',
+                        fti_twelvedata_key = '',
+                        fti_googleai_key = '',
+                        fti_theme_preference = 'system',
+                        fti_shortcuts_utilities = []
+                    } = snapshot.datos;
+
+                    localStorage.setItem('fti_discord_webhook', fti_discord_webhook);
+                    localStorage.setItem('fti_twelvedata_key', fti_twelvedata_key);
+                    localStorage.setItem('fti_googleai_key', fti_googleai_key);
+                    localStorage.setItem('fti_theme_preference', fti_theme_preference);
+                    localStorage.setItem('fti_cloud_password', pwd);
+                    localStorage.setItem('fti_cloud_password_date', Date.now().toString());
+
+                    if (Array.isArray(fti_shortcuts_utilities) && fti_shortcuts_utilities.length > 0) {
+                        writeShortcutCookie(fti_shortcuts_utilities);
+                    }
+
+                    setSyncStatus('Ajustes restaurados con éxito. Recargando de forma forzada para aplicar todos los cambios...');
+                    setSyncStatusType('success');
+
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+
+                } catch (err) {
+                    setSyncStatus(`Error: ${err.message}`);
+                    setSyncStatusType('error');
+                } finally {
+                    setIsSyncing(false);
+                }
             };
 
             const toggleSubmenu = (id) => {
@@ -569,11 +735,48 @@
                                     </div>
                                 </div>
 
-                                <div className="mt-6 flex justify-end">
+                                <div className="mt-6 flex justify-end border-b border-gray-100 dark:border-slate-800 pb-6">
                                     <button onClick={saveIntegrations} className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 px-6 rounded-lg transition-colors flex items-center gap-2">
                                         <span>Guardar Integraciones</span>
                                         {saveIntegrationsSuccess && <span className="text-emerald-200 text-sm"><i className="fas fa-check"></i></span>}
                                     </button>
+                                </div>
+
+                                <div className="mt-6">
+                                    <h4 className="text-sm font-bold text-gray-900 mb-2 dark:text-white flex items-center gap-2">
+                                        <i className="fas fa-cloud text-blue-500"></i>
+                                        Sincronización en la Nube
+                                    </h4>
+                                    <p className="text-xs text-gray-500 mb-4 dark:text-slate-400">
+                                        Respalda o restaura la configuración completa de tus APIs, atajos de utilidades, webhook y tema usando tu contraseña de nube.
+                                    </p>
+                                    <div className="flex flex-wrap gap-3 items-center">
+                                        <button 
+                                            onClick={respaldarAjustesNube} 
+                                            disabled={isSyncing}
+                                            className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-medium py-2 px-5 rounded-lg transition-colors flex items-center gap-2 text-sm cursor-pointer"
+                                        >
+                                            {isSyncing ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-cloud-upload-alt"></i>}
+                                            <span>Subir Ajustes a la Nube</span>
+                                        </button>
+                                        <button 
+                                            onClick={restaurarAjustesNube} 
+                                            disabled={isSyncing}
+                                            className="bg-slate-600 hover:bg-slate-700 disabled:opacity-50 text-white font-medium py-2 px-5 rounded-lg transition-colors flex items-center gap-2 text-sm dark:bg-slate-700 dark:hover:bg-slate-600 cursor-pointer"
+                                        >
+                                            {isSyncing ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-cloud-download-alt"></i>}
+                                            <span>Restaurar Ajustes de la Nube</span>
+                                        </button>
+                                    </div>
+                                    {syncStatus && (
+                                        <div className={`mt-3 text-xs font-semibold p-3 rounded-lg border ${
+                                            syncStatusType === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-950/20 dark:border-emerald-800 dark:text-emerald-400' : 
+                                            syncStatusType === 'error' ? 'bg-red-50 border-red-200 text-red-700 dark:bg-red-950/20 dark:border-red-800 dark:text-red-400' : 
+                                            'bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-950/20 dark:border-blue-800 dark:text-blue-400'
+                                        }`}>
+                                            {syncStatus}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
