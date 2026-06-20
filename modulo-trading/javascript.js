@@ -5035,120 +5035,261 @@ function renderDiary() {
     return;
   }
 
-  let html = '';
-  trades.slice().reverse().forEach((trade, index) => {
-    // Calcular índice real en el array original (ya que estamos invirtiendo la copia)
-    const realIndex = trades.length - 1 - index;
+  // 1. Construir la serie histórica de eventos de capital de la cuenta activa
+  const activeAccountId = getActiveAccountId();
+  const accountData = readAccountData(activeAccountId);
+  let initialCapital = parseFloat(accountData.initialCapital || '0');
+  if (!Number.isFinite(initialCapital)) initialCapital = 0;
 
-    const formattedAsset = typeof formatAssetSymbol === 'function'
-      ? formatAssetSymbol(trade.asset)
-      : trade.asset;
+  const allTrades = Array.isArray(accountData.trades) ? accountData.trades : [];
+  const movements = Array.isArray(accountData.capitalMovements) ? accountData.capitalMovements : [];
+  const capitalStartDate = accountData.capitalStartDate ? clampValidDate(new Date(accountData.capitalStartDate)) : null;
+  const baselineDate = capitalStartDate || null;
 
-    const isCompra = trade.direction === 'long';
-    const direction = isCompra ? 'COMPRA' : 'VENTA';
-    const directionClass = isCompra
-      ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
-      : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
+  const events = [];
+  allTrades.forEach(t => {
+    const date = t.openTime ? new Date(t.openTime) : null;
+    if (!date || Number.isNaN(date.getTime())) return;
+    if (baselineDate && date < baselineDate) return;
+    const value = parseFloat(t.resultMxn);
+    if (!Number.isFinite(value)) return;
+    events.push({ date, value });
+  });
 
-    const resultMxn = parseFloat(trade.resultMxn);
-    const resultClass = resultMxn >= 0
-      ? 'text-green-600 dark:text-green-400'
-      : 'text-red-600 dark:text-red-400';
+  movements.forEach(movement => {
+    if (!movement) return;
+    const date = movement.date ? new Date(movement.date) : null;
+    if (!date || Number.isNaN(date.getTime())) return;
+    if (baselineDate && date < baselineDate) return;
+    const rawAmount = parseFloat(movement.amount);
+    if (!Number.isFinite(rawAmount)) return;
+    const value = movement.type === 'retiro' ? -Math.abs(rawAmount) : Math.abs(rawAmount);
+    events.push({ date, value });
+  });
 
-    const marginNumeric = parseFloat(trade.margin);
-    const marginDisplay = Number.isFinite(marginNumeric)
-      ? marginNumeric.toFixed(2)
-      : '-';
+  events.sort((a, b) => a.date.getTime() - b.date.getTime());
 
-    const leverageNumeric = parseFloat(trade.leverage);
-    const leverageDisplay = Number.isFinite(leverageNumeric) && leverageNumeric > 0
-      ? `${Number.isInteger(leverageNumeric) ? leverageNumeric.toFixed(0) : leverageNumeric.toFixed(2)}X`
-      : '-';
-
+  // 2. Agrupar trades por mes (usando fecha de apertura del trade)
+  const tradesPorMes = {};
+  trades.forEach((trade, realIndex) => {
     const openDate = new Date(trade.openTime);
-    const dateStr = openDate.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
-    const timeStr = openDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+    if (Number.isNaN(openDate.getTime())) return;
+    const year = openDate.getFullYear();
+    const month = openDate.getMonth(); // 0-11
+    const mesKey = `${year}-${String(month + 1).padStart(2, '0')}`;
 
+    if (!tradesPorMes[mesKey]) {
+      tradesPorMes[mesKey] = {
+        key: mesKey,
+        year: year,
+        month: month,
+        tradesInfo: [],
+        totalTrades: 0,
+        tpCount: 0,
+        slCount: 0,
+        empateCount: 0,
+        pnlMxn: 0
+      };
+    }
+
+    const group = tradesPorMes[mesKey];
+    group.tradesInfo.push({ trade, realIndex });
+    group.totalTrades++;
+
+    const resultMxn = parseFloat(trade.resultMxn) || 0;
+    group.pnlMxn += resultMxn;
+
+    if (resultMxn > 0) {
+      group.tpCount++;
+    } else if (resultMxn < 0) {
+      group.slCount++;
+    } else {
+      group.empateCount++;
+    }
+  });
+
+  // 3. Ordenar los meses de forma descendente (los más recientes primero)
+  const mesesOrdenados = Object.keys(tradesPorMes).sort((a, b) => b.localeCompare(a));
+
+  // 4. Renderizar cada bloque mensual
+  let html = '';
+  const CAPITAL_MONTH_NAMES_ES = [
+    "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+    "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+  ];
+
+  mesesOrdenados.forEach(mesKey => {
+    const group = tradesPorMes[mesKey];
+
+    // Obtener balance de la cuenta al inicio de este mes
+    const fechaInicioMes = new Date(group.year, group.month, 1, 0, 0, 0);
+    const balanceInicial = computeCapitalAtDate(events, initialCapital, fechaInicioMes, false);
+
+    // Calcular crecimiento porcentual respecto al balance inicial
+    const pnlPercent = balanceInicial > 0 ? (group.pnlMxn / balanceInicial) * 100 : 0;
+
+    // Configurar coloración y signos según PNL
+    let pnlColorClass = '';
+    let pnlSign = '';
+    let pnlPercentSign = '';
+    const diff = roundMoney(group.pnlMxn);
+
+    if (diff > 0) {
+      pnlColorClass = 'bg-green-50 dark:bg-green-950/20 text-green-700 dark:text-green-400 border-green-150 dark:border-green-900/30';
+      pnlSign = '+';
+      pnlPercentSign = '+';
+    } else if (diff < 0) {
+      pnlColorClass = 'bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-400 border-red-150 dark:border-red-900/30';
+      pnlSign = '-';
+      pnlPercentSign = '-';
+    } else {
+      pnlColorClass = 'bg-orange-50 dark:bg-orange-950/20 text-orange-700 dark:text-orange-400 border-orange-150 dark:border-orange-900/30';
+      pnlSign = '';
+      pnlPercentSign = '';
+    }
+
+    const nombreMes = `${CAPITAL_MONTH_NAMES_ES[group.month]} ${group.year}`;
+
+    // Cabecera del mes con métricas integradas
     html += `
-      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden flex flex-col">
-        <div class="p-5 flex-grow">
-          <div class="flex justify-between items-start mb-4">
-            <div>
-              <h3 class="text-xl font-bold text-gray-900 dark:text-white">${formattedAsset}</h3>
-              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">${dateStr} • ${timeStr}</p>
-            </div>
-            <span class="${directionClass} text-xs font-medium px-2.5 py-0.5 rounded border border-current opacity-90">
-              ${direction}
+      <div class="col-span-full mt-6 mb-2">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-700/80 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white capitalize">${nombreMes}</h2>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Resumen mensual de operaciones</p>
+          </div>
+          <div class="flex flex-wrap gap-3 items-center text-xs font-semibold">
+            <span class="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-3 py-1.5 rounded-xl border border-gray-200 dark:border-gray-650">
+              ${group.totalTrades} ${group.totalTrades === 1 ? 'Trade' : 'Trades'}
+            </span>
+            <span class="bg-green-50 dark:bg-green-950/20 text-green-700 dark:text-green-400 px-3 py-1.5 rounded-xl border border-green-150 dark:border-green-900/30">
+              ${group.tpCount} TP
+            </span>
+            <span class="bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-400 px-3 py-1.5 rounded-xl border border-red-150 dark:border-red-900/30">
+              ${group.slCount} SL
+            </span>
+            <span class="bg-gray-50 dark:bg-gray-900 text-gray-600 dark:text-gray-400 px-3 py-1.5 rounded-xl border border-gray-200 dark:border-gray-800">
+              ${group.empateCount} Empate${group.empateCount === 1 ? '' : 's'}
+            </span>
+            <span class="px-3 py-1.5 rounded-xl border ${pnlColorClass}">
+              PNL: ${pnlSign}$${Math.abs(group.pnlMxn).toFixed(2)} (${pnlPercentSign}${pnlPercent.toFixed(2)}%)
             </span>
           </div>
-          
-          <div class="space-y-3">
-            <div class="flex justify-between items-center">
-              <span class="text-sm text-gray-500 dark:text-gray-400">Resultado</span>
-              <span class="text-lg font-bold ${resultClass}">$${resultMxn.toFixed(2)}</span>
-            </div>
-
-            <div class="flex justify-between items-center">
-              <span class="text-sm text-gray-500 dark:text-gray-400">Motivo</span>
-              <span class="text-sm font-medium text-gray-900 dark:text-white text-right max-w-[220px] truncate" title="${trade.resultReason ? getResultReasonLabel(trade.resultReason) : '-'}">${trade.resultReason ? getResultReasonLabel(trade.resultReason) : '-'}</span>
-            </div>
-            
-            <div class="flex justify-between items-center">
-              <span class="text-sm text-gray-500 dark:text-gray-400">Lotes</span>
-              <span class="text-sm font-medium text-gray-900 dark:text-white">${parseFloat(trade.lots).toFixed(8).replace(/\.?0+$/, '')}</span>
-            </div>
-
-            <div class="flex justify-between items-center">
-              <span class="text-sm text-gray-500 dark:text-gray-400">Margen (MXN)</span>
-              <span class="text-sm font-medium text-gray-900 dark:text-white">${marginDisplay}</span>
-            </div>
-
-            <div class="flex justify-between items-center">
-              <span class="text-sm text-gray-500 dark:text-gray-400">Apalancamiento</span>
-              <span class="text-sm font-medium text-gray-900 dark:text-white">${leverageDisplay}</span>
-            </div>
-            
-            <div class="flex justify-between items-center">
-              <span class="text-sm text-gray-500 dark:text-gray-400">Estrategia</span>
-              <span class="text-xs font-medium bg-gray-100 text-gray-800 px-2 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300 truncate max-w-[120px]" title="${trade.strategy}">
-                ${trade.strategy}
-              </span>
-            </div>
-          </div>
-          
-          ${trade.notes ? `
-            <div class="mt-4 pt-3 border-t border-gray-100 dark:border-gray-700">
-              <p class="text-xs text-gray-500 dark:text-gray-400 italic line-clamp-2">"${trade.notes}"</p>
-            </div>
-          ` : ''}
-        </div>
-        
-        <div class="bg-gray-50 dark:bg-gray-700/50 px-5 py-3 border-t border-gray-100 dark:border-gray-700 flex justify-between items-center">
-           <button onclick='showTradeDetails(${realIndex})' class="text-sm font-medium text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 transition-colors">
-             Ver detalles
-           </button>
-           <div class="flex gap-2 items-center">
-             ${(() => {
-        // Mostrar botón de sincronización si es cripto y no tiene MAE/MFE
-        const isCrypto = typeof isCryptoAsset === 'function' && isCryptoAsset(trade.asset);
-        const needsSync = isCrypto && (trade.mae === null || trade.mae === undefined || trade.mfe === null || trade.mfe === undefined);
-        if (needsSync) {
-          return `<button onclick="syncTradeMAEMFE(${realIndex})" class="p-1.5 text-yellow-500 hover:text-yellow-600 dark:text-yellow-400 dark:hover:text-yellow-300 transition-colors" title="Sincronizar MAE/MFE">
-                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
-                 </button>`;
-        }
-        return '';
-      })()}
-             <button onclick='showEditTradeModal(${realIndex})' class="p-1.5 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors" title="Editar">
-               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
-             </button>
-             <button onclick="deleteTrade(${realIndex})" class="p-1.5 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 transition-colors" title="Eliminar">
-               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-             </button>
-           </div>
         </div>
       </div>
     `;
+
+    // Renderizar tarjetas de trades del mes (de más recientes a más antiguos)
+    group.tradesInfo.slice().reverse().forEach(({ trade, realIndex }) => {
+      const formattedAsset = typeof formatAssetSymbol === 'function'
+        ? formatAssetSymbol(trade.asset)
+        : trade.asset;
+
+      const isCompra = trade.direction === 'long';
+      const direction = isCompra ? 'COMPRA' : 'VENTA';
+      const directionClass = isCompra
+        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+        : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
+
+      const resultMxn = parseFloat(trade.resultMxn);
+      const resultClass = resultMxn >= 0
+        ? 'text-green-600 dark:text-green-400'
+        : 'text-red-600 dark:text-red-400';
+
+      const marginNumeric = parseFloat(trade.margin);
+      const marginDisplay = Number.isFinite(marginNumeric)
+        ? marginNumeric.toFixed(2)
+        : '-';
+
+      const leverageNumeric = parseFloat(trade.leverage);
+      const leverageDisplay = Number.isFinite(leverageNumeric) && leverageNumeric > 0
+        ? `${Number.isInteger(leverageNumeric) ? leverageNumeric.toFixed(0) : leverageNumeric.toFixed(2)}X`
+        : '-';
+
+      const openDate = new Date(trade.openTime);
+      const dateStr = openDate.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
+      const timeStr = openDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+
+      html += `
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden flex flex-col">
+          <div class="p-5 flex-grow">
+            <div class="flex justify-between items-start mb-4">
+              <div>
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white">${formattedAsset}</h3>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">${dateStr} • ${timeStr}</p>
+              </div>
+              <span class="${directionClass} text-xs font-medium px-2.5 py-0.5 rounded border border-current opacity-90">
+                ${direction}
+              </span>
+            </div>
+            
+            <div class="space-y-3">
+              <div class="flex justify-between items-center">
+                <span class="text-sm text-gray-500 dark:text-gray-400">Resultado</span>
+                <span class="text-lg font-bold ${resultClass}">$${resultMxn.toFixed(2)}</span>
+              </div>
+
+              <div class="flex justify-between items-center">
+                <span class="text-sm text-gray-500 dark:text-gray-400">Motivo</span>
+                <span class="text-sm font-medium text-gray-900 dark:text-white text-right max-w-[220px] truncate" title="${trade.resultReason ? getResultReasonLabel(trade.resultReason) : '-'}">${trade.resultReason ? getResultReasonLabel(trade.resultReason) : '-'}</span>
+              </div>
+              
+              <div class="flex justify-between items-center">
+                <span class="text-sm text-gray-500 dark:text-gray-400">Lotes</span>
+                <span class="text-sm font-medium text-gray-900 dark:text-white">${parseFloat(trade.lots).toFixed(8).replace(/\.?0+$/, '')}</span>
+              </div>
+
+              <div class="flex justify-between items-center">
+                <span class="text-sm text-gray-500 dark:text-gray-400">Margen (MXN)</span>
+                <span class="text-sm font-medium text-gray-900 dark:text-white">${marginDisplay}</span>
+              </div>
+
+              <div class="flex justify-between items-center">
+                <span class="text-sm text-gray-500 dark:text-gray-400">Apalancamiento</span>
+                <span class="text-sm font-medium text-gray-900 dark:text-white">${leverageDisplay}</span>
+              </div>
+              
+              <div class="flex justify-between items-center">
+                <span class="text-sm text-gray-500 dark:text-gray-400">Estrategia</span>
+                <span class="text-xs font-medium bg-gray-100 text-gray-800 px-2 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300 truncate max-w-[120px]" title="${trade.strategy}">
+                  ${trade.strategy}
+                </span>
+              </div>
+            </div>
+            
+            ${trade.notes ? `
+              <div class="mt-4 pt-3 border-t border-gray-100 dark:border-gray-700">
+                <p class="text-xs text-gray-500 dark:text-gray-400 italic line-clamp-2">"${trade.notes}"</p>
+              </div>
+            ` : ''}
+          </div>
+          
+          <div class="bg-gray-50 dark:bg-gray-700/50 px-5 py-3 border-t border-gray-100 dark:border-gray-700 flex justify-between items-center animate-fade-in">
+             <button onclick='showTradeDetails(${realIndex})' class="text-sm font-medium text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 transition-colors">
+               Ver detalles
+             </button>
+             <div class="flex gap-2 items-center">
+               ${(() => {
+                 const isCrypto = typeof isCryptoAsset === 'function' && isCryptoAsset(trade.asset);
+                 const needsSync = isCrypto && (trade.mae === null || trade.mae === undefined || trade.mfe === null || trade.mfe === undefined);
+                 if (needsSync) {
+                   return `<button onclick="syncTradeMAEMFE(${realIndex})" class="p-1.5 text-yellow-500 hover:text-yellow-600 dark:text-yellow-400 dark:hover:text-yellow-300 transition-colors" title="Sincronizar MAE/MFE">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+                          </button>`;
+                 }
+                 return '';
+               })()}
+               <button onclick='showEditTradeModal(${realIndex})' class="p-1.5 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors" title="Editar">
+                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+               </button>
+               <button onclick="deleteTrade(${realIndex})" class="p-1.5 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 transition-colors" title="Eliminar">
+                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+               </button>
+             </div>
+          </div>
+        </div>
+      `;
+    });
   });
 
   diaryContainer.innerHTML = html;
