@@ -849,15 +849,47 @@ async function abrirModalEdicion(c) {
     fechaInput.value = `${año}-${mes}-${dia}`
   }
 
-  // Handle parent info for sub-accounts
-  const padreInfo = document.getElementById('editar-cuenta-padre-info')
-  const padreNombre = document.getElementById('editar-cuenta-padre-nombre')
-  if (c.esSubcuenta && c.parentId) {
-    const parent = await obtenerCuentaPorId(c.parentId)
-    if (padreInfo) padreInfo.classList.remove('hidden')
-    if (padreNombre) padreNombre.textContent = parent?.nombre || 'Cuenta eliminada'
-  } else {
-    if (padreInfo) padreInfo.classList.add('hidden')
+  // Sincronizar el selector de cuentas padre y el checkbox
+  const editCheckbox = document.getElementById('editar-cuenta-es-subcuenta')
+  const editParentSelect = document.getElementById('editar-cuenta-padre')
+  const editParentContainer = document.getElementById('editar-cuenta-padre-container')
+  const editRestriccionMsj = document.getElementById('editar-cuenta-restriccion-msj')
+
+  if (editCheckbox && editParentSelect && editParentContainer && editRestriccionMsj) {
+    const cuentas = await listarCuentas()
+    const hijas = await obtenerSubcuentas(c.id)
+    const tieneHijas = hijas.length > 0
+
+    if (tieneHijas) {
+      editCheckbox.checked = false
+      editCheckbox.disabled = true
+      editRestriccionMsj.classList.remove('hidden')
+      editParentContainer.classList.add('hidden')
+      editParentSelect.removeAttribute('required')
+    } else {
+      editCheckbox.disabled = false
+      editCheckbox.checked = Boolean(c.esSubcuenta)
+      editRestriccionMsj.classList.add('hidden')
+
+      const posiblesPadres = cuentas.filter(item => !item.esSubcuenta && item.id !== c.id)
+      editParentSelect.innerHTML = '<option value="">Selecciona una cuenta principal...</option>'
+      posiblesPadres.forEach(item => {
+        const opt = document.createElement('option')
+        opt.value = item.id
+        opt.textContent = item.nombre
+        editParentSelect.appendChild(opt)
+      })
+
+      editParentSelect.value = c.parentId || ''
+
+      if (c.esSubcuenta) {
+        editParentContainer.classList.remove('hidden')
+        editParentSelect.setAttribute('required', 'required')
+      } else {
+        editParentContainer.classList.add('hidden')
+        editParentSelect.removeAttribute('required')
+      }
+    }
   }
 
   // Handle sub-accounts panel for parent accounts
@@ -925,6 +957,23 @@ function handleEditar() {
     })
   }
 
+  // Listener para alternar el contenedor de cuenta padre en la edición
+  const editCheckbox = document.getElementById('editar-cuenta-es-subcuenta')
+  const editParentContainer = document.getElementById('editar-cuenta-padre-container')
+  const editParentSelect = document.getElementById('editar-cuenta-padre')
+  if (editCheckbox && editParentContainer && editParentSelect) {
+    editCheckbox.addEventListener('change', () => {
+      if (editCheckbox.checked) {
+        editParentContainer.classList.remove('hidden')
+        editParentSelect.setAttribute('required', 'required')
+      } else {
+        editParentContainer.classList.add('hidden')
+        editParentSelect.removeAttribute('required')
+        editParentSelect.value = ''
+      }
+    })
+  }
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault()
     const id = document.getElementById('editar-cuenta-id').value
@@ -933,6 +982,9 @@ function handleEditar() {
     const color = document.getElementById('editar-cuenta-color').value
     const dinero = parseFloat(document.getElementById('editar-cuenta-dinero').value || '0')
     const creadaEn = document.getElementById('editar-cuenta-fecha-creacion')?.value || null
+
+    const esSubcuenta = editCheckbox ? editCheckbox.checked : false
+    const parentId = esSubcuenta && editParentSelect ? editParentSelect.value || null : null
 
     // Si el saldo cambió, usar la fecha del ajuste para el historial
     const originalVal = parseFloat(document.getElementById('editar-cuenta-dinero-original')?.value || '0')
@@ -954,7 +1006,7 @@ function handleEditar() {
       }
     }
 
-    await actualizarCuenta(id, { nombre, descripcion, color, dinero, creadaEn, fechaHistorial })
+    await actualizarCuenta(id, { nombre, descripcion, color, dinero, creadaEn, fechaHistorial, esSubcuenta, parentId })
     await renderLista()
     cerrarModalEdicion()
   })

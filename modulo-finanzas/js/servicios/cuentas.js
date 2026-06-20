@@ -137,12 +137,36 @@ export async function actualizarCuenta(id, payload) {
     }
   }
 
+  let nuevoEsSubcuenta = prev.esSubcuenta
+  if (payload?.esSubcuenta !== undefined) {
+    const esSub = Boolean(payload.esSubcuenta)
+    if (esSub !== prev.esSubcuenta) {
+      cambios.push(esSub ? 'Convertida a subcuenta' : 'Convertida a cuenta principal')
+      nuevoEsSubcuenta = esSub
+    }
+  }
+
+  let nuevoParentId = prev.parentId
+  if (payload?.parentId !== undefined) {
+    const pId = payload.parentId || null
+    if (pId !== prev.parentId) {
+      if (pId) {
+        cambios.push(`Cuenta padre asociada`)
+      } else {
+        cambios.push(`Cuenta padre desasociada`)
+      }
+      nuevoParentId = pId
+    }
+  }
+
   const next = {
     ...prev,
     nombre: nuevoNombre,
     descripcion: nuevaDesc,
     color: nuevoColor,
     dinero: nuevoDinero,
+    esSubcuenta: nuevoEsSubcuenta,
+    parentId: nuevoParentId,
     creadaEn: nuevaCreadaEn,
     actualizadaEn: nuevaActualizadaEn,
     historial: historial
