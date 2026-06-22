@@ -56,7 +56,7 @@ async function renderLista() {
     orphansContainer.appendChild(title)
 
     const grid = document.createElement('div')
-    grid.className = 'grid grid-cols-1 sm:grid-cols-2 gap-4'
+    grid.className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'
 
     orphans.forEach((sub) => {
       const subCard = crearTarjetaCuenta(sub, true)
@@ -136,7 +136,7 @@ function crearSeparadorVisual(sep, mainAccounts, subAccounts, isSystem = false) 
 
   // Separator accounts grid
   const grid = document.createElement('div')
-  grid.className = 'grid grid-cols-1 sm:grid-cols-2 gap-4'
+  grid.className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'
 
   // Sort accounts by balance (already filtered above)
   sepAccounts.sort((a, b) => (b.dinero || 0) - (a.dinero || 0))
@@ -258,9 +258,8 @@ function renderGraficoDistribucion(cuentas, subcuentas, separadores = []) {
     dataPoints = cuentas.map(principal => {
       // Sumar dinero propio + subcuentas hijas
       const montoPropio = principal.dinero || 0
-      const montoSubs = subcuentas
-        .filter(sub => sub.parentId === principal.id)
-        .reduce((sum, sub) => sum + (sub.dinero || 0), 0)
+      const subcuentasHijas = subcuentas.filter(sub => sub.parentId === principal.id)
+      const montoSubs = subcuentasHijas.reduce((sum, sub) => sum + (sub.dinero || 0), 0)
 
       return {
         nombre: principal.nombre,
@@ -268,7 +267,8 @@ function renderGraficoDistribucion(cuentas, subcuentas, separadores = []) {
         montoPropio: montoPropio,
         montoSubs: montoSubs,
         color: principal.color || '#3b82f6',
-        tipo: 'cuenta'
+        tipo: 'cuenta',
+        subcuentasList: subcuentasHijas
       }
     }).filter(d => d.dinero > 0)
   }
@@ -322,7 +322,7 @@ function renderGraficoDistribucion(cuentas, subcuentas, separadores = []) {
         const breakdown = document.createElement('div')
         breakdown.className = 'mt-2 pt-2 border-t border-gray-50 dark:border-gray-800 text-[9px] text-gray-400 dark:text-gray-500 space-y-1'
 
-        breakdown.innerHTML = `
+        let breakdownHtml = `
           <div class="flex justify-between">
              <span>Propio</span>
              <span class="font-semibold text-gray-600 dark:text-gray-400">${formatoMoneda(item.montoPropio)} (${pctPropio}%)</span>
@@ -332,6 +332,27 @@ function renderGraficoDistribucion(cuentas, subcuentas, separadores = []) {
              <span class="font-semibold text-gray-600 dark:text-gray-400">${formatoMoneda(item.montoSubs)} (${pctSubs}%)</span>
           </div>
         `
+
+        if (item.subcuentasList && item.subcuentasList.length > 0) {
+          const sortedSubs = [...item.subcuentasList].sort((a, b) => (b.dinero || 0) - (a.dinero || 0))
+          breakdownHtml += `<div class="pl-2 mt-1.5 space-y-1 border-l border-gray-100 dark:border-gray-800/80">`
+          sortedSubs.forEach(sub => {
+            const subPct = item.montoSubs > 0 ? ((sub.dinero || 0) / item.montoSubs * 100).toFixed(0) : 0
+            const subColor = sub.color || '#0ea5e9'
+            breakdownHtml += `
+              <div class="flex justify-between items-center text-[8px] pl-1.5">
+                 <div class="flex items-center gap-1.5 min-w-0">
+                    <div class="w-1 h-1 rounded-full flex-shrink-0" style="background-color: ${subColor}"></div>
+                    <span class="truncate max-w-[85px] text-gray-500 dark:text-gray-400" title="${sub.nombre}">${sub.nombre}</span>
+                 </div>
+                 <span class="font-medium text-gray-500 dark:text-gray-400">${formatoMoneda(sub.dinero)} (${subPct}%)</span>
+              </div>
+            `
+          })
+          breakdownHtml += `</div>`
+        }
+
+        breakdown.innerHTML = breakdownHtml
         itemContainer.appendChild(breakdown)
       }
 
@@ -428,7 +449,7 @@ function crearTarjetaCuentaConSubs(c, subAccounts) {
     subsContainer.appendChild(subsTitle)
 
     const grid = document.createElement('div')
-    grid.className = `grid grid-cols-1 ${subs.length > 1 ? 'sm:grid-cols-2' : ''} gap-2.5`
+    grid.className = 'grid grid-cols-1 gap-2.5'
 
     subs.forEach((sub) => {
       const subItem = crearItemSubcuenta(sub)
@@ -443,47 +464,60 @@ function crearTarjetaCuentaConSubs(c, subAccounts) {
 
 function crearItemSubcuenta(c) {
   const item = document.createElement('div')
-  item.className = 'flex items-center justify-between p-2.5 rounded-xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800/85 group hover:border-sky-200 dark:hover:border-sky-900 transition-colors'
+  item.className = 'flex items-center justify-between p-3 rounded-xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800/85 group hover:border-sky-200 dark:hover:border-sky-900 transition-colors gap-3'
 
   const left = document.createElement('div')
-  left.className = 'flex items-center gap-2.5'
+  left.className = 'flex items-center gap-3 min-w-0 flex-grow'
 
   const color = document.createElement('div')
-  color.className = 'w-1 h-6 rounded-full flex-shrink-0'
+  color.className = 'w-1 h-8 rounded-full flex-shrink-0'
   color.style.backgroundColor = c.color || '#0ea5e9'
 
   const info = document.createElement('div')
+  info.className = 'min-w-0 flex-grow'
+
   const name = document.createElement('div')
-  name.className = 'font-bold text-xs text-gray-900 dark:text-gray-100 truncate max-w-[100px]'
+  name.className = 'font-bold text-xs text-gray-900 dark:text-gray-100 truncate'
   name.textContent = c.nombre
 
-  const money = document.createElement('div')
-  money.className = 'text-[10px] font-bold text-gray-400 dark:text-gray-500'
-  money.textContent = formatoMoneda(c.dinero)
-
   info.appendChild(name)
-  info.appendChild(money)
+
+  if (c.descripcion) {
+    const desc = document.createElement('div')
+    desc.className = 'text-[9px] text-gray-400 dark:text-gray-500 line-clamp-1 mt-0.5'
+    desc.textContent = c.descripcion
+    info.appendChild(desc)
+  }
+
   left.appendChild(color)
   left.appendChild(info)
 
+  const rightSide = document.createElement('div')
+  rightSide.className = 'relative flex items-center justify-end flex-shrink-0 min-h-[32px] min-w-[70px]'
+
+  const money = document.createElement('div')
+  money.className = 'text-xs font-extrabold text-gray-900 dark:text-gray-100 text-right sm:group-hover:opacity-0 transition-opacity duration-150'
+  money.textContent = formatoMoneda(c.dinero)
+  rightSide.appendChild(money)
+
   const actions = document.createElement('div')
-  actions.className = 'flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity'
+  actions.className = 'flex items-center gap-1 opacity-100 sm:opacity-0 sm:absolute sm:right-0 sm:inset-y-0 sm:bg-white sm:dark:bg-gray-900 sm:pl-2 pointer-events-auto sm:pointer-events-none sm:group-hover:opacity-100 sm:group-hover:pointer-events-auto transition-opacity duration-150 flex-shrink-0'
 
   const btnEdit = document.createElement('button')
   btnEdit.className = 'p-1 text-gray-400 hover:text-sky-600 hover:bg-sky-50 dark:hover:bg-sky-900/20 rounded-md transition-colors'
-  btnEdit.innerHTML = `<i data-lucide="pencil" class="w-3 h-3"></i>`
+  btnEdit.innerHTML = `<i data-lucide="pencil" class="w-3.5 h-3.5"></i>`
   btnEdit.title = 'Editar'
   btnEdit.onclick = (e) => { e.stopPropagation(); abrirModalEdicion(c); }
 
   const btnHistory = document.createElement('button')
   btnHistory.className = 'p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors'
-  btnHistory.innerHTML = `<i data-lucide="history" class="w-3 h-3"></i>`
+  btnHistory.innerHTML = `<i data-lucide="history" class="w-3.5 h-3.5"></i>`
   btnHistory.title = 'Historial'
   btnHistory.onclick = (e) => { e.stopPropagation(); abrirModalHistorial(c); }
 
   const btnDel = document.createElement('button')
   btnDel.className = 'p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors'
-  btnDel.innerHTML = `<i data-lucide="trash-2" class="w-3 h-3"></i>`
+  btnDel.innerHTML = `<i data-lucide="trash-2" class="w-3.5 h-3.5"></i>`
   btnDel.title = 'Eliminar'
   btnDel.onclick = (e) => { e.stopPropagation(); abrirModalEliminar(c); }
 
@@ -491,8 +525,10 @@ function crearItemSubcuenta(c) {
   actions.appendChild(btnHistory)
   actions.appendChild(btnDel)
 
+  rightSide.appendChild(actions)
+
   item.appendChild(left)
-  item.appendChild(actions)
+  item.appendChild(rightSide)
 
   return item
 }
@@ -501,15 +537,15 @@ function crearTarjetaCuenta(c, esSubcuenta) {
   const card = document.createElement('div')
   card.className = esSubcuenta
     ? 'rounded-2xl bg-gray-50/50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-800 p-5 ml-4 relative overflow-hidden transition-all'
-    : 'rounded-2xl bg-gray-50/50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-800 p-5 relative overflow-hidden transition-all hover:shadow-md hover:border-gray-200 dark:hover:border-gray-700/80'
+    : 'rounded-2xl bg-gray-50/50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-800 p-5 relative overflow-hidden transition-all hover:shadow-md hover:border-gray-200 dark:hover:border-gray-700/80 flex flex-col min-h-[140px] group'
 
   const accountColor = c.color || '#0ea5e9'
   card.style.borderLeft = `4px solid ${accountColor}`
 
   const header = document.createElement('div')
-  header.className = 'flex items-center justify-between gap-2'
+  header.className = 'w-full min-w-0 flex items-start justify-between gap-3'
   const titleWrapper = document.createElement('div')
-  titleWrapper.className = 'flex items-center gap-2 min-w-0'
+  titleWrapper.className = 'flex items-center gap-2 min-w-0 flex-grow'
 
   if (esSubcuenta) {
     // Only used for orphans now
@@ -526,7 +562,7 @@ function crearTarjetaCuenta(c, esSubcuenta) {
   header.appendChild(titleWrapper)
 
   const actions = document.createElement('div')
-  actions.className = 'flex items-center gap-1'
+  actions.className = 'flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200 flex-shrink-0'
 
   const btnEdit = document.createElement('button')
   btnEdit.className = 'p-1.5 text-gray-400 hover:text-sky-600 hover:bg-sky-50 dark:hover:bg-sky-900/20 rounded-lg transition-colors'
@@ -552,16 +588,31 @@ function crearTarjetaCuenta(c, esSubcuenta) {
   header.appendChild(actions)
 
   const desc = document.createElement('div')
-  desc.className = 'mt-1 text-[11px] text-gray-400 dark:text-gray-500 line-clamp-1'
+  desc.className = 'mt-1 text-[11px] text-gray-400 dark:text-gray-500 line-clamp-2'
   desc.textContent = c.descripcion || ''
 
   const money = document.createElement('div')
-  money.className = 'mt-3 text-lg font-black text-gray-900 dark:text-white tracking-tight'
+  money.className = 'text-lg font-black text-gray-900 dark:text-white tracking-tight'
   money.textContent = formatoMoneda(c.dinero)
 
-  card.appendChild(header)
-  card.appendChild(desc)
-  card.appendChild(money)
+  if (esSubcuenta) {
+    card.appendChild(header)
+    card.appendChild(desc)
+    card.appendChild(money)
+  } else {
+    const topSection = document.createElement('div')
+    topSection.className = 'flex-grow min-w-0'
+    topSection.appendChild(header)
+    topSection.appendChild(desc)
+
+    const bottomSection = document.createElement('div')
+    bottomSection.className = 'mt-auto pt-4 flex-shrink-0'
+    bottomSection.appendChild(money)
+
+    card.appendChild(topSection)
+    card.appendChild(bottomSection)
+  }
+
   return card
 }
 async function abrirModalHistorial(c) {

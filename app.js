@@ -5,8 +5,8 @@ const isSupported = () => {
 
 
 // variables de versión de página
-window.PAGE_VERSION = "6.12.2";
-window.ACT_DATE = "20/06/2026";
+window.PAGE_VERSION = "6.13.0";
+window.ACT_DATE = "21/06/2026";
 
 console.log("Página versión: " + window.PAGE_VERSION + ", actualizada por ultima vez el: " + window.ACT_DATE);
 
