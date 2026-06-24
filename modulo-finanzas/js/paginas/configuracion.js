@@ -1417,6 +1417,13 @@ async function inicializarSyncTrading() {
 
     cerrarModal()
     
+    // Invocación del Motor de Conciliación Determinista para vinculación tardía
+    import('../servicios/operaciones.js').then(module => {
+      if (module.sincronizarCuentasVinculadas) {
+        module.sincronizarCuentasVinculadas()
+      }
+    }).catch(err => console.error('Error al invocar motor de conciliación:', err))
+    
     // Mostrar feedback visual temporal en la tarjeta
     const msgEl = document.createElement('div')
     msgEl.className = 'text-xs text-emerald-600 dark:text-emerald-400 font-semibold mt-2 animate-fade-in'

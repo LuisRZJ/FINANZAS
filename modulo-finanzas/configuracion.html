@@ -15,40 +15,12 @@
 </head>
 
 <body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 antialiased min-h-screen">
-  <header class="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 sticky top-0 z-40">
+  <header class="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
       <div class="flex items-center gap-8">
         <div class="text-xl font-semibold">GTR Finanzas</div>
-        <nav class="hidden md:flex items-center gap-6">
-          <a href="../index.html"
-            class="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors">Volver
-            al Inicio</a>
-          <a href="index.html" data-route="index.html"
-            class="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors">Inicio</a>
-          <a href="cuentas.html" data-route="cuentas.html"
-            class="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors">Cuentas</a>
-          <a href="transacciones.html" data-route="transacciones.html"
-            class="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors">Transacciones</a>
-          <a href="presupuestos.html" data-route="presupuestos.html"
-            class="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors">Presupuestos</a>
-          <a href="reportes.html" data-route="reportes.html"
-            class="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors">Reportes</a>
-          <a href="metas.html" data-route="metas.html"
-            class="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors">Metas</a>
-          <a href="configuracion.html" data-route="configuracion.html"
-            class="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors">Configuración</a>
-        </nav>
       </div>
       <div class="flex items-center gap-3">
-        <button id="mobile-menu-btn"
-          class="md:hidden inline-flex items-center justify-center p-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-          <svg id="menu-icon-open" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-          </svg>
-          <svg id="menu-icon-close" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-          </svg>
-        </button>
         <button id="theme-toggle"
           class="inline-flex items-center gap-2 rounded-md px-3 py-2 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700">
           <span class="hidden sm:inline">Cambiar tema</span>
@@ -60,19 +32,6 @@
         </button>
       </div>
     </div>
-
-    <script>
-      document.getElementById('mobile-menu-btn').addEventListener('click', function () {
-        const menu = document.getElementById('mobile-menu');
-        const iconOpen = document.getElementById('menu-icon-open');
-        const iconClose = document.getElementById('menu-icon-close');
-        const isHidden = menu.classList.contains('hidden');
-        menu.classList.toggle('hidden');
-        iconOpen.classList.toggle('hidden');
-        iconClose.classList.toggle('hidden');
-        document.body.style.overflow = isHidden ? 'hidden' : '';
-      });
-    </script>
   </header>
   <main class="max-w-2xl mx-auto px-4 sm:px-6 py-8 relative z-10">
     <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-xl border border-gray-100 dark:border-gray-800/80 p-6 md:p-8 relative">
@@ -506,27 +465,106 @@
   </div>
 
 
-  <nav id="mobile-menu" class="hidden md:hidden fixed inset-0 top-16 z-40 bg-white dark:bg-gray-900 overflow-y-auto">
-    <div class="px-4 py-6 space-y-1">
-      <a href="../index.html"
-        class="block px-4 py-3 rounded-lg text-lg font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">Volver
-        al Inicio</a>
-      <a href="index.html" data-route="index.html"
-        class="block px-4 py-3 rounded-lg text-lg font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">Inicio</a>
-      <a href="cuentas.html" data-route="cuentas.html"
-        class="block px-4 py-3 rounded-lg text-lg font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">Cuentas</a>
-      <a href="transacciones.html" data-route="transacciones.html"
-        class="block px-4 py-3 rounded-lg text-lg font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">Transacciones</a>
-      <a href="presupuestos.html" data-route="presupuestos.html"
-        class="block px-4 py-3 rounded-lg text-lg font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">Presupuestos</a>
-      <a href="reportes.html" data-route="reportes.html"
-        class="block px-4 py-3 rounded-lg text-lg font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">Reportes</a>
-      <a href="metas.html" data-route="metas.html"
-        class="block px-4 py-3 rounded-lg text-lg font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">Metas</a>
-      <a href="configuracion.html" data-route="configuracion.html"
-        class="block px-4 py-3 rounded-lg text-lg font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">Configuración</a>
+  <!-- Menú de Navegación Flotante (FAB) -->
+  <div class="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
+    <!-- Lista de opciones del menú -->
+    <div id="fab-menu-options" class="hidden flex flex-col items-end gap-2.5 mb-2 transition-all duration-200 transform translate-y-4 opacity-0">
+      <a href="../index.html" class="flex items-center gap-2.5 px-4 py-2.5 rounded-full text-xs font-semibold bg-white/95 dark:bg-gray-800/95 backdrop-blur-md text-gray-700 dark:text-gray-250 border border-gray-200/50 dark:border-gray-700/50 shadow-lg hover:bg-gray-50 dark:hover:bg-gray-750 transition-all hover:-translate-x-1 active:scale-95">
+        <i data-lucide="arrow-left" class="w-4 h-4 text-gray-500 dark:text-gray-400"></i>
+        <span>Volver al Inicio</span>
+      </a>
+      <a href="index.html" data-route="index.html" class="flex items-center gap-2.5 px-4 py-2.5 rounded-full text-xs font-semibold bg-white/95 dark:bg-gray-800/95 backdrop-blur-md text-gray-700 dark:text-gray-250 border border-gray-200/50 dark:border-gray-700/50 shadow-lg hover:bg-gray-50 dark:hover:bg-gray-750 transition-all hover:-translate-x-1 active:scale-95">
+        <i data-lucide="home" class="w-4 h-4 text-gray-500 dark:text-gray-400"></i>
+        <span>Inicio</span>
+      </a>
+      <a href="cuentas.html" data-route="cuentas.html" class="flex items-center gap-2.5 px-4 py-2.5 rounded-full text-xs font-semibold bg-white/95 dark:bg-gray-800/95 backdrop-blur-md text-gray-700 dark:text-gray-250 border border-gray-200/50 dark:border-gray-700/50 shadow-lg hover:bg-gray-50 dark:hover:bg-gray-750 transition-all hover:-translate-x-1 active:scale-95">
+        <i data-lucide="wallet" class="w-4 h-4 text-gray-500 dark:text-gray-400"></i>
+        <span>Cuentas</span>
+      </a>
+      <a href="transacciones.html" data-route="transacciones.html" class="flex items-center gap-2.5 px-4 py-2.5 rounded-full text-xs font-semibold bg-white/95 dark:bg-gray-800/95 backdrop-blur-md text-gray-700 dark:text-gray-250 border border-gray-200/50 dark:border-gray-700/50 shadow-lg hover:bg-gray-50 dark:hover:bg-gray-750 transition-all hover:-translate-x-1 active:scale-95">
+        <i data-lucide="list" class="w-4 h-4 text-gray-500 dark:text-gray-400"></i>
+        <span>Transacciones</span>
+      </a>
+      <a href="presupuestos.html" data-route="presupuestos.html" class="flex items-center gap-2.5 px-4 py-2.5 rounded-full text-xs font-semibold bg-white/95 dark:bg-gray-800/95 backdrop-blur-md text-gray-700 dark:text-gray-250 border border-gray-200/50 dark:border-gray-700/50 shadow-lg hover:bg-gray-50 dark:hover:bg-gray-750 transition-all hover:-translate-x-1 active:scale-95">
+        <i data-lucide="piggy-bank" class="w-4 h-4 text-gray-500 dark:text-gray-400"></i>
+        <span>Presupuestos</span>
+      </a>
+      <a href="reportes.html" data-route="reportes.html" class="flex items-center gap-2.5 px-4 py-2.5 rounded-full text-xs font-semibold bg-white/95 dark:bg-gray-800/95 backdrop-blur-md text-gray-700 dark:text-gray-250 border border-gray-200/50 dark:border-gray-700/50 shadow-lg hover:bg-gray-50 dark:hover:bg-gray-750 transition-all hover:-translate-x-1 active:scale-95">
+        <i data-lucide="bar-chart-2" class="w-4 h-4 text-gray-500 dark:text-gray-400"></i>
+        <span>Reportes</span>
+      </a>
+      <a href="metas.html" data-route="metas.html" class="flex items-center gap-2.5 px-4 py-2.5 rounded-full text-xs font-semibold bg-white/95 dark:bg-gray-800/95 backdrop-blur-md text-gray-700 dark:text-gray-250 border border-gray-200/50 dark:border-gray-700/50 shadow-lg hover:bg-gray-50 dark:hover:bg-gray-750 transition-all hover:-translate-x-1 active:scale-95">
+        <i data-lucide="target" class="w-4 h-4 text-gray-500 dark:text-gray-400"></i>
+        <span>Metas</span>
+      </a>
+      <a href="configuracion.html" data-route="configuracion.html" class="flex items-center gap-2.5 px-4 py-2.5 rounded-full text-xs font-semibold bg-white/95 dark:bg-gray-800/95 backdrop-blur-md text-gray-700 dark:text-gray-250 border border-gray-200/50 dark:border-gray-700/50 shadow-lg hover:bg-gray-50 dark:hover:bg-gray-750 transition-all hover:-translate-x-1 active:scale-95">
+        <i data-lucide="settings" class="w-4 h-4 text-gray-500 dark:text-gray-400"></i>
+        <span>Configuración</span>
+      </a>
     </div>
-  </nav>
+
+    <!-- Botón FAB principal -->
+    <button id="fab-menu-btn" class="w-14 h-14 rounded-full bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600 text-white flex items-center justify-center shadow-2xl transition-all duration-300 active:scale-95 focus:outline-none relative group" title="Menú de navegación">
+      <i data-lucide="menu" id="fab-icon-menu" class="w-6 h-6 transition-all duration-200"></i>
+      <i data-lucide="x" id="fab-icon-close" class="w-6 h-6 absolute opacity-0 scale-50 transition-all duration-200"></i>
+    </button>
+  </div>
+
+  <script>
+    (function() {
+      const btn = document.getElementById('fab-menu-btn');
+      const options = document.getElementById('fab-menu-options');
+      const iconMenu = document.getElementById('fab-icon-menu');
+      const iconClose = document.getElementById('fab-icon-close');
+      
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        const isHidden = options.classList.contains('hidden');
+        
+        if (isHidden) {
+          options.classList.remove('hidden');
+          // Forzar reflujo para activar transición
+          options.offsetHeight;
+          options.classList.remove('translate-y-4', 'opacity-0');
+          options.classList.add('translate-y-0', 'opacity-100');
+          
+          iconMenu.classList.add('opacity-0', 'scale-50');
+          iconClose.classList.remove('opacity-0', 'scale-50');
+          iconClose.classList.add('opacity-100', 'scale-100');
+        } else {
+          collapseFAB();
+        }
+      });
+
+      function collapseFAB() {
+        options.classList.remove('translate-y-0', 'opacity-100');
+        options.classList.add('translate-y-4', 'opacity-0');
+        
+        iconMenu.classList.remove('opacity-0', 'scale-50');
+        iconMenu.classList.add('opacity-100', 'scale-100');
+        iconClose.classList.remove('opacity-100', 'scale-100');
+        iconClose.classList.add('opacity-0', 'scale-50');
+        
+        setTimeout(() => {
+          options.classList.add('hidden');
+        }, 200);
+      }
+
+      // Cerrar al hacer clic fuera
+      document.addEventListener('click', function (e) {
+        if (!options.classList.contains('hidden') && !btn.contains(e.target) && !options.contains(e.target)) {
+          collapseFAB();
+        }
+      });
+
+      // Inicializar iconos de Lucide al cargar la página
+      window.addEventListener('DOMContentLoaded', () => {
+        if (window.lucide) {
+          window.lucide.createIcons();
+        }
+      });
+    })();
+  </script>
   <script type="module" src="js/paginas/configuracion.js"></script>
 </body>
 

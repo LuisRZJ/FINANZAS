@@ -39,6 +39,10 @@
             800: '#075985',
             900: '#0c4a6e'
           },
+          gray: {
+            250: '#e2e8f0',
+            750: '#2d3748'
+          },
           success: { DEFAULT: '#22c55e' },
           danger: { DEFAULT: '#ef4444' },
           warning: { DEFAULT: '#f59e0b' }

@@ -211,6 +211,19 @@ export async function ajustarSaldoPorOperacion(id, delta, operacionInfo = {}) {
   const now = new Date().toISOString()
   const nuevoDinero = Number(prev.dinero || 0) + Number(delta)
 
+  // Bloqueo condicional de saldo negativo para cuentas vinculadas a trading
+  if (nuevoDinero < 0) {
+    try {
+      const relaciones = JSON.parse(localStorage.getItem('gtr_cuenta_relaciones') || '{}')
+      const estaVinculada = Object.values(relaciones).includes(id)
+      if (estaVinculada) {
+        throw new Error(`La cuenta "${prev.nombre}" está vinculada a trading y no permite saldo negativo. Faltan $${Math.abs(nuevoDinero).toFixed(2)}.`)
+      }
+    } catch (err) {
+      if (err.message.includes('está vinculada')) throw err;
+      console.error('Error verificando vinculación de cuenta:', err)
+    }
+  }
 
   // Ya no hacemos push al historial aquí.
   // El historial de transacciones se obtiene directamente de la tabla 'operaciones'.

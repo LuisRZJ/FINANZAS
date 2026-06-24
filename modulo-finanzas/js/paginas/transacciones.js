@@ -1178,6 +1178,11 @@ async function renderHistorial() {
   const cuentas = await listarCuentas()
   const cuentaMap = new Map(cuentas.map(c => [c.id, c]))
   const recurrencias = await listarRecurrencias()
+  
+  let relaciones = {}
+  try {
+    relaciones = JSON.parse(localStorage.getItem('gtr_cuenta_relaciones') || '{}')
+  } catch(e) {}
 
   // Filter by Month
   const targetMonth = filtroFecha.getMonth()
@@ -1595,6 +1600,43 @@ async function renderHistorial() {
               } catch (ex) {
                 alert(ex.message)
               }
+            }
+          }
+        }
+
+        if (op.tipo === 'transferencia' && op.estado === 'pagado') {
+          const tradingIdDestino = Object.keys(relaciones).find(key => relaciones[key] === op.destinoId)
+          if (tradingIdDestino) {
+            let materialized = false
+            try {
+              const raw = localStorage.getItem('tradingAccountData:' + tradingIdDestino)
+              if (raw) {
+                const data = JSON.parse(raw)
+                const movs = data.capitalMovements || []
+                materialized = movs.some(m => m.id === `sync_${op.id}`)
+              }
+            } catch(e) {}
+
+            if (!materialized) {
+              const btnSync = document.createElement('button')
+              btnSync.className = 'p-1 text-gray-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded-lg transition-colors'
+              btnSync.innerHTML = '<i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>'
+              btnSync.title = 'Forzar Sincronización con Trading'
+              btnSync.onclick = async (e) => {
+                e.stopPropagation()
+                btnSync.innerHTML = '<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i>'
+                try {
+                  const { sincronizarCuentasVinculadas } = await import('../servicios/operaciones.js')
+                  await sincronizarCuentasVinculadas(op.destinoId)
+                  await renderHistorial()
+                } catch (ex) {
+                  alert('Error al sincronizar: ' + ex.message)
+                  btnSync.innerHTML = '<i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>'
+                }
+              }
+              actionsDiv.appendChild(btnSync)
+              amountEl.classList.remove('group-hover:-translate-x-12')
+              amountEl.classList.add('group-hover:-translate-x-[4.5rem]')
             }
           }
         }

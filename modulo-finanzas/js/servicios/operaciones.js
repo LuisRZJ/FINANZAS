@@ -164,6 +164,7 @@ export async function crearIngreso(payload) {
   const list = await obtenerTodas()
   list.push(op)
   await guardarTodas(list)
+  await sincronizarCuentasVinculadas(cuentaId)
   return op
 }
 
@@ -210,41 +211,10 @@ export async function crearGasto(payload) {
   const list = await obtenerTodas()
   list.push(op)
   await guardarTodas(list)
+  await sincronizarCuentasVinculadas(cuentaId)
   return op
 }
 
-function inyectarMovimientoTrading(tradingAccountId, tipo, cantidad, fecha, origenSync) {
-  const accountKey = 'tradingAccountData:' + tradingAccountId
-  let data = {}
-  try {
-    const raw = localStorage.getItem(accountKey)
-    if (raw) data = JSON.parse(raw)
-  } catch (err) {
-    console.error('Error al leer datos de la cuenta de trading:', err)
-  }
-  
-  if (!data.capitalMovements) data.capitalMovements = []
-  
-  const idStr = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function' 
-    ? crypto.randomUUID() 
-    : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`
-    
-  const movement = {
-    id: idStr,
-    type: tipo, // 'deposito' o 'retiro'
-    amount: Number(cantidad),
-    date: new Date(fecha).toISOString(),
-    origenSync: origenSync // 'finanzas'
-  }
-  
-  data.capitalMovements.push(movement)
-  localStorage.setItem(accountKey, JSON.stringify(data))
-  
-  // Si esta cuenta es la activa en trading, también la escribimos a 'capitalMovements' actual
-  if (localStorage.getItem('activeTradingAccountId') === tradingAccountId) {
-    localStorage.setItem('capitalMovements', JSON.stringify(data.capitalMovements))
-  }
-}
 
 export async function crearTransferencia(payload) {
   const nombre = String(payload?.nombre || '').trim()
@@ -289,31 +259,13 @@ export async function crearTransferencia(payload) {
     creadaEn: now
   }
 
-  // Sincronización Finanzas -> Trading
-  const syncActive = localStorage.getItem('gtr_sync_trades_active') === 'true'
-  if (syncActive && payload?.origenSync !== 'trading') {
-    try {
-      const relaciones = JSON.parse(localStorage.getItem('gtr_cuenta_relaciones') || '{}')
-      
-      // Si la cuenta destino está vinculada, es un DEPOSITO en trading
-      const tradingIdDestino = Object.keys(relaciones).find(key => relaciones[key] === destinoId)
-      if (tradingIdDestino) {
-        inyectarMovimientoTrading(tradingIdDestino, 'deposito', cantidad, fecha, 'finanzas')
-      }
-      
-      // Si la cuenta origen está vinculada, es un RETIRO en trading
-      const tradingIdOrigen = Object.keys(relaciones).find(key => relaciones[key] === origenId)
-      if (tradingIdOrigen) {
-        inyectarMovimientoTrading(tradingIdOrigen, 'retiro', cantidad, fecha, 'finanzas')
-      }
-    } catch (err) {
-      console.error('Error al sincronizar transferencia con trading:', err)
-    }
-  }
+
 
   const list = await obtenerTodas()
   list.push(op)
   await guardarTodas(list)
+  await sincronizarCuentasVinculadas(origenId)
+  await sincronizarCuentasVinculadas(destinoId)
   return op
 }
 
@@ -331,6 +283,9 @@ export async function eliminarOperacion(id) {
 
   const next = list.filter(o => o.id !== id)
   await guardarTodas(next)
+  if (op.cuentaId) await sincronizarCuentasVinculadas(op.cuentaId)
+  if (op.origenId) await sincronizarCuentasVinculadas(op.origenId)
+  if (op.destinoId) await sincronizarCuentasVinculadas(op.destinoId)
   return true
 }
 
@@ -405,6 +360,9 @@ export async function actualizarOperacion(id, payload) {
   }
   list[idx] = next
   await guardarTodas(list)
+  if (next.cuentaId) await sincronizarCuentasVinculadas(next.cuentaId)
+  if (next.origenId) await sincronizarCuentasVinculadas(next.origenId)
+  if (next.destinoId) await sincronizarCuentasVinculadas(next.destinoId)
   return next
 }
 
@@ -474,4 +432,91 @@ export async function eliminarOperacionesPorEtiqueta(etiquetaId) {
     await guardarTodas(filtradas)
   }
   return eliminadas
+}
+
+// === MOTOR DE CONCILIACIÓN DETERMINISTA ===
+
+export async function sincronizarCuentasVinculadas(cuentaIdTrigger = null) {
+  const syncActive = localStorage.getItem('gtr_sync_trades_active') === 'true'
+  if (!syncActive) return
+
+  let relaciones = {}
+  try {
+    relaciones = JSON.parse(localStorage.getItem('gtr_cuenta_relaciones') || '{}')
+  } catch (e) {}
+
+  // Cortafuegos de Rendimiento
+  if (cuentaIdTrigger) {
+    const estaVinculada = Object.values(relaciones).includes(cuentaIdTrigger)
+    if (!estaVinculada) return // No está vinculada, saltar procesamiento costoso
+  }
+
+  const operaciones = await obtenerTodas()
+  const cuentas = await listarCuentas()
+
+  for (const [tradingId, financeId] of Object.entries(relaciones)) {
+    // Si se pasó un trigger y no coincide con la cuenta actual, ignorar esta iteración
+    if (cuentaIdTrigger && financeId !== cuentaIdTrigger) continue;
+
+    const cuenta = cuentas.find(c => c.id === financeId)
+    if (!cuenta) continue
+
+    const opsCuenta = operaciones.filter(o => 
+      (o.tipo === 'ingreso' && o.cuentaId === financeId) ||
+      (o.tipo === 'gasto' && o.cuentaId === financeId) ||
+      (o.tipo === 'transferencia' && (o.origenId === financeId || o.destinoId === financeId))
+    )
+
+    let netDelta = 0
+    const nuevosMovements = []
+
+    for (const op of opsCuenta) {
+      if (op.estado !== 'pagado') continue // Excluir operaciones pendientes
+      
+      let amount = Number(op.cantidad)
+      let isDeposit = false
+
+      if (op.tipo === 'ingreso') { isDeposit = true }
+      else if (op.tipo === 'gasto') { isDeposit = false }
+      else if (op.tipo === 'transferencia') {
+         if (op.destinoId === financeId) isDeposit = true
+         if (op.origenId === financeId) isDeposit = false
+      }
+
+      netDelta += isDeposit ? amount : -amount
+
+      nuevosMovements.push({
+        id: `sync_${op.id}`, // Estructura de IDs Deterministas
+        type: isDeposit ? 'deposito' : 'retiro',
+        amount: amount,
+        date: op.fecha,
+        origenSync: 'finanzas'
+      })
+    }
+
+    const dineroActual = Number(cuenta.dinero || 0)
+    const dineroInicial = dineroActual - netDelta
+
+    const accountKey = 'tradingAccountData:' + tradingId
+    let data = {}
+    try {
+      const raw = localStorage.getItem(accountKey)
+      if (raw) data = JSON.parse(raw)
+    } catch (err) {}
+
+    // Limpiar capitalMovements que vinieron de finanzas
+    data.capitalMovements = (data.capitalMovements || []).filter(m => m.origenSync !== 'finanzas')
+    
+    // Agregar regenerados y ordenar
+    data.capitalMovements.push(...nuevosMovements)
+    data.capitalMovements.sort((a, b) => new Date(a.date) - new Date(b.date))
+
+    data.initialCapital = String(dineroInicial)
+    localStorage.setItem(accountKey, JSON.stringify(data))
+
+    if (localStorage.getItem('activeTradingAccountId') === tradingId) {
+      localStorage.setItem('capitalMovements', JSON.stringify(data.capitalMovements))
+      localStorage.setItem('initialCapital', data.initialCapital)
+    }
+  }
 }
