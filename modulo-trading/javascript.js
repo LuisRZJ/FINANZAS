@@ -5053,7 +5053,7 @@ function renderDiary() {
     if (baselineDate && date < baselineDate) return;
     const value = parseFloat(t.resultMxn);
     if (!Number.isFinite(value)) return;
-    events.push({ date, value });
+    events.push({ date, value, type: 'trade' });
   });
 
   movements.forEach(movement => {
@@ -5064,7 +5064,7 @@ function renderDiary() {
     const rawAmount = parseFloat(movement.amount);
     if (!Number.isFinite(rawAmount)) return;
     const value = movement.type === 'retiro' ? -Math.abs(rawAmount) : Math.abs(rawAmount);
-    events.push({ date, value });
+    events.push({ date, value, type: 'movement' });
   });
 
   events.sort((a, b) => a.date.getTime() - b.date.getTime());
@@ -5123,10 +5123,22 @@ function renderDiary() {
 
     // Obtener balance de la cuenta al inicio de este mes
     const fechaInicioMes = new Date(group.year, group.month, 1, 0, 0, 0);
+    const fechaFinMes = new Date(group.year, group.month + 1, 1, 0, 0, 0);
     const balanceInicial = computeCapitalAtDate(events, initialCapital, fechaInicioMes, false);
 
-    // Calcular crecimiento porcentual respecto al balance inicial
-    const pnlPercent = balanceInicial > 0 ? (group.pnlMxn / balanceInicial) * 100 : 0;
+    let baseForRoi = balanceInicial;
+    if (baseForRoi <= 0) {
+      let netDepositsInMonth = 0;
+      events.forEach(e => {
+        if (e.type === 'movement' && e.date >= fechaInicioMes && e.date < fechaFinMes) {
+          netDepositsInMonth += e.value;
+        }
+      });
+      baseForRoi = netDepositsInMonth;
+    }
+
+    // Calcular crecimiento porcentual respecto al balance inicial (o depósitos del mes)
+    const pnlPercent = baseForRoi > 0 ? (group.pnlMxn / baseForRoi) * 100 : 0;
 
     // Configurar coloración y signos según PNL
     let pnlColorClass = '';
