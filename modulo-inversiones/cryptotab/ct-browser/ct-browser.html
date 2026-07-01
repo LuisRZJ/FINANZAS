@@ -573,8 +573,33 @@ html:not(.dark) .tabs{ background: rgba(2,6,23,0.02) !important; }
                 </div>
               </div>
               <div style="flex:1; min-width:200px">
-                <label for="sats">SATs <span class="help">(entero o decimal)</span></label>
-                <input id="sats" type="number" inputmode="decimal" step="1" min="0" placeholder="Ej. 25000" required />
+                <label>SATs <b>totales acumulados</b> de hoy por Sub-App <span class="help">(al menos uno &gt; 0)</span></label>
+                <div style="display:flex; gap:8px; flex-wrap:wrap">
+                  <div style="flex:1; min-width:120px">
+                    <label for="total_lite" style="font-size:11px; color:var(--accent); font-weight:700">🔵 CT Browser Lite</label>
+                    <input id="total_lite" type="number" inputmode="decimal" step="1" min="0" placeholder="Total acumulado" />
+                  </div>
+                  <div style="flex:1; min-width:120px">
+                    <label for="total_pro" style="font-size:11px; color:#f97316; font-weight:700">🟠 CT Browser Pro</label>
+                    <input id="total_pro" type="number" inputmode="decimal" step="1" min="0" placeholder="Total acumulado" />
+                  </div>
+                  <div style="flex:1; min-width:120px">
+                    <label for="total_max" style="font-size:11px; color:#a78bfa; font-weight:700">🟣 CT Browser Max</label>
+                    <input id="total_max" type="number" inputmode="decimal" step="1" min="0" placeholder="Total acumulado" />
+                  </div>
+                </div>
+                <!-- Panel de referencia: ayer y ganancia estimada -->
+                <div id="gainPreviewPanel" style="margin-top:8px; display:none">
+                  <div style="padding:8px 12px; background:rgba(59,130,246,0.08); border:1px solid rgba(59,130,246,0.2); border-radius:8px; font-size:12px; color:var(--muted); margin-bottom:6px">
+                    Referencia (último registro v2): 🔵 <span id="prevLiteRef">—</span> | 🟠 <span id="prevProRef">—</span> | 🟣 <span id="prevMaxRef">—</span>
+                  </div>
+                  <div style="padding:8px 12px; background:rgba(22,163,74,0.1); border:1px solid rgba(22,163,74,0.25); border-radius:8px; font-size:13px; font-weight:700">
+                    Ganancia estimada: 🔵 <span id="gainLitePreview" style="color:var(--primary)">—</span> | 🟠 <span id="gainProPreview" style="color:#f97316">—</span> | 🟣 <span id="gainMaxPreview" style="color:#a78bfa">—</span> → Total: <span id="gainTotalPreview" style="color:var(--primary)">—</span>
+                  </div>
+                </div>
+                <div id="gainPreviewNoPrev" style="margin-top:8px; padding:8px 12px; background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.3); border-radius:8px; font-size:12px; color:var(--muted); display:none">
+                  ℹ️ Primer registro v2 — no hay registro anterior para calcular ganancia. Los valores se guardarán como base para el día siguiente.
+                </div>
               </div>
             </div>
             <div style="margin-top:12px">
@@ -586,7 +611,7 @@ html:not(.dark) .tabs{ background: rgba(2,6,23,0.02) !important; }
               <button type="button" class="btn" style="background-color: #FFA500; color: #000;"><i class="fas fa-calculator"></i> Abrir calculadora</button>
               <button type="submit" class="btn primary">Guardar registro</button>
             </div>
-            <div class="help" style="margin-top:10px">La conversión <b>SATs→MXN</b> se calculará y <b>guardará como valor estático</b> del día con el precio de BTC indicado.
+            <div class="help" style="margin-top:10px">Ingresa el <b>total acumulado</b> de SATs de hoy. La ganancia se calcula automáticamente vs el registro anterior.
             </div>
           </form>
         </div>
@@ -624,8 +649,14 @@ html:not(.dark) .tabs{ background: rgba(2,6,23,0.02) !important; }
             <thead>
               <tr>
                 <th>ID</th>
-                <th>SATs</th>
-                <th>MXN (estático)</th>
+                <th style="color:var(--accent)">🔵 Total Lite</th>
+                <th style="color:#f97316">🟠 Total Pro</th>
+                <th style="color:#a78bfa">🟣 Total Max</th>
+                <th style="color:var(--accent)">Gan. Lite</th>
+                <th style="color:#f97316">Gan. Pro</th>
+                <th style="color:#a78bfa">Gan. Max</th>
+                <th>Gan. Total</th>
+                <th>MXN</th>
                 <th>Día</th>
                 <th>Notas</th>
                 <th class="nowrap">Acciones</th>
@@ -649,13 +680,25 @@ html:not(.dark) .tabs{ background: rgba(2,6,23,0.02) !important; }
           </div>
         </div>
         <div class="card">
-          <h2 style="margin-top:0">Métricas en SATs</h2>
+          <h2 style="margin-top:0">Métricas en SATs (Total)</h2>
           <div class="grid" style="grid-template-columns: repeat(2,1fr); gap:12px">
             <div class="stat"><h3>Promedio SATs (global)</h3><div class="value" id="avgSats">—</div></div>
             <div class="stat"><h3>Promedio 7 días</h3><div class="value" id="avgSats7">—</div></div>
             <div class="stat"><h3>Promedio 30 días</h3><div class="value" id="avgSats30">—</div></div>
             <div class="stat"><h3>Total SATs</h3><div class="value" id="sumSats">—</div></div>
           </div>
+        </div>
+        <div class="card">
+          <h2 style="margin-top:0">Desglose por Sub-App</h2>
+          <div class="grid" style="grid-template-columns: repeat(3,1fr); gap:12px">
+            <div class="stat"><h3 style="color:var(--accent)">🔵 Lite – Total</h3><div class="value" id="sumSatsLite">—</div></div>
+            <div class="stat"><h3 style="color:#f97316">🟣 Pro – Total</h3><div class="value" id="sumSatsPro">—</div></div>
+            <div class="stat"><h3 style="color:#a78bfa">🟡 Max – Total</h3><div class="value" id="sumSatsMax">—</div></div>
+            <div class="stat"><h3 style="color:var(--accent)">🔵 Lite – Promedio</h3><div class="value" id="avgSatsLite">—</div></div>
+            <div class="stat"><h3 style="color:#f97316">🟣 Pro – Promedio</h3><div class="value" id="avgSatsPro">—</div></div>
+            <div class="stat"><h3 style="color:#a78bfa">🟡 Max – Promedio</h3><div class="value" id="avgSatsMax">—</div></div>
+          </div>
+          <div class="help" style="margin-top:8px">Solo se incluyen registros con el nuevo formato. Los registros legacy aparecen únicamente en el total.</div>
         </div>
         <div class="card">
           <h2 style="margin-top:0">Métricas adicionales</h2>
@@ -1004,8 +1047,45 @@ html:not(.dark) .tabs{ background: rgba(2,6,23,0.02) !important; }
   }
 
   function nextId(list){ return `D${list.length + 1}`; }
-  function hasRecordFor(dateISO, list){ return list.some(r=> r.dateISO === dateISO); }
+  function hasRecordFor(dateISO, list){ return list.some(r=>r.dateISO === dateISO); }
   function calcMXNFromSats(sats, btcPriceMXN){ return (Number(sats) / SATS_PER_BTC) * Number(btcPriceMXN); }
+
+  // ── Helpers v2 (sistema de SATs totales acumulados) ─────────────────────
+  function isV2(r){ return r.format === 'v2'; }
+  function getV2Sorted(list){ return list.filter(isV2).sort((a,b)=>a.dateISO.localeCompare(b.dateISO)); }
+  // Obtiene el registro v2 inmediatamente anterior a dateISO (sin incluirlo)
+  function getPrevV2(dateISO, v2sorted){ return v2sorted.filter(r=>r.dateISO < dateISO).pop() || null; }
+  // Calcula la ganancia entre un registro y su predecesor
+  function computeGain(r, prev){
+    if (!prev) return null;
+    const lite  = (Number(r.total_lite)||0) - (Number(prev.total_lite)||0);
+    const pro   = (Number(r.total_pro)||0)  - (Number(prev.total_pro)||0);
+    const max   = (Number(r.total_max)||0)  - (Number(prev.total_max)||0);
+    return { lite, pro, max, total: lite + pro + max };
+  }
+  // Recalcula mxn_static y sats (ganancia) del registro siguiente al editado
+  async function recalcularSiguiente(editedId, allList){
+    const v2sorted = getV2Sorted(allList);
+    const idx = v2sorted.findIndex(r=>r.id === editedId);
+    if (idx < 0 || idx >= v2sorted.length - 1) return;
+    const edited = v2sorted[idx];
+    const next   = v2sorted[idx + 1];
+    const gain   = computeGain(next, edited);
+    if (!gain) return;
+    next.sats = gain.total;
+    next.sats_lite = gain.lite;
+    next.sats_pro = gain.pro;
+    next.sats_max = gain.max;
+    next.mxn_static = calcMXNFromSats(gain.total, next.rate_mxn_btc_at_entry);
+  }
+  // Backward-compat: devuelve la ganancia total de un registro (legacy o v2 ya calculada)
+  function totalSats(r){
+    if (isV2(r)) return Number(r.sats)||0; // en v2, sats = ganancia ya guardada
+    if (r.sats_lite !== undefined || r.sats_pro !== undefined || r.sats_max !== undefined){
+      return (Number(r.sats_lite)||0) + (Number(r.sats_pro)||0) + (Number(r.sats_max)||0);
+    }
+    return Number(r.sats)||0;
+  }
 
   function byId(id){return document.getElementById(id)}
 
@@ -1157,44 +1237,112 @@ html:not(.dark) .tabs{ background: rgba(2,6,23,0.02) !important; }
   });
   closeDatePickerBtn.addEventListener('click', () => { customDatePickerPopup.style.display = 'none'; });
 
-  // Submit registro
+  // ── Preview en tiempo real del formulario de registro (v2) ────────────────
+  let prevV2ForForm = null; // cache del último registro v2 para el preview
+
+  async function loadPrevV2ForDate(dateISO){
+    const list = await loadRecords();
+    const v2sorted = getV2Sorted(list);
+    prevV2ForForm = getPrevV2(dateISO, v2sorted);
+    updateGainPreview();
+  }
+
+  function updateGainPreview(){
+    const panelPrev   = byId('gainPreviewPanel');
+    const panelNoPrev = byId('gainPreviewNoPrev');
+    const lite = Number(byId('total_lite').value)||0;
+    const pro  = Number(byId('total_pro').value)||0;
+    const max  = Number(byId('total_max').value)||0;
+
+    if (!prevV2ForForm){
+      if (panelPrev)   panelPrev.style.display   = 'none';
+      if (panelNoPrev) panelNoPrev.style.display = (lite + pro + max > 0) ? 'block' : 'none';
+      return;
+    }
+    if (panelNoPrev) panelNoPrev.style.display = 'none';
+    if (panelPrev)   panelPrev.style.display   = 'block';
+
+    const N = new Intl.NumberFormat('es-MX');
+    byId('prevLiteRef').textContent = N.format(prevV2ForForm.total_lite||0);
+    byId('prevProRef').textContent  = N.format(prevV2ForForm.total_pro||0);
+    byId('prevMaxRef').textContent  = N.format(prevV2ForForm.total_max||0);
+
+    const gLite  = lite - (prevV2ForForm.total_lite||0);
+    const gPro   = pro  - (prevV2ForForm.total_pro||0);
+    const gMax   = max  - (prevV2ForForm.total_max||0);
+    const gTotal = gLite + gPro + gMax;
+    const fmt = v => (v >= 0 ? '+' : '') + N.format(v);
+    byId('gainLitePreview').textContent  = fmt(gLite);
+    byId('gainProPreview').textContent   = fmt(gPro);
+    byId('gainMaxPreview').textContent   = fmt(gMax);
+    byId('gainTotalPreview').textContent = fmt(gTotal) + ' SATs';
+  }
+
+  function setupTotalsPreview(){
+    ['total_lite','total_pro','total_max'].forEach(id=>{
+      const el = byId(id);
+      if (el) el.addEventListener('input', updateGainPreview);
+    });
+  }
+  setupTotalsPreview();
+
+  // Submit registro (v2)
   async function handleSubmitRegistro(ev){
     ev.preventDefault();
-    const sats = Number(byId('sats').value);
-    const notes = byId('notas').value.trim();
+    const total_lite = Number(byId('total_lite').value)||0;
+    const total_pro  = Number(byId('total_pro').value)||0;
+    const total_max  = Number(byId('total_max').value)||0;
+    const notes   = byId('notas').value.trim();
     const dateISO = byId('fechaRegistro').value;
 
-    if (!sats || sats<=0){ alert('Ingresa una cantidad de SATs válida.'); return; }
+    if (total_lite + total_pro + total_max <= 0){ alert('Al menos uno de los campos debe ser mayor a 0.'); return; }
 
     const selectedDate = parseYMD(dateISO);
     const today = parseYMD(todayYMD());
-    if (selectedDate > today) { alert('No se pueden registrar ganancias en días futuros.'); return; }
+    if (selectedDate > today) { alert('No se pueden registrar datos en días futuros.'); return; }
 
     const list = await loadRecords();
     if (hasRecordFor(dateISO, list)){ alert('Ya existe un registro para ese día. Edita el existente en la pestaña Historial.'); return; }
 
-    // Determine which BTC price to use: historical for past dates, current for today
     let precioAPI = null;
     if (dateISO === todayYMD()){
-      // ensure we have a current price
       if (!currentBtcPriceMXN) await fetchBtcPrice();
       precioAPI = currentBtcPriceMXN;
     } else {
-      // fetch historical price for the selected past date
       precioAPI = await fetchBtcPriceAtDate(dateISO);
     }
+    if (!precioAPI || precioAPI <= 0){ alert('No se pudo obtener el precio de BTC. Intenta nuevamente.'); return; }
 
-    if (!precioAPI || precioAPI <= 0){ alert('No se pudo obtener el precio de BTC para la fecha seleccionada. Intenta nuevamente o elige otra fecha.'); return; }
+    // Calcular ganancia vs registro v2 anterior
+    const v2sorted = getV2Sorted(list);
+    const prevV2   = getPrevV2(dateISO, v2sorted);
+    const gain     = prevV2 ? computeGain({total_lite, total_pro, total_max}, prevV2) : null;
+    const gainTotal = gain ? gain.total : 0;
 
-    const id = nextId(list);
-    const mxn = calcMXNFromSats(sats, precioAPI);
-    const record = { id, sats: Number(sats), mxn_static: Number(mxn), dateISO, notes, rate_mxn_btc_at_entry: Number(precioAPI) };
+    const id  = nextId(list);
+    const mxn = calcMXNFromSats(gainTotal, precioAPI);
+    const record = {
+      id, format: 'v2',
+      total_lite, total_pro, total_max,
+      sats: gainTotal,          // ganancia del día (para backward-compat)
+      sats_lite: gain ? gain.lite : 0,
+      sats_pro: gain ? gain.pro : 0,
+      sats_max: gain ? gain.max : 0,
+      mxn_static: Number(mxn),
+      dateISO, notes,
+      rate_mxn_btc_at_entry: Number(precioAPI)
+    };
     list.push(record);
     await saveRecords(list);
 
-    byId('sats').value=''; byId('notas').value='';
+    byId('total_lite').value=''; byId('total_pro').value=''; byId('total_max').value='';
+    byId('notas').value='';
+    prevV2ForForm = null;
+    updateGainPreview();
     await refreshAll();
-    alert(`Registro ${id} guardado para ${dateISO}.`);
+    // Recargar cache del prev para el formulario
+    await loadPrevV2ForDate(todayYMD());
+    alert(`Registro ${id} guardado para ${dateISO}.${gain ? '\nGanancia del día: ' + new Intl.NumberFormat('es-MX').format(gainTotal) + ' SATs' : '\nPrimer registro v2: será la base para mañana.'}`);
   }
   byId('formRegistro').addEventListener('submit', handleSubmitRegistro);
   byId('btnFechaActual').onclick = ()=> {
@@ -1229,34 +1377,64 @@ html:not(.dark) .tabs{ background: rgba(2,6,23,0.02) !important; }
       if (currentDayDate > today) { day.classList.add('disabled'); } else { day.addEventListener('click', ()=>{ byId('fechaRegistro').value = currentDayYMD; updateSelectedDateDisplay(currentDayDate); renderDatePickerPopup(currentDayDate); }); }
       daysContainer.appendChild(day);
     }
-    byId('prevMonthPopup').onclick = () => { currentMonthPopup.setMonth(currentMonthPopup.getMonth() - 1); renderDatePickerPopup(currentMonthPopup); };
-    byId('nextMonthPopup').onclick = () => { currentMonthPopup.setMonth(currentMonthPopup.getMonth() + 1); renderDatePickerPopup(currentMonthPopup); };
-  }
-
-  // Historial rendering and delegation
+    byId('prevMonthPopup').onclick = () => { currentMonthPopup.setMonth(currentMonthPopup.getMonth  // Historial rendering and delegation
   async function renderHistorial(filterText=''){
     const tbody = byId('tablaHistorial').querySelector('tbody'); tbody.innerHTML = '';
     const list = await loadRecords();
+    const v2sorted = getV2Sorted(list);
     const ft = filterText.trim().toLowerCase();
+
     for (const r of list){
-      const rowText = `${r.id} ${r.sats} ${r.mxn_static} ${r.dateISO} ${r.notes||''}`.toLowerCase(); if (ft && !rowText.includes(ft)) continue;
-      const tr = document.createElement('tr');
-      
-      // Procesar notas - siempre incluir botón para detección visual
       const notesText = r.notes ? r.notes.replace(/</g,'&lt;') : '';
-      
       let notesCellContent = '';
-      if (notesText) {
-        notesCellContent = `
-          <div class="notes-cell">
-            <div class="notes-content" data-full-text="${notesText}">${notesText}</div>
-            <button class="notes-toggle hidden" onclick="toggleNotesExpansion(this)">Ver más</button>
-          </div>`;
+      if (notesText) notesCellContent = `<div class="notes-cell"><div class="notes-content">${notesText}</div><button class="notes-toggle hidden" onclick="toggleNotesExpansion(this)">Ver más</button></div>`;
+
+      let totalLiteCell, totalProCell, totalMaxCell;
+      let gainLiteCell, gainProCell, gainMaxCell, gainTotalCell;
+
+      if (isV2(r)){
+        // registro v2: mostrar totales y ganancia calculada al vuelo
+        const prev  = getPrevV2(r.dateISO, v2sorted);
+        const gain  = computeGain(r, prev);
+        const N = new Intl.NumberFormat('es-MX');
+        const fmtG = v => v === null ? '<span style="color:var(--muted);font-size:11px">—</span>' :
+                          '<span style="color:' + (v >= 0 ? 'var(--primary)' : 'var(--danger)') + '">' + (v>=0?'+':'') + N.format(v) + '</span>';
+        totalLiteCell = fmtNumber(r.total_lite||0);
+        totalProCell  = fmtNumber(r.total_pro||0);
+        totalMaxCell  = fmtNumber(r.total_max||0);
+        gainLiteCell  = gain ? fmtG(gain.lite)  : fmtG(null);
+        gainProCell   = gain ? fmtG(gain.pro)   : fmtG(null);
+        gainMaxCell   = gain ? fmtG(gain.max)   : fmtG(null);
+        gainTotalCell = gain ? fmtG(gain.total) : fmtG(null);
+      } else if (r.sats_lite !== undefined || r.sats_pro !== undefined || r.sats_max !== undefined){
+        // registro viejo con campos sats_lite/pro/max (eran ganancias directas)
+        const badge = '<span style="color:var(--muted);font-size:10px">(legacy v1)</span>';
+        totalLiteCell = '—'; totalProCell = '—'; totalMaxCell = '—';
+        gainLiteCell  = fmtNumber(r.sats_lite||0) + ' ' + badge;
+        gainProCell   = fmtNumber(r.sats_pro||0);
+        gainMaxCell   = fmtNumber(r.sats_max||0);
+        gainTotalCell = fmtNumber((r.sats_lite||0)+(r.sats_pro||0)+(r.sats_max||0));
+      } else {
+        // legacy puro: solo sats total
+        const badge = '<span style="color:var(--muted);font-size:10px">(legacy)</span>';
+        totalLiteCell = '—'; totalProCell = '—'; totalMaxCell = '—';
+        gainLiteCell  = badge; gainProCell = ''; gainMaxCell = '';
+        gainTotalCell = fmtNumber(r.sats||0);
       }
-      
+
+      const searchStr = `${r.id} ${r.mxn_static} ${r.dateISO} ${r.notes||''} ${r.total_lite||''} ${r.total_pro||''} ${r.total_max||}`.toLowerCase();
+      if (ft && !searchStr.includes(ft)) continue;
+
+      const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td class="nowrap">${r.id}</td>
-        <td>${fmtNumber(r.sats)}</td>
+        <td class="nowrap">${r.id}${isV2(r)?'<span style="font-size:9px;color:var(--primary);margin-left:3px">v2</span>':''}</td>
+        <td style="color:var(--accent)">${totalLiteCell}</td>
+        <td style="color:#f97316">${totalProCell}</td>
+        <td style="color:#a78bfa">${totalMaxCell}</td>
+        <td style="color:var(--accent)">${gainLiteCell}</td>
+        <td style="color:#f97316">${gainProCell}</td>
+        <td style="color:#a78bfa">${gainMaxCell}</td>
+        <td style="font-weight:700">${gainTotalCell}</td>
         <td>${fmtMoney(r.mxn_static)}</td>
         <td class="nowrap">${r.dateISO}</td>
         <td>${notesCellContent}</td>
@@ -1266,15 +1444,14 @@ html:not(.dark) .tabs{ background: rgba(2,6,23,0.02) !important; }
         </td>`;
       tbody.appendChild(tr);
     }
-    
-    // Verificar truncamiento después de renderizar
+
     verificarTruncamientoNotas();
-    
+
     tbody.onclick = async (e)=>{
       const btn = e.target.closest('button'); if (!btn) return; const id = btn.getAttribute('data-id');
       if (btn.getAttribute('data-action')==='del'){
         if (confirm(`¿Eliminar registro ${id}?`)){
-          let list = await loadRecords(); list = list.filter(x=> x.id !== id); await saveRecords(list); await refreshAll();
+          let list = await loadRecords(); list = list.filter(x=>x.id !== id); await saveRecords(list); await refreshAll();
         }
       } else if (btn.getAttribute('data-action')==='edit'){
         await editarRegistro(id);
@@ -1286,63 +1463,165 @@ html:not(.dark) .tabs{ background: rgba(2,6,23,0.02) !important; }
     const list = await loadRecords();
     const r = list.find(x => x.id === id);
     if (!r) { alert('Registro no encontrado'); return; }
-    const modal = document.createElement('div'); modal.className = 'modal-overlay active';
-    modal.innerHTML = `...`;
-    // Build full edit modal (keep style & inputs as before) - to avoid duplicating many lines we recreate fully here
-    modal.innerHTML = `
-      <div class="calculator-modal" style="max-width: 400px; width: 90%;">
-        <div class="calculator-header">
-          <div class="calculator-title">Editar Registro ${r.id}</div>
-          <button class="close-calculator" onclick="this.closest('.modal-overlay').remove()">×</button>
-        </div>
-        <form id="editForm" style="display: flex; flex-direction: column; gap: 16px;">
-          <div>
-            <label style="font-size: 12px; color: var(--muted); margin-bottom: 6px; display: block;">Fecha</label>
-            <input type="date" id="editFecha" value="${r.dateISO}" required style="width: 100%; background: var(--panel); color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px;">
-          </div>
-          <div>
-            <label style="font-size: 12px; color: var(--muted); margin-bottom: 6px; display: block;">SATs</label>
-            <input type="number" id="editSats" value="${r.sats}" inputmode="decimal" step="1" min="0" required style="width: 100%; background: var(--panel); color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px;">
-          </div>
-          <div>
-            <label style="font-size: 12px; color: var(--muted); margin-bottom: 6px; display: block;">Notas</label>
-            <textarea id="editNotas" rows="3" style="width: 100%; background: var(--panel); color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; resize: vertical;">${r.notes || ''}</textarea>
-          </div>
-          <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px;">
-            <button type="button" class="btn ghost" onclick="this.closest('.modal-overlay').remove()">Cancelar</button>
-            <button type="submit" class="btn primary">Guardar cambios</button>
-          </div>
-        </form>
-      </div>
-    `;
-    document.body.appendChild(modal);
+    const v2sorted = getV2Sorted(list);
+    const prevRecord = isV2(r) ? getPrevV2(r.dateISO, v2sorted) : null;
+    const N = new Intl.NumberFormat('es-MX');
 
-    modal.querySelector('#editForm').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      const nuevaFecha = modal.querySelector('#editFecha').value;
-      const nuevosSats = Number(modal.querySelector('#editSats').value);
-      const nuevasNotas = modal.querySelector('#editNotas').value.trim();
-      if (!nuevosSats || nuevosSats <= 0) { alert('Ingresa una cantidad de SATs válida.'); return; }
-      const selectedDate = parseYMD(nuevaFecha); const today = parseYMD(todayYMD()); if (selectedDate > today) { alert('No se pueden registrar ganancias en días futuros.'); return; }
-      if (nuevaFecha !== r.dateISO){
-        const existeRegistro = (await loadRecords()).some(record => record.dateISO === nuevaFecha && record.id !== r.id);
-        if (existeRegistro) { alert('Ya existe un registro para esta fecha.'); return; }
-        // If date changed, update the stored BTC rate according to the new date
-        let nuevaRate = null;
-        if (nuevaFecha === todayYMD()){
-          if (!currentBtcPriceMXN) await fetchBtcPrice();
-          nuevaRate = currentBtcPriceMXN;
-        } else {
-          nuevaRate = await fetchBtcPriceAtDate(nuevaFecha);
+    const modal = document.createElement('div'); modal.className = 'modal-overlay active';
+
+    if (isV2(r)){
+      // ── Modal para registros v2 (totales acumulados) ───────────────────
+      const prevInfo = prevRecord
+        ? `Ref. anterior (${prevRecord.dateISO}): 🔵 ${N.format(prevRecord.total_lite||0)} | 🟠 ${N.format(prevRecord.total_pro||0)} | 🟣 ${N.format(prevRecord.total_max||0)}`
+        : 'Primer registro v2 — sin referencia anterior.';
+      modal.innerHTML = `
+        <div class="calculator-modal" style="max-width:480px;width:95%">
+          <div class="calculator-header">
+            <div class="calculator-title">Editar Registro ${r.id} <span style="font-size:11px;color:var(--primary)">v2</span></div>
+            <button class="close-calculator" onclick="this.closest('.modal-overlay').remove()">×</button>
+          </div>
+          <form id="editFormV2" style="display:flex;flex-direction:column;gap:12px">
+            <div><label style="font-size:12px;color:var(--muted);margin-bottom:6px;display:block">Fecha</label>
+              <input type="date" id="editFecha" value="${r.dateISO}" required style="width:100%;background:var(--panel);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:10px 12px">
+            </div>
+            <div style="padding:8px 12px;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);border-radius:8px;font-size:12px;color:var(--muted)">${prevInfo}</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <div style="flex:1;min-width:110px"><label style="font-size:11px;color:var(--accent);font-weight:700;margin-bottom:4px;display:block">🔵 Total Lite</label>
+                <input type="number" id="editTotalLite" value="${r.total_lite||0}" inputmode="decimal" step="1" min="0" style="width:100%;background:var(--panel);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:10px 12px">
+              </div>
+              <div style="flex:1;min-width:110px"><label style="font-size:11px;color:#f97316;font-weight:700;margin-bottom:4px;display:block">🟠 Total Pro</label>
+                <input type="number" id="editTotalPro" value="${r.total_pro||0}" inputmode="decimal" step="1" min="0" style="width:100%;background:var(--panel);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:10px 12px">
+              </div>
+              <div style="flex:1;min-width:110px"><label style="font-size:11px;color:#a78bfa;font-weight:700;margin-bottom:4px;display:block">🟣 Total Max</label>
+                <input type="number" id="editTotalMax" value="${r.total_max||0}" inputmode="decimal" step="1" min="0" style="width:100%;background:var(--panel);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:10px 12px">
+              </div>
+            </div>
+            <div style="padding:8px 12px;background:rgba(22,163,74,0.1);border:1px solid rgba(22,163,74,0.25);border-radius:8px;font-size:13px;font-weight:700">
+              Ganancia estimada: <span id="editGainPreview" style="color:var(--primary)">—</span>
+            </div>
+            <div><label style="font-size:12px;color:var(--muted);margin-bottom:6px;display:block">Notas</label>
+              <textarea id="editNotas" rows="2" style="width:100%;background:var(--panel);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:10px 12px;resize:vertical">${r.notes||''}</textarea>
+            </div>
+            <div style="display:flex;gap:8px;justify-content:flex-end">
+              <button type="button" class="btn ghost" onclick="this.closest('.modal-overlay').remove()">Cancelar</button>
+              <button type="submit" class="btn primary">Guardar cambios</button>
+            </div>
+          </form>
+        </div>`;
+      document.body.appendChild(modal);
+
+      const updateEditGain = ()=>{
+        const lite = Number(modal.querySelector('#editTotalLite').value)||0;
+        const pro  = Number(modal.querySelector('#editTotalPro').value)||0;
+        const max  = Number(modal.querySelector('#editTotalMax').value)||0;
+        if (!prevRecord){ modal.querySelector('#editGainPreview').textContent = 'Sin referencia anterior'; return; }
+        const g = computeGain({total_lite:lite,total_pro:pro,total_max:max}, prevRecord);
+        const fmt = v => (v>=0?'+':'') + N.format(v);
+        modal.querySelector('#editGainPreview').textContent =
+          `🔵 ${fmt(g.lite)} | 🟠 ${fmt(g.pro)} | 🟣 ${fmt(g.max)} → Total: ${fmt(g.total)} SATs`;
+      };
+      ['editTotalLite','editTotalPro','editTotalMax'].forEach(fid=>{ const el=modal.querySelector('#'+fid); if(el) el.addEventListener('input', updateEditGain); });
+      updateEditGain();
+
+      modal.querySelector('#editFormV2').addEventListener('submit', async function(ev){
+        ev.preventDefault();
+        const nuevaFecha  = modal.querySelector('#editFecha').value;
+        const nuevoLite   = Number(modal.querySelector('#editTotalLite').value)||0;
+        const nuevoPro    = Number(modal.querySelector('#editTotalPro').value)||0;
+        const nuevoMax    = Number(modal.querySelector('#editTotalMax').value)||0;
+        const nuevasNotas = modal.querySelector('#editNotas').value.trim();
+        if (nuevoLite + nuevoPro + nuevoMax <= 0){ alert('Al menos un campo debe ser > 0.'); return; }
+        const selDate = parseYMD(nuevaFecha); const todayDate = parseYMD(todayYMD());
+        if (selDate > todayDate){ alert('No se pueden registrar datos en días futuros.'); return; }
+        if (nuevaFecha !== r.dateISO){
+          if ((await loadRecords()).some(x=>x.dateISO===nuevaFecha && x.id!==r.id)){ alert('Ya existe un registro para esa fecha.'); return; }
+          let rate = null;
+          if (nuevaFecha === todayYMD()){ if(!currentBtcPriceMXN) await fetchBtcPrice(); rate=currentBtcPriceMXN; }
+          else rate = await fetchBtcPriceAtDate(nuevaFecha);
+          if (!rate||rate<=0){ alert('No se pudo obtener precio histórico.'); return; }
+          r.rate_mxn_btc_at_entry = Number(rate);
         }
-        if (!nuevaRate || nuevaRate <= 0){ alert('No se pudo obtener el precio histórico para la nueva fecha.'); return; }
-        r.rate_mxn_btc_at_entry = Number(nuevaRate);
-      }
-      // Update sats, mxn_static and notes using the (possibly updated) rate
-      r.dateISO = nuevaFecha; r.sats = nuevosSats; r.mxn_static = calcMXNFromSats(nuevosSats, r.rate_mxn_btc_at_entry); r.notes = nuevasNotas;
-      await saveRecords(list);
-      await refreshAll(); modal.remove(); alert(`Registro ${r.id} actualizado exitosamente.`);
-    });
+        r.dateISO   = nuevaFecha;
+        r.total_lite = nuevoLite; r.total_pro = nuevoPro; r.total_max = nuevoMax;
+        // Recalcular ganancia (sats) y mxn del propio registro vs su prev
+        const currentV2sorted = getV2Sorted(list);
+        const myPrev = getPrevV2(nuevaFecha, currentV2sorted.filter(x=>x.id!==r.id));
+        const myGain = myPrev ? computeGain(r, myPrev) : null;
+        r.sats       = myGain ? myGain.total : 0;
+        r.sats_lite  = myGain ? myGain.lite : 0;
+        r.sats_pro   = myGain ? myGain.pro : 0;
+        r.sats_max   = myGain ? myGain.max : 0;
+        r.mxn_static = calcMXNFromSats(r.sats, r.rate_mxn_btc_at_entry);
+        r.notes      = nuevasNotas;
+        await saveRecords(list);
+        // Recalcular el siguiente registro v2 si existe
+        await recalcularSiguiente(r.id, list);
+        await saveRecords(list);
+        await refreshAll(); modal.remove();
+        alert(`Registro ${r.id} actualizado. ${myGain ? 'Ganancia recalculada: ' + N.format(myGain.total) + ' SATs.' : ''}`);
+      });
+
+    } else {
+      // ── Modal para registros legacy (formato antiguo) ───────────────────
+      const isLegacyV1 = r.sats_lite !== undefined || r.sats_pro !== undefined || r.sats_max !== undefined;
+      modal.innerHTML = `
+        <div class="calculator-modal" style="max-width:440px;width:95%">
+          <div class="calculator-header">
+            <div class="calculator-title">Editar Registro ${r.id} <span style="font-size:11px;color:var(--muted)">legacy</span></div>
+            <button class="close-calculator" onclick="this.closest('.modal-overlay').remove()">×</button>
+          </div>
+          <form id="editFormLegacy" style="display:flex;flex-direction:column;gap:14px">
+            <div><label style="font-size:12px;color:var(--muted);margin-bottom:6px;display:block">Fecha</label>
+              <input type="date" id="editFecha" value="${r.dateISO}" required style="width:100%;background:var(--panel);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:10px 12px">
+            </div>
+            <div style="padding:8px 12px;background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.2);border-radius:8px;font-size:12px;color:var(--muted)">
+              📌 Registro legacy. Edita las ganancias directas de cada sub-app.
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <div style="flex:1;min-width:110px"><label style="font-size:11px;color:var(--accent);font-weight:700;margin-bottom:4px;display:block">🔵 Gan. Lite</label>
+                <input type="number" id="editLite" value="${isLegacyV1?(r.sats_lite||0):(r.sats||0)}" inputmode="decimal" step="1" min="0" style="width:100%;background:var(--panel);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:10px 12px">
+              </div>
+              <div style="flex:1;min-width:110px"><label style="font-size:11px;color:#f97316;font-weight:700;margin-bottom:4px;display:block">🟠 Gan. Pro</label>
+                <input type="number" id="editPro" value="${isLegacyV1?(r.sats_pro||0):0}" inputmode="decimal" step="1" min="0" style="width:100%;background:var(--panel);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:10px 12px">
+              </div>
+              <div style="flex:1;min-width:110px"><label style="font-size:11px;color:#a78bfa;font-weight:700;margin-bottom:4px;display:block">🟣 Gan. Max</label>
+                <input type="number" id="editMax" value="${isLegacyV1?(r.sats_max||0):0}" inputmode="decimal" step="1" min="0" style="width:100%;background:var(--panel);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:10px 12px">
+              </div>
+            </div>
+            <div><label style="font-size:12px;color:var(--muted);margin-bottom:6px;display:block">Notas</label>
+              <textarea id="editNotas" rows="2" style="width:100%;background:var(--panel);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:10px 12px;resize:vertical">${r.notes||''}</textarea>
+            </div>
+            <div style="display:flex;gap:8px;justify-content:flex-end">
+              <button type="button" class="btn ghost" onclick="this.closest('.modal-overlay').remove()">Cancelar</button>
+              <button type="submit" class="btn primary">Guardar cambios</button>
+            </div>
+          </form>
+        </div>`;
+      document.body.appendChild(modal);
+      modal.querySelector('#editFormLegacy').addEventListener('submit', async function(ev){
+        ev.preventDefault();
+        const nuevaFecha  = modal.querySelector('#editFecha').value;
+        const nuevoLite   = Number(modal.querySelector('#editLite').value)||0;
+        const nuevoPro    = Number(modal.querySelector('#editPro').value)||0;
+        const nuevoMax    = Number(modal.querySelector('#editMax').value)||0;
+        const nuevoTotal  = nuevoLite + nuevoPro + nuevoMax;
+        const nuevasNotas = modal.querySelector('#editNotas').value.trim();
+        if (nuevoTotal <= 0){ alert('Al menos un campo debe ser > 0.'); return; }
+        if (nuevaFecha !== r.dateISO){
+          if ((await loadRecords()).some(x=>x.dateISO===nuevaFecha&&x.id!==r.id)){ alert('Ya existe un registro para esa fecha.'); return; }
+          let rate = null;
+          if (nuevaFecha===todayYMD()){ if(!currentBtcPriceMXN) await fetchBtcPrice(); rate=currentBtcPriceMXN; }
+          else rate = await fetchBtcPriceAtDate(nuevaFecha);
+          if (!rate||rate<=0){ alert('No se pudo obtener precio histórico.'); return; }
+          r.rate_mxn_btc_at_entry = Number(rate);
+        }
+        r.dateISO = nuevaFecha; r.sats_lite = nuevoLite; r.sats_pro = nuevoPro; r.sats_max = nuevoMax;
+        r.sats = nuevoTotal; r.mxn_static = calcMXNFromSats(nuevoTotal, r.rate_mxn_btc_at_entry);
+        r.notes = nuevasNotas;
+        await saveRecords(list);
+        await refreshAll(); modal.remove(); alert(`Registro ${r.id} actualizado.`);
+      });
+    }
   }
 
   window.closeModal = function(element) { element.closest('.modal-overlay').remove(); };
@@ -1365,9 +1644,17 @@ html:not(.dark) .tabs{ background: rgba(2,6,23,0.02) !important; }
 
   // Export / Import
   byId('btnExportar').onclick = async ()=>{
-    const data = { records: await loadRecords(), settings: await getAllSettings() };
+    // Normalizar registros legacy al exportar: sats_lite = sats original, sats_pro/max = 0
+    const rawRecords = await loadRecords();
+    const normalized = rawRecords.map(r=>{
+      if (r.sats_lite === undefined && r.sats_pro === undefined && r.sats_max === undefined){
+        return { ...r, sats_lite: r.sats||0, sats_pro: 0, sats_max: 0 };
+      }
+      return r;
+    });
+    const data = { records: normalized, settings: await getAllSettings() };
     const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `btc_registros_${todayYMD()}.json`; a.click(); URL.revokeObjectURL(a.href);
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `ctbrowser_registros_${todayYMD()}.json`; a.click(); URL.revokeObjectURL(a.href);
   };
 
   byId('fileImport').addEventListener('change', async (ev)=>{
@@ -1398,23 +1685,68 @@ html:not(.dark) .tabs{ background: rgba(2,6,23,0.02) !important; }
   byId('buscador').addEventListener('input', (e)=> renderHistorial(e.target.value));
   byId('btnLimpiarBusqueda').onclick = ()=>{ byId('buscador').value=''; renderHistorial(''); };
 
-  // Estadísticas
+  // Estadísticas — basadas en ganancias calculadas al vuelo para registros v2
   async function computeStats(){
     const list = await loadRecords();
+    const allStatIds = ['avgMxn','avgMxn7','avgMxn30','sumMxn','avgSats','avgSats7','avgSats30','sumSats',
+      'sumSatsLite','sumSatsPro','sumSatsMax','avgSatsLite','avgSatsPro','avgSatsMax',
+      'diasConRegistro','rachaActual','primeraFecha','ultimaFecha'];
     if (!list.length){
-      const ids = ['avgMxn','avgMxn7','avgMxn30','sumMxn','avgSats','avgSats7','avgSats30','sumSats','diasConRegistro','rachaActual','primeraFecha','ultimaFecha'];
-      ids.forEach(id=> byId(id).textContent = id.includes('sum')||id.includes('avg') ? '—' : '0');
+      allStatIds.forEach(id=>{ const el=byId(id); if(el) el.textContent = id.includes('sum')||id.includes('avg') ? '—' : '0'; });
       return;
     }
-    const byDate = list.slice().sort((a,b)=> a.dateISO.localeCompare(b.dateISO));
-    const mxnAll = byDate.map(r=> r.mxn_static); const satsAll = byDate.map(r=> r.sats);
-    const today = new Date(todayYMD()); const msDay = 86400000; const d7 = new Date(today.getTime() - 6*msDay); const d30 = new Date(today.getTime() - 29*msDay);
-    const last7 = byDate.filter(r=> new Date(r.dateISO) >= d7); const last30 = byDate.filter(r=> new Date(r.dateISO) >= d30);
-    const avg = arr => arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : 0; const sum = arr => arr.reduce((a,b)=>a+b,0);
-    byId('avgMxn').textContent = fmtMoney(avg(mxnAll)); byId('avgMxn7').textContent = fmtMoney(avg(last7.map(r=> r.mxn_static))); byId('avgMxn30').textContent = fmtMoney(avg(last30.map(r=> r.mxn_static))); byId('sumMxn').textContent = fmtMoney(sum(mxnAll));
-    byId('avgSats').textContent = fmtNumber(avg(satsAll)); byId('avgSats7').textContent = fmtNumber(avg(last7.map(r=> r.sats))); byId('avgSats30').textContent = fmtNumber(avg(last30.map(r=> r.sats))); byId('sumSats').textContent = fmtNumber(sum(satsAll));
-    byId('diasConRegistro').textContent = byDate.length; byId('primeraFecha').textContent = byDate[0]?.dateISO || '—'; byId('ultimaFecha').textContent = byDate[byDate.length-1]?.dateISO || '—';
-    let streak = 0; let cursor = new Date(today); const dates = new Set(byDate.map(r=> r.dateISO)); while (dates.has(toYMD(cursor))){ streak++; cursor = new Date(cursor.getTime() - msDay); }
+    const v2sorted = getV2Sorted(list);
+    // Construir array de {record, gain} solo para registros v2 que tengan registro anterior
+    const gainsData = v2sorted.map((r, i)=>{
+      const prev = i > 0 ? v2sorted[i-1] : null;
+      const gain = computeGain(r, prev);
+      return { r, gain };
+    }).filter(x => x.gain !== null);
+
+    const today  = new Date(todayYMD()); const msDay = 86400000;
+    const d7  = new Date(today.getTime() - 6*msDay);
+    const d30 = new Date(today.getTime() - 29*msDay);
+    const avg = arr => arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : 0;
+    const sum = arr => arr.reduce((a,b)=>a+b,0);
+
+    if (!gainsData.length){
+      // Hay registros pero sin ganancias calculables aún (solo el primero v2)
+      allStatIds.forEach(id=>{ const el=byId(id); if(el) el.textContent = '—'; });
+      byId('diasConRegistro').textContent = v2sorted.length;
+      byId('primeraFecha').textContent    = v2sorted[0]?.dateISO || '—';
+      byId('ultimaFecha').textContent     = v2sorted[v2sorted.length-1]?.dateISO || '—';
+      byId('rachaActual').textContent     = '0';
+      return;
+    }
+
+    const mxnAll    = gainsData.map(x=>x.r.mxn_static);
+    const gainTots  = gainsData.map(x=>x.gain.total);
+    const gainLites = gainsData.map(x=>x.gain.lite);
+    const gainPros  = gainsData.map(x=>x.gain.pro);
+    const gainMaxs  = gainsData.map(x=>x.gain.max);
+    const last7data  = gainsData.filter(x=>new Date(x.r.dateISO)>=d7);
+    const last30data = gainsData.filter(x=>new Date(x.r.dateISO)>=d30);
+
+    byId('avgMxn').textContent   = fmtMoney(avg(mxnAll));
+    byId('avgMxn7').textContent  = fmtMoney(avg(last7data.map(x=>x.r.mxn_static)));
+    byId('avgMxn30').textContent = fmtMoney(avg(last30data.map(x=>x.r.mxn_static)));
+    byId('sumMxn').textContent   = fmtMoney(sum(mxnAll));
+    byId('avgSats').textContent   = fmtNumber(avg(gainTots));
+    byId('avgSats7').textContent  = fmtNumber(avg(last7data.map(x=>x.gain.total)));
+    byId('avgSats30').textContent = fmtNumber(avg(last30data.map(x=>x.gain.total)));
+    byId('sumSats').textContent   = fmtNumber(sum(gainTots));
+    byId('sumSatsLite').textContent = fmtNumber(sum(gainLites));
+    byId('sumSatsPro').textContent  = fmtNumber(sum(gainPros));
+    byId('sumSatsMax').textContent  = fmtNumber(sum(gainMaxs));
+    byId('avgSatsLite').textContent = fmtNumber(avg(gainLites));
+    byId('avgSatsPro').textContent  = fmtNumber(avg(gainPros));
+    byId('avgSatsMax').textContent  = fmtNumber(avg(gainMaxs));
+    byId('diasConRegistro').textContent = v2sorted.length;
+    byId('primeraFecha').textContent    = v2sorted[0]?.dateISO || '—';
+    byId('ultimaFecha').textContent     = v2sorted[v2sorted.length-1]?.dateISO || '—';
+    let streak=0; let cursor=new Date(today);
+    const dates = new Set(v2sorted.map(r=>r.dateISO));
+    while(dates.has(toYMD(cursor))){ streak++; cursor=new Date(cursor.getTime()-msDay); }
     byId('rachaActual').textContent = streak;
   }
 
@@ -1500,7 +1832,14 @@ html:not(.dark) .tabs{ background: rgba(2,6,23,0.02) !important; }
         btnSendDiscord.disabled = true; btnSendDiscord.textContent = '⌛ Enviando...';
 
         // Gather data for embed
-        const records = await getAllRecordsFromDB();
+        const rawRecordsDiscord = await getAllRecordsFromDB();
+        // Normalizar legacy al exportar a Discord
+        const records = rawRecordsDiscord.map(r => {
+          if (r.sats_lite === undefined && r.sats_pro === undefined && r.sats_max === undefined){
+            return { ...r, sats_lite: r.sats||0, sats_pro: 0, sats_max: 0 };
+          }
+          return r;
+        });
         const dbJsonSize = await computeDbJsonSize();
         const est = await estimateOriginUsage();
         const summary = {
@@ -1681,7 +2020,14 @@ html:not(.dark) .tabs{ background: rgba(2,6,23,0.02) !important; }
     const password = obtenerPasswordNube();
 
     try {
-      const records = await getAllRecordsFromDB();
+      const rawRecordsCloud = await getAllRecordsFromDB();
+      // Normalizar legacy al subir a la nube
+      const records = rawRecordsCloud.map(r => {
+        if (r.sats_lite === undefined && r.sats_pro === undefined && r.sats_max === undefined){
+          return { ...r, sats_lite: r.sats||0, sats_pro: 0, sats_max: 0 };
+        }
+        return r;
+      });
       const settings = await getAllSettings();
       const exportState = {
         __page: 'ct-browser',
@@ -2002,6 +2348,7 @@ html:not(.dark) .tabs{ background: rgba(2,6,23,0.02) !important; }
   // Inicio: obtener precio, luego inicializar UI leyendo IndexedDB
   await fetchBtcPrice();
   await refreshAll();
+  await loadPrevV2ForDate(todayYMD()); // cargar referencia del prev para el formulario
   // Refresh storage stats initially
   await refreshStorageStats();
   await refreshSettingsUI();

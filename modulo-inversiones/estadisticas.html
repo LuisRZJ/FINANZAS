@@ -2035,6 +2035,57 @@
             console.log(`Daily income updated: BTC=${btcDailyIncome}, GO=${goDailyIncome}, TAP=${tapDailyIncome}, CPM=${cloudPowerMinerDailyIncome}, CT-FARM=${ctFarmIncome}, CT-POOL=${ctPoolIncome}, CT-BROWSER=${ctBrowserIncome}, CT-NFT=${ctNftIncome}, FINANZAS=${finanzasDailyIncome.toFixed(2)}, TRADING=${tradingDailyPnl.toFixed(2)}, FTT=${fttDailyPnl.toFixed(2)}, TOTAL=${totalDailyIncome}`);
         }
 
+        // Function to get the breakdown of Lite, Pro, Max daily income in MXN
+        function getCryptotabBrowserDailyIncomeBreakdown() {
+            return new Promise((resolve) => {
+                try {
+                    const dbName = 'ctBrowser_registroDiario_db_v1';
+                    const request = indexedDB.open(dbName);
+                    
+                    request.onsuccess = function (event) {
+                        const db = event.target.result;
+                        if (!db.objectStoreNames.contains('records')) {
+                            resolve({ lite: 0, pro: 0, max: 0, total: 0 });
+                            return;
+                        }
+                        try {
+                            const transaction = db.transaction(['records'], 'readonly');
+                            const store = transaction.objectStore('records');
+                            const getAllRequest = store.getAll();
+                            
+                            getAllRequest.onsuccess = function (event) {
+                                const records = event.target.result;
+                                if (!records || records.length === 0) {
+                                    resolve({ lite: 0, pro: 0, max: 0, total: 0 });
+                                    return;
+                                }
+                                records.sort((a, b) => new Date(b.dateISO) - new Date(a.dateISO));
+                                const r = records[0];
+                                const rate = Number(r.rate_mxn_btc_at_entry) || 0;
+                                const SATS_PER_BTC = 100_000_000;
+                                
+                                const lite = ((Number(r.sats_lite) || 0) / SATS_PER_BTC) * rate;
+                                const pro  = ((Number(r.sats_pro) || 0) / SATS_PER_BTC) * rate;
+                                const max  = ((Number(r.sats_max) || 0) / SATS_PER_BTC) * rate;
+                                const total = ((Number(r.sats) || 0) / SATS_PER_BTC) * rate;
+                                resolve({ lite, pro, max, total });
+                            };
+                            getAllRequest.onerror = function () {
+                                resolve({ lite: 0, pro: 0, max: 0, total: 0 });
+                            };
+                        } catch (e) {
+                            resolve({ lite: 0, pro: 0, max: 0, total: 0 });
+                        }
+                    };
+                    request.onerror = function () {
+                        resolve({ lite: 0, pro: 0, max: 0, total: 0 });
+                    };
+                } catch (error) {
+                    resolve({ lite: 0, pro: 0, max: 0, total: 0 });
+                }
+            });
+        }
+
         // Function to create and update the income source chart
         async function updateIncomeSourceChart() {
             try {
@@ -2045,7 +2096,7 @@
                 const cloudPowerMinerDailyIncome = calculateMiningDailyIncome('cloudPowerMinerInvestments');
                 const ctFarmIncome = await getCryptotabDailyIncome('ctFarm_registroDiario_db_v1');
                 const ctPoolIncome = await getCryptotabDailyIncome('ctPool_registroDiario_db_v1');
-                const ctBrowserIncome = await getCryptotabDailyIncome('ctBrowser_registroDiario_db_v1');
+                const browserBreakdown = await getCryptotabBrowserDailyIncomeBreakdown();
                 const ctNftIncome = await getCryptotabDailyIncome('ctNft_registroDiario_db_v1');
 
                 // Get daily income from Finanzas Personales module
@@ -2063,7 +2114,9 @@
                     { name: 'Cloud Power Miner', value: cloudPowerMinerDailyIncome, color: '#06b6d4' },
                     { name: 'CT Farm', value: ctFarmIncome, color: '#FBBC04' },
                     { name: 'CT Pool', value: ctPoolIncome, color: '#EA4335' },
-                    { name: 'CT Browser', value: ctBrowserIncome, color: '#9C27B0' },
+                    { name: 'CT Browser Lite', value: browserBreakdown.lite, color: '#3b82f6' },
+                    { name: 'CT Browser Pro', value: browserBreakdown.pro, color: '#f97316' },
+                    { name: 'CT Browser Max', value: browserBreakdown.max, color: '#a855f7' },
                     { name: 'CT NFT', value: ctNftIncome, color: '#8b5cf6' },
                     { name: 'Finanzas Personales', value: finanzasDailyIncome, color: '#10b981' },
                     { name: 'Trading', value: Math.max(0, tradingDailyPnl), color: '#f59e0b' },
