@@ -580,8 +580,9 @@ html:not(.dark) .tabs{ background: rgba(2,6,23,0.02) !important; }
                   <div style="padding:8px 12px; background:rgba(59,130,246,0.08); border:1px solid rgba(59,130,246,0.2); border-radius:8px; font-size:12px; color:var(--muted); margin-bottom:6px">
                     Referencia (último registro v2): <span id="prevSatsRef">—</span> SATs
                   </div>
-                  <div style="padding:8px 12px; background:rgba(22,163,74,0.1); border:1px solid rgba(22,163,74,0.25); border-radius:8px; font-size:13px; font-weight:700">
-                    Ganancia estimada: <span id="gainSatsPreview" style="color:var(--primary)">—</span> SATs
+                  <div style="padding:10px; background:rgba(22,163,74,0.05); border:1px solid rgba(22,163,74,0.2); border-radius:8px; display:flex; flex-direction:column; gap:6px">
+                    <label for="gain_sats" style="font-size:12px; font-weight:700; color:var(--muted)">Ganancia diaria a registrar (Sats - editable):</label>
+                    <input id="gain_sats" type="number" inputmode="decimal" step="1" style="width:100%; padding:6px 10px; font-size:13px; font-weight:700; color:var(--primary); background:var(--panel); border:1px solid var(--border); border-radius:8px" />
                   </div>
                 </div>
                 <div id="gainPreviewNoPrev" style="margin-top:8px; padding:8px 12px; background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.3); border-radius:8px; font-size:12px; color:var(--muted); display:none">
@@ -1035,17 +1036,9 @@ const STORE_SETTINGS = 'settings';
     if (!prev) return null;
     return (Number(r.total_sats)||0) - (Number(prev.total_sats)||0);
   }
-  async function recalcularSiguiente(editedId, allList){
-    const v2sorted = getV2Sorted(allList);
-    const idx = v2sorted.findIndex(r=>r.id === editedId);
-    if (idx < 0 || idx >= v2sorted.length - 1) return;
-    const edited = v2sorted[idx];
-    const next   = v2sorted[idx + 1];
-    const gain   = computeGain(next, edited);
-    if (gain === null) return;
-    next.sats = gain;
-    next.mxn_static = calcMXNFromSats(gain, next.rate_mxn_btc_at_entry);
-  }
+  // recalcularSiguiente: ya no aplica porque los registros no-recientes no tienen total_sats.
+  // Se conserva como no-op para compatibilidad con llamadas existentes.
+  async function recalcularSiguiente(editedId, allList){ /* no-op */ }
   function totalSats(r){
     if (isV2(r)) return Number(r.sats)||0; // en v2, sats es la ganancia del día
     return Number(r.sats)||0;
@@ -1228,8 +1221,7 @@ const STORE_SETTINGS = 'settings';
     byId('prevSatsRef').textContent = N.format(prevV2ForForm.total_sats||0);
 
     const gSats = total_sats - (prevV2ForForm.total_sats||0);
-    const fmt = v => (v >= 0 ? '+' : '') + N.format(v);
-    byId('gainSatsPreview').textContent = fmt(gSats);
+    byId('gain_sats').value = gSats;
   }
 
   function setupTotalsPreview(){
@@ -1242,6 +1234,7 @@ const STORE_SETTINGS = 'settings';
   async function handleSubmitRegistro(ev){
     ev.preventDefault();
     const total_sats = Number(byId('total_sats').value)||0;
+    const gain_sats = Number(byId('gain_sats').value)||0;
     const notes = byId('notas').value.trim();
     const dateISO = byId('fechaRegistro').value;
 
@@ -1267,7 +1260,7 @@ const STORE_SETTINGS = 'settings';
     // Calcular ganancia vs registro v2 anterior
     const v2sorted = getV2Sorted(list);
     const prevV2   = getPrevV2(dateISO, v2sorted);
-    const gain     = prevV2 ? computeGain({total_sats}, prevV2) : 0;
+    const gain     = prevV2 ? gain_sats : 0;
 
     const id = nextId(list);
     const mxn = calcMXNFromSats(gain, precioAPI);
@@ -1281,6 +1274,15 @@ const STORE_SETTINGS = 'settings';
     };
     list.push(record);
     await saveRecords(list);
+
+    // Borrar total_sats del registro previo (ya no es el más reciente)
+    if (prevV2) {
+      const prevIdx = list.findIndex(rx => rx.id === prevV2.id);
+      if (prevIdx >= 0) {
+        delete list[prevIdx].total_sats;
+        await saveRecords(list);
+      }
+    }
 
     byId('total_sats').value=''; byId('notas').value='';
     prevV2ForForm = null;
@@ -1345,13 +1347,13 @@ const STORE_SETTINGS = 'settings';
 
       let totalSatsCell, gainSatsCell;
       if (isV2(r)){
-        const prev = getPrevV2(r.dateISO, v2sorted);
-        const gain = computeGain(r, prev);
         const N = new Intl.NumberFormat('es-MX');
         const fmtG = v => v === null ? '<span style="color:var(--muted);font-size:11px">—</span>' :
                           '<span style="color:' + (v >= 0 ? 'var(--primary)' : 'var(--danger)') + '">' + (v>=0?'+':'') + N.format(v) + '</span>';
-        totalSatsCell = fmtNumber(r.total_sats||0);
-        gainSatsCell  = fmtG(gain);
+        // Mostrar total solo si el registro lo tiene (es el más reciente)
+        totalSatsCell = r.total_sats !== undefined ? fmtNumber(r.total_sats) : '<span style="color:var(--muted);font-size:11px">—</span>';
+        // La ganancia ya está guardada directamente en r.sats
+        gainSatsCell  = fmtG(Number(r.sats)||0);
       } else {
         totalSatsCell = '—';
         gainSatsCell  = fmtNumber(r.sats) + ' <span style="color:var(--muted);font-size:10px">(legacy)</span>';
@@ -1401,80 +1403,138 @@ const STORE_SETTINGS = 'settings';
     const modal = document.createElement('div'); modal.className = 'modal-overlay active';
 
     if (isV2(r)){
-      const prevInfo = prevRecord
-        ? `Ref. anterior (${prevRecord.dateISO}): ${N.format(prevRecord.total_sats||0)} SATs`
-        : 'Primer registro v2 — sin referencia anterior.';
-      modal.innerHTML = `
-        <div class="calculator-modal" style="max-width: 400px; width: 90%;">
-          <div class="calculator-header">
-            <div class="calculator-title">Editar Registro ${r.id} <span style="font-size:11px;color:var(--primary)">v2</span></div>
-            <button class="close-calculator" onclick="this.closest('.modal-overlay').remove()">×</button>
-          </div>
-          <form id="editFormV2" style="display: flex; flex-direction: column; gap: 16px;">
-            <div>
-              <label style="font-size: 12px; color: var(--muted); margin-bottom: 6px; display: block;">Fecha</label>
-              <input type="date" id="editFecha" value="${r.dateISO}" required style="width: 100%; background: var(--panel); color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px;">
-            </div>
-            <div style="padding:8px 12px; background:rgba(59,130,246,0.08); border:1px solid rgba(59,130,246,0.2); border-radius:8px; font-size:12px; color:var(--muted)">${prevInfo}</div>
-            <div>
-              <label style="font-size: 12px; color: var(--muted); margin-bottom: 6px; display: block;">SATs Totales Acumulados</label>
-              <input type="number" id="editTotalSats" value="${r.total_sats||0}" inputmode="decimal" step="1" min="0" required style="width: 100%; background: var(--panel); color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px;">
-            </div>
-            <div style="padding:8px 12px; background:rgba(22,163,74,0.1); border:1px solid rgba(22,163,74,0.25); border-radius:8px; font-size:13px; font-weight:700">
-              Ganancia estimada: <span id="editGainPreview" style="color:var(--primary)">—</span>
-            </div>
-            <div>
-              <label style="font-size: 12px; color: var(--muted); margin-bottom: 6px; display: block;">Notas</label>
-              <textarea id="editNotas" rows="3" style="width: 100%; background: var(--panel); color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; resize: vertical;">${r.notes || ''}</textarea>
-            </div>
-            <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px;">
-              <button type="button" class="btn ghost" onclick="this.closest('.modal-overlay').remove()">Cancelar</button>
-              <button type="submit" class="btn primary">Guardar cambios</button>
-            </div>
-          </form>
-        </div>`;
-      document.body.appendChild(modal);
+      // ¿Tiene total_sats? → es el registro más reciente, se edita por totales.
+      // ¿No tiene total_sats? → es un registro antiguo, se edita la ganancia directo.
+      const esMasReciente = r.total_sats !== undefined;
+      // Si es el más reciente, el total anterior se deriva: total_prev = total_actual - sats_actual
+      const totalPrevDerivado = esMasReciente ? (Number(r.total_sats) - Number(r.sats)) : null;
 
-      const updateEditGain = ()=>{
-        const total = Number(modal.querySelector('#editTotalSats').value)||0;
-        if (!prevRecord){ modal.querySelector('#editGainPreview').textContent = 'Sin referencia anterior'; return; }
-        const g = total - (prevRecord.total_sats||0);
-        const fmt = v => (v>=0?'+':'') + N.format(v);
-        modal.querySelector('#editGainPreview').textContent = `${fmt(g)} SATs`;
-      };
-      modal.querySelector('#editTotalSats').addEventListener('input', updateEditGain);
-      updateEditGain();
+      if (esMasReciente) {
+        // MODAL EDICIÓN POR TOTALES (solo para el registro más reciente)
+        modal.innerHTML = `
+          <div class="calculator-modal" style="max-width: 400px; width: 90%;">
+            <div class="calculator-header">
+              <div class="calculator-title">Editar Registro ${r.id} <span style="font-size:11px;color:var(--primary)">v2</span></div>
+              <button class="close-calculator" onclick="this.closest('.modal-overlay').remove()">×</button>
+            </div>
+            <form id="editFormV2" style="display: flex; flex-direction: column; gap: 16px;">
+              <div>
+                <label style="font-size: 12px; color: var(--muted); margin-bottom: 6px; display: block;">Fecha</label>
+                <input type="date" id="editFecha" value="${r.dateISO}" required style="width: 100%; background: var(--panel); color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px;">
+              </div>
+              <div style="padding:8px 12px; background:rgba(59,130,246,0.08); border:1px solid rgba(59,130,246,0.2); border-radius:8px; font-size:12px; color:var(--muted)">
+                ${prevRecord ? `Ref. anterior (${prevRecord.dateISO}): ≈ ${N.format(totalPrevDerivado)} SATs` : 'Primer registro v2 — sin referencia anterior.'}
+              </div>
+              <div>
+                <label style="font-size: 12px; color: var(--muted); margin-bottom: 6px; display: block;">SATs Totales Acumulados</label>
+                <input type="number" id="editTotalSats" value="${r.total_sats||0}" inputmode="decimal" step="1" min="0" required style="width: 100%; background: var(--panel); color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px;">
+              </div>
+              <div style="padding:8px 12px; background:rgba(22,163,74,0.1); border:1px solid rgba(22,163,74,0.25); border-radius:8px; font-size:13px; font-weight:700">
+                Ganancia estimada: <span id="editGainPreview" style="color:var(--primary)">—</span>
+              </div>
+              <div>
+                <label style="font-size: 12px; color: var(--muted); margin-bottom: 6px; display: block;">Notas</label>
+                <textarea id="editNotas" rows="3" style="width: 100%; background: var(--panel); color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; resize: vertical;">${r.notes || ''}</textarea>
+              </div>
+              <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px;">
+                <button type="button" class="btn ghost" onclick="this.closest('.modal-overlay').remove()">Cancelar</button>
+                <button type="submit" class="btn primary">Guardar cambios</button>
+              </div>
+            </form>
+          </div>`;
+        document.body.appendChild(modal);
 
-      modal.querySelector('#editFormV2').addEventListener('submit', async function(ev){
-        ev.preventDefault();
-        const nuevaFecha  = modal.querySelector('#editFecha').value;
-        const nuevoTotal  = Number(modal.querySelector('#editTotalSats').value)||0;
-        const nuevasNotas = modal.querySelector('#editNotas').value.trim();
-        if (nuevoTotal <= 0){ alert('Ingresa un valor válido.'); return; }
-        const selDate = parseYMD(nuevaFecha); const todayDate = parseYMD(todayYMD());
-        if (selDate > todayDate){ alert('No se pueden registrar datos en días futuros.'); return; }
-        if (nuevaFecha !== r.dateISO){
-          if ((await loadRecords()).some(x=>x.dateISO===nuevaFecha && x.id!==r.id)){ alert('Ya existe un registro para esa fecha.'); return; }
-          let rate = null;
-          if (nuevaFecha === todayYMD()){ if(!currentBtcPriceMXN) await fetchBtcPrice(); rate=currentBtcPriceMXN; }
-          else rate = await fetchBtcPriceAtDate(nuevaFecha);
-          if (!rate||rate<=0){ alert('No se pudo obtener precio histórico.'); return; }
-          r.rate_mxn_btc_at_entry = Number(rate);
-        }
-        r.dateISO    = nuevaFecha;
-        r.total_sats = nuevoTotal;
-        const currentV2sorted = getV2Sorted(list);
-        const myPrev = getPrevV2(nuevaFecha, currentV2sorted.filter(x=>x.id!==r.id));
-        const myGain = myPrev ? (nuevoTotal - (myPrev.total_sats||0)) : 0;
-        r.sats       = myGain;
-        r.mxn_static = calcMXNFromSats(myGain, r.rate_mxn_btc_at_entry);
-        r.notes      = nuevasNotas;
-        await saveRecords(list);
-        await recalcularSiguiente(r.id, list);
-        await saveRecords(list);
-        await refreshAll(); modal.remove();
-        alert(`Registro ${r.id} actualizado. Recalculada ganancia: ${N.format(myGain)} SATs.`);
-      });
+        const updateEditGain = ()=>{
+          const total = Number(modal.querySelector('#editTotalSats').value)||0;
+          if (totalPrevDerivado === null){ modal.querySelector('#editGainPreview').textContent = 'Sin referencia anterior'; return; }
+          const g = total - totalPrevDerivado;
+          const fmt = v => (v>=0?'+':'') + N.format(v);
+          modal.querySelector('#editGainPreview').textContent = `${fmt(g)} SATs`;
+        };
+        modal.querySelector('#editTotalSats').addEventListener('input', updateEditGain);
+        updateEditGain();
+
+        modal.querySelector('#editFormV2').addEventListener('submit', async function(ev){
+          ev.preventDefault();
+          const nuevaFecha  = modal.querySelector('#editFecha').value;
+          const nuevoTotal  = Number(modal.querySelector('#editTotalSats').value)||0;
+          const nuevasNotas = modal.querySelector('#editNotas').value.trim();
+          if (nuevoTotal <= 0){ alert('Ingresa un valor válido.'); return; }
+          const selDate = parseYMD(nuevaFecha); const todayDate = parseYMD(todayYMD());
+          if (selDate > todayDate){ alert('No se pueden registrar datos en días futuros.'); return; }
+          if (nuevaFecha !== r.dateISO){
+            if ((await loadRecords()).some(x=>x.dateISO===nuevaFecha && x.id!==r.id)){ alert('Ya existe un registro para esa fecha.'); return; }
+            let rate = null;
+            if (nuevaFecha === todayYMD()){ if(!currentBtcPriceMXN) await fetchBtcPrice(); rate=currentBtcPriceMXN; }
+            else rate = await fetchBtcPriceAtDate(nuevaFecha);
+            if (!rate||rate<=0){ alert('No se pudo obtener precio histórico.'); return; }
+            r.rate_mxn_btc_at_entry = Number(rate);
+          }
+          r.dateISO    = nuevaFecha;
+          r.total_sats = nuevoTotal;
+          // Ganancia = nuevo total - total previo derivado
+          const myGain = totalPrevDerivado !== null ? (nuevoTotal - totalPrevDerivado) : 0;
+          r.sats       = myGain;
+          r.mxn_static = calcMXNFromSats(myGain, r.rate_mxn_btc_at_entry);
+          r.notes      = nuevasNotas;
+          await saveRecords(list);
+          await refreshAll(); modal.remove();
+          alert(`Registro ${r.id} actualizado. Ganancia recalculada: ${N.format(myGain)} SATs.`);
+        });
+
+      } else {
+        // MODAL EDICIÓN DIRECTA DE GANANCIA (registros v2 no recientes, sin total)
+        modal.innerHTML = `
+          <div class="calculator-modal" style="max-width: 400px; width: 90%;">
+            <div class="calculator-header">
+              <div class="calculator-title">Editar Registro ${r.id} <span style="font-size:11px;color:var(--primary)">v2</span></div>
+              <button class="close-calculator" onclick="this.closest('.modal-overlay').remove()">×</button>
+            </div>
+            <form id="editFormV2" style="display: flex; flex-direction: column; gap: 16px;">
+              <div>
+                <label style="font-size: 12px; color: var(--muted); margin-bottom: 6px; display: block;">Fecha</label>
+                <input type="date" id="editFecha" value="${r.dateISO}" required style="width: 100%; background: var(--panel); color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px;">
+              </div>
+              <div>
+                <label style="font-size: 12px; color: var(--muted); margin-bottom: 6px; display: block;">Ganancia SATs del día</label>
+                <input type="number" id="editSatsGain" value="${r.sats||0}" inputmode="decimal" step="1" min="0" required style="width: 100%; background: var(--panel); color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px;">
+              </div>
+              <div>
+                <label style="font-size: 12px; color: var(--muted); margin-bottom: 6px; display: block;">Notas</label>
+                <textarea id="editNotas" rows="3" style="width: 100%; background: var(--panel); color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; resize: vertical;">${r.notes || ''}</textarea>
+              </div>
+              <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px;">
+                <button type="button" class="btn ghost" onclick="this.closest('.modal-overlay').remove()">Cancelar</button>
+                <button type="submit" class="btn primary">Guardar cambios</button>
+              </div>
+            </form>
+          </div>`;
+        document.body.appendChild(modal);
+
+        modal.querySelector('#editFormV2').addEventListener('submit', async function(ev){
+          ev.preventDefault();
+          const nuevaFecha  = modal.querySelector('#editFecha').value;
+          const nuevaGanancia = Number(modal.querySelector('#editSatsGain').value)||0;
+          const nuevasNotas = modal.querySelector('#editNotas').value.trim();
+          const selDate = parseYMD(nuevaFecha); const todayDate = parseYMD(todayYMD());
+          if (selDate > todayDate){ alert('No se pueden registrar datos en días futuros.'); return; }
+          if (nuevaFecha !== r.dateISO){
+            if ((await loadRecords()).some(x=>x.dateISO===nuevaFecha && x.id!==r.id)){ alert('Ya existe un registro para esa fecha.'); return; }
+            let rate = null;
+            if (nuevaFecha === todayYMD()){ if(!currentBtcPriceMXN) await fetchBtcPrice(); rate=currentBtcPriceMXN; }
+            else rate = await fetchBtcPriceAtDate(nuevaFecha);
+            if (!rate||rate<=0){ alert('No se pudo obtener precio histórico.'); return; }
+            r.rate_mxn_btc_at_entry = Number(rate);
+          }
+          r.dateISO    = nuevaFecha;
+          r.sats       = nuevaGanancia;
+          r.mxn_static = calcMXNFromSats(nuevaGanancia, r.rate_mxn_btc_at_entry);
+          r.notes      = nuevasNotas;
+          await saveRecords(list);
+          await refreshAll(); modal.remove();
+          alert(`Registro ${r.id} actualizado.`);
+        });
+      }
     } else {
       modal.innerHTML = `
         <div class="calculator-modal" style="max-width: 400px; width: 90%;">
@@ -1591,11 +1651,13 @@ const STORE_SETTINGS = 'settings';
       return;
     }
     const v2sorted = getV2Sorted(list);
-    const gainsData = v2sorted.map((r, i)=>{
-      const prev = i > 0 ? v2sorted[i-1] : null;
-      const gain = computeGain(r, prev);
+    // Leer ganancias directamente del campo r.sats ya guardado
+    const gainsData = v2sorted.map(r => {
+      const gain = Number(r.sats)||0;
+      // Excluir primer registro base con ganancia 0
+      if (gain === 0) return null;
       return { r, gain };
-    }).filter(x => x.gain !== null);
+    }).filter(x => x !== null);
 
     const today = new Date(todayYMD()); const msDay = 86400000; const d7 = new Date(today.getTime() - 6*msDay); const d30 = new Date(today.getTime() - 29*msDay);
     const avg = arr => arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : 0; const sum = arr => arr.reduce((a,b)=>a+b,0);
