@@ -1392,7 +1392,10 @@ html:not(.dark) .tabs{ background: rgba(2,6,23,0.02) !important; }
       if (currentDayDate > today) { day.classList.add('disabled'); } else { day.addEventListener('click', ()=>{ byId('fechaRegistro').value = currentDayYMD; updateSelectedDateDisplay(currentDayDate); renderDatePickerPopup(currentDayDate); }); }
       daysContainer.appendChild(day);
     }
-    byId('prevMonthPopup').onclick = () => { currentMonthPopup.setMonth(currentMonthPopup.getMonth  // Historial rendering and delegation
+    byId('prevMonthPopup').onclick = () => { currentMonthPopup.setMonth(currentMonthPopup.getMonth() - 1); renderDatePickerPopup(currentMonthPopup); };
+    byId('nextMonthPopup').onclick = () => { currentMonthPopup.setMonth(currentMonthPopup.getMonth() + 1); renderDatePickerPopup(currentMonthPopup); };
+  }
+
   async function renderHistorial(filterText=''){
     const tbody = byId('tablaHistorial').querySelector('tbody'); tbody.innerHTML = '';
     const list = await loadRecords();
@@ -1440,7 +1443,7 @@ html:not(.dark) .tabs{ background: rgba(2,6,23,0.02) !important; }
         gainTotalCell = fmtNumber(r.sats||0);
       }
 
-      const searchStr = `${r.id} ${r.mxn_static} ${r.dateISO} ${r.notes||''} ${r.total_lite||''} ${r.total_pro||''} ${r.total_max||}`.toLowerCase();
+      const searchStr = `${r.id} ${r.mxn_static} ${r.dateISO} ${r.notes||''} ${r.total_lite||''} ${r.total_pro||''} ${r.total_max||''}`.toLowerCase();
       if (ft && !searchStr.includes(ft)) continue;
 
       const tr = document.createElement('tr');
