@@ -1127,10 +1127,22 @@ const STORE_SETTINGS = 'settings';
       if (data.bitcoin && data.bitcoin.mxn){
         currentBtcPriceMXN = data.bitcoin.mxn;
         byId('statPrecio').textContent = fmtMoney(currentBtcPriceMXN);
-      } else {
-        console.error('Sin precio en respuesta');
+        return;
       }
-    } catch (err){ console.error('fetchBtcPrice', err); }
+    } catch (err){
+      console.warn('fetchBtcPrice from CoinGecko failed, trying Binance fallback:', err);
+    }
+    try {
+      const resp = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCMXN');
+      if (!resp.ok) throw new Error(`Binance HTTP ${resp.status}`);
+      const data = await resp.json();
+      if (data.price) {
+        currentBtcPriceMXN = Number(data.price);
+        byId('statPrecio').textContent = fmtMoney(currentBtcPriceMXN);
+      }
+    } catch (binanceErr) {
+      console.error('fetchBtcPrice Binance fallback also failed:', binanceErr);
+    }
   }
 
   // Cache for historical prices to avoid repeated network calls
@@ -1144,21 +1156,18 @@ const STORE_SETTINGS = 'settings';
     }
     if (historicPriceCache.has(dateISO)) return historicPriceCache.get(dateISO);
     try {
-      // Use CryptoCompare histoday endpoint to get daily close price
-      // Convert dateISO to UTC midnight timestamp (seconds)
-      const ts = Math.floor(new Date(dateISO + 'T00:00:00Z').getTime() / 1000);
-      const url = `https://min-api.cryptocompare.com/data/v2/histoday?fsym=BTC&tsym=MXN&limit=1&toTs=${ts}`;
+      const startTimeMs = new Date(dateISO + 'T00:00:00Z').getTime();
+      const url = `https://api.binance.com/api/v3/klines?symbol=BTCMXN&interval=1d&limit=1&startTime=${startTimeMs}`;
       const resp = await fetch(url);
-      if (!resp.ok) throw new Error('Fallo en la API histórica: ' + resp.status);
+      if (!resp.ok) throw new Error('Fallo en la API histórica de Binance: ' + resp.status);
       const data = await resp.json();
-      if (!data.Data || !data.Data.Data || data.Data.Data.length === 0) throw new Error('No hay datos históricos para ' + dateISO);
-      const entry = data.Data.Data[0];
-      const price = entry.close;
-      if (!price || Number.isNaN(price)) throw new Error('Precio inválido en respuesta histórica');
+      if (!data || data.length === 0) throw new Error('No hay datos históricos de Binance para ' + dateISO);
+      const price = Number(data[0][4]);
+      if (!price || Number.isNaN(price)) throw new Error('Precio de Binance inválido en respuesta histórica');
       historicPriceCache.set(dateISO, price);
       return price;
     } catch (err){
-      console.error('fetchBtcPriceAtDate', err);
+      console.error('fetchBtcPriceAtDate (Binance)', err);
       return null;
     }
   }
