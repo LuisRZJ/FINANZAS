@@ -374,27 +374,8 @@ window.addEventListener('DOMContentLoaded', () => {
         return { simulations, localStorage: ls };
     }
 
-    async function restoreDataFromFile(file) {
-        if (!file) return;
-        const ok = window.confirm('Esto reemplazará tus datos locales actuales por los del archivo. ¿Deseas continuar?');
-        if (!ok) return;
-
-        setStatus('Restaurando…');
-        let text = '';
-        try {
-            text = await file.text();
-        } catch (e) {
-            setStatus('No se pudo leer el archivo');
-            return;
-        }
-
-        let parsed;
-        try {
-            parsed = parseImportJson(text);
-        } catch (e) {
-            setStatus('JSON inválido');
-            return;
-        }
+    async function restoreDataFromPayload(parsed) {
+        if (!parsed) return false;
 
         try {
             await new Promise((resolve, reject) => {
@@ -404,16 +385,14 @@ window.addEventListener('DOMContentLoaded', () => {
                 req.onblocked = () => reject(new Error('Restauración bloqueada. Cierra otras pestañas de la app.'));
             });
         } catch (e) {
-            setStatus(e && e.message ? e.message : 'Error');
-            return;
+            return false;
         }
 
         let db;
         try {
             db = await openAnalyticsDb();
         } catch (e) {
-            setStatus('No se pudo abrir la base de datos');
-            return;
+            return false;
         }
 
         try {
@@ -435,9 +414,8 @@ window.addEventListener('DOMContentLoaded', () => {
                 tx.onabort = () => reject(tx.error || new Error('Restauración abortada'));
             });
         } catch (e) {
-            setStatus('Error restaurando datos');
             db.close();
-            return;
+            return false;
         }
 
         db.close();
@@ -468,13 +446,315 @@ window.addEventListener('DOMContentLoaded', () => {
             window.NECTheme.applyAccent(storedAccent);
         }
 
-        setStatus('Restaurado');
-        await refreshStorageUI();
-
         if (webhookUrlInput) {
             webhookUrlInput.value = getStoredWebhookUrl();
         }
         setWebhookStatus(getStoredWebhookUrl() ? 'Configurado' : 'No configurado');
+        return true;
+    }
+
+    async function restoreDataFromFile(file) {
+        if (!file) return;
+        const ok = window.confirm('Esto reemplazará tus datos locales actuales por los del archivo. ¿Deseas continuar?');
+        if (!ok) return;
+
+        setStatus('Restaurando…');
+        let text = '';
+        try {
+            text = await file.text();
+        } catch (e) {
+            setStatus('No se pudo leer el archivo');
+            return;
+        }
+
+        let parsed;
+        try {
+            parsed = parseImportJson(text);
+        } catch (e) {
+            setStatus('JSON inválido');
+            return;
+        }
+
+        const success = await restoreDataFromPayload(parsed);
+        if (success) {
+            setStatus('Restaurado');
+            await refreshStorageUI();
+        } else {
+            setStatus('Error al restaurar');
+        }
+    }
+
+    // --- Lógica de Sincronización en la Nube ---
+    const CLOUD_PASSWORD_KEY = 'fti_cloud_password';
+    const CLOUD_PASSWORD_DATE_KEY = 'fti_cloud_password_date';
+    const CLOUD_MODULE_NAME = 'nakededgechart';
+    const CHUNK_SIZE_CHARS = 3 * 1024 * 1024; // ~3MB
+    const EXPIRATION_DAYS = 15;
+    const MS_PER_DAY = 1000 * 60 * 60 * 24;
+
+    const cloudStatusBadge = document.getElementById('cloud-status-badge');
+    const cloudGuestPanel = document.getElementById('cloud-guest-panel');
+    const cloudUserPanel = document.getElementById('cloud-user-panel');
+    const cloudLoginForm = document.getElementById('cloud-login-form');
+    const cloudPasswordInput = document.getElementById('cloud-password-input');
+    const cloudLastSyncTime = document.getElementById('cloud-last-sync-time');
+    const cloudLogoutBtn = document.getElementById('cloud-logout-btn');
+    const cloudBackupBtn = document.getElementById('cloud-backup-btn');
+    const cloudRestoreBtn = document.getElementById('cloud-restore-btn');
+    const cloudCheckBtn = document.getElementById('cloud-check-btn');
+    const cloudInfoMessage = document.getElementById('cloud-info-message');
+
+    function estaAutenticadoEnNube() {
+        const pwd = localStorage.getItem(CLOUD_PASSWORD_KEY);
+        const dateStr = localStorage.getItem(CLOUD_PASSWORD_DATE_KEY);
+        if (!pwd || !dateStr) return false;
+        const date = parseInt(dateStr, 10);
+        if (isNaN(date)) return false;
+        return (Date.now() - date) / MS_PER_DAY <= EXPIRATION_DAYS;
+    }
+
+    function obtenerPasswordNube() {
+        return estaAutenticadoEnNube() ? localStorage.getItem(CLOUD_PASSWORD_KEY) : null;
+    }
+
+    function guardarPasswordNube(password) {
+        if (!password) return;
+        localStorage.setItem(CLOUD_PASSWORD_KEY, password);
+        localStorage.setItem(CLOUD_PASSWORD_DATE_KEY, Date.now().toString());
+    }
+
+    function cerrarSesionNube() {
+        localStorage.removeItem(CLOUD_PASSWORD_KEY);
+        localStorage.removeItem(CLOUD_PASSWORD_DATE_KEY);
+    }
+
+    function showCloudInfo(text, isError = false) {
+        if (!cloudInfoMessage) return;
+        cloudInfoMessage.textContent = text;
+        cloudInfoMessage.classList.remove('hidden');
+        if (isError) {
+            cloudInfoMessage.className = 'mt-4 text-xs text-center font-medium text-rose-500 dark:text-rose-400';
+        } else {
+            cloudInfoMessage.className = 'mt-4 text-xs text-center font-medium text-emerald-500 dark:text-emerald-400';
+        }
+    }
+
+    function hideCloudInfo() {
+        if (cloudInfoMessage) cloudInfoMessage.classList.add('hidden');
+    }
+
+    async function verificarSeguridadSincronizacionCloud() {
+        if (!estaAutenticadoEnNube()) return { safe: false, reason: 'No hay sesión activa' };
+
+        try {
+            const password = obtenerPasswordNube();
+            const response = await fetch(`/api/sync?module=${CLOUD_MODULE_NAME}&index=true`, {
+                method: 'GET',
+                headers: { 'Authorization': `Bearer ${password}` }
+            });
+
+            if (!response.ok) {
+                return { safe: false, reason: 'Error al contactar con la nube' };
+            }
+
+            const data = await response.json();
+            if (!data.exists) {
+                return { safe: true, hasCloudData: false };
+            }
+
+            const cloudTimestamp = data.data.exportadoEn || new Date().toISOString();
+            return { safe: true, cloudTimestamp, hasCloudData: true };
+        } catch (error) {
+            return { safe: false, reason: error.message };
+        }
+    }
+
+    async function updateAuthUICloud() {
+        hideCloudInfo();
+        const authed = estaAutenticadoEnNube();
+        
+        if (cloudStatusBadge) {
+            if (authed) {
+                cloudStatusBadge.textContent = 'Conectado';
+                cloudStatusBadge.className = 'inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300 text-xs font-semibold px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-800/50';
+            } else {
+                cloudStatusBadge.textContent = 'Desconectado';
+                cloudStatusBadge.className = 'inline-flex items-center gap-1.5 bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 text-xs font-semibold px-3 py-1 rounded-full border border-slate-200 dark:border-slate-700';
+            }
+        }
+
+        if (authed) {
+            if (cloudGuestPanel) cloudGuestPanel.classList.add('hidden');
+            if (cloudUserPanel) cloudUserPanel.classList.remove('hidden');
+            
+            const res = await verificarSeguridadSincronizacionCloud();
+            if (res.safe && res.hasCloudData) {
+                if (cloudLastSyncTime) {
+                    const date = new Date(res.cloudTimestamp);
+                    cloudLastSyncTime.textContent = date.toLocaleString('es-ES');
+                }
+            } else {
+                if (cloudLastSyncTime) cloudLastSyncTime.textContent = 'Sin respaldos';
+            }
+        } else {
+            if (cloudGuestPanel) cloudGuestPanel.classList.remove('hidden');
+            if (cloudUserPanel) cloudUserPanel.classList.add('hidden');
+        }
+    }
+
+    async function cloudBackup() {
+        if (!estaAutenticadoEnNube()) return;
+        
+        showCloudInfo('Preparando respaldo...');
+        if (cloudBackupBtn) cloudBackupBtn.disabled = true;
+
+        try {
+            let simulations = [];
+            try {
+                simulations = await readAllSimulations();
+            } catch (e) {
+                simulations = [];
+            }
+
+            const exportObject = {
+                meta: {
+                    app: 'NakedEdgeChart',
+                    exportedAt: new Date().toISOString(),
+                    formatVersion: 1
+                },
+                localStorage: localStorageSnapshot(),
+                indexedDB: {
+                    [ANALYTICS_DB_NAME]: {
+                        version: ANALYTICS_DB_VERSION,
+                        simulations
+                    }
+                }
+            };
+
+            const jsonString = JSON.stringify(exportObject);
+            const chunks = [];
+            for (let i = 0; i < jsonString.length; i += CHUNK_SIZE_CHARS) {
+                chunks.push(jsonString.slice(i, i + CHUNK_SIZE_CHARS));
+            }
+
+            const password = obtenerPasswordNube();
+
+            for (let i = 0; i < chunks.length; i++) {
+                showCloudInfo(`Subiendo parte ${i+1}/${chunks.length}...`);
+                const response = await fetch(`/api/sync?module=${CLOUD_MODULE_NAME}&part=${i}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain',
+                        'Authorization': `Bearer ${password}`
+                    },
+                    body: chunks[i]
+                });
+
+                const result = await response.json();
+                if (!response.ok) {
+                    throw new Error(result.error || `Error al subir la parte ${i+1}/${chunks.length}`);
+                }
+            }
+
+            showCloudInfo('Registrando índice de respaldo...');
+            const indexObj = {
+                parts: chunks.length,
+                exportadoEn: exportObject.meta.exportedAt,
+                version: exportObject.meta.formatVersion
+            };
+
+            const indexResponse = await fetch(`/api/sync?module=${CLOUD_MODULE_NAME}&index=true`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${password}`
+                },
+                body: JSON.stringify(indexObj)
+            });
+
+            if (!indexResponse.ok) {
+                const result = await indexResponse.json();
+                throw new Error(result.error || 'Error al subir el índice.');
+            }
+
+            showCloudInfo('¡Sincronización exitosa!');
+            await updateAuthUICloud();
+        } catch (error) {
+            showCloudInfo(error.message, true);
+        } finally {
+            if (cloudBackupBtn) cloudBackupBtn.disabled = false;
+        }
+    }
+
+    async function cloudRestore() {
+        if (!estaAutenticadoEnNube()) return;
+        
+        const ok = window.confirm('Esto reemplazará todos tus datos locales actuales (simulaciones y preferencias) con el respaldo de la nube. ¿Deseas continuar?');
+        if (!ok) return;
+
+        showCloudInfo('Descargando respaldo...');
+        if (cloudRestoreBtn) cloudRestoreBtn.disabled = true;
+
+        try {
+            const password = obtenerPasswordNube();
+
+            const indexRes = await fetch(`/api/sync?module=${CLOUD_MODULE_NAME}&index=true`, {
+                method: 'GET',
+                headers: { 'Authorization': `Bearer ${password}` }
+            });
+
+            const indexResult = await indexRes.json();
+            if (!indexRes.ok) {
+                throw new Error(indexResult.error || 'Error al obtener el índice de la nube');
+            }
+
+            if (!indexResult.exists || !indexResult.data) {
+                throw new Error('No se encontraron datos de respaldo en la nube');
+            }
+
+            const partsCount = indexResult.data.parts || 1;
+            const chunks = [];
+
+            for (let i = 0; i < partsCount; i++) {
+                showCloudInfo(`Descargando parte ${i+1}/${partsCount}...`);
+                const partRes = await fetch(`/api/sync?module=${CLOUD_MODULE_NAME}&part=${i}`, {
+                    method: 'GET',
+                    headers: { 'Authorization': `Bearer ${password}` }
+                });
+                const partResult = await partRes.json();
+                
+                if (!partRes.ok) {
+                    throw new Error(partResult.error || `Error al descargar la parte ${i+1}/${partsCount}`);
+                }
+                if (!partResult.exists) {
+                    throw new Error(`Parte ${i+1}/${partsCount} no encontrada.`);
+                }
+
+                chunks.push(partResult.raw || JSON.stringify(partResult.data));
+            }
+
+            showCloudInfo('Reconstruyendo base de datos...');
+            const fullJsonStr = chunks.join('');
+            let parsed;
+            try {
+                parsed = parseImportJson(fullJsonStr);
+            } catch (e) {
+                throw new Error('El archivo de la nube está corrupto o no se pudo ensamblar correctamente.');
+            }
+
+            const success = await restoreDataFromPayload(parsed);
+            if (!success) {
+                throw new Error('No se pudieron restaurar los datos en el navegador.');
+            }
+
+            showCloudInfo('¡Restauración exitosa!');
+            await refreshStorageUI();
+            await updateAuthUICloud();
+        } catch (error) {
+            showCloudInfo(error.message, true);
+        } finally {
+            if (cloudRestoreBtn) cloudRestoreBtn.disabled = false;
+        }
     }
 
     if (exportBtn) exportBtn.addEventListener('click', () => downloadData());
@@ -487,7 +767,40 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // --- Vinculación de Eventos de Sincronización en la Nube ---
+    if (cloudLoginForm) {
+        cloudLoginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const password = cloudPasswordInput ? cloudPasswordInput.value.trim() : '';
+            if (password) {
+                guardarPasswordNube(password);
+                if (cloudPasswordInput) cloudPasswordInput.value = '';
+                updateAuthUICloud();
+            }
+        });
+    }
+
+    if (cloudLogoutBtn) {
+        cloudLogoutBtn.addEventListener('click', () => {
+            if (window.confirm('¿Seguro que deseas cerrar la conexión con la nube? Tus datos locales se conservarán.')) {
+                cerrarSesionNube();
+                updateAuthUICloud();
+            }
+        });
+    }
+
+    if (cloudBackupBtn) cloudBackupBtn.addEventListener('click', () => cloudBackup());
+    if (cloudRestoreBtn) cloudRestoreBtn.addEventListener('click', () => cloudRestore());
+    if (cloudCheckBtn) {
+        cloudCheckBtn.addEventListener('click', async () => {
+            showCloudInfo('Buscando actualizaciones...');
+            await updateAuthUICloud();
+            showCloudInfo('Verificación completada.');
+        });
+    }
+
     refreshStorageUI();
+    updateAuthUICloud();
 
     if (webhookUrlInput) {
         webhookUrlInput.value = getStoredWebhookUrl();
@@ -508,14 +821,6 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    if (webhookClearBtn) {
-        webhookClearBtn.addEventListener('click', () => {
-            setStoredWebhookUrl('');
-            if (webhookUrlInput) webhookUrlInput.value = '';
-            setWebhookStatus('Eliminado');
-            refreshStorageUI();
-        });
-    }
     if (webhookClearBtn) {
         webhookClearBtn.addEventListener('click', () => {
             setStoredWebhookUrl('');

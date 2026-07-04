@@ -258,8 +258,81 @@
                             class="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/40 text-slate-700 dark:text-slate-200 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition">
                             Restaurar
                         </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Categoría: Sincronización en la Nube -->
+        <section aria-label="Sincronización en la Nube" class="mb-8">
+            <h2 class="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-2">
+                <i data-lucide="cloud" class="w-5 h-5 text-accent"></i>
+                Sincronización en la Nube
+            </h2>
+
+            <div
+                class="card w-full max-w-2xl bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm p-6 backdrop-blur-sm">
+                
+                <div class="flex items-center justify-between mb-4 border-b border-slate-100 dark:border-slate-800 pb-4">
+                    <div class="flex items-center gap-4">
+                        <div class="bg-accent-soft dark:bg-slate-800 p-2 rounded-lg">
+                            <i data-lucide="cloud-lightning" class="w-5 h-5 text-accent"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-base font-bold text-slate-900 dark:text-slate-100">Respaldo Remoto</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Guarda tus datos en el repositorio compartido de GitHub</p>
+                        </div>
+                    </div>
+                    <span id="cloud-status-badge" class="inline-flex items-center gap-1.5 bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 text-xs font-semibold px-3 py-1 rounded-full border border-slate-200 dark:border-slate-700">
+                        Desconectado
+                    </span>
+                </div>
+
+                <!-- Estado no conectado (login) -->
+                <div id="cloud-guest-panel" class="space-y-4">
+                    <p class="text-xs text-slate-600 dark:text-slate-400">
+                        Para sincronizar tus datos con la nube a través de GitHub, necesitas ingresar la Contraseña Maestra de Sincronización. Esta se guardará por 15 días en este navegador.
+                    </p>
+                    <form id="cloud-login-form" class="flex flex-col sm:flex-row gap-2">
+                        <input type="password" id="cloud-password-input" required placeholder="Contraseña Maestra"
+                            class="flex-1 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/40 text-slate-700 dark:text-slate-200 text-xs placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-accent/40" />
+                        <button type="submit"
+                            class="px-4 py-2 rounded-lg bg-accent text-white text-xs font-semibold hover:bg-accent-hover transition shadow accent-shadow">
+                            Autorizar Sesión
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Estado conectado -->
+                <div id="cloud-user-panel" class="hidden space-y-4">
+                    <div class="flex items-center justify-between flex-wrap gap-2 text-xs">
+                        <div>
+                            <span class="text-slate-500 dark:text-slate-400">Última sincronización:</span>
+                            <span id="cloud-last-sync-time" class="font-semibold text-slate-800 dark:text-slate-200">—</span>
+                        </div>
+                        <button id="cloud-logout-btn" type="button"
+                            class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/40 text-slate-700 dark:text-slate-200 font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+                            Cerrar Conexión
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+                        <button id="cloud-backup-btn" type="button"
+                            class="px-3 py-2.5 rounded-xl bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20">
+                            <i data-lucide="cloud-upload" class="w-4 h-4"></i> Subir a la Nube
+                        </button>
+                        <button id="cloud-restore-btn" type="button"
+                            class="px-3 py-2.5 rounded-xl bg-blue-600 text-white text-xs font-bold hover:bg-blue-700 transition flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20">
+                            <i data-lucide="cloud-download" class="w-4 h-4"></i> Restaurar de la Nube
+                        </button>
+                        <button id="cloud-check-btn" type="button"
+                            class="px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/40 text-slate-700 dark:text-slate-200 text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition flex items-center justify-center gap-2">
+                            <i data-lucide="refresh-cw" class="w-4 h-4"></i> Buscar en Nube
+                        </button>
                     </div>
                 </div>
+
+                <!-- Mensaje de información de nube -->
+                <div id="cloud-info-message" class="mt-4 text-xs text-center font-medium text-slate-500 dark:text-slate-400 hidden"></div>
             </div>
         </section>
     </main>
