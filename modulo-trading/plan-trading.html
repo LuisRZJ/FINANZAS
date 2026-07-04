@@ -77,151 +77,110 @@
             color: #fb923c;
             /* orange-400 */
         }
+        
+        /* Ocultar barra de scroll para el carrusel de navegación móvil */
+        .scrollbar-none::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-none {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        /* Evitar que el botón activo se vuelva invisible al hacer hover */
+        .nav-menu a.active:hover {
+            background-color: #c2410c !important;
+            color: #ffffff !important;
+        }
+        .dark .nav-menu a.active:hover {
+            background-color: #9a3412 !important;
+            color: #ffffff !important;
+        }
     </style>
 </head>
 
 <body class="bg-orange-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
 
-    <!-- Botón del Menú Hamburguesa -->
-    <button
-        class="menu-toggle fixed z-50 top-4 left-4 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-lg flex items-center justify-center text-2xl text-gray-700 dark:text-gray-300 transition-all duration-300 ease-in-out"
-        onclick="toggleMenu()">
-        ☰
-    </button>
 
-    <!-- Overlay del Menú -->
-    <div
-        class="menu-overlay fixed inset-0 bg-black bg-opacity-50 z-30 opacity-0 pointer-events-none transition-opacity duration-300">
-    </div>
 
-    <!-- Menú de Navegación Lateral -->
-    <nav
-        class="nav-menu fixed top-0 left-0 h-full w-72 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md shadow-xl z-40 transform -translate-x-full transition-transform duration-300 ease-in-out">
-        <div class="p-4">
-            <div class="flex items-center justify-between mb-6">
+    <!-- Contenido Principal -->
+    <!-- Botón del Menú Hamburguesa (Oculto para compatibilidad JS) -->
+    <button class="menu-toggle hidden" onclick="toggleMenu()"></button>
+    
+    <!-- Overlay del Menú (Oculto para compatibilidad JS) -->
+    <div class="menu-overlay hidden"></div>
+
+    <!-- Menú de Navegación Responsivo -->
+    <nav class="nav-menu fixed bottom-0 left-0 right-0 h-16 w-full lg:top-0 lg:bottom-0 lg:left-0 lg:h-full lg:w-72 bg-white/95 dark:bg-gray-800/95 backdrop-blur-md border-t border-gray-200 dark:border-gray-700 lg:border-t-0 lg:border-r z-40 shadow-lg lg:shadow-none flex items-center lg:items-stretch overflow-x-auto lg:overflow-y-auto scrollbar-none transition-all duration-300">
+        <div class="w-full lg:p-4 flex flex-row lg:flex-col items-center lg:items-stretch justify-start h-full">
+            <!-- Encabezado del menú (solo visible en PC) -->
+            <div class="hidden lg:flex items-center justify-between mb-6">
                 <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Menú</h2>
-                <!-- Botón de Cierre -->
-                <button
-                    class="w-10 h-10 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors"
-                    onclick="toggleMenu()">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                </button>
             </div>
-            <div class="menu-items space-y-2">
-                <a href="index.html"
-                    class="flex items-center gap-3 py-2.5 px-4 rounded-lg font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                        <polyline points="9 22 9 12 15 12 15 22" />
-                    </svg>
-                    <span>Inicio</span>
+            <!-- Contenedor de items -->
+            <div class="menu-items flex flex-row lg:flex-col items-center lg:items-stretch gap-1 px-4 lg:px-0 lg:space-y-1 h-full w-full">
+                <!-- 1. Inicio -->
+                <a href="index.html" class="flex-shrink-0 flex flex-col lg:flex-row items-center gap-1 lg:gap-3 py-1 lg:py-2.5 px-3 lg:px-4 rounded-xl font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                    <span class="text-[10px] lg:text-sm font-medium">Inicio</span>
                 </a>
-                <a href="/index.html"
-                    class="flex items-center gap-3 py-2.5 px-4 rounded-lg font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect width="7" height="9" x="3" y="3" rx="1" />
-                        <rect width="7" height="5" x="14" y="3" rx="1" />
-                        <rect width="7" height="9" x="14" y="12" rx="1" />
-                        <rect width="7" height="5" x="3" y="16" rx="1" />
-                    </svg>
-                    <span>Volver al panel de control</span>
+                <!-- 2. Volver al Panel -->
+                <a href="/index.html" class="flex-shrink-0 flex flex-col lg:flex-row items-center gap-1 lg:gap-3 py-1 lg:py-2.5 px-3 lg:px-4 rounded-xl font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+                    <span class="block lg:hidden text-[10px] font-medium">Volver</span>
+                    <span class="hidden lg:block text-sm font-medium">Volver al panel</span>
                 </a>
-                <a href="registrar-trade.html"
-                    class="flex items-center gap-3 py-2.5 px-4 rounded-lg font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10" />
-                        <path d="M8 12h8" />
-                        <path d="M12 8v8" />
-                    </svg>
-                    <span>Registrar Trade</span>
+                <!-- 3. Registrar Trade -->
+                <a href="registrar-trade.html" class="flex-shrink-0 flex flex-col lg:flex-row items-center gap-1 lg:gap-3 py-1 lg:py-2.5 px-3 lg:px-4 rounded-xl font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>
+                    <span class="block lg:hidden text-[10px] font-medium">Registrar</span>
+                    <span class="hidden lg:block text-sm font-medium">Registrar Trade</span>
                 </a>
-                <a href="diario.html"
-                    class="flex items-center gap-3 py-2.5 px-4 rounded-lg font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-                    </svg>
-                    <span>Diario</span>
+                <!-- 4. Diario -->
+                <a href="diario.html" class="flex-shrink-0 flex flex-col lg:flex-row items-center gap-1 lg:gap-3 py-1 lg:py-2.5 px-3 lg:px-4 rounded-xl font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                    <span class="text-[10px] lg:text-sm font-medium">Diario</span>
                 </a>
-                <a href="estadisticas.html"
-                    class="flex items-center gap-3 py-2.5 px-4 rounded-lg font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M3 3v18h18" />
-                        <path d="M18 17V9" />
-                        <path d="M13 17V5" />
-                        <path d="M8 17v-3" />
-                    </svg>
-                    <span>Estadísticas</span>
+                <!-- 5. Estadísticas -->
+                <a href="estadisticas.html" class="flex-shrink-0 flex flex-col lg:flex-row items-center gap-1 lg:gap-3 py-1 lg:py-2.5 px-3 lg:px-4 rounded-xl font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
+                    <span class="text-[10px] lg:text-sm font-medium">Estadísticas</span>
                 </a>
-                <a href="plan-trading.html"
-                    class="flex items-center gap-3 py-2.5 px-4 rounded-lg font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700 active bg-orange-600 dark:bg-orange-700 text-white">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
-                        <path d="M14 2v4a2 2 0 0 0 2 2h4" />
-                        <path d="M10 9H8" />
-                        <path d="M16 13H8" />
-                        <path d="M16 17H8" />
-                    </svg>
-                    <span>Plan de Trading</span>
+                <!-- 6. Plan de Trading -->
+                <a href="plan-trading.html" class="flex-shrink-0 flex flex-col lg:flex-row items-center gap-1 lg:gap-3 py-1 lg:py-2.5 px-3 lg:px-4 rounded-xl font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>
+                    <span class="block lg:hidden text-[10px] font-medium">Plan</span>
+                    <span class="hidden lg:block text-sm font-medium">Plan de Trading</span>
                 </a>
-                <a href="almacenamiento.html"
-                    class="flex items-center gap-3 py-2.5 px-4 rounded-lg font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <ellipse cx="12" cy="5" rx="9" ry="3" />
-                        <path d="M3 5V19A9 3 0 0 0 21 19V5" />
-                        <path d="M3 12A9 3 0 0 0 21 12" />
-                    </svg>
-                    <span>Almacenamiento</span>
+                <!-- 7. Almacenamiento -->
+                <a href="almacenamiento.html" class="flex-shrink-0 flex flex-col lg:flex-row items-center gap-1 lg:gap-3 py-1 lg:py-2.5 px-3 lg:px-4 rounded-xl font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></svg>
+                    <span class="block lg:hidden text-[10px] font-medium">Almacén</span>
+                    <span class="hidden lg:block text-sm font-medium">Almacenamiento</span>
                 </a>
-                <a href="ajustes.html"
-                    class="flex items-center gap-3 py-2.5 px-4 rounded-lg font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path
-                            d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1 0-2l.15.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
-                        <circle cx="12" cy="12" r="3" />
-                    </svg>
-                    <span>Ajustes</span>
+                <!-- 8. Ajustes -->
+                <a href="ajustes.html" class="flex-shrink-0 flex flex-col lg:flex-row items-center gap-1 lg:gap-3 py-1 lg:py-2.5 px-3 lg:px-4 rounded-xl font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1 0-2l.15.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+                    <span class="text-[10px] lg:text-sm font-medium">Ajustes</span>
                 </a>
-                <a href="deposito-retiro.html"
-                    class="flex items-center gap-3 py-2.5 px-4 rounded-lg font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M8 3 4 7l4 4" />
-                        <path d="M4 7h16" />
-                        <path d="m16 21 4-4-4-4" />
-                        <path d="M20 17H4" />
-                    </svg>
-                    <span>Deposito/Retiro</span>
+                <!-- 9. Depósito / Retiro -->
+                <a href="deposito-retiro.html" class="flex-shrink-0 flex flex-col lg:flex-row items-center gap-1 lg:gap-3 py-1 lg:py-2.5 px-3 lg:px-4 rounded-xl font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/></svg>
+                    <span class="block lg:hidden text-[10px] font-medium">Dep/Ret</span>
+                    <span class="hidden lg:block text-sm font-medium">Depósito/Retiro</span>
                 </a>
-                <a href="gestor-cuentas.html"
-                    class="flex items-center gap-3 py-2.5 px-4 rounded-lg font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                        <circle cx="9" cy="7" r="4" />
-                        <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                    </svg>
-                    <span>Gestor de Cuentas</span>
+                <!-- 10. Gestor de Cuentas -->
+                <a href="gestor-cuentas.html" class="flex-shrink-0 flex flex-col lg:flex-row items-center gap-1 lg:gap-3 py-1 lg:py-2.5 px-3 lg:px-4 rounded-xl font-medium transition duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    <span class="block lg:hidden text-[10px] font-medium">Cuentas</span>
+                    <span class="hidden lg:block text-sm font-medium">Gestor Cuentas</span>
                 </a>
             </div>
         </div>
     </nav>
 
     <!-- Contenido Principal -->
-    <div class="container mx-auto p-4 sm:p-6 lg:p-8 pt-24">
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8 pt-6 pb-24 lg:pt-8 lg:pb-8 lg:pl-80">
         <!-- Encabezado -->
         <header class="mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
