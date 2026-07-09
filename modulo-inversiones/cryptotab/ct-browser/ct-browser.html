@@ -1538,6 +1538,10 @@ html:not(.dark) .tabs{ background: rgba(2,6,23,0.02) !important; }
               <div style="padding:8px 12px;background:rgba(22,163,74,0.1);border:1px solid rgba(22,163,74,0.25);border-radius:8px;font-size:13px;font-weight:700">
                 Ganancia estimada: <span id="editGainPreview" style="color:var(--primary)">—</span>
               </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <input type="checkbox" id="editLockGain" ${r.lock_gain ? 'checked' : ''} style="width: auto; margin: 0; cursor: pointer;">
+                <label for="editLockGain" style="font-size: 12px; color: var(--muted); cursor: pointer; user-select: none;">Bloquear ganancia</label>
+              </div>
               <div><label style="font-size:12px;color:var(--muted);margin-bottom:6px;display:block">Notas</label>
                 <textarea id="editNotas" rows="2" style="width:100%;background:var(--panel);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:10px 12px;resize:vertical">${r.notes||''}</textarea>
               </div>
@@ -1550,6 +1554,13 @@ html:not(.dark) .tabs{ background: rgba(2,6,23,0.02) !important; }
         document.body.appendChild(modal);
 
         const updateEditGain = ()=>{
+          const isLocked = modal.querySelector('#editLockGain').checked;
+          if (isLocked) {
+            const fmt = v => (v>=0?'+':'') + N.format(v);
+            modal.querySelector('#editGainPreview').textContent =
+              `🔵 ${fmt(r.sats_lite||0)} | 🟠 ${fmt(r.sats_pro||0)} | 🟣 ${fmt(r.sats_max||0)} → Total: ${fmt(r.sats||0)} SATs (Bloqueada)`;
+            return;
+          }
           const lite = Number(modal.querySelector('#editTotalLite').value)||0;
           const pro  = Number(modal.querySelector('#editTotalPro').value)||0;
           const max  = Number(modal.querySelector('#editTotalMax').value)||0;
@@ -1560,6 +1571,7 @@ html:not(.dark) .tabs{ background: rgba(2,6,23,0.02) !important; }
             `🔵 ${fmt(gLite)} | 🟠 ${fmt(gPro)} | 🟣 ${fmt(gMax)} → Total: ${fmt(gLite+gPro+gMax)} SATs`;
         };
         ['editTotalLite','editTotalPro','editTotalMax'].forEach(fid=>{ const el=modal.querySelector('#'+fid); if(el) el.addEventListener('input', updateEditGain); });
+        modal.querySelector('#editLockGain').addEventListener('change', updateEditGain);
         updateEditGain();
 
         modal.querySelector('#editFormV2').addEventListener('submit', async function(ev){
@@ -1569,6 +1581,8 @@ html:not(.dark) .tabs{ background: rgba(2,6,23,0.02) !important; }
           const nuevoPro    = Number(modal.querySelector('#editTotalPro').value)||0;
           const nuevoMax    = Number(modal.querySelector('#editTotalMax').value)||0;
           const nuevasNotas = modal.querySelector('#editNotas').value.trim();
+          const lockGain    = modal.querySelector('#editLockGain').checked;
+
           if (nuevoLite + nuevoPro + nuevoMax <= 0){ alert('Al menos un campo debe ser > 0.'); return; }
           const selDate = parseYMD(nuevaFecha); const todayDate = parseYMD(todayYMD());
           if (selDate > todayDate){ alert('No se pueden registrar datos en días futuros.'); return; }
@@ -1582,17 +1596,29 @@ html:not(.dark) .tabs{ background: rgba(2,6,23,0.02) !important; }
           }
           r.dateISO    = nuevaFecha;
           r.total_lite = nuevoLite; r.total_pro = nuevoPro; r.total_max = nuevoMax;
-          // Ganancia = nuevo total - prev derivado
-          const gLite = prevLiteDerivado !== null ? (nuevoLite - prevLiteDerivado) : 0;
-          const gPro  = prevProDerivado  !== null ? (nuevoPro  - prevProDerivado)  : 0;
-          const gMax  = prevMaxDerivado  !== null ? (nuevoMax  - prevMaxDerivado)  : 0;
-          r.sats_lite  = gLite; r.sats_pro = gPro; r.sats_max = gMax;
-          r.sats       = gLite + gPro + gMax;
-          r.mxn_static = calcMXNFromSats(r.sats, r.rate_mxn_btc_at_entry);
+          
+          let myGain = r.sats;
+          if (lockGain) {
+            r.lock_gain = true;
+          } else {
+            delete r.lock_gain;
+            const gLite = prevLiteDerivado !== null ? (nuevoLite - prevLiteDerivado) : 0;
+            const gPro  = prevProDerivado  !== null ? (nuevoPro  - prevProDerivado)  : 0;
+            const gMax  = prevMaxDerivado  !== null ? (nuevoMax  - prevMaxDerivado)  : 0;
+            r.sats_lite  = gLite; r.sats_pro = gPro; r.sats_max = gMax;
+            myGain       = gLite + gPro + gMax;
+            r.sats       = myGain;
+            r.mxn_static = calcMXNFromSats(myGain, r.rate_mxn_btc_at_entry);
+          }
+
+          if (lockGain) {
+            r.mxn_static = calcMXNFromSats(myGain, r.rate_mxn_btc_at_entry);
+          }
+
           r.notes      = nuevasNotas;
           await saveRecords(list);
           await refreshAll(); modal.remove();
-          alert(`Registro ${r.id} actualizado. Ganancia recalculada: ${N.format(r.sats)} SATs.`);
+          alert(`Registro ${r.id} actualizado.`);
         });
 
       } else {
