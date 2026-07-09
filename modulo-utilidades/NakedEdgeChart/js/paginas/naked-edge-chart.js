@@ -908,12 +908,12 @@ function drawTradeOverlay(width, right) {
     ctx.fillText(`ENTRY ${TradeManager.entryPrice.toFixed(2)}`, xEnd + 8, entryY + 4);
 }
 
-function hitTestTradeLine(mouseY) {
+function hitTestTradeLine(mouseY, tolerance = 6) {
     if (!TradeManager.active || TradeManager.isSimulating || !chartScale) return null;
     const tpY = priceToY(TradeManager.tpPrice);
     const slY = priceToY(TradeManager.slPrice);
-    if (tpY !== null && Math.abs(mouseY - tpY) <= 6) return 'tp';
-    if (slY !== null && Math.abs(mouseY - slY) <= 6) return 'sl';
+    if (tpY !== null && Math.abs(mouseY - tpY) <= tolerance) return 'tp';
+    if (slY !== null && Math.abs(mouseY - slY) <= tolerance) return 'sl';
     return null;
 }
 
@@ -1008,6 +1008,42 @@ container.addEventListener('mouseleave', () => {
         tooltip.style.display = 'none';
     }
     tooltip.style.display = 'none';
+    isDraggingLine = false;
+    dragTarget = null;
+    if (!TradeManager.isSimulating) container.style.cursor = 'crosshair';
+});
+
+// Touch support for mobile devices
+container.addEventListener('touchstart', (e) => {
+    if (!TradeManager.active || TradeManager.isSimulating) return;
+    const touch = e.touches[0];
+    const rect = container.getBoundingClientRect();
+    const mouseY = touch.clientY - rect.top;
+    const hit = hitTestTradeLine(mouseY, 20); // Higher tolerance for touch
+    if (hit) {
+        isDraggingLine = true;
+        dragTarget = hit;
+        container.style.cursor = 'ns-resize';
+        if (e.cancelable) e.preventDefault();
+    }
+}, { passive: false });
+
+container.addEventListener('touchmove', (e) => {
+    if (!isDraggingLine) return;
+    const touch = e.touches[0];
+    const rect = container.getBoundingClientRect();
+    const mouseY = touch.clientY - rect.top;
+    updateDraggedLine(mouseY);
+    if (e.cancelable) e.preventDefault();
+}, { passive: false });
+
+container.addEventListener('touchend', () => {
+    isDraggingLine = false;
+    dragTarget = null;
+    if (!TradeManager.isSimulating) container.style.cursor = 'crosshair';
+});
+
+container.addEventListener('touchcancel', () => {
     isDraggingLine = false;
     dragTarget = null;
     if (!TradeManager.isSimulating) container.style.cursor = 'crosshair';
