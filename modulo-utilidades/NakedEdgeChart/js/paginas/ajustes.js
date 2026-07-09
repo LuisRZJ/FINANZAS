@@ -120,7 +120,7 @@ window.addEventListener('DOMContentLoaded', () => {
     function localStorageSnapshot() {
         const out = {};
         try {
-            const keys = ['nec_theme_preference', 'nec_accent_preference', DISCORD_WEBHOOK_STORAGE_KEY];
+            const keys = ['nec_theme_preference', 'nec_accent_preference', DISCORD_WEBHOOK_STORAGE_KEY, 'nec_last_sync_timestamp'];
             keys.forEach((k) => {
                 const v = localStorage.getItem(k);
                 if (v !== null) out[k] = v;
@@ -436,6 +436,9 @@ window.addEventListener('DOMContentLoaded', () => {
                         localStorage.removeItem(DISCORD_WEBHOOK_STORAGE_KEY);
                     }
                 }
+                if (typeof parsed.localStorage.nec_last_sync_timestamp === 'string') {
+                    localStorage.setItem('nec_last_sync_timestamp', parsed.localStorage.nec_last_sync_timestamp);
+                }
             }
         } catch (e) { }
 
@@ -491,6 +494,7 @@ window.addEventListener('DOMContentLoaded', () => {
     const CHUNK_SIZE_CHARS = 3 * 1024 * 1024; // ~3MB
     const EXPIRATION_DAYS = 15;
     const MS_PER_DAY = 1000 * 60 * 60 * 24;
+    const LAST_SYNC_TIMESTAMP_KEY = 'nec_last_sync_timestamp';
 
     const cloudStatusBadge = document.getElementById('cloud-status-badge');
     const cloudGuestPanel = document.getElementById('cloud-guest-panel');
@@ -503,6 +507,27 @@ window.addEventListener('DOMContentLoaded', () => {
     const cloudRestoreBtn = document.getElementById('cloud-restore-btn');
     const cloudCheckBtn = document.getElementById('cloud-check-btn');
     const cloudInfoMessage = document.getElementById('cloud-info-message');
+
+    function crearModalBloqueante(htmlContent) {
+        const overlay = document.createElement('div');
+        overlay.className = 'fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm';
+        
+        const modal = document.createElement('div');
+        modal.className = 'w-[90%] max-w-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl rounded-2xl p-6 relative animate-in fade-in zoom-in-95 duration-200';
+        modal.innerHTML = htmlContent;
+
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+        document.body.style.overflow = 'hidden';
+        return overlay;
+    }
+
+    function cerrarModal(overlay) {
+        if (overlay) {
+            overlay.remove();
+            document.body.style.overflow = '';
+        }
+    }
 
     function estaAutenticadoEnNube() {
         const pwd = localStorage.getItem(CLOUD_PASSWORD_KEY);
@@ -602,6 +627,118 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    async function chequearDatosNuevosCloud(manual = false) {
+        if (!estaAutenticadoEnNube()) return;
+        if (!manual && sessionStorage.getItem('nec_local_session_only') === 'true') return;
+
+        try {
+            const check = await verificarSeguridadSincronizacionCloud();
+            if (!check.safe) {
+                if (manual) showCloudInfo(check.reason || 'Error verificando la nube', true);
+                return;
+            }
+            if (!check.hasCloudData) {
+                if (manual) showCloudInfo('No se encontraron datos en la nube.');
+                return;
+            }
+
+            const lastSyncStr = localStorage.getItem(LAST_SYNC_TIMESTAMP_KEY);
+            const cloudDate = new Date(check.cloudTimestamp);
+            
+            let hasNewerData = false;
+            if (!lastSyncStr) {
+                hasNewerData = true;
+            } else {
+                const localDate = new Date(lastSyncStr);
+                if (cloudDate.getTime() > localDate.getTime() + 5000) {
+                    hasNewerData = true;
+                }
+            }
+
+            if (hasNewerData) {
+                return new Promise((resolve) => {
+                    const overlay = crearModalBloqueante(`
+                        <div class="text-center">
+                            <div class="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mx-auto mb-4 text-amber-600 dark:text-amber-400">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                            </div>
+                            <h3 class="text-base font-bold text-slate-900 dark:text-slate-100 mb-2">Datos más recientes en la nube</h3>
+                            <p class="text-xs text-slate-600 dark:text-slate-400 mb-6">
+                                Se detectó un respaldo de NakedEdgeChart más actualizado en la nube (${cloudDate.toLocaleString()}). ¿Deseas restaurarlo ahora?
+                            </p>
+                            <div id="restore-loading-cloud" class="hidden mb-4 text-xs font-semibold text-blue-600 animate-pulse">Descargando datos...</div>
+                            <div class="flex flex-col gap-2 mt-2" id="restore-actions-cloud">
+                                <button type="button" id="btn-do-restore-cloud" class="w-full px-4 py-2 rounded-lg text-xs font-semibold bg-amber-600 hover:bg-amber-700 text-white shadow-sm transition">
+                                    Sí, restaurar datos de la nube
+                                </button>
+                                <button type="button" id="btn-skip-restore-cloud" class="w-full px-4 py-2 rounded-lg text-xs font-semibold border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+                                    Trabajar en local (ignorar aviso)
+                                </button>
+                            </div>
+                        </div>
+                    `);
+
+                    document.getElementById('btn-skip-restore-cloud').addEventListener('click', () => {
+                        sessionStorage.setItem('nec_local_session_only', 'true');
+                        cerrarModal(overlay);
+                        if (manual) showCloudInfo('Trabajando en sesión local.');
+                        resolve();
+                    });
+
+                    document.getElementById('btn-do-restore-cloud').addEventListener('click', async () => {
+                        const actions = document.getElementById('restore-actions-cloud');
+                        const loading = document.getElementById('restore-loading-cloud');
+                        if (actions) actions.classList.add('hidden');
+                        if (loading) loading.classList.remove('hidden');
+
+                        try {
+                            const password = obtenerPasswordNube();
+                            const indexRes = await fetch(`/api/sync?module=${CLOUD_MODULE_NAME}&index=true`, {
+                                method: 'GET',
+                                headers: { 'Authorization': `Bearer ${password}` }
+                            });
+                            const indexResult = await indexRes.json();
+                            if (!indexRes.ok) throw new Error(indexResult.error || 'Error de conexión');
+
+                            const partsCount = indexResult.data.parts || 1;
+                            const chunks = [];
+                            for (let i = 0; i < partsCount; i++) {
+                                const partRes = await fetch(`/api/sync?module=${CLOUD_MODULE_NAME}&part=${i}`, {
+                                    method: 'GET',
+                                    headers: { 'Authorization': `Bearer ${password}` }
+                                });
+                                const partResult = await partRes.json();
+                                if (!partRes.ok) throw new Error(partResult.error || 'Error de conexión');
+                                chunks.push(partResult.raw || JSON.stringify(partResult.data));
+                            }
+
+                            const fullJsonStr = chunks.join('');
+                            const parsed = parseImportJson(fullJsonStr);
+                            const success = await restoreDataFromPayload(parsed);
+                            if (!success) throw new Error('No se pudo restaurar en el navegador');
+
+                            localStorage.setItem(LAST_SYNC_TIMESTAMP_KEY, indexResult.data.exportadoEn);
+                            showCloudInfo('¡Restauración exitosa!');
+                            await refreshStorageUI();
+                            await updateAuthUICloud();
+                        } catch (e) {
+                            showCloudInfo(`Error: ${e.message}`, true);
+                        } finally {
+                            cerrarModal(overlay);
+                            resolve();
+                        }
+                    });
+                });
+            } else {
+                if (manual) {
+                    showCloudInfo('Tus datos locales están actualizados respecto a la nube.');
+                }
+            }
+        } catch (error) {
+            if (manual) showCloudInfo(`Error: ${error.message}`, true);
+        }
+    }
+
     async function cloudBackup() {
         if (!estaAutenticadoEnNube()) return;
         
@@ -677,6 +814,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 throw new Error(result.error || 'Error al subir el índice.');
             }
 
+            localStorage.setItem(LAST_SYNC_TIMESTAMP_KEY, indexObj.exportadoEn);
             showCloudInfo('¡Sincronización exitosa!');
             await updateAuthUICloud();
         } catch (error) {
@@ -747,6 +885,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 throw new Error('No se pudieron restaurar los datos en el navegador.');
             }
 
+            localStorage.setItem(LAST_SYNC_TIMESTAMP_KEY, indexResult.data.exportadoEn);
             showCloudInfo('¡Restauración exitosa!');
             await refreshStorageUI();
             await updateAuthUICloud();
@@ -775,7 +914,9 @@ window.addEventListener('DOMContentLoaded', () => {
             if (password) {
                 guardarPasswordNube(password);
                 if (cloudPasswordInput) cloudPasswordInput.value = '';
-                updateAuthUICloud();
+                updateAuthUICloud().then(() => {
+                    chequearDatosNuevosCloud();
+                });
             }
         });
     }
@@ -795,12 +936,14 @@ window.addEventListener('DOMContentLoaded', () => {
         cloudCheckBtn.addEventListener('click', async () => {
             showCloudInfo('Buscando actualizaciones...');
             await updateAuthUICloud();
-            showCloudInfo('Verificación completada.');
+            await chequearDatosNuevosCloud(true);
         });
     }
 
     refreshStorageUI();
-    updateAuthUICloud();
+    updateAuthUICloud().then(() => {
+        chequearDatosNuevosCloud();
+    });
 
     if (webhookUrlInput) {
         webhookUrlInput.value = getStoredWebhookUrl();
